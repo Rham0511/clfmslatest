@@ -25,7 +25,7 @@ import { listEquipmentAvailability, getEquipmentBorrowingHistory } from "../cont
 import { listEquipmentAssignments, updateEquipmentAssignment, getEquipmentAssignmentHistory, listMyEquipmentAssignments, getMyEquipmentAssignmentHistory } from "../controllers/equipmentAssignmentController.js";
 import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, getFacultyScheduleAttendanceHistory, exportFacultyScheduleAttendanceHistory, scanAttendance, createAttendanceSession, getStudentAttendanceQrRoster, createStudentAttendanceQrs } from "../controllers/attendanceController.js";
 import { getAuditLogs, logAuditEntry } from "../controllers/auditController.js";
-import { getPCStationQr, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
+import { getPCStationQr, getMyPCStationSessions, logoutMyPCStationSession, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
 import { getAuditTrail } from "../controllers/auditTrailController.js";
 import { getPCAvailability, assignPC, endPCSession, getCurrentPCAssignment } from "../controllers/pcAssignmentController.js";
 import { getScheduleSeatingChart } from "../controllers/seatingChartController.js";
@@ -4660,6 +4660,9 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   const reportsStylesheet = pageName === "reports"
     ? '<link rel="stylesheet" href="/css/reports.css?v=2">'
     : "";
+  const adminMobilePolishStyles = ["laboratory-schedules", "reports"].includes(pageName)
+    ? '<link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">'
+    : "";
   const auditLogsStylesheet = pageName === "audit-logs"
     ? '<link rel="stylesheet" href="/css/audit-logs.css?v=11">'
     : "";
@@ -4698,10 +4701,11 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/sidebar.css?v=70">
   ${dashboardHeaderStylesheet}
   ${scheduleStylesheet}
   ${reportsStylesheet}
+  ${adminMobilePolishStyles}
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   ${auditLogsStylesheet}
   ${auditLogsScript}
@@ -4738,7 +4742,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     </main>
   </div>
   ${facultySidebarScripts}
-  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <script src="/js/sidebar-component.js?v=68" defer></script>
 </body>
 </html>`;
 };
@@ -5301,6 +5305,8 @@ router.get("/page/:page", serveFeaturePage);
 
 router.get("/login", loginPage);
 router.post("/login", loginUser);
+router.get("/api/pc-stations/my-sessions", getMyPCStationSessions);
+router.post("/api/pc-stations/my-sessions/logout", logoutMyPCStationSession);
 router.post("/pc-station/uid/:token/action", submitPCStationAction);
 router.get("/pc-station/s/:token/status", showPCStationScanResult);
 router.get("/pc-station/s/:token", scanPCStationQr);
@@ -5457,6 +5463,8 @@ router.get("/api/equipment/usage-history/:userId", async (req, res) => {
       { replacements: [userId] }
     );
 
+    // Attendance is optional: keep every PC usage session in the student's history,
+    // including sessions started outside a scheduled class.
     const history = await sequelize.query(
       `SELECT eul.id as usageLogId, eul.equipmentId, eul.serialNumber,
               eul.usageStartTime, eul.usageEndTime, eul.durationMinutes,
@@ -5465,7 +5473,7 @@ router.get("/api/equipment/usage-history/:userId", async (req, res) => {
               a.id as attendanceId, a.date as attendanceDate, a.timeIn as attendanceTime,
               a.status as attendanceStatus, a.subject, a.lab as attendanceLab,
               a.courseSection, a.instructor, a.sessionToken,
-              CASE WHEN a.id IS NULL THEN 'Class not linked' ELSE 'Linked to attendance' END as traceStatus
+              CASE WHEN a.id IS NULL THEN 'No class schedule' ELSE 'Linked to attendance' END as traceStatus
        FROM equipment_usage_logs eul
        LEFT JOIN equipment e ON e.id = eul.equipmentId
        LEFT JOIN attendance a ON a.id = eul.attendanceId
@@ -7306,10 +7314,12 @@ router.get("/api/faculty", async (req, res) => {
   try {
     const context = await getAdminFacultyContext(req, res);
     if (!context) return;
+    const archivedFacultyIds = await getArchivedEntityIds("faculty-account");
     const faculty = await User.findAll({
       where: {
         campus: { [Op.in]: [context.campus, `${context.campus} Campus`] },
-        role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] }
+        role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] },
+        ...(archivedFacultyIds.length ? { id: { [Op.notIn]: archivedFacultyIds } } : {})
       },
       attributes: ["id", "name", "email", "college", "campus", "email_verified", "createdAt"],
       order: [["name", "ASC"]]
@@ -7360,6 +7370,82 @@ router.post("/api/faculty", async (req, res) => {
   } catch (error) {
     console.error("Failed to create campus Faculty account.", error);
     return res.status(500).json({ error: "Failed to create the Faculty account." });
+  }
+});
+
+router.put("/api/faculty/:id", async (req, res) => {
+  try {
+    const context = await getAdminFacultyContext(req, res);
+    if (!context) return;
+
+    const facultyId = Number(req.params.id);
+    if (!Number.isSafeInteger(facultyId) || facultyId < 1) {
+      return res.status(400).json({ error: "Select a valid Faculty account." });
+    }
+
+    const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const college = String(req.body?.college || "").trim().toUpperCase();
+    if (!name || name.length > 120) {
+      return res.status(400).json({ error: "Enter the Faculty member’s full name (up to 120 characters)." });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 190) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
+    if (!FACULTY_COLLEGES.has(college)) {
+      return res.status(400).json({ error: "Select a valid college or institute." });
+    }
+
+    const faculty = await User.findOne({
+      where: {
+        id: facultyId,
+        campus: { [Op.in]: [context.campus, `${context.campus} Campus`] },
+        role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] }
+      }
+    });
+    if (!faculty) return res.status(404).json({ error: "Faculty account not found at your campus." });
+    const archivedFacultyIds = await getArchivedEntityIds("faculty-account");
+    if (archivedFacultyIds.includes(String(facultyId))) {
+      return res.status(409).json({ error: "This Faculty account is archived. Restore it before editing." });
+    }
+
+    const duplicate = await User.findOne({
+      where: { email, id: { [Op.ne]: facultyId } },
+      attributes: ["id"]
+    });
+    if (duplicate) return res.status(409).json({ error: "Another account already uses this email address." });
+
+    const previousName = faculty.name;
+    const previousEmail = faculty.email;
+    const previousCollege = faculty.college;
+    await faculty.update({ name, email, college });
+    await logAuditEntry(req, {
+      action: "Faculty Account Updated",
+      module: "User Management",
+      resourceId: faculty.id,
+      description: `Updated the Faculty account for ${previousName} at ${context.campus}.`
+    });
+
+    return res.json({
+      success: true,
+      faculty: {
+        id: faculty.id,
+        name: faculty.name,
+        email: faculty.email,
+        college: faculty.college,
+        campus: faculty.campus,
+        email_verified: faculty.email_verified,
+        createdAt: faculty.createdAt
+      },
+      changes: {
+        name: previousName !== faculty.name,
+        email: previousEmail !== faculty.email,
+        college: previousCollege !== faculty.college
+      }
+    });
+  } catch (error) {
+    console.error("Failed to update campus Faculty account.", error);
+    return res.status(500).json({ error: "Failed to update the Faculty account." });
   }
 });
 

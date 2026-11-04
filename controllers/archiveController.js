@@ -20,7 +20,8 @@ const entityTypes = new Set([
   "maintenance-report",
   "technician-report",
   "borrow-record",
-  "borrow-request"
+  "borrow-request",
+  "faculty-account"
 ]);
 const entityTypeAliases = new Map([
   ["schedule", "laboratory-schedule"],
@@ -104,6 +105,20 @@ async function findArchiveTarget(entityType, entityId) {
         id: String(lab.id),
         title: lab.name,
         details: [lab.roomNumber || "Room/location not specified", lab.campus].filter(Boolean).join(" · ")
+      };
+    }
+    case "faculty-account": {
+      const faculty = await User.findOne({
+        where: {
+          id: entityId,
+          role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] }
+        },
+        attributes: ["id", "name", "email", "college", "campus"]
+      });
+      return faculty && {
+        id: String(faculty.id),
+        title: faculty.name,
+        details: [faculty.email, faculty.college, faculty.campus].filter(Boolean).join(" · ")
       };
     }
     case "maintenance-report": {
@@ -240,6 +255,22 @@ export async function archiveRecord(req, res) {
         return res.status(403).json({ error: "Only the report owner or an administrator can archive technician reports." });
       }
       entityId = String(report.id);
+    } else if (entityType === "faculty-account") {
+      archiveStage = "authorizing the Faculty account archive";
+      if (!await requireAdmin(req, res)) return;
+      const admin = await User.findByPk(req.session.userId, { attributes: ["campus"] });
+      const faculty = await User.findOne({
+        where: {
+          id: entityId,
+          role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] }
+        },
+        attributes: ["id", "campus"]
+      });
+      if (!faculty) return res.status(404).json({ error: "Faculty account not found." });
+      const normalizeCampus = (campus) => String(campus || "").trim().replace(/\s*Campus\s*$/i, "").toLowerCase();
+      if (!normalizeCampus(admin?.campus) || normalizeCampus(admin.campus) !== normalizeCampus(faculty.campus)) {
+        return res.status(403).json({ error: "You can archive Faculty accounts only at your assigned campus." });
+      }
     } else if (entityType === "computer-lab") {
       archiveStage = "validating the computer lab";
       const labId = Number(entityId);
@@ -485,6 +516,7 @@ export async function restoreArchivedRecord(req, res) {
 
 const archivedEntityDeleteTargets = {
   equipment: { table: "equipment", column: "equipmentId", binary: true },
+  "faculty-account": { table: "users", column: "id" },
   "equipment-category": { table: "equipment_categories", column: "id" },
   "pc-set": { table: "equipment_sets", column: "setId", binary: true },
   "laboratory-schedule": { table: "laboratory_schedules", column: "id" },

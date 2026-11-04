@@ -6,7 +6,7 @@
     <title>ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=66">
+    <link rel="stylesheet" href="/css/sidebar.css?v=70">
     <style>
         :root {
             --primary: #052e1d;
@@ -1155,8 +1155,9 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=1">
 </head>
-<body class="app-shell student-portal system-layout-page">
+<body class="app-shell student-portal system-layout-page student-dashboard-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
@@ -1189,7 +1190,7 @@
                 <article class="summary-card dashboard-kpi-card pc-station">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Current PC Station</p>
+                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Station</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-current-pc-value>Loading...</h4>
                         <p class="dashboard-kpi-description" data-current-pc-description>Checking your assignment</p>
                     </div>
@@ -1197,7 +1198,7 @@
                 <article class="summary-card dashboard-kpi-card borrowed">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-box-open" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Active Borrowed Equipment</p>
+                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Borrowed Items</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-borrow-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-borrow-description>Checking borrowed items</p>
                     </div>
@@ -1213,7 +1214,7 @@
                 <article class="summary-card dashboard-kpi-card sessions">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Recent PC Sessions</p>
+                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Sessions</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-session-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-session-description>In the last 30 days</p>
                     </div>
@@ -1793,6 +1794,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=64" defer></script>
+    <script src="/js/sidebar-component.js?v=68" defer></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
   <title>Equipment Assignment | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/sidebar.css?v=70">
   <style>
     html,
     body {
@@ -1142,7 +1142,44 @@
         padding: .5rem .6rem;
       }
     }
+
+    @media (max-width: 767px) {
+      html,
+      body {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      body.admin-shell .assignment-container {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      body.admin-shell .assignment-content {
+        display: block;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      body.admin-shell .assignment-table-card {
+        display: block;
+        min-height: 0;
+      }
+
+      body.admin-shell .assignment-table-scroll {
+        height: auto;
+        min-height: 0;
+        max-height: 60vh;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
   </style>
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell admin-shell system-layout-page equipment-assignment-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -1269,7 +1306,7 @@
   </div>
 
   <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <script src="/js/sidebar-component.js?v=68" defer></script>
   <script>
     const state = { equipment: [], faculty: [], histories: new Set(), selectedEquipmentIds: new Set(), loading: false, bulkAssigning: false, currentPage: 1 };
     const rowsPerPage = 12;

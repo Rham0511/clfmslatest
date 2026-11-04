@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Profile | ComLab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/sidebar.css?v=70">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <style>
     body.admin-profile-page { min-height: 100vh; }
@@ -57,22 +57,23 @@
     html.theme-light body.admin-profile-page .admin-profile-role { border-color: #b8e4c7; background: #e7f7ec; }
     html.theme-light body.admin-profile-page .admin-profile-message { color: #08774f; }
     html.theme-light body.admin-profile-page .admin-profile-message[data-state="error"] { color: #b42332; }
-    html.theme-dark body.admin-profile-page .admin-profile-heading h1 { color: #f0fdf4; }
-    html.theme-dark body.admin-profile-page .admin-profile-heading p { color: #a7b7ad; }
-    html.theme-dark body.admin-profile-page .admin-profile-summary, html.theme-dark body.admin-profile-page .admin-profile-panels { border-color: rgba(74,222,128,.18); background: #0b2117; }
-    html.theme-dark body.admin-profile-page .admin-profile-summary { background: radial-gradient(circle at 50% 28%, rgba(16,128,78,.28), #0b2117 68%); }
-    html.theme-dark body.admin-profile-page .admin-profile-panel { border-color: rgba(74,222,128,.15); background: #081b12; }
-    html.theme-dark body.admin-profile-page .admin-profile-panel h2 { color: #d1fae5; }
-    html.theme-dark body.admin-profile-page .admin-profile-panel-intro, html.theme-dark body.admin-profile-page .admin-profile-summary-note, html.theme-dark body.admin-profile-page .admin-profile-security-note { color: #a8c7b2; }
-    html.theme-dark body.admin-profile-page .admin-profile-field label { color: #c2ddca; }
-    html.theme-dark body.admin-profile-page .admin-profile-field input { border-color: #315d43; background: #0e281b; color: #f0fdf4; }
-    html.theme-dark body.admin-profile-page .admin-profile-field input[readonly] { background: #112a1d; color: #bdd1c2; }
-    html.theme-dark body.admin-profile-page .admin-profile-name { color: #effcf3; }
-    html.theme-dark body.admin-profile-page .admin-profile-kicker { color: #6ee7b7; }
-    html.theme-dark body.admin-profile-page .admin-profile-role { border-color: #286647; background: #0d3524; color: #a7f3d0; }
-    html.theme-dark body.admin-profile-page .admin-profile-message { color: #a7f3d0; }
-    html.theme-dark body.admin-profile-page .admin-profile-message[data-state="error"] { color: #fda4af; }
+    html.dark body.admin-profile-page .admin-profile-heading h1 { color: #f0fdf4; }
+    html.dark body.admin-profile-page .admin-profile-heading p { color: #a7b7ad; }
+    html.dark body.admin-profile-page .admin-profile-summary, html.dark body.admin-profile-page .admin-profile-panels { border-color: rgba(74,222,128,.18); background: #0b2117; }
+    html.dark body.admin-profile-page .admin-profile-summary { background: radial-gradient(circle at 50% 28%, rgba(16,128,78,.28), #0b2117 68%); }
+    html.dark body.admin-profile-page .admin-profile-panel { border-color: rgba(74,222,128,.15); background: #081b12; }
+    html.dark body.admin-profile-page .admin-profile-panel h2 { color: #d1fae5; }
+    html.dark body.admin-profile-page .admin-profile-panel-intro, html.dark body.admin-profile-page .admin-profile-summary-note, html.dark body.admin-profile-page .admin-profile-security-note { color: #a8c7b2; }
+    html.dark body.admin-profile-page .admin-profile-field label { color: #c2ddca; }
+    html.dark body.admin-profile-page .admin-profile-field input { border-color: #315d43; background: #0e281b; color: #f0fdf4; }
+    html.dark body.admin-profile-page .admin-profile-field input[readonly] { background: #112a1d; color: #bdd1c2; }
+    html.dark body.admin-profile-page .admin-profile-name { color: #effcf3; }
+    html.dark body.admin-profile-page .admin-profile-kicker { color: #6ee7b7; }
+    html.dark body.admin-profile-page .admin-profile-role { border-color: #286647; background: #0d3524; color: #a7f3d0; }
+    html.dark body.admin-profile-page .admin-profile-message { color: #a7f3d0; }
+    html.dark body.admin-profile-page .admin-profile-message[data-state="error"] { color: #fda4af; }
   </style>
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell admin-shell system-layout-page admin-profile-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -234,6 +235,6 @@
       });
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <script src="/js/sidebar-component.js?v=68" defer></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Faculty Management | ComLab</title>
-  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/sidebar.css?v=70">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -152,6 +152,13 @@
     .faculty-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     .faculty-card { display: flex; min-width: 0; align-items: center; gap: .8rem; padding: .82rem; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 95%, var(--accent)), var(--surface)); transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
     .faculty-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 8%, transparent); }
+    .faculty-card-actions { display: flex; flex: none; }
+    .edit-faculty { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .7rem; border: 1px solid var(--line); color: var(--text); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); font-size: .78rem; }
+    .edit-faculty:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); color: var(--accent); }
+    .archive-faculty { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .7rem; border: 1px solid rgba(251, 191, 36, .3); color: #fbbf24; background: color-mix(in srgb, #fbbf24 8%, var(--surface)); font-size: .78rem; }
+    .archive-faculty:hover { border-color: #fbbf24; background: color-mix(in srgb, #fbbf24 14%, var(--surface)); }
+    .edit-faculty:focus-visible, .archive-faculty:focus-visible, .dialog-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .edit-faculty:disabled, .archive-faculty:disabled { opacity: .6; cursor: wait; }
     .avatar { display: grid; width: 2.65rem; height: 2.65rem; flex: none; place-items: center; border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent); border-radius: 14px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-size: .82rem; font-weight: 800; }
     .faculty-info { min-width: 0; flex: 1 1 auto; }
     .faculty-info strong, .faculty-info span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -161,6 +168,15 @@
     .faculty-info .faculty-meta i { color: var(--accent); font-size: .7rem; }
     .college-pill { display: inline-flex; flex: none; align-items: center; gap: .35rem; margin-left: auto; padding: .36rem .58rem; border: 1px solid var(--line); border-radius: 999px; color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); font-size: .7rem; font-weight: 800; white-space: nowrap; }
     .empty { padding: 1rem; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 75%, transparent); text-align: center; }
+    .edit-dialog { width: min(100% - 2rem, 30rem); padding: 1.35rem; border: 1px solid var(--line); border-radius: 18px; color: var(--text); background: var(--panel); box-shadow: 0 24px 70px #0008; }
+    .edit-dialog::backdrop { background: #0009; backdrop-filter: blur(3px); }
+    .edit-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .edit-dialog-header p { margin: .25rem 0 0; color: var(--muted); font-size: .84rem; line-height: 1.5; }
+    .dialog-close { display: grid; width: 2.3rem; height: 2.3rem; flex: none; place-items: center; padding: 0; border: 1px solid var(--line); color: var(--text); background: var(--surface); }
+    .edit-dialog-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1rem; }
+    .edit-dialog-actions button { min-width: 6rem; }
+    .edit-dialog-actions .primary { width: auto; margin-top: 0; }
+    .secondary { border: 1px solid var(--line); color: var(--text); background: var(--surface); }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 
     @media (max-width: 900px) {
@@ -177,11 +193,16 @@
       .faculty-card { gap: .6rem; padding: .7rem; }
       .faculty-info .faculty-meta { flex-direction: column; gap: .15rem; }
       .college-pill { padding: .3rem .42rem; font-size: .65rem; }
+      .edit-faculty { width: 2.3rem; height: 2.3rem; justify-content: center; padding: 0; font-size: 0; }
+      .edit-faculty i { font-size: .85rem; }
+      .archive-faculty { width: 2.3rem; height: 2.3rem; justify-content: center; padding: 0; font-size: 0; }
+      .archive-faculty i { font-size: .85rem; }
     }
     @media (prefers-reduced-motion: reduce) {
       .faculty-card, .primary, input, select { transition: none; }
     }
   </style>
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell system-layout-page faculty-management-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -222,6 +243,21 @@
       </div>
     </div>
   </main>
+  <dialog id="editFacultyDialog" class="edit-dialog" aria-labelledby="editFacultyTitle">
+    <form id="editFacultyForm" class="faculty-form">
+      <div class="edit-dialog-header">
+        <div><h2 id="editFacultyTitle">Edit Faculty Account</h2><p>Update this account’s name, email, or college.</p></div>
+        <button class="dialog-close" type="button" id="closeEditFaculty" aria-label="Close edit form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <input id="editFacultyId" name="id" type="hidden">
+      <label for="editFacultyName">Full name</label><input id="editFacultyName" name="name" maxlength="120" required>
+      <label for="editFacultyEmail">Email address</label><input id="editFacultyEmail" name="email" type="email" maxlength="190" required>
+      <label for="editFacultyCollege">College / institute</label>
+      <select id="editFacultyCollege" name="college" required><option value="">Select college / institute</option><option>IABE</option><option>CBM</option><option>CCS</option><option>CAS</option><option>CTE</option><option>CCJE</option><option>CAAF</option><option>IF</option><option>GS</option></select>
+      <p class="notice" id="editFacultyNotice" role="status" aria-live="polite"></p>
+      <div class="edit-dialog-actions"><button class="secondary" type="button" id="cancelEditFaculty">Cancel</button><button class="primary" type="submit" id="saveFacultyChanges">Save Changes</button></div>
+    </form>
+  </dialog>
   <script>
     (() => {
       const user = window.__CURRENT_USER__ || {};
@@ -229,10 +265,21 @@
       const list = document.getElementById('facultyList');
       const notice = document.getElementById('formNotice');
       const search = document.getElementById('facultySearch');
+      const editDialog = document.getElementById('editFacultyDialog');
+      const editForm = document.getElementById('editFacultyForm');
+      const editNotice = document.getElementById('editFacultyNotice');
       let faculty = [];
       document.getElementById('campusName').textContent = String(user.campus || 'No campus assigned').replace(/\s*Campus\s*$/i, '');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
       const setNotice = (message, type = '') => { notice.textContent = message; notice.className = `notice ${type}`; };
+      const readApiResponse = async (response) => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('json')) {
+          if (response.redirected) throw new Error('Your session may have expired. Sign in again and retry.');
+          throw new Error(`The server returned a webpage instead of API data (HTTP ${response.status}). Restart ComLab to load the latest Faculty edit route, then reload this page.`);
+        }
+        return response.json();
+      };
       const renderFaculty = () => {
         const query = search.value.trim().toLowerCase();
         const filtered = faculty.filter((person) => `${person.name} ${person.email} ${person.college}`.toLowerCase().includes(query));
@@ -245,17 +292,87 @@
         filtered.forEach((person) => {
           const card = document.createElement('article'); card.className = 'faculty-card';
           const initials = String(person.name || '').trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'FA';
-          card.innerHTML = `<span class="avatar" aria-hidden="true">${escapeHtml(initials)}</span><div class="faculty-info"><strong>${escapeHtml(person.name)}</strong><div class="faculty-meta"><span><i class="fa-regular fa-envelope" aria-hidden="true"></i>${escapeHtml(person.email)}</span><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${escapeHtml(person.campus)}</span></div></div><span class="college-pill"><i class="fa-solid fa-building-columns" aria-hidden="true"></i>${escapeHtml(person.college || 'Faculty')}</span>`;
+          card.innerHTML = `<span class="avatar" aria-hidden="true">${escapeHtml(initials)}</span><div class="faculty-info"><strong>${escapeHtml(person.name)}</strong><div class="faculty-meta"><span><i class="fa-regular fa-envelope" aria-hidden="true"></i>${escapeHtml(person.email)}</span><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${escapeHtml(person.campus)}</span></div></div><span class="college-pill"><i class="fa-solid fa-building-columns" aria-hidden="true"></i>${escapeHtml(person.college || 'Faculty')}</span><div class="faculty-card-actions"><button type="button" class="edit-faculty" data-faculty-id="${escapeHtml(person.id)}" aria-label="Edit ${escapeHtml(person.name)}"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit</button><button type="button" class="archive-faculty" data-faculty-id="${escapeHtml(person.id)}" aria-label="Archive ${escapeHtml(person.name)}"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Archive</button></div>`;
           list.append(card);
         });
       };
+      const openEditDialog = (person) => {
+        editForm.elements.id.value = person.id;
+        editForm.elements.name.value = person.name || '';
+        editForm.elements.email.value = person.email || '';
+        editForm.elements.college.value = person.college || '';
+        editNotice.textContent = '';
+        editNotice.className = 'notice';
+        editDialog.showModal();
+        editForm.elements.name.focus();
+      };
       const loadFaculty = async () => {
-        const response = await fetch('/api/faculty', { credentials: 'same-origin', cache: 'no-store' });
-        const payload = await response.json();
+        const response = await fetch('/api/faculty', { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' } });
+        const payload = await readApiResponse(response);
         if (!response.ok) throw new Error(payload.error || 'Unable to load faculty accounts.');
         faculty = Array.isArray(payload.faculty) ? payload.faculty : [];
         renderFaculty();
       };
+      list.addEventListener('click', (event) => {
+        const button = event.target.closest('.edit-faculty');
+        if (!button) return;
+        const person = faculty.find((item) => String(item.id) === button.dataset.facultyId);
+        if (person) openEditDialog(person);
+      });
+      list.addEventListener('click', async (event) => {
+        const button = event.target.closest('.archive-faculty');
+        if (!button) return;
+        const person = faculty.find((item) => String(item.id) === button.dataset.facultyId);
+        if (!person || !window.confirm(`Archive ${person.name}'s account? They will no longer be able to sign in. You can restore the account from Archived Records.`)) return;
+        button.disabled = true;
+        try {
+          const response = await fetch(`/api/archive/faculty-account/${encodeURIComponent(person.id)}`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+          });
+          const payload = await readApiResponse(response);
+          if (!response.ok) throw new Error(payload.error || 'Unable to archive Faculty account.');
+          await loadFaculty();
+          setNotice(`${person.name}’s account was archived. Restore it from Archived Records if needed.`, 'success');
+        } catch (error) {
+          setNotice(error.message, 'error');
+          button.disabled = false;
+        }
+      });
+      const closeEditDialog = () => editDialog.close();
+      document.getElementById('closeEditFaculty').addEventListener('click', closeEditDialog);
+      document.getElementById('cancelEditFaculty').addEventListener('click', closeEditDialog);
+      editForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const saveButton = document.getElementById('saveFacultyChanges');
+        saveButton.disabled = true;
+        editNotice.textContent = 'Saving changes…';
+        editNotice.className = 'notice';
+        try {
+          const facultyId = encodeURIComponent(editForm.elements.id.value);
+          const response = await fetch(`/api/faculty/${facultyId}`, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              name: editForm.elements.name.value,
+              email: editForm.elements.email.value,
+              college: editForm.elements.college.value
+            })
+          });
+          const payload = await readApiResponse(response);
+          if (!response.ok) throw new Error(payload.error || 'Unable to update Faculty account.');
+          await loadFaculty();
+          editDialog.close();
+          setNotice(`${payload.faculty.name}’s account was updated.`, 'success');
+        } catch (error) {
+          editNotice.textContent = error.message;
+          editNotice.className = 'notice error';
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
       search.addEventListener('input', renderFaculty);
       document.getElementById('togglePassword').addEventListener('click', (event) => {
         const input = document.getElementById('facultyPassword');
@@ -268,8 +385,8 @@
         event.preventDefault();
         const button = document.getElementById('createFaculty'); button.disabled = true; setNotice('Creating Faculty account…');
         try {
-          const response = await fetch('/api/faculty', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
-          const payload = await response.json();
+          const response = await fetch('/api/faculty', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+          const payload = await readApiResponse(response);
           if (!response.ok) throw new Error(payload.error || 'Unable to create Faculty account.');
           const password = form.elements.password.value;
           document.getElementById('temporaryPasswordValue').textContent = password;
@@ -288,6 +405,6 @@
       loadFaculty().catch((error) => { list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; document.getElementById('facultyCount').textContent = 'Unable to load accounts'; });
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <script src="/js/sidebar-component.js?v=68" defer></script>
 </body>
 </html>

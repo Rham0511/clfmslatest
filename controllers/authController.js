@@ -29,6 +29,7 @@ import { Op } from "sequelize";
 import fs from "fs";
 import path from "path";
 import { User } from "../models/userModel.js";
+import { isEntityArchived } from "../models/archiveRecords.js";
 import { logAuditEntry } from "./auditController.js";
 import { endUserStationSessions } from "./pcStationController.js";
 import crypto from 'crypto';
@@ -190,6 +191,13 @@ export const loginUser = async (req, res) => {
   const normalizedRole = normalizeUserRole(user.role);
   if (!normalizedRole) {
     req.flash("error_msg", "This account has an unsupported role. Please contact an administrator.");
+    return res.redirect("/login");
+  }
+  if (
+    ["faculty", "instructor"].includes(normalizedRole) &&
+    await isEntityArchived("faculty-account", user.id)
+  ) {
+    req.flash("error_msg", "This Faculty account is archived. Please contact an administrator.");
     return res.redirect("/login");
   }
   console.log("[LOGIN] Normalized role:", normalizedRole);

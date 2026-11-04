@@ -8,6 +8,7 @@
 
 import { Op } from "sequelize";
 import { User } from "../models/userModel.js";
+import { isEntityArchived } from "../models/archiveRecords.js";
 
 export const normalizeRoleName = (role) => String(role || "").trim().toLowerCase();
 
@@ -51,6 +52,13 @@ export const getUserAuthContext = async (req) => {
     } catch (error) {
       console.warn("[campusAuth] Failed to fetch user from DB:", error?.message || error);
     }
+  }
+
+  if (
+    ["faculty", "instructor"].includes(normalizeRoleName(role)) &&
+    await isEntityArchived("faculty-account", userId)
+  ) {
+    return { userId: null, campus: null, role: null };
   }
 
   return { userId, campus, role };

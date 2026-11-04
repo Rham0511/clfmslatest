@@ -1,0 +1,963 @@
+/* Shared mobile polish for the admin pages shown in the mobile UI. */
+@media (max-width: 767px) {
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) .main-container {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.comlab-slim-page-header, .borrow-page-header, .system-dashboard-heading) {
+    box-sizing: border-box !important;
+    min-height: 3.45rem !important;
+    height: 3.45rem !important;
+    padding: .4rem .8rem !important;
+    gap: .55rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(135deg, rgba(7, 35, 23, .98), rgba(4, 22, 15, .98)) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2) !important;
+    backdrop-filter: blur(16px) saturate(1.12);
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) .comlab-slim-page-header:not(#comlab-header-specificity) {
+    inset: 0 !important;
+    width: 100% !important;
+    z-index: 1100 !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) .comlab-page-header-spacer {
+    height: 3.45rem !important;
+    min-height: 3.45rem !important;
+    margin-bottom: .65rem !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.system-dashboard-heading-main, .header-left) {
+    display: flex !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    gap: .65rem !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.system-dashboard-heading-actions, .header-actions, .header-right) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .4rem !important;
+    margin-left: auto !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(#mobileMenuToggle, .menu-toggle, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    box-sizing: border-box !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    flex: 0 0 2.5rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(110, 231, 183, .23) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .64) !important;
+    color: #a7f3d0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+    line-height: 1 !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.system-profile-badge, .user-profile, .campus-chip) {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    border: 1px solid rgba(110, 231, 183, .23) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .48) !important;
+    box-shadow: none !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) .system-profile-badge-avatar {
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    flex-basis: 1.85rem !important;
+    border-radius: .58rem !important;
+    font-size: .7rem !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.comlab-page-heading-title, .borrow-page-header h1) {
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    color: #e5f7ec !important;
+    font-size: .98rem !important;
+    font-weight: 750 !important;
+    letter-spacing: -.015em !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.equipment-assignment-page .assignment-content {
+    padding: .7rem .75rem 1rem !important;
+  }
+
+  html body.app-shell.equipment-assignment-page :is(.assignment-controls, .assignment-bulk-controls, .assignment-table-card) {
+    border-radius: 1.15rem !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .14) !important;
+  }
+
+  html body.app-shell.equipment-assignment-page .assignment-controls {
+    gap: .75rem !important;
+    padding: .85rem !important;
+  }
+
+  html body.app-shell.equipment-assignment-page .assignment-toolbar-copy h2 {
+    font-size: clamp(1.2rem, 5.2vw, 1.55rem) !important;
+    line-height: 1.2 !important;
+  }
+
+  html body.app-shell.equipment-assignment-page .assignment-bulk-controls {
+    padding: .75rem !important;
+  }
+
+  html body.app-shell.equipment-assignment-page .assignment-table-scroll,
+  html body.app-shell.admin-borrow-equipment-page .table-wrap,
+  html body.app-shell.laboratory-schedules-page .schedule-calendar-scroll,
+  html body.app-shell.reports-page .report-table-shell {
+    max-width: 100% !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #318451 rgba(7, 25, 16, .9);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body.app-shell:is(.equipment-assignment-page, .admin-borrow-equipment-page, .laboratory-schedules-page, .reports-page)
+    :is(.assignment-table-scroll, .table-wrap, .schedule-calendar-scroll, .report-table-shell)::-webkit-scrollbar {
+    width: .55rem;
+    height: .55rem;
+  }
+
+  html body.app-shell:is(.equipment-assignment-page, .admin-borrow-equipment-page, .laboratory-schedules-page, .reports-page)
+    :is(.assignment-table-scroll, .table-wrap, .schedule-calendar-scroll, .report-table-shell)::-webkit-scrollbar-thumb {
+    border: 1px solid rgba(7, 25, 16, .9);
+    border-radius: 999px;
+    background: #318451;
+  }
+
+  html body.app-shell.faculty-management-page .main-container {
+    padding: .65rem .8rem 1rem !important;
+  }
+
+  html body.app-shell.faculty-management-page .page-wrap {
+    width: 100%;
+  }
+
+  html body.app-shell.faculty-management-page :is(.hero, .panel) {
+    border-radius: 1.2rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .14);
+  }
+
+  html body.app-shell.faculty-management-page .panel {
+    padding: 1rem !important;
+  }
+
+  html body.app-shell.faculty-management-page .faculty-form :is(input, select, .password-wrap) {
+    min-height: 3.1rem;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .main-container {
+    padding: .45rem .75rem 1rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header-spacer {
+    height: 3.45rem !important;
+    min-height: 3.45rem !important;
+    margin-bottom: .65rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .page-card {
+    border-radius: 1.2rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .page-panel {
+    padding: .8rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .summary-card {
+    border-radius: 1rem !important;
+  }
+
+  html body.app-shell.laboratory-schedules-page .main-container > .page-content {
+    padding: .55rem .7rem 1rem !important;
+  }
+
+  html body.app-shell.laboratory-schedules-page .schedule-manager-card {
+    padding: .9rem !important;
+    border-radius: 1.2rem !important;
+  }
+
+  html body.app-shell.laboratory-schedules-page .schedule-calendar-scroll {
+    border: 1px solid rgba(110, 231, 183, .16);
+    border-radius: .9rem;
+  }
+
+  html body.app-shell.reports-page .page-content {
+    gap: .7rem !important;
+    padding-top: .55rem !important;
+  }
+
+  html body.app-shell.reports-page .report-card-surface {
+    padding: .85rem !important;
+    border-radius: 1.2rem !important;
+  }
+
+  html.theme-light body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.comlab-slim-page-header, .borrow-page-header, .system-dashboard-heading) {
+    border-bottom-color: #d7e7dc !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(242, 249, 244, .98)) !important;
+    box-shadow: 0 8px 24px rgba(27, 74, 48, .1) !important;
+  }
+
+  html.theme-light body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button], #mobileMenuToggle, .menu-toggle) {
+    border-color: #d0e3d6 !important;
+    background: #f1f8f3 !important;
+    color: #17623a !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) :is(.system-profile-badge-copy, .user-info, .campus-chip > span) {
+    display: none !important;
+  }
+
+  html body.app-shell.faculty-management-page .faculty-header-actions .campus-chip {
+    max-width: 7rem;
+    gap: .3rem !important;
+    padding: .1rem .5rem !important;
+  }
+
+  html body.app-shell.faculty-management-page .campus-chip strong {
+    max-width: 4.3rem;
+    overflow: hidden;
+    font-size: .68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  html body.app-shell.faculty-management-page .campus-chip strong {
+    display: none !important;
+  }
+
+  html body.app-shell.faculty-management-page .faculty-header-actions .campus-chip {
+    width: 2.5rem;
+    justify-content: center;
+    padding: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) *,
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) *::before,
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page
+  ) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Mobile layout refinements for report review, archive, and profile screens. */
+@media (max-width: 767px) {
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page) .main-container {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.comlab-slim-page-header, .system-dashboard-heading) {
+    box-sizing: border-box !important;
+    min-height: 3.45rem !important;
+    height: 3.45rem !important;
+    padding: .4rem .8rem !important;
+    gap: .55rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(135deg, rgba(7, 35, 23, .98), rgba(4, 22, 15, .98)) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2) !important;
+    backdrop-filter: blur(16px) saturate(1.12);
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    .comlab-slim-page-header:not(#comlab-header-specificity) {
+    inset: 0 !important;
+    width: 100% !important;
+    z-index: 1100 !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    .comlab-page-header-spacer {
+    height: 3.45rem !important;
+    min-height: 3.45rem !important;
+    margin-bottom: .65rem !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.system-dashboard-heading-main, .header-left) {
+    display: flex !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    gap: .65rem !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.system-dashboard-heading-actions, .header-actions, .header-right) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .4rem !important;
+    margin-left: auto !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(#mobileMenuToggle, .menu-toggle, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    box-sizing: border-box !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    flex: 0 0 2.5rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(110, 231, 183, .23) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .64) !important;
+    color: #a7f3d0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+    line-height: 1 !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.system-profile-badge, .user-profile) {
+    box-sizing: border-box !important;
+    min-height: 2.5rem !important;
+    border: 1px solid rgba(110, 231, 183, .23) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .48) !important;
+    box-shadow: none !important;
+  }
+
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    .system-profile-badge-avatar {
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    flex-basis: 1.85rem !important;
+    border-radius: .58rem !important;
+    font-size: .7rem !important;
+  }
+
+  html body.app-shell.technician-accomplishments-page .main-container {
+    padding: .7rem .75rem 1rem !important;
+  }
+
+  html body.app-shell.technician-accomplishments-page .wrap {
+    max-width: none;
+  }
+
+  html body.app-shell.technician-accomplishments-page .panel {
+    padding: .85rem !important;
+    border-radius: 1.15rem;
+  }
+
+  html body.app-shell.technician-accomplishments-page .toolbar {
+    display: block;
+  }
+
+  html body.app-shell.technician-accomplishments-page .toolbar > div:first-child {
+    margin-bottom: .65rem;
+  }
+
+  html body.app-shell.technician-accomplishments-page .filters {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.8rem;
+    flex: none;
+    gap: .45rem;
+  }
+
+  html body.app-shell.technician-accomplishments-page .filters .search-field {
+    min-width: 0;
+    grid-column: 1 / -1;
+  }
+
+  html body.app-shell.technician-accomplishments-page .filter-field {
+    min-width: 0;
+  }
+
+  html body.app-shell.technician-accomplishments-page .refresh-button {
+    width: 2.8rem;
+    height: 2.8rem;
+    align-self: end;
+  }
+
+  html body.app-shell.technician-accomplishments-page .report {
+    padding: .8rem;
+    border-radius: .9rem;
+  }
+
+  html body.app-shell.archived-records-page .page-content {
+    padding: .45rem .7rem 1rem !important;
+  }
+
+  html body.app-shell.archived-records-page .archive-page-actions {
+    justify-content: flex-start;
+    margin: 0 0 .55rem;
+  }
+
+  html body.app-shell.archived-records-page .archive-back-link {
+    min-height: 2.65rem;
+    border-radius: .8rem;
+    padding: .55rem .85rem;
+    box-shadow: 0 8px 18px rgba(22, 163, 74, .16);
+  }
+
+  html body.app-shell.archived-records-page .archived-records-panel {
+    border-radius: 1.15rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .14);
+  }
+
+  html body.app-shell.archived-records-page .archive-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .6rem;
+    padding: .75rem;
+  }
+
+  html body.app-shell.archived-records-page .archive-toolbar-copy {
+    min-width: 0;
+    margin: 0;
+  }
+
+  html body.app-shell.archived-records-page .archive-select-all {
+    justify-self: end;
+  }
+
+  html body.app-shell.archived-records-page .archive-search-wrap {
+    min-width: 0;
+    grid-column: 1 / -1;
+  }
+
+  html body.app-shell.archived-records-page .archive-actions {
+    display: grid;
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+  }
+
+  html body.app-shell.archived-records-page .archive-action-button {
+    min-width: 0;
+    min-height: 2.75rem;
+    gap: .32rem;
+    padding: .45rem .5rem;
+    border-radius: .75rem;
+    font-size: .72rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  html body.app-shell.archived-records-page .archive-table-wrap {
+    max-width: 100%;
+    overflow: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-content {
+    padding: .55rem .75rem 1rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-heading {
+    align-items: center !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-heading .system-dashboard-heading-main > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-heading h1 {
+    min-width: 0;
+    overflow: hidden;
+    font-size: .98rem !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-heading p {
+    display: none !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-layout {
+    gap: .75rem;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-summary {
+    min-height: 0;
+    padding: 1rem .85rem;
+    border-radius: 1.15rem;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-avatar {
+    width: 4.75rem;
+    height: 4.75rem;
+    margin: .3rem 0 .65rem;
+    font-size: 1.4rem;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-summary-note {
+    margin-top: .65rem;
+    font-size: .78rem;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-panels {
+    gap: .7rem;
+    padding: .75rem;
+    border-radius: 1.15rem;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-panel {
+    padding: .85rem;
+    border-radius: .9rem;
+  }
+
+  html.theme-light body.app-shell.admin-profile-page .main-container.theme-light .admin-profile-field input {
+    border-color: #c7d8cc !important;
+    background: #fff !important;
+    color: #17281d !important;
+  }
+
+  html.theme-light body.app-shell.admin-profile-page .main-container.theme-light .admin-profile-field input[readonly] {
+    background: #f2f7f3 !important;
+    color: #52685a !important;
+  }
+
+  html.theme-dark body.app-shell.admin-profile-page .main-container.theme-dark .admin-profile-field input {
+    border-color: #315d43 !important;
+    background: #0e281b !important;
+    color: #f0fdf4 !important;
+  }
+
+  html.theme-dark body.app-shell.admin-profile-page .main-container.theme-dark .admin-profile-field input[readonly] {
+    background: #112a1d !important;
+    color: #bdd1c2 !important;
+  }
+
+  html.theme-light body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.comlab-slim-page-header, .system-dashboard-heading) {
+    border-bottom-color: #d7e7dc !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(242, 249, 244, .98)) !important;
+    box-shadow: 0 8px 24px rgba(27, 74, 48, .1) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body.app-shell:is(.technician-accomplishments-page, .archived-records-page, .admin-profile-page)
+    :is(.system-profile-badge-copy, .user-info) {
+    display: none !important;
+  }
+}
+
+/* Align the mobile toolbar and profile surfaces with the app's actual theme state. */
+@media (max-width: 767px) {
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header {
+    position: fixed !important;
+    inset: env(safe-area-inset-top, 0px) 0 auto 0 !important;
+    display: flex !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 3.2rem !important;
+    min-height: 3.2rem !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .5rem !important;
+    padding: .35rem .65rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .22) !important;
+    border-radius: 0 !important;
+    background: rgba(5, 28, 19, .97) !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .2) !important;
+    backdrop-filter: blur(16px) saturate(1.12);
+    z-index: 1201 !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-page-header-spacer {
+    height: calc(3.2rem + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(3.2rem + env(safe-area-inset-top, 0px)) !important;
+    margin-bottom: .65rem !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header :is(.system-dashboard-heading-main, .header-left) {
+    display: flex !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: .55rem !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header :is(.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .35rem !important;
+    margin-left: auto !important;
+  }
+
+  html body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header :is(#mobileMenuToggle, .menu-toggle, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    position: static !important;
+    inset: auto !important;
+    box-sizing: border-box !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    flex: 0 0 2.35rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: .72rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .comlab-slim-page-header h1 {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    font-size: .92rem !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.admin-profile-page .comlab-slim-page-header p {
+    display: none !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-content {
+    padding: .65rem .75rem 1.25rem !important;
+  }
+
+  html.theme-light body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header {
+    border-bottom-color: #d7e7dc !important;
+    background: rgba(255, 255, 255, .97) !important;
+  }
+
+  html.theme-light body.app-shell:is(
+    .equipment-assignment-page,
+    .faculty-management-page,
+    .admin-borrow-equipment-page,
+    .laboratory-schedules-page,
+    .reports-page,
+    .technician-accomplishments-page,
+    .archived-records-page,
+    .admin-profile-page
+  ) .comlab-slim-page-header :is(h1, .comlab-page-heading-title) {
+    color: #173b2a !important;
+  }
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-summary,
+html.dark body.app-shell.admin-profile-page .admin-profile-panels,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-summary,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-panels {
+  border-color: rgba(110, 231, 183, .18) !important;
+  background-color: #0b2117 !important;
+  color: #e7f5ec !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, .18) !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-summary,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-summary {
+  background-image: radial-gradient(circle at 50% 20%, rgba(29, 134, 82, .24), #0b2117 72%) !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-panel,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-panel {
+  border-color: rgba(110, 231, 183, .15) !important;
+  background: #0e281b !important;
+  color: #e7f5ec !important;
+}
+
+html.dark body.app-shell.admin-profile-page :is(.admin-profile-name, .admin-profile-panel h2),
+html body.app-shell.admin-profile-page #mainContainer.theme-dark :is(.admin-profile-name, .admin-profile-panel h2) {
+  color: #e7f5ec !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-kicker,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-kicker {
+  color: #6ee7b7 !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-role,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-role {
+  border-color: #286647 !important;
+  background: #0d3524 !important;
+  color: #a7f3d0 !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-panel h2 i,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-panel h2 i {
+  color: #4ade80 !important;
+}
+
+html.dark body.app-shell.admin-profile-page :is(.admin-profile-summary-note, .admin-profile-panel-intro, .admin-profile-security-note),
+html body.app-shell.admin-profile-page #mainContainer.theme-dark :is(.admin-profile-summary-note, .admin-profile-panel-intro, .admin-profile-security-note) {
+  color: #a8c7b2 !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-field label,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-field label {
+  color: #c2ddca !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-field input,
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-field input {
+  border-color: #315d43 !important;
+  background: #081b12 !important;
+  color: #f0fdf4 !important;
+}
+
+html.dark body.app-shell.admin-profile-page .admin-profile-field input[readonly],
+html body.app-shell.admin-profile-page #mainContainer.theme-dark .admin-profile-field input[readonly] {
+  background: #10271b !important;
+  color: #bdd1c2 !important;
+}
+
+html.theme-light body.app-shell.admin-profile-page .admin-profile-summary,
+html.theme-light body.app-shell.admin-profile-page .admin-profile-panels,
+html body.app-shell.admin-profile-page #mainContainer.theme-light .admin-profile-summary,
+html body.app-shell.admin-profile-page #mainContainer.theme-light .admin-profile-panels {
+  border-color: #cfe0d4 !important;
+  background-color: #f7faf8 !important;
+  color: #17281d !important;
+}
+
+html.theme-light body.app-shell.admin-profile-page .admin-profile-panel,
+html body.app-shell.admin-profile-page #mainContainer.theme-light .admin-profile-panel {
+  border-color: #d8e6dc !important;
+  background: #fff !important;
+  color: #17281d !important;
+}
+
+@media (max-width: 767px) {
+  html body.app-shell.admin-profile-page .admin-profile-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: .75rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-summary {
+    min-height: 0 !important;
+    padding: 1.1rem .95rem !important;
+    border-radius: 1.1rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-panels {
+    gap: .7rem !important;
+    padding: .7rem !important;
+    border-radius: 1.1rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-panel {
+    padding: .9rem !important;
+    border-radius: .9rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-field-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: .7rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-field input {
+    min-height: 3rem !important;
+  }
+
+  html body.app-shell.admin-profile-page .admin-profile-submit {
+    min-height: 2.8rem !important;
+  }
+}

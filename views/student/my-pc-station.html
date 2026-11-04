@@ -6,7 +6,7 @@
     <title>My PC Station | ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=66">
+    <link rel="stylesheet" href="/css/sidebar.css?v=70">
     <style>
         :root {
             --accent: #22C55E;
@@ -129,149 +129,138 @@
             font-size: 0.98rem;
         }
 
-        .current-pc-card {
-            position: relative;
-            overflow: hidden;
-            border: 2px solid var(--border);
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(34, 197, 94, 0.1));
-            padding: 2rem;
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .current-pc-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent 45%);
-            pointer-events: none;
-        }
-
-        .current-pc-icon {
-            width: 4rem;
-            height: 4rem;
+        .pc-session-heading {
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 1rem;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(34, 197, 94, 0.2));
-            color: #93c5fd;
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            justify-content: space-between;
+            gap: .8rem;
+            margin-bottom: .85rem;
         }
 
-        .pc-info-grid {
+        .pc-scan-copy {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            min-width: 0;
+        }
+
+        .pc-scan-icon {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
+            width: 2.8rem;
+            height: 2.8rem;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid rgba(74, 222, 128, .22);
+            border-radius: .85rem;
+            background: rgba(16, 185, 129, .12);
+            color: #6ee7b7;
+            font-size: 1.2rem;
         }
 
-        .pc-info-item {
+        .pc-scan-copy h2 {
+            margin: 0;
+            color: #e8f7ee;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .pc-scan-copy p {
+            margin: .2rem 0 0;
+            color: #a7c2b2;
+            font-size: .78rem;
+            line-height: 1.45;
+        }
+
+        .pc-session-list {
+            display: grid;
+            gap: .6rem;
+        }
+
+        .pc-session-item,
+        .pc-session-empty {
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .pc-info-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
-        .pc-info-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
-            box-shadow: 0 10px 24px rgba(6,64,43,.16);
-            color: #fff;
-            padding: 0.875rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
+            gap: .8rem;
+            padding: .8rem .9rem;
+            border: 1px solid rgba(74, 222, 128, .16);
+            border-radius: .9rem;
+            background: rgba(3, 20, 13, .42);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 28px rgba(34, 197, 94, 0.4);
+        .pc-session-item-copy {
+            display: grid;
+            min-width: 0;
+            gap: .14rem;
         }
 
-        .btn-secondary {
-            background: rgba(148, 163, 184, 0.1);
-            border: 1px solid rgba(148, 163, 184, 0.3);
-            color: #cbd5e1;
-            padding: 0.875rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .pc-session-item-copy strong {
+            color: #e8f7ee;
+            font-size: .94rem;
+        }
+
+        .pc-session-item-copy span {
+            color: #a7c2b2;
+            font-size: .74rem;
+            line-height: 1.4;
+        }
+
+        .pc-session-empty {
+            justify-content: flex-start;
+            color: #a7c2b2;
+            font-size: .82rem;
+            line-height: 1.5;
+        }
+
+        .pc-session-empty i { color: #6ee7b7; }
+
+        .pc-session-logout {
             display: inline-flex;
+            flex: 0 0 auto;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: .4rem;
+            min-height: 2.4rem;
+            padding: .5rem .75rem;
+            border: 1px solid rgba(251, 191, 36, .3);
+            border-radius: .75rem;
+            background: rgba(245, 158, 11, .1);
+            color: #fcd34d;
+            font-size: .76rem;
+            font-weight: 750;
+            cursor: pointer;
         }
 
-        .btn-secondary:hover {
-            background: rgba(148, 163, 184, 0.15);
-            border-color: rgba(148, 163, 184, 0.4);
-        }
+        .pc-session-logout:disabled { cursor: wait; opacity: .65; }
 
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        .pc-session-feedback {
+            min-height: 1.15rem;
+            margin-top: .45rem;
             color: #fca5a5;
-            padding: 0.875rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            font-size: .76rem;
+        }
+
+        .pc-logs-link {
             display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.25);
-            border-color: rgba(239, 68, 68, 0.5);
-        }
-
-        .no-pc-card {
-            display: flex;
-            flex-direction: column;
+            flex: 0 0 auto;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
-            padding: 3rem 2rem;
-            border-radius: 1.5rem;
-            border: 2px dashed rgba(74,222,128,.2);
-            background: rgba(2, 6, 23,.95);
-            text-align: center;
+            gap: .5rem;
+            min-height: 2.65rem;
+            padding: .65rem .9rem;
+            border: 1px solid rgba(74, 222, 128, .28);
+            border-radius: .8rem;
+            background: rgba(34, 197, 94, .12);
+            color: #a7f3d0;
+            font-size: .82rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background .18s ease, border-color .18s ease;
         }
 
-        .no-pc-icon {
-            width: 4rem;
-            height: 4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 1rem;
-            background: rgba(16, 185, 129, 0.14);
-            color: #bbf7d0;
-            font-size: 2rem;
+        .pc-logs-link:hover {
+            border-color: rgba(74, 222, 128, .5);
+            background: rgba(34, 197, 94, .2);
         }
 
         .usage-history-table {
@@ -318,272 +307,6 @@
             display: none;
         }
 
-        /* PC Seat Selector Modal Styles */
-        .pc-selector-backdrop {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(8px);
-            z-index: 9999;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .pc-selector-backdrop.open {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .pc-selector-modal {
-            width: min(1100px, 100%);
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: 1.5rem;
-            background: linear-gradient(180deg, rgba(7, 17, 31,.98), rgba(2, 6, 23,.98));
-            border: 1px solid rgba(74, 222, 128, 0.3);
-            box-shadow: 0 30px 80px rgba(2, 8, 23, 0.6);
-            animation: slideUp 0.3s ease;
-        }
-
-        .pc-selector-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(74, 222, 128, 0.15);
-            background: rgba(34, 197, 94, 0.05);
-        }
-
-        .pc-selector-header h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #f8fafc;
-            margin: 0;
-        }
-
-        .pc-selector-close {
-            width: 2.5rem;
-            height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.75rem;
-            border: 1px solid rgba(74, 222, 128, 0.2);
-            background: rgba(2, 6, 23, 0.8);
-            color: #bbf7d0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .pc-selector-close:hover {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-
-        .pc-selector-body {
-            padding: 1.5rem;
-        }
-
-        .pc-selector-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 1rem;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            margin-bottom: 1.5rem;
-        }
-
-        .pc-selector-info i {
-            font-size: 1.5rem;
-            color: #93c5fd;
-        }
-
-        .pc-selector-info-text h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #f8fafc;
-            margin: 0 0 0.25rem 0;
-        }
-
-        .pc-selector-info-text p {
-            font-size: 0.875rem;
-            color: #cbd5e1;
-            margin: 0;
-        }
-
-        .pc-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            border-radius: 1rem;
-            background: rgba(7, 17, 31, 0.5);
-            border: 1px solid rgba(74, 222, 128, 0.1);
-        }
-
-        .pc-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: #cbd5e1;
-        }
-
-        .pc-legend-box {
-            width: 2rem;
-            height: 2rem;
-            border-radius: 0.5rem;
-            border: 2px solid;
-        }
-
-        .pc-legend-box.available {
-            background: rgba(34, 197, 94, 0.15);
-            border-color: rgba(34, 197, 94, 0.4);
-        }
-
-        .pc-legend-box.occupied {
-            background: rgba(148, 163, 184, 0.15);
-            border-color: rgba(148, 163, 184, 0.4);
-        }
-
-        .pc-legend-box.selected {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.6);
-        }
-
-        .pc-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        @media (max-width: 640px) {
-            .pc-grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-                gap: 0.5rem;
-            }
-        }
-
-        .pc-seat {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.25rem;
-            border-radius: 0.75rem;
-            border: 2px solid;
-            background: rgba(7, 17, 31, 0.6);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .pc-seat.available {
-            border-color: rgba(34, 197, 94, 0.4);
-            background: rgba(34, 197, 94, 0.08);
-        }
-
-        .pc-seat.available:hover {
-            border-color: rgba(34, 197, 94, 0.7);
-            background: rgba(34, 197, 94, 0.15);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
-        }
-
-        .pc-seat.occupied {
-            border-color: rgba(148, 163, 184, 0.3);
-            background: rgba(148, 163, 184, 0.08);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .pc-seat.selected {
-            border-color: rgba(59, 130, 246, 0.8);
-            background: rgba(59, 130, 246, 0.2);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .pc-seat-icon {
-            font-size: 1.5rem;
-        }
-
-        .pc-seat.available .pc-seat-icon {
-            color: #86efac;
-        }
-
-        .pc-seat.occupied .pc-seat-icon {
-            color: #94a3b8;
-        }
-
-        .pc-seat.selected .pc-seat-icon {
-            color: #93c5fd;
-        }
-
-        .pc-seat-number {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-
-        .pc-seat-label {
-            font-size: 0.625rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .pc-selector-actions {
-            display: flex;
-            gap: 0.75rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(74, 222, 128, 0.15);
-        }
-
-        .pc-selector-actions button {
-            flex: 1;
-        }
-
-        .pc-loading {
-            text-align: center;
-            padding: 2rem;
-            color: #94a3b8;
-        }
-
-        .pc-loading i {
-            font-size: 2rem;
-            color: #86efac;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
         .pc-error {
             padding: 1rem;
             border-radius: 0.75rem;
@@ -619,51 +342,26 @@
                 padding: 0.75rem !important;
             }
 
-            body.student-portal #currentPCSection,
-            body.student-portal #currentPCSection + section {
+            body.student-portal #pcScanInfo,
+            body.student-portal #pcScanInfo + section {
                 border-radius: 1.25rem;
                 padding: 1rem !important;
             }
 
-            .no-pc-card {
-                gap: 0.8rem;
-                padding: 1.75rem 1rem;
-                border-radius: 1.1rem;
+            .pc-session-heading {
+                align-items: flex-start;
             }
 
-            .no-pc-card p {
-                max-width: 28ch;
-                line-height: 1.55;
+            .pc-scan-copy { gap: .65rem; }
+            .pc-scan-icon { width: 2.4rem; height: 2.4rem; }
+            .pc-scan-copy h2 { font-size: 1rem; }
+
+            .pc-session-item {
+                align-items: flex-start;
+                flex-direction: column;
             }
 
-            .current-pc-card {
-                padding: 1.25rem;
-                border-radius: 1.2rem;
-            }
-
-            .current-pc-card h3 {
-                font-size: 1.35rem;
-            }
-
-            .pc-info-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 0.85rem;
-                margin-top: 1.1rem;
-            }
-
-            .pc-info-value {
-                font-size: 1rem;
-                overflow-wrap: anywhere;
-            }
-
-            .current-pc-card > div[style*="display: flex"] {
-                flex-wrap: wrap;
-            }
-
-            .current-pc-card > div[style*="display: flex"] button {
-                flex: 1 1 100%;
-                justify-content: center;
-            }
+            .pc-session-logout { width: 100%; }
 
             .usage-history-table,
             .usage-history-table tbody {
@@ -760,13 +458,13 @@
                 letter-spacing: 0.08em;
             }
 
-            body.student-portal.pc-station-page #currentPCSection,
-            body.student-portal.pc-station-page #currentPCSection + section {
+            body.student-portal.pc-station-page #pcScanInfo,
+            body.student-portal.pc-station-page #pcScanInfo + section {
                 padding: 0.9rem !important;
                 border-radius: 1.1rem;
             }
 
-            body.student-portal.pc-station-page #currentPCSection + section h2 {
+            body.student-portal.pc-station-page #pcScanInfo + section h2 {
                 margin-bottom: 0.8rem;
                 font-size: 1.15rem;
             }
@@ -832,11 +530,11 @@
     }
 
     @media (max-width: 640px) {
-        body.student-portal.pc-station-page #currentPCSection + section {
+        body.student-portal.pc-station-page #pcScanInfo + section {
             padding: 0.8rem !important;
         }
 
-        body.student-portal.pc-station-page #currentPCSection + section h2 {
+        body.student-portal.pc-station-page #pcScanInfo + section h2 {
             margin-bottom: 0.65rem !important;
             font-size: 1.05rem !important;
             line-height: 1.25;
@@ -904,6 +602,7 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=9">
 </head>
 <body class="app-shell student-portal system-layout-page pc-station-page">
     <div id="shared-sidebar"></div>
@@ -927,14 +626,24 @@
         </header>
 
         <main class="mx-auto flex w-full max-w-screen-2xl flex-col gap-4 px-3 py-3 md:px-4 md:py-4">
-            <!-- Current PC Assignment Section -->
-            <section id="currentPCSection" class="glass-card rounded-[1.5rem] p-4 md:p-5">
-                <div id="currentPCContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-4xl text-green-400"></i>
-                        <p class="mt-4 text-gray-400">Loading your PC assignment...</p>
+            <section id="pcScanInfo" class="glass-card rounded-[1.5rem] p-4 md:p-5" aria-labelledby="pcScanInfoTitle">
+                <div class="pc-session-heading">
+                    <div class="pc-scan-copy">
+                        <span class="pc-scan-icon" aria-hidden="true"><i class="fas fa-desktop"></i></span>
+                        <div>
+                            <h2 id="pcScanInfoTitle">My PC Station</h2>
+                            <p>Active QR sign-ins appear here. Scan the station QR again or sign out below when you finish.</p>
+                        </div>
                     </div>
+                    <a class="pc-logs-link" href="/student-audit-history">
+                        <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+                        View PC Logs
+                    </a>
                 </div>
+                <div id="activePCSessionContainer" aria-live="polite">
+                    <div class="pc-session-empty"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Checking your active PC station…</div>
+                </div>
+                <div id="pcSessionFeedback" class="pc-session-feedback" role="status" aria-live="polite"></div>
             </section>
 
             <!-- Usage History Section -->
@@ -952,62 +661,8 @@
         </main>
     </div>
 
-    <!-- PC Seat Selector Modal -->
-    <div class="pc-selector-backdrop" id="pcSelectorModal">
-        <div class="pc-selector-modal">
-            <div class="pc-selector-header">
-                <h3><i class="fas fa-desktop mr-2"></i>Select Your PC Station</h3>
-                <div class="pc-selector-close" onclick="closePCSelector()">
-                    <i class="fas fa-times"></i>
-                </div>
-            </div>
-            <div class="pc-selector-body">
-                <div class="pc-selector-info">
-                    <i class="fas fa-info-circle"></i>
-                    <div class="pc-selector-info-text">
-                        <h4>Choose Your Workstation</h4>
-                        <p>Select an available PC from the grid below. Green stations are available, gray stations are occupied.</p>
-                    </div>
-                </div>
-
-                <div class="pc-legend">
-                    <div class="pc-legend-item">
-                        <div class="pc-legend-box available"></div>
-                        <span>Available</span>
-                    </div>
-                    <div class="pc-legend-item">
-                        <div class="pc-legend-box occupied"></div>
-                        <span>Occupied</span>
-                    </div>
-                    <div class="pc-legend-item">
-                        <div class="pc-legend-box selected"></div>
-                        <span>Selected</span>
-                    </div>
-                </div>
-
-                <div id="pcGridContainer">
-                    <div class="pc-loading">
-                        <i class="fas fa-spinner"></i>
-                        <p>Loading PC stations...</p>
-                    </div>
-                </div>
-
-                <div class="pc-selector-actions">
-                    <button class="btn-secondary" onclick="closePCSelector()">Cancel</button>
-                    <button class="btn-primary" id="confirmSeatBtn" disabled onclick="confirmPCSelection()">
-                        Confirm Selection
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
-
-        let pcStations = [];
-        let selectedPC = null;
-        let currentAssignment = null;
 
         async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
             const controller = new AbortController();
@@ -1019,294 +674,80 @@
             }
         }
 
-        // PC Selector Functions
-        function openPCSelector() {
-            selectedPC = null;
-            
-            const modal = document.getElementById('pcSelectorModal');
-            modal.classList.add('open');
-            
-            fetchPCStations();
-        }
-
-        function closePCSelector() {
-            const modal = document.getElementById('pcSelectorModal');
-            modal.classList.remove('open');
-            selectedPC = null;
-        }
-
-        async function fetchPCStations() {
-            const container = document.getElementById('pcGridContainer');
-            
-            try {
-                console.log('Fetching all PC stations...');
-                
-                const user = window.__CURRENT_USER__ || {};
-                const params = new URLSearchParams();
-                if (user.campus) params.set('campus', user.campus);
-                const response = await fetch(`/api/equipment/pc-availability?${params.toString()}`);
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API Error:', errorText);
-                    throw new Error(`Failed to load PC stations: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('PC stations data:', data);
-                console.log('Number of stations:', data.stations?.length || 0);
-                
-                pcStations = data.stations || [];
-                
-                if (pcStations.length === 0) {
-                    console.warn('No PC stations returned from API');
-                }
-                
-                renderPCGrid();
-            } catch (error) {
-                console.error('Error fetching PC stations:', error);
-                container.innerHTML = `
-                    <div class="pc-error">
-                        <i class="fas fa-exclamation-triangle mb-2"></i>
-                        <p>Unable to load PC stations.</p>
-                        <p class="text-xs mt-2">Error: ${error.message}</p>
-                        <button onclick="fetchPCStations()" class="mt-3 px-4 py-2 bg-green-600 rounded">
-                            Retry
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        function renderPCGrid() {
-            const container = document.getElementById('pcGridContainer');
-            
-            if (!pcStations.length) {
-                container.innerHTML = `
-                    <div class="no-pc-card">
-                        <div class="no-pc-icon"><i class="fas fa-desktop"></i></div>
-                        <h4 class="text-lg font-semibold text-white">No PC stations available</h4>
-                        <p>Please contact your instructor or lab administrator.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const gridHTML = `
-                <div class="pc-grid-container">
-                    ${pcStations.map(pc => `
-                        <div class="pc-seat ${pc.isOccupied ? 'occupied' : 'available'}" 
-                             data-pc-id="${pc.id}"
-                             onclick="selectPC(${pc.id}, ${pc.isOccupied})">
-                            <i class="fas fa-desktop pc-seat-icon"></i>
-                            <div class="pc-seat-number">${escapeHistoryText(pc.setId || `PC ${pc.stationNumber}`)}</div>
-                            <div class="pc-seat-label">${pc.isOccupied ? 'In Use' : 'Free'}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            container.innerHTML = gridHTML;
-        }
-
-        function selectPC(pcId, isOccupied) {
-            if (isOccupied) return;
-
-            document.querySelectorAll('.pc-seat').forEach(seat => {
-                seat.classList.remove('selected');
-            });
-
-            const selectedSeat = document.querySelector(`[data-pc-id="${pcId}"]`);
-            if (selectedSeat) {
-                selectedSeat.classList.add('selected');
-                selectedPC = pcStations.find(pc => pc.id === pcId);
-                
-                document.getElementById('confirmSeatBtn').disabled = false;
-            }
-        }
-
-        async function confirmPCSelection() {
-            if (!selectedPC) {
-                alert('Please select a PC station');
-                return;
-            }
-
-            const confirmBtn = document.getElementById('confirmSeatBtn');
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Confirming...';
+        async function loadMyPCStationSessions() {
+            const container = document.getElementById('activePCSessionContainer');
+            if (!container) return;
 
             try {
-                const user = window.__CURRENT_USER__ || {};
-                
-                const response = await fetch('/api/equipment/assign-pc', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        equipmentId: selectedPC.id,
-                        userId: user.id,
-                        campus: user.campus || selectedPC.campus,
-                        laboratory: selectedPC.laboratoryRoom
-                    })
+                const response = await fetchWithTimeout('/api/pc-stations/my-sessions', {
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' }
                 });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Unable to load your active PC station.');
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to assign PC');
+                const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+                if (!sessions.length) {
+                    container.innerHTML = `
+                        <div class="pc-session-empty">
+                            <i class="fas fa-qrcode" aria-hidden="true"></i>
+                            <span>Not signed in at a PC station. Scan the QR code at your workstation to start a session.</span>
+                        </div>`;
+                    return;
                 }
 
-                const result = await response.json();
-                
-                alert(`Successfully assigned to PC ${selectedPC.stationNumber}!`);
-                
-                closePCSelector();
-                
-                await loadCurrentAssignment();
-                
-            } catch (error) {
-                console.error('Error confirming PC selection:', error);
-                alert(error.message || 'Failed to assign PC. Please try again.');
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = 'Confirm Selection';
-            }
-        }
-
-        // Current Assignment Functions
-        async function loadCurrentAssignment() {
-            const container = document.getElementById('currentPCContainer');
-            
-            try {
-                const user = window.__CURRENT_USER__ || {};
-                if (!user.id) {
-                    throw new Error('User not logged in');
-                }
-
-                const response = await fetchWithTimeout(`/api/equipment/current-assignment/${user.id}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load assignment');
-                }
-
-                const data = await response.json();
-                
-                if (data.hasAssignment) {
-                    currentAssignment = data.assignment;
-                    renderCurrentAssignment(data.assignment);
-                } else {
-                    renderNoAssignment();
-                }
-            } catch (error) {
-                console.error('Error loading assignment:', error);
-                container.innerHTML = `
-                    <div class="pc-error">
-                        <i class="fas fa-exclamation-triangle mb-2"></i>
-                        <p>Unable to load your PC assignment. Please try again.</p>
-                    </div>
-                `;
-            }
-        }
-
-        function renderCurrentAssignment(assignment) {
-            const container = document.getElementById('currentPCContainer');
-            const duration = assignment.durationMinutes || 0;
-            const hours = Math.floor(duration / 60);
-            const minutes = duration % 60;
-            
-            container.innerHTML = `
-                <div class="current-pc-card">
-                    <div class="current-pc-icon">
-                        <i class="fas fa-desktop"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-2">Currently Assigned</h3>
-                    <p class="text-gray-300 mb-4">You are currently using a workstation</p>
-                    
-                    <div class="pc-info-grid">
-                        <div class="pc-info-item">
-                            <div class="pc-info-label">PC Station</div>
-                            <div class="pc-info-value">${assignment.pcSetId || assignment.equipmentName || 'N/A'}</div>
+                container.innerHTML = `<div class="pc-session-list">${sessions.map(session => `
+                    <article class="pc-session-item">
+                        <div class="pc-session-item-copy">
+                            <strong>${escapeHistoryText(session.setName || session.setId || 'PC Station')}</strong>
+                            <span>${escapeHistoryText([session.setId, session.location].filter(Boolean).join(' · '))}</span>
+                            <span>Signed in ${escapeHistoryText(formatHistoryDateTime(session.startedAt))}</span>
                         </div>
-                        <div class="pc-info-item">
-                            <div class="pc-info-label">Asset Number</div>
-                            <div class="pc-info-value">${assignment.assetNumber || 'N/A'}</div>
-                        </div>
-                        <div class="pc-info-item">
-                            <div class="pc-info-label">Laboratory</div>
-                            <div class="pc-info-value">${assignment.laboratoryRoom || 'N/A'}</div>
-                        </div>
-                        <div class="pc-info-item">
-                            <div class="pc-info-label">Session Duration</div>
-                            <div class="pc-info-value">${hours > 0 ? `${hours}h ` : ''}${minutes}m</div>
-                        </div>
-                        <div class="pc-info-item">
-                            <div class="pc-info-label">Started At</div>
-                            <div class="pc-info-value">${escapeHistoryText(formatHistoryTime(assignment.usageStartTime))}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-                        <button class="btn-secondary" onclick="openPCSelector()">
-                            <i class="fas fa-exchange-alt"></i>
-                            Change PC
+                        <button class="pc-session-logout" type="button" data-pc-station-logout="${escapeHistoryText(session.setId)}">
+                            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>Log out
                         </button>
-                        <button class="btn-danger" onclick="endSession()">
-                            <i class="fas fa-power-off"></i>
-                            End Session
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
+                    </article>`).join('')}</div>`;
 
-        function renderNoAssignment() {
-            const container = document.getElementById('currentPCContainer');
-            
-            container.innerHTML = `
-                <div class="no-pc-card">
-                    <div class="no-pc-icon">
-                        <i class="fas fa-desktop"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white">No Active Session</h3>
-                    <p class="text-gray-400">You don't have an active PC assignment</p>
-                    <button class="btn-primary mt-4" onclick="openPCSelector()">
-                        <i class="fas fa-desktop"></i>
-                        Select a PC Station
-                    </button>
-                </div>
-            `;
-        }
-
-        async function endSession() {
-            if (!await window.appDialogs.confirm('Are you sure you want to end your current PC session?')) {
-                return;
-            }
-
-            try {
-                const user = window.__CURRENT_USER__ || {};
-                
-                const response = await fetch('/api/equipment/end-pc-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userId: user.id
-                    })
+                container.querySelectorAll('[data-pc-station-logout]').forEach(button => {
+                    button.addEventListener('click', () => logoutMyPCStationSession(button));
                 });
-
-                if (!response.ok) {
-                    throw new Error('Failed to end session');
-                }
-
-                alert('Session ended successfully!');
-                await loadCurrentAssignment();
-                await loadUsageHistory();
-                
             } catch (error) {
-                console.error('Error ending session:', error);
-                alert('Failed to end session. Please try again.');
+                console.error('Error loading active PC station:', error);
+                container.innerHTML = `
+                    <div class="pc-session-empty">
+                        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>${escapeHistoryText(error.message || 'Unable to load your active PC station.')}</span>
+                    </div>`;
+            }
+        }
+
+        async function logoutMyPCStationSession(button) {
+            const confirmed = window.appDialogs?.confirm
+                ? await window.appDialogs.confirm('Log out from this PC station?')
+                : window.confirm('Log out from this PC station?');
+            if (!confirmed) return;
+
+            const setId = button.dataset.pcStationLogout;
+            const feedback = document.getElementById('pcSessionFeedback');
+            feedback.textContent = '';
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Logging out…';
+
+            try {
+                const response = await fetchWithTimeout('/api/pc-stations/my-sessions/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify({ setId })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Unable to log out from this PC station.');
+
+                feedback.textContent = payload.message || 'You have been signed out from this PC station.';
+                await loadMyPCStationSessions();
+            } catch (error) {
+                feedback.textContent = error.message || 'Unable to log out from this PC station.';
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-right-from-bracket" aria-hidden="true"></i>Log out';
             }
         }
 
@@ -1319,6 +760,13 @@
                 '"': '&quot;',
                 "'": '&#39;'
             })[character]);
+        }
+
+        function toggleHistoryLab(button) {
+            const expanded = button.classList.toggle('is-expanded');
+            button.closest('tr')?.classList.toggle('has-expanded-lab', expanded);
+            button.setAttribute('aria-expanded', String(expanded));
+            button.title = expanded ? 'Tap to collapse laboratory name' : 'Tap to show full laboratory name';
         }
 
         function formatHistoryCourseSection(value) {
@@ -1377,13 +825,13 @@
                                 <thead><tr><th>PC Set</th><th>Class / Subject</th><th>Instructor</th><th>Laboratory</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead>
                                 <tbody>${history.map(item => `
                                     <tr>
-                                        <td><span class="usage-history-cell-label">PC Set</span><span class="usage-history-value">${escapeHistoryText(item.pcSetId || 'Set not assigned')}</span></td>
-                                        <td><span class="usage-history-cell-label">Class / Subject</span><span class="usage-history-value">${escapeHistoryText(formatHistoryCourseSection(item.courseSection) || '—')}<br><small>${escapeHistoryText(item.subject || item.traceStatus || 'Class not linked')}</small></span></td>
-                                        <td><span class="usage-history-cell-label">Instructor</span><span class="usage-history-value">${escapeHistoryText(item.instructor || '—')}</span></td>
-                                        <td><span class="usage-history-cell-label">Laboratory</span><span class="usage-history-value">${escapeHistoryText(item.laboratoryRoom || '—')}</span></td>
-                                        <td><span class="usage-history-cell-label">Started</span><span class="usage-history-value">${escapeHistoryText(formatHistoryDateTime(item.usageStartTime))}</span></td>
-                                        <td><span class="usage-history-cell-label">Ended</span><span class="usage-history-value">${escapeHistoryText(item.usageEndTime ? formatHistoryDateTime(item.usageEndTime) : 'Active')}</span></td>
-                                        <td><span class="usage-history-cell-label">Duration</span><span class="usage-history-value">${escapeHistoryText(item.durationMinutes == null ? 'Active' : `${item.durationMinutes} min`)}</span></td>
+                                        <td><span class="usage-history-cell-label">PC Set</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.pcSetId || 'Set not assigned')}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Class / Subject</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryCourseSection(item.courseSection) || (item.attendanceId ? 'Class session' : 'Unscheduled session'))}</span><small>${escapeHistoryText(item.subject || (item.attendanceId ? item.traceStatus || 'Class details unavailable' : 'No class schedule — session recorded'))}</small></span></td>
+                                        <td><span class="usage-history-cell-label">Instructor</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.instructor || '—')}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Laboratory</span><button class="usage-history-value usage-history-expandable" type="button" aria-expanded="false" title="Tap to show full laboratory name" onclick="toggleHistoryLab(this)"><span class="usage-history-primary">${escapeHistoryText(item.laboratoryRoom || '—')}</span></button></td>
+                                        <td><span class="usage-history-cell-label">Started</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryDateTime(item.usageStartTime))}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Ended</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.usageEndTime ? formatHistoryDateTime(item.usageEndTime) : 'Active')}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Duration</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.durationMinutes == null ? 'Active' : `${item.durationMinutes} min`)}</span></span></td>
                                     </tr>
                                 `).join('')}</tbody>
                             </table>
@@ -1412,23 +860,15 @@
                     `;
                 }
             }, 9000);
-            await loadCurrentAssignment().catch(error => {
-                console.error('Error loading assignment:', error);
-            });
-            await loadUsageHistory().catch(error => {
-                console.error('Error loading usage history:', error);
-            });
+            await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
             window.clearTimeout(loadingFallback);
-            
-            // Auto-refresh every 30 seconds
-            setInterval(async () => {
-                if (!document.getElementById('pcSelectorModal').classList.contains('open')) {
-                    await loadCurrentAssignment();
-                }
-            }, 30000);
+
+            window.setInterval(() => {
+                if (document.visibilityState === 'visible') loadMyPCStationSessions();
+            }, 15000);
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=64" defer></script>
+    <script src="/js/sidebar-component.js?v=68" defer></script>
 </body>
 </html>

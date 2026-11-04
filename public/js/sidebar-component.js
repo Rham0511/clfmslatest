@@ -548,7 +548,7 @@ const COMLAB_MAIN_THEME_CONTAINERS = [
 ].join(', ');
 
 function isDarkOnlyPage() {
-  return document.body.matches('.laboratory-schedules-page, .schedule-page, .student-pc-audit-page')
+  return document.body.matches('.laboratory-schedules-page, .schedule-page')
     || /laboratory schedules/i.test(document.title)
     || ['/page/laboratory-schedules', '/faculty-laboratory-schedules'].includes(window.location.pathname);
 }
@@ -788,6 +788,16 @@ function ensureAdminProfileShortcut() {
   });
 }
 
+function ensureFloatingScanButton() {
+  if (!getCurrentComLabRole() || window.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__) return;
+  if (document.querySelector('script[data-comlab-floating-scanner]')) return;
+
+  const scannerScript = document.createElement('script');
+  scannerScript.src = '/js/qr-scanner-button.js?v=3';
+  scannerScript.dataset.comlabFloatingScanner = 'true';
+  document.head.append(scannerScript);
+}
+
 document.addEventListener('click', event => {
   const profile = event.target.closest('[data-admin-profile-shortcut="true"]');
   if (!profile) return;
@@ -1000,6 +1010,7 @@ window.addEventListener('DOMContentLoaded', () => {
   ensureCompactPageHeaderTitles();
   ensureRoleNotificationButtons();
   ensureAdminProfileShortcut();
+  ensureFloatingScanButton();
   refreshRoleNotificationCount();
   if (window.__COMLAB_HEADER_NOTIFICATION_TIMER__) {
     window.clearInterval(window.__COMLAB_HEADER_NOTIFICATION_TIMER__);

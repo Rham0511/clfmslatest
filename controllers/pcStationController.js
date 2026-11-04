@@ -554,16 +554,75 @@ export const showPCStationScanResult = async (req, res) => {
   }
 };
 
-export const endUserStationSessions = async (userId, reason = "The user logged out of ComLab.") => {
+export const getMyPCStationSessions = async (req, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ success: false, error: "Please sign in to view your PC station session." });
+  }
+
+  try {
+    const user = await getSessionUser(req);
+    if (getSupportedRole(user?.role) !== "student") {
+      return res.status(403).json({ success: false, error: "This session list is available to students only." });
+    }
+
+    const sessions = await sequelize.query(
+      `SELECT ps.setId, COALESCE(es.setName, ps.setId) AS setName,
+              es.location, ps.startedAt, ps.autoLogoutAt
+       FROM pc_station_sessions ps
+       LEFT JOIN equipment_sets es ON BINARY es.setId = BINARY ps.setId
+       WHERE ps.activeUserId = ?
+       ORDER BY ps.startedAt DESC, ps.setId ASC`,
+      { replacements: [user.id], type: QueryTypes.SELECT }
+    );
+
+    res.set({ "Cache-Control": "no-store, private" });
+    return res.json({ success: true, sessions });
+  } catch (error) {
+    console.error("[PCStation] Failed to load current student station sessions:", error);
+    return res.status(500).json({ success: false, error: "Unable to load your active PC station." });
+  }
+};
+
+export const logoutMyPCStationSession = async (req, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ success: false, error: "Please sign in before ending a PC station session." });
+  }
+
+  try {
+    const user = await getSessionUser(req);
+    if (getSupportedRole(user?.role) !== "student") {
+      return res.status(403).json({ success: false, error: "Only students can end a session from this page." });
+    }
+
+    const setId = getValidSetId(req.body?.setId);
+    if (!setId) return res.status(400).json({ success: false, error: "A valid PC station is required." });
+
+    const endedCount = await endUserStationSessions(
+      user.id,
+      "The student ended the session from My PC Station.",
+      setId
+    );
+    if (!endedCount) {
+      return res.status(409).json({ success: false, error: "You are no longer signed in at this PC station." });
+    }
+
+    return res.json({ success: true, message: "You have been signed out from this PC station." });
+  } catch (error) {
+    console.error("[PCStation] Failed to end student station session:", error);
+    return res.status(500).json({ success: false, error: "Unable to end this PC station session." });
+  }
+};
+
+export const endUserStationSessions = async (userId, reason = "The user logged out of ComLab.", setId = null) => {
   if (!userId) return 0;
 
   return sequelize.transaction(async (transaction) => {
     const activeSessions = await sequelize.query(
       `SELECT setId
        FROM pc_station_sessions
-       WHERE activeUserId = ?
+       WHERE activeUserId = ?${setId ? " AND BINARY setId = BINARY ?" : ""}
        ORDER BY setId`,
-      { replacements: [userId], type: QueryTypes.SELECT, transaction }
+      { replacements: setId ? [userId, setId] : [userId], type: QueryTypes.SELECT, transaction }
     );
     if (!activeSessions.length) return 0;
 

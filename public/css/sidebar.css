@@ -4073,3 +4073,521 @@ body.app-shell :is(.system-dashboard-heading, .top-header, .student-page-header,
 body.app-shell :is(.system-dashboard-heading, .top-header, .student-page-header, .header-actions) .header-pill > i {
     font-size: 1rem !important;
 }
+
+/* One shared toolbar for every authenticated content area. */
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+    box-sizing: border-box !important;
+    position: fixed !important;
+    inset: 0 0 auto var(--sidebar-width, 280px) !important;
+    display: flex !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 2.8rem !important;
+    min-height: 2.8rem !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .65rem !important;
+    margin: 0 !important;
+    padding: .25rem .9rem !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(135deg, rgba(7, 35, 23, .98), rgba(4, 22, 15, .98)) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
+    backdrop-filter: blur(16px) saturate(1.12) !important;
+    transform: none !important;
+    z-index: 1150 !important;
+    transition: none !important;
+}
+
+html body.app-shell .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+    box-sizing: border-box !important;
+    height: 2.8rem !important;
+    min-height: 2.8rem !important;
+    margin: 0 0 .65rem !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-dashboard-heading-main, .header-left, .student-page-heading, .heading-copy) {
+    display: flex !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: .6rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons, .student-dashboard-profile-column, .borrow-header-actions, .attendance-header-actions) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .45rem !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(h1, h2, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title, p, .header-meta, .header-subtitle, .student-page-subtitle, .page-header-subtitle, .dashboard-header-details) {
+    display: none !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.profile-theme-controls, [data-theme-toggle-anchor]) {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(#mobileMenuToggle, .menu-toggle, .student-page-menu, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    position: static !important;
+    inset: auto !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 2.25rem !important;
+    min-width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    flex: 0 0 2.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(110, 231, 183, .24) !important;
+    border-radius: .72rem !important;
+    background: rgba(14, 67, 43, .64) !important;
+    color: #a7f3d0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    transform: none !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    min-width: 0 !important;
+    min-height: 2.25rem !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: .45rem !important;
+    margin: 0 !important;
+    padding: .15rem .55rem .15rem .3rem !important;
+    border: 1px solid rgba(110, 231, 183, .24) !important;
+    border-radius: .75rem !important;
+    background: rgba(14, 67, 43, .52) !important;
+    color: #e7f5ec !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar, .faculty-profile-avatar) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    min-width: 1.75rem !important;
+    flex: 0 0 1.75rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid rgba(110, 231, 183, .28) !important;
+    border-radius: .55rem !important;
+    background: rgba(5, 69, 43, .85) !important;
+    color: #a7f3d0 !important;
+    font-size: .7rem !important;
+    font-weight: 850 !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-copy, .student-page-user-copy, .user-info) {
+    display: flex !important;
+    min-width: 0 !important;
+    flex-direction: column !important;
+    gap: .1rem !important;
+    text-align: left !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-name, .student-page-user-name, .user-name) {
+    display: block !important;
+    max-width: min(12rem, 25vw) !important;
+    overflow: hidden !important;
+    color: #f0fdf4 !important;
+    font-size: .72rem !important;
+    font-weight: 750 !important;
+    line-height: 1.1 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-role, .student-page-user-role, .user-role) {
+    display: block !important;
+    color: #86efac !important;
+    font-size: .52rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .1em !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
+}
+
+@media (max-width: 768px) {
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+        inset: env(safe-area-inset-top, 0px) 0 auto 0 !important;
+        width: 100% !important;
+        height: 2.8rem !important;
+        min-height: 2.8rem !important;
+        padding: .25rem .65rem !important;
+    }
+
+    html body.app-shell .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+        height: calc(2.8rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(2.8rem + env(safe-area-inset-top, 0px)) !important;
+    }
+
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) .menu-toggle,
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) #mobileMenuToggle,
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) .student-page-menu {
+        display: inline-flex !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) .menu-toggle,
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) #mobileMenuToggle,
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) .student-page-menu {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+        :is(.system-profile-badge-name, .student-page-user-name, .user-name) {
+        display: none !important;
+    }
+
+    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+        :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+        gap: .35rem !important;
+        padding-right: .4rem !important;
+    }
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+    border-bottom-color: #d4e4d9 !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(242, 249, 244, .98)) !important;
+    box-shadow: 0 8px 22px rgba(27, 74, 48, .1) !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(#mobileMenuToggle, .menu-toggle, .student-page-menu, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    border-color: #c9dfd0 !important;
+    background: #edf7f0 !important;
+    color: #17623a !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+    border-color: #c9dfd0 !important;
+    background: #f0f8f2 !important;
+    color: #1f2937 !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-name, .student-page-user-name, .user-name) {
+    color: #173b2a !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-role, .student-page-user-role, .user-role) {
+    color: #08774f !important;
+}
+
+html body.app-shell #qr-scan-float-btn {
+    position: fixed !important;
+    right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1000 !important;
+    display: inline-flex !important;
+    width: 3.25rem !important;
+    min-width: 3.25rem !important;
+    height: 3.25rem !important;
+    min-height: 3.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid rgba(167, 243, 208, .48) !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #21b86a, #087a4c) !important;
+    color: #f0fdf4 !important;
+    box-shadow: 0 12px 28px rgba(2, 18, 12, .36), 0 0 0 4px rgba(34, 197, 94, .1) !important;
+    font: inherit !important;
+    font-size: .88rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease !important;
+}
+
+html body.app-shell #qr-scan-float-btn:hover {
+    filter: brightness(1.08) !important;
+    transform: translateY(-2px) !important;
+}
+
+html body.app-shell #qr-scan-float-btn:focus-visible {
+    outline: 3px solid #a7f3d0 !important;
+    outline-offset: 3px !important;
+}
+
+html body.app-shell #qr-scan-float-btn i {
+    font-size: 1.15rem !important;
+}
+
+@media (max-width: 768px) {
+    html body.app-shell.sidebar-open #qr-scan-float-btn {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
+html body.app-shell #qr-scanner-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5000 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px)) !important;
+    background: rgba(2, 14, 9, .88) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+html body.app-shell #qr-scanner-modal.is-open {
+    display: flex !important;
+}
+
+html body.app-shell #qr-scanner-modal .qr-scanner-dialog {
+    box-sizing: border-box !important;
+    width: min(100%, 30rem) !important;
+    max-height: 100% !important;
+    overflow: auto !important;
+    padding: 1.1rem !important;
+    border: 1px solid rgba(110, 231, 183, .25) !important;
+    border-radius: 1.2rem !important;
+    background: linear-gradient(145deg, #10291c, #07170f) !important;
+    color: #f0fdf4 !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .48) !important;
+}
+
+html body.app-shell #qr-scanner-modal .qr-scanner-dialog :is(h2, p) {
+    margin: 0 !important;
+}
+
+html body.app-shell #qr-scanner-modal .qr-scanner-title-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .8rem !important;
+    margin-bottom: .9rem !important;
+}
+
+html body.app-shell #qr-scanner-modal .qr-scanner-close {
+    display: inline-grid !important;
+    width: 2.4rem !important;
+    height: 2.4rem !important;
+    place-items: center !important;
+    border: 1px solid rgba(110, 231, 183, .23) !important;
+    border-radius: .75rem !important;
+    background: rgba(14, 67, 43, .56) !important;
+    color: #d1fae5 !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #qr-reader {
+    overflow: hidden !important;
+    border: 1px solid rgba(110, 231, 183, .2) !important;
+    border-radius: .9rem !important;
+    background: #04150d !important;
+}
+
+html body.app-shell #qr-reader video {
+    border-radius: .85rem !important;
+    object-fit: cover !important;
+}
+
+html body.app-shell #qr-scan-status {
+    margin-top: .8rem !important;
+    color: #a7f3d0 !important;
+    font-size: .88rem !important;
+    line-height: 1.45 !important;
+}
+
+html body.app-shell #qr-scan-status[data-state="error"] {
+    color: #fecaca !important;
+}
+
+html body.app-shell #qr-scanner-modal [hidden] {
+    display: none !important;
+}
+
+html body.app-shell #qr-admin-equipment-result {
+    display: grid !important;
+    gap: .85rem !important;
+    max-height: min(68vh, 38rem) !important;
+    overflow: auto !important;
+    padding-right: .15rem !important;
+}
+
+html body.app-shell .qr-admin-equipment-heading {
+    padding: .8rem .9rem !important;
+    border: 1px solid rgba(110, 231, 183, .18) !important;
+    border-radius: .9rem !important;
+    background: rgba(4, 20, 13, .72) !important;
+}
+
+html body.app-shell .qr-admin-equipment-heading h3 {
+    margin: 0 !important;
+    color: #f0fdf4 !important;
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+}
+
+html body.app-shell .qr-admin-equipment-heading p {
+    margin: .2rem 0 0 !important;
+    color: #86efac !important;
+    font-size: .78rem !important;
+}
+
+html body.app-shell .qr-admin-current-holder,
+html body.app-shell .qr-admin-cycle-section {
+    padding: .85rem .9rem !important;
+    border: 1px solid rgba(110, 231, 183, .18) !important;
+    border-radius: .9rem !important;
+    background: rgba(8, 34, 22, .68) !important;
+}
+
+html body.app-shell .qr-admin-result-label {
+    display: block !important;
+    margin-bottom: .4rem !important;
+    color: #86efac !important;
+    font-size: .68rem !important;
+    font-weight: 850 !important;
+    letter-spacing: .1em !important;
+}
+
+html body.app-shell #qr-admin-current-holder-name {
+    display: grid !important;
+    gap: .35rem !important;
+    color: #f0fdf4 !important;
+    font-size: .98rem !important;
+    font-weight: 750 !important;
+}
+
+html body.app-shell .qr-admin-holder-entry span {
+    display: block !important;
+    margin-top: .1rem !important;
+    color: #a7f3d0 !important;
+    font-size: .76rem !important;
+    font-weight: 550 !important;
+}
+
+html body.app-shell .qr-admin-not-borrowed {
+    color: #a7f3d0 !important;
+    font-size: .9rem !important;
+    font-weight: 650 !important;
+}
+
+html body.app-shell .qr-admin-cycle-section h4 {
+    margin: 0 0 .65rem !important;
+    color: #f0fdf4 !important;
+    font-size: .92rem !important;
+    font-weight: 800 !important;
+}
+
+html body.app-shell #qr-admin-cycle-list {
+    display: grid !important;
+    gap: .5rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+html body.app-shell .qr-admin-cycle-event,
+html body.app-shell .qr-admin-cycle-empty {
+    padding: .65rem .7rem !important;
+    border: 1px solid rgba(110, 231, 183, .13) !important;
+    border-radius: .7rem !important;
+    background: rgba(2, 17, 11, .55) !important;
+}
+
+html body.app-shell .qr-admin-cycle-event-heading {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: .5rem !important;
+}
+
+html body.app-shell .qr-admin-cycle-event-heading strong {
+    color: #e7f5ec !important;
+    font-size: .82rem !important;
+}
+
+html body.app-shell .qr-admin-cycle-event-heading span {
+    color: #cbd5e1 !important;
+    font-size: .67rem !important;
+    font-weight: 750 !important;
+    text-align: right !important;
+}
+
+html body.app-shell .qr-admin-cycle-event-heading span.is-current {
+    color: #fcd34d !important;
+}
+
+html body.app-shell .qr-admin-cycle-event p,
+html body.app-shell .qr-admin-cycle-empty {
+    margin: .25rem 0 0 !important;
+    color: #a7c8b5 !important;
+    font-size: .74rem !important;
+}
+
+html body.app-shell #qr-admin-scan-again {
+    display: inline-flex !important;
+    min-height: 2.65rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: .5rem !important;
+    border: 1px solid rgba(110, 231, 183, .25) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .66) !important;
+    color: #d1fae5 !important;
+    font: inherit !important;
+    font-size: .86rem !important;
+    font-weight: 750 !important;
+    cursor: pointer !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.app-shell #qr-scan-float-btn {
+        transition: none !important;
+    }
+}

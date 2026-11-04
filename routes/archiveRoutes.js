@@ -48,7 +48,7 @@ router.post("/api/archived-records/:archiveId/restore", restoreArchivedRecord);
 router.post("/api/archive/:archiveId/restore", restoreArchivedRecord);
 router.post("/api/archive/computer-lab/:id", archiveRecord);
 router.post(
-  "/api/archive/:entityType(equipment|equipment-category|pc-set|laboratory-schedule|computer-lab|maintenance-report|technician-report|borrow-record|borrow-request)/:entityId",
+  "/api/archive/:entityType(equipment|equipment-category|pc-set|laboratory-schedule|computer-lab|maintenance-report|technician-report|borrow-record|borrow-request|faculty-account)/:entityId",
   archiveRecord
 );
 

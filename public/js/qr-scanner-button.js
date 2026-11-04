@@ -1,172 +1,381 @@
-// Floating QR Scanner Button Component for Students
-(function() {
-    // Only show on student pages
-    const studentPages = ['/student/dashboard', '/student-dashboard', '/my-pc-station', '/student/scan-attendance'];
-    const currentPath = window.location.pathname;
-    const isStudentPage = studentPages.some(page => currentPath.includes(page) || currentPath === '/');
+(() => {
+  if (window.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__) return;
 
-    if (!isStudentPage) return;
+  const rawUserRole = String(window.__CURRENT_USER__?.role || window.__CURRENT_USER_ROLE__ || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+  const userRole = rawUserRole.includes('superadmin') ? 'superadmin'
+    : rawUserRole.includes('admin') ? 'admin'
+      : rawUserRole.includes('technician') ? 'technician'
+        : ['faculty', 'instructor'].includes(rawUserRole) ? rawUserRole
+          : rawUserRole === 'student' ? 'student' : '';
+  const roleFromPage = document.body.matches('.admin-shell') ? 'admin'
+    : document.body.matches('.technician-portal') ? 'technician'
+      : document.body.matches('.faculty-portal, .faculty-page') ? 'faculty'
+        : document.body.matches('.student-portal') ? 'student' : '';
+  const role = userRole || roleFromPage;
+  if (!role || !['admin', 'superadmin', 'technician', 'faculty', 'instructor', 'student'].includes(role)) return;
+  const isAdminRole = role === 'admin' || role === 'superadmin';
 
-    // Create floating button
-    const button = document.createElement('button');
-    button.id = 'qr-scan-float-btn';
-    button.type = 'button';
-    button.setAttribute('aria-label', 'Scan a QR code');
-    button.title = 'Scan a QR code';
-    button.innerHTML = '<i class="fas fa-qrcode"></i>';
-    button.style.cssText = `
-        position: fixed;
-        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-        right: 24px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        border: none;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-        z-index: 50;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        transition: all 0.3s ease;
-        -webkit-tap-highlight-color: transparent;
-    `;
+  window.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__ = true;
+  document.getElementById('qr-scan-float-btn')?.remove();
+  document.getElementById('qr-scanner-modal')?.remove();
 
-    // Hover/Active effects
-    button.onmouseover = () => {
-        button.style.transform = 'scale(1.1)';
-        button.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3)';
-    };
-    button.onmouseout = () => {
-        button.style.transform = 'scale(1)';
-        button.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2)';
-    };
+  const button = document.createElement('button');
+  button.id = 'qr-scan-float-btn';
+  button.type = 'button';
+  button.setAttribute('aria-label', 'Scan a ComLab QR code');
+  button.setAttribute('aria-haspopup', 'dialog');
+  button.setAttribute('aria-expanded', 'false');
+  button.title = 'Scan a ComLab QR code';
+  button.innerHTML = '<i class="fas fa-qrcode" aria-hidden="true"></i>';
 
-    // Create scanner modal
-    const modal = document.createElement('div');
-    modal.id = 'qr-scanner-modal';
-    modal.style.cssText = `
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
-        z-index: 99999;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    `;
+  const scannerDescription = isAdminRole
+    ? 'Scan an equipment QR code to view its borrow cycle and current borrower.'
+    : 'Scan equipment, attendance, or PC station QR codes.';
 
-    modal.innerHTML = `
-        <div style="position: relative; width: 100%; max-width: 500px;">
-            <button id="close-scanner" style="
-                position: absolute;
-                top: -50px;
-                right: 0;
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                font-size: 20px;
-                cursor: pointer;
-                z-index: 1;
-            ">
-                <i class="fas fa-times"></i>
-            </button>
-            
-            <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden;"></div>
-            
-            <div style="margin-top: 20px; text-align: center; color: white;">
-                <p style="font-size: 18px; margin-bottom: 10px;">
-                    <i class="fas fa-camera" style="margin-right: 8px;"></i>
-                    Scan QR Code
-                </p>
-                <p style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">
-                    Point your camera at the attendance QR code
-                </p>
-            </div>
+  const modal = document.createElement('div');
+  modal.id = 'qr-scanner-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'qr-scanner-title');
+  modal.innerHTML = `
+    <section class="qr-scanner-dialog">
+      <div class="qr-scanner-title-row">
+        <div>
+          <h2 id="qr-scanner-title"><i class="fas fa-qrcode" aria-hidden="true"></i> Scan QR code</h2>
+          <p class="qr-scanner-description">${scannerDescription}</p>
         </div>
-    `;
+        <button type="button" class="qr-scanner-close" aria-label="Close QR scanner"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div id="qr-reader"></div>
+      <p id="qr-scan-status" role="status" aria-live="polite">Starting camera…</p>
+      <section id="qr-admin-equipment-result" hidden aria-live="polite">
+        <header class="qr-admin-equipment-heading">
+          <h3 id="qr-admin-equipment-name"></h3>
+          <p id="qr-admin-equipment-id"></p>
+        </header>
+        <div class="qr-admin-current-holder">
+          <span class="qr-admin-result-label">CURRENTLY BORROWED BY</span>
+          <div id="qr-admin-current-holder-name"></div>
+        </div>
+        <div class="qr-admin-cycle-section">
+          <h4>Borrow cycle</h4>
+          <ol id="qr-admin-cycle-list"></ol>
+        </div>
+        <button id="qr-admin-scan-again" type="button"><i class="fas fa-qrcode" aria-hidden="true"></i> Scan another item</button>
+      </section>
+    </section>
+  `;
 
-    // Append elements
-    document.body.appendChild(button);
-    document.body.appendChild(modal);
+  document.body.append(button, modal);
 
-    // Load QR scanner library
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-    document.head.appendChild(script);
+  const status = modal.querySelector('#qr-scan-status');
+  const closeButton = modal.querySelector('.qr-scanner-close');
+  const reader = modal.querySelector('#qr-reader');
+  const adminResult = modal.querySelector('#qr-admin-equipment-result');
+  const adminScanAgainButton = modal.querySelector('#qr-admin-scan-again');
+  let scanner = null;
+  let scannerLibraryPromise = null;
+  let startPromise = null;
+  let handlingResult = false;
+  let previousBodyOverflow = '';
 
-    let html5QrCode = null;
+  function loadScannerLibrary() {
+    if (window.Html5Qrcode) return Promise.resolve();
+    if (scannerLibraryPromise) return scannerLibraryPromise;
 
-    // Open scanner
-    button.onclick = async () => {
-        modal.style.display = 'flex';
+    scannerLibraryPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+      script.onload = () => window.Html5Qrcode
+        ? resolve()
+        : reject(new Error('The QR scanner could not start. Please try again.'));
+      script.onerror = () => reject(new Error('Unable to load the QR scanner. Check your internet connection and try again.'));
+      document.head.append(script);
+    }).catch((error) => {
+      scannerLibraryPromise = null;
+      throw error;
+    });
 
-        // Wait for library to load
-        if (typeof Html5Qrcode === 'undefined') {
-            await new Promise(resolve => {
-                script.onload = resolve;
-            });
-        }
+    return scannerLibraryPromise;
+  }
 
-        if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("qr-reader");
-        }
+  async function stopScanner() {
+    if (!scanner) return;
+    const activeScanner = scanner;
+    try {
+      if (activeScanner.isScanning) await activeScanner.stop();
+    } catch (error) {
+      console.warn('Unable to stop the QR camera cleanly.', error);
+    }
+  }
 
-        try {
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 }
-                },
-                (decodedText, decodedResult) => {
-                    // QR Code detected!
-                    console.log('QR Code detected:', decodedText);
-                    
-                    // Stop scanner
-                    html5QrCode.stop().then(() => {
-                        modal.style.display = 'none';
-                        
-                        // Navigate to scanned URL
-                        if (decodedText.startsWith('http')) {
-                            window.location.href = decodedText;
-                        } else {
-                            alert('Invalid QR code');
-                        }
-                    });
-                },
-                (errorMessage) => {
-                    // Scanning error (ignore, happens frequently)
-                }
-            );
-        } catch (err) {
-            console.error('Error starting scanner:', err);
-            alert('Failed to access camera. Please check permissions.');
-            modal.style.display = 'none';
-        }
-    };
+  async function closeScanner() {
+    button.setAttribute('aria-expanded', 'false');
+    modal.classList.remove('is-open');
+    document.body.style.overflow = previousBodyOverflow;
+    await stopScanner();
+    button.focus({ preventScroll: true });
+  }
 
-    // Close scanner
-    document.getElementById('close-scanner').onclick = () => {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                modal.style.display = 'none';
-            }).catch(err => {
-                console.error('Error stopping scanner:', err);
-                modal.style.display = 'none';
-            });
-        } else {
-            modal.style.display = 'none';
-        }
-    };
+  function setStatus(message, isError = false) {
+    status.textContent = message;
+    status.dataset.state = isError ? 'error' : 'info';
+    status.hidden = false;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+  }
+
+  function formatBorrowCycleDate(dateValue, timeValue, fallbackValue) {
+    const dateText = String(dateValue || '').slice(0, 10);
+    const timeText = String(timeValue || '').slice(0, 5);
+    const timestamp = dateText
+      ? new Date(`${dateText}T${timeText || '00:00'}:00+08:00`)
+      : fallbackValue ? new Date(fallbackValue) : null;
+    if (!timestamp || Number.isNaN(timestamp.getTime())) return 'Date unavailable';
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short'
+    }).format(timestamp);
+  }
+
+  async function showAdminEquipmentCycle(destination) {
+    setStatus('Loading equipment borrow cycle…');
+    let equipmentId = destination.equipmentId;
+
+    if (destination.token) {
+      const resolveResponse = await fetch(`/api/equipment/qr/${encodeURIComponent(destination.token)}/resolve`, {
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+      const resolved = await resolveResponse.json().catch(() => ({}));
+      if (!resolveResponse.ok) throw new Error(resolved.error || 'Unable to find this equipment.');
+      equipmentId = resolved.equipmentId;
+    }
+
+    if (!equipmentId) throw new Error('The equipment QR code did not contain a valid item ID.');
+
+    const cycleResponse = await fetch(`/api/equipment/${encodeURIComponent(equipmentId)}/borrow-cycle`, {
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    const data = await cycleResponse.json().catch(() => ({}));
+    if (!cycleResponse.ok) throw new Error(data.error || 'Unable to load this item’s borrow cycle.');
+
+    fetch(`/api/equipment/${encodeURIComponent(equipmentId)}/scan`, {
+      method: 'POST',
+      credentials: 'same-origin'
+    }).catch((error) => console.warn('Unable to record equipment QR scan.', error));
+
+    const equipment = data.equipment || {};
+    const events = Array.isArray(data.events)
+      ? data.events.filter((event) => event.type === 'borrowed')
+      : [];
+    const currentBorrowers = events.filter((event) => String(event.status || '').toLowerCase() === 'borrowed');
+
+    modal.querySelector('#qr-admin-equipment-name').textContent = equipment.name || 'Equipment';
+    modal.querySelector('#qr-admin-equipment-id').textContent = equipment.equipmentId || equipmentId;
+    modal.querySelector('#qr-admin-current-holder-name').innerHTML = currentBorrowers.length
+      ? currentBorrowers.map((event) => `<div class="qr-admin-holder-entry">${escapeHtml(event.borrowerName || 'Unknown borrower')}${event.borrowerCollege ? `<span>${escapeHtml(event.borrowerCollege)}</span>` : ''}</div>`).join('')
+      : '<span class="qr-admin-not-borrowed">Not currently borrowed</span>';
+
+    const cycleList = modal.querySelector('#qr-admin-cycle-list');
+    cycleList.innerHTML = events.length
+      ? events.slice().reverse().map((event) => {
+        const isCurrent = String(event.status || '').toLowerCase() === 'borrowed';
+        const statusLabel = isCurrent ? 'Currently borrowed' : String(event.status || 'Recorded');
+        const borrowedDate = formatBorrowCycleDate(event.borrowDate, event.borrowStartTime, event.occurredAt);
+        const returnDate = event.returnDate
+          ? formatBorrowCycleDate(event.returnDate, event.returnTime)
+          : '';
+        return `<li class="qr-admin-cycle-event">
+          <div class="qr-admin-cycle-event-heading">
+            <strong>${escapeHtml(event.borrowerName || 'Unknown borrower')}</strong>
+            <span class="${isCurrent ? 'is-current' : ''}">${escapeHtml(statusLabel)}</span>
+          </div>
+          <p>Borrowed ${escapeHtml(borrowedDate)}</p>
+          ${returnDate ? `<p>Returned ${escapeHtml(returnDate)}</p>` : ''}
+        </li>`;
+      }).join('')
+      : '<li class="qr-admin-cycle-empty">No borrow records for this item yet.</li>';
+
+    await stopScanner();
+    reader.hidden = true;
+    adminResult.hidden = false;
+    status.hidden = true;
+  }
+
+  function buildQrDestination(value) {
+    const decoded = String(value || '').trim();
+    if (!decoded) return null;
+
+    let scannedUrl;
+    try {
+      scannedUrl = new URL(decoded, window.location.origin);
+    } catch {
+      return null;
+    }
+
+    const equipmentMatch = scannedUrl.pathname.match(/^\/equipment\/(?:uid|s)\/([A-Za-z0-9_-]+)\/?$/i);
+    if (isAdminRole) {
+      if (equipmentMatch) return { type: 'admin-equipment', token: equipmentMatch[1] };
+
+      const legacyEquipmentMatch = scannedUrl.pathname.match(/^\/equipment\/view\/([A-Za-z0-9._-]{2,80})\/?$/i);
+      if (legacyEquipmentMatch) return { type: 'admin-equipment', equipmentId: legacyEquipmentMatch[1] };
+
+      if (/^[A-Za-z0-9][A-Za-z0-9._-]{1,79}$/.test(decoded)) {
+        return { type: 'admin-equipment', equipmentId: decoded };
+      }
+
+      return { type: 'unsupported', message: 'This scanner only reads equipment QR codes for admin accounts.' };
+    }
+
+    if (equipmentMatch) {
+      return { type: 'equipment-url', value: decoded, path: `/equipment/uid/${encodeURIComponent(equipmentMatch[1])}` };
+    }
+
+    const stationMatch = scannedUrl.pathname.match(/^\/pc-station\/uid\/([A-Za-z0-9_-]+)\/?$/i);
+    if (stationMatch) {
+      return { type: 'navigate', path: `/pc-station/uid/${encodeURIComponent(stationMatch[1])}` };
+    }
+
+    const attendancePathMatch = scannedUrl.pathname.match(/^\/attendance\/scan\/([^/]+)\/?$/i);
+    const attendanceToken = attendancePathMatch?.[1] ||
+      (/^\/api\/attendance\/scan\/?$/i.test(scannedUrl.pathname) ? scannedUrl.searchParams.get('token') : '');
+    if (attendanceToken) {
+      if (role !== 'student') {
+        return { type: 'unsupported', message: 'Attendance QR check-in is available through a student account.' };
+      }
+      return { type: 'navigate', path: `/attendance/scan/${encodeURIComponent(attendanceToken)}` };
+    }
+
+    if (/^[A-Za-z0-9][A-Za-z0-9._-]{1,79}$/.test(decoded)) {
+      if (typeof window.resolveEquipmentQrValue === 'function' &&
+          document.body.matches('.student-borrow-equipment-page, .faculty-borrow-equipment-page')) {
+        return { type: 'equipment-value', value: decoded };
+      }
+      return { type: 'navigate', path: `/equipment/view/${encodeURIComponent(decoded)}` };
+    }
+
+    return null;
+  }
+
+  async function handleDecodedValue(decodedText) {
+    if (handlingResult) return;
+    handlingResult = true;
+
+    try {
+      const destination = buildQrDestination(decodedText);
+      if (!destination) {
+        setStatus(isAdminRole
+          ? 'That QR code is not recognized. Scan an equipment QR code.'
+          : 'That QR code is not recognized. Scan a ComLab equipment, attendance, or PC station code.', true);
+        window.setTimeout(() => { handlingResult = false; }, 1400);
+        return;
+      }
+
+      if (destination.type === 'unsupported') {
+        setStatus(destination.message, true);
+        window.setTimeout(() => { handlingResult = false; }, 1600);
+        return;
+      }
+
+      if (isAdminRole) {
+        await showAdminEquipmentCycle(destination);
+        return;
+      }
+
+      if (destination.type === 'equipment-url' &&
+          typeof window.resolveEquipmentQrValue === 'function' &&
+          document.body.matches('.student-borrow-equipment-page, .faculty-borrow-equipment-page')) {
+        setStatus('Equipment found. Loading its borrow details…');
+        const equipmentId = await window.resolveEquipmentQrValue(destination.value);
+        await closeScanner();
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+          detail: { value: equipmentId }
+        }));
+        return;
+      }
+
+      if (destination.type === 'equipment-value') {
+        setStatus('Equipment found. Loading its borrow details…');
+        await closeScanner();
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+          detail: { value: destination.value }
+        }));
+        return;
+      }
+
+      setStatus('QR code recognized. Opening…');
+      await stopScanner();
+      modal.classList.remove('is-open');
+      document.body.style.overflow = previousBodyOverflow;
+      window.location.assign(destination.path);
+    } catch (error) {
+      setStatus(error.message || 'Unable to read that QR code. Please scan again.', true);
+      window.setTimeout(() => { handlingResult = false; }, 1400);
+    }
+  }
+
+  async function startScanner() {
+    if (startPromise) return startPromise;
+    startPromise = (async () => {
+      try {
+        setStatus(isAdminRole
+          ? 'Allow camera access, then point your camera at an equipment QR code.'
+          : 'Allow camera access, then point your camera at a QR code.');
+        await loadScannerLibrary();
+        if (!modal.classList.contains('is-open')) return;
+        scanner = scanner || new window.Html5Qrcode('qr-reader');
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+          handleDecodedValue,
+          () => {}
+        );
+      } catch (error) {
+        setStatus(error.message || 'Camera access failed. Check browser permissions and try again.', true);
+      } finally {
+        startPromise = null;
+      }
+    })();
+    return startPromise;
+  }
+
+  function openScanner() {
+    handlingResult = false;
+    previousBodyOverflow = document.body.style.overflow;
+    reader.hidden = false;
+    adminResult.hidden = true;
+    status.hidden = false;
+    setStatus(isAdminRole
+      ? 'Allow camera access, then point your camera at an equipment QR code.'
+      : 'Allow camera access, then point your camera at a QR code.');
+    document.body.style.overflow = 'hidden';
+    button.setAttribute('aria-expanded', 'true');
+    modal.classList.add('is-open');
+    closeButton.focus({ preventScroll: true });
+    startScanner();
+  }
+
+  button.addEventListener('click', openScanner);
+  closeButton.addEventListener('click', closeScanner);
+  adminScanAgainButton.addEventListener('click', () => {
+    handlingResult = false;
+    adminResult.hidden = true;
+    reader.hidden = false;
+    setStatus('Point your camera at another equipment QR code.');
+    startScanner();
+  });
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeScanner();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) closeScanner();
+  });
 })();
