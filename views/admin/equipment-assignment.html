@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equipment Assignment | ComLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <style>
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body.admin-shell .assignment-container {
+      display: flex;
+      height: 100vh;
+      min-height: 0;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    body.admin-shell .assignment-content {
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      flex-direction: column;
+      overflow: hidden;
+      padding: .65rem;
+    }
+
+    .assignment-controls,
+    #assignmentMessage {
+      flex: 0 0 auto;
+    }
+
+    .assignment-table-card {
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      flex-direction: column;
+    }
+
+    .assignment-table-scroll {
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(52, 211, 112, .72) rgba(5, 20, 13, .72);
+    }
+
+    .assignment-table-scroll::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+
+    .assignment-table-scroll::-webkit-scrollbar-track {
+      background: rgba(5, 20, 13, .72);
+    }
+
+    .assignment-table-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #4ade80, #059669);
+      border: 2px solid rgba(5, 20, 13, .72);
+      border-radius: 999px;
+    }
+
+    .assignment-table-scroll thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #073321;
+    }
+
+    .assignment-table {
+      min-width: 960px;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .assignment-table td,
+    .assignment-table th {
+      padding: .55rem .7rem;
+      vertical-align: middle;
+    }
+
+    .assignment-table tbody tr[data-equipment-id] {
+      height: 3.75rem;
+    }
+
+    .assignment-table .faculty-select {
+      min-width: 0;
+      width: 100%;
+      padding: .5rem .6rem;
+      font-size: .8rem;
+    }
+
+    .assignment-bulk-controls {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem .75rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .85rem;
+      background: linear-gradient(100deg, rgba(8, 43, 29, .96), rgba(5, 24, 17, .96));
+    }
+
+    .assignment-bulk-controls select {
+      min-width: 0;
+      flex: 1 1 16rem;
+    }
+
+    .assignment-search {
+      min-width: 0;
+      width: 3in;
+      max-width: 3in;
+      align-self: flex-start;
+      flex: 0 0 3in;
+    }
+
+    .assignment-search-field {
+      box-sizing: border-box;
+      display: flex;
+      width: 100%;
+      min-height: 2.85rem;
+      align-items: center;
+      gap: .7rem;
+      padding: 0 .9rem;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: .85rem;
+      background: linear-gradient(120deg, rgba(3, 17, 11, .92), rgba(6, 30, 19, .9));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .assignment-search-field:focus-within {
+      border-color: rgba(74, 222, 128, .72);
+      background: rgba(3, 18, 11, .98);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .12), 0 8px 22px rgba(2, 30, 16, .24);
+    }
+
+    .assignment-search-field input {
+      min-width: 0;
+      flex: 1 1 auto;
+      min-height: 2.75rem;
+      color: #f0fdf4;
+      caret-color: #4ade80;
+    }
+
+    .assignment-search-field input::placeholder {
+      color: rgba(167, 243, 208, .55);
+    }
+
+    .assignment-search-clear {
+      display: inline-flex;
+      width: 1.8rem;
+      height: 1.8rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border-radius: .55rem;
+      color: #a7f3d0;
+      transition: color .15s ease, background .15s ease;
+    }
+
+    .assignment-search-clear[hidden] {
+      display: none;
+    }
+
+    .assignment-search-clear:hover {
+      color: white;
+      background: rgba(74, 222, 128, .14);
+    }
+
+    .assignment-search-shortcut {
+      display: none;
+      flex: 0 0 auto;
+      border: 1px solid rgba(74, 222, 128, .18);
+      border-radius: .4rem;
+      background: rgba(3, 15, 10, .65);
+      padding: .12rem .38rem;
+      color: rgba(167, 243, 208, .72);
+      font: 500 .68rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    @media (max-width: 540px) {
+      .assignment-search-shortcut { display: none; }
+    }
+
+    .assignment-bulk-controls button,
+    .assignment-bulk-controls select {
+      min-height: 2.5rem;
+    }
+
+    .assignment-select-cell {
+      width: 2.75rem;
+      text-align: center;
+    }
+
+    .assignment-select-checkbox {
+      width: 1rem;
+      height: 1rem;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+
+    #assignmentPaginationFooter {
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 767px) {
+      body.admin-shell .assignment-content {
+        padding: .75rem;
+      }
+
+      .assignment-bulk-controls {
+        align-items: stretch;
+        flex-wrap: wrap;
+      }
+
+      .assignment-bulk-controls select {
+        flex-basis: 100%;
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=2">
+  <style>
+    body.admin-shell .assignment-content {
+      --assignment-ink: #eaf7ef;
+      --assignment-muted: #a4bdad;
+      --assignment-border: rgba(110, 231, 183, .2);
+      --assignment-panel: linear-gradient(145deg, rgba(12, 37, 26, .96), rgba(7, 24, 17, .96));
+      --assignment-field: rgba(2, 18, 11, .52);
+      --assignment-row: rgba(5, 29, 19, .7);
+      --assignment-row-alt: rgba(9, 39, 26, .72);
+    }
+
+    html.theme-light body.admin-shell .assignment-content {
+      --assignment-ink: #183b2b;
+      --assignment-muted: #617668;
+      --assignment-border: #c8ddd0;
+      --assignment-panel: linear-gradient(145deg, #ffffff, #f5faf6);
+      --assignment-field: #ffffff;
+      --assignment-row: #fbfdfb;
+      --assignment-row-alt: #f2f7f3;
+    }
+
+    body.admin-shell .assignment-controls {
+      display: flex;
+      flex: 0 0 auto;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.1rem 1.2rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: 1.15rem;
+      background: var(--assignment-panel);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, .12);
+    }
+
+    body.admin-shell .assignment-toolbar-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    body.admin-shell .assignment-toolbar-copy {
+      min-width: 15rem;
+    }
+
+    body.admin-shell .assignment-toolbar-kicker {
+      margin: 0 0 .2rem;
+      color: #22c55e;
+      font-size: .66rem;
+      font-weight: 850;
+      letter-spacing: .16em;
+    }
+
+    body.admin-shell .assignment-toolbar-copy h2 {
+      margin: 0;
+      color: var(--assignment-ink);
+      font-size: 1.1rem;
+      font-weight: 850;
+      letter-spacing: -.025em;
+    }
+
+    body.admin-shell .assignment-toolbar-copy > p:last-child {
+      margin: .3rem 0 0;
+      color: var(--assignment-muted);
+      font-size: .8rem;
+    }
+
+    body.admin-shell .assignment-toolbar-actions,
+    body.admin-shell .assignment-overview-stats {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+    }
+
+    body.admin-shell .assignment-overview-stats {
+      flex-wrap: wrap;
+    }
+
+    body.admin-shell .assignment-overview-stat {
+      display: grid;
+      min-width: 5.8rem;
+      gap: .12rem;
+      padding: .48rem .65rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .7rem;
+      background: rgba(34, 197, 94, .07);
+    }
+
+    body.admin-shell .assignment-overview-stat > span {
+      color: var(--assignment-muted);
+      font-size: .62rem;
+      font-weight: 750;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    body.admin-shell .assignment-overview-stat strong {
+      color: var(--assignment-ink);
+      font-size: .9rem;
+      line-height: 1.2;
+    }
+
+    body.admin-shell .assignment-refresh-button {
+      display: inline-flex;
+      min-height: 2.7rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      padding: .55rem .8rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .75rem;
+      background: rgba(34, 197, 94, .12);
+      color: var(--assignment-ink);
+      font-size: .8rem;
+      font-weight: 750;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    body.admin-shell .assignment-refresh-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: rgba(34, 197, 94, .22);
+    }
+
+    body.admin-shell .assignment-refresh-button:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    body.admin-shell .assignment-filter-grid {
+      display: grid;
+      grid-template-columns: minmax(16rem, 1.45fr) minmax(12rem, .9fr) minmax(15rem, 1.2fr);
+      align-items: end;
+      gap: .8rem;
+      padding-top: .9rem;
+      border-top: 1px solid var(--assignment-border);
+    }
+
+    body.admin-shell .assignment-search {
+      width: auto;
+      max-width: none;
+      flex: initial;
+      align-self: auto;
+    }
+
+    body.admin-shell .assignment-field-label,
+    body.admin-shell .assignment-filter-field {
+      display: grid;
+      min-width: 0;
+      gap: .3rem;
+      color: var(--assignment-muted);
+      font-size: .72rem;
+      font-weight: 750;
+    }
+
+    body.admin-shell .assignment-search-field {
+      min-height: 2.8rem;
+      gap: .65rem;
+      padding: 0 .75rem;
+      border-color: var(--assignment-border);
+      border-radius: .75rem;
+      background: var(--assignment-field);
+      box-shadow: none;
+    }
+
+    body.admin-shell .assignment-search-field > i {
+      color: #22c55e;
+    }
+
+    body.admin-shell .assignment-search-field:focus-within {
+      border-color: #22c55e;
+      background: var(--assignment-field);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .12);
+    }
+
+    body.admin-shell .assignment-search-field input {
+      width: 100%;
+      min-height: 2.65rem;
+      padding: 0;
+      border: 0 !important;
+      border-radius: 0;
+      outline: 0;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--assignment-ink) !important;
+      font-size: .82rem;
+    }
+
+    body.admin-shell .assignment-search-field input::placeholder {
+      color: var(--assignment-muted);
+      opacity: .85;
+    }
+
+    body.admin-shell .assignment-search-clear {
+      color: var(--assignment-muted);
+    }
+
+    body.admin-shell .assignment-filter-field select {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 2.8rem;
+      padding: .55rem .75rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .75rem;
+      background-color: var(--assignment-field);
+      color: var(--assignment-ink);
+      font-size: .82rem;
+    }
+
+    body.admin-shell .assignment-filter-field select:focus,
+    body.admin-shell .assignment-bulk-controls select:focus {
+      border-color: #22c55e;
+      outline: 3px solid rgba(34, 197, 94, .15);
+      outline-offset: 1px;
+    }
+
+    body.admin-shell .assignment-bulk-controls {
+      display: grid;
+      grid-template-columns: minmax(15rem, 1.2fr) minmax(15rem, 2fr) auto auto;
+      align-items: center;
+      gap: .7rem;
+      padding: .7rem .85rem;
+      border-color: var(--assignment-border);
+      border-radius: .95rem;
+      background: var(--assignment-panel);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .08);
+    }
+
+    body.admin-shell .assignment-bulk-summary {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .65rem;
+    }
+
+    body.admin-shell .assignment-bulk-icon {
+      display: inline-flex;
+      width: 2.4rem;
+      height: 2.4rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--assignment-border);
+      border-radius: .7rem;
+      background: rgba(34, 197, 94, .1);
+      color: #22c55e;
+    }
+
+    body.admin-shell .assignment-bulk-summary > span:last-child {
+      display: grid;
+      gap: .12rem;
+    }
+
+    body.admin-shell .assignment-bulk-summary strong {
+      color: var(--assignment-ink);
+      font-size: .82rem;
+    }
+
+    body.admin-shell .assignment-bulk-summary small {
+      color: var(--assignment-muted);
+      font-size: .68rem;
+    }
+
+    body.admin-shell .assignment-bulk-controls select {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 2.65rem;
+      padding: .55rem .75rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .7rem;
+      background-color: var(--assignment-field);
+      color: var(--assignment-ink);
+      font-size: .8rem;
+    }
+
+    body.admin-shell .assignment-bulk-controls button {
+      display: inline-flex;
+      min-height: 2.65rem;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      padding: .55rem .8rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .7rem;
+      background: rgba(34, 197, 94, .08);
+      color: var(--assignment-ink);
+      font-size: .78rem;
+      font-weight: 750;
+      white-space: nowrap;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    body.admin-shell .assignment-bulk-controls #bulkAssignButton {
+      border-color: #16834a;
+      background: #16834a;
+      color: #fff;
+    }
+
+    body.admin-shell .assignment-bulk-controls button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: rgba(34, 197, 94, .2);
+    }
+
+    body.admin-shell .assignment-bulk-controls #bulkAssignButton:hover:not(:disabled) {
+      background: #129257;
+    }
+
+    body.admin-shell .assignment-bulk-controls button:disabled,
+    body.admin-shell .assignment-bulk-controls select:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    body.admin-shell .assignment-table-card {
+      border-color: var(--assignment-border);
+      border-radius: 1rem;
+      background: var(--assignment-panel);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, .1);
+    }
+
+    body.admin-shell .assignment-table-scroll {
+      scrollbar-color: rgba(52, 211, 112, .72) rgba(5, 20, 13, .12);
+    }
+
+    body.admin-shell .assignment-table-scroll::-webkit-scrollbar-track {
+      background: rgba(5, 20, 13, .12);
+    }
+
+    body.admin-shell .assignment-table-scroll::-webkit-scrollbar-thumb {
+      border-color: rgba(5, 20, 13, .12);
+    }
+
+    body.admin-shell .assignment-table {
+      min-width: 1040px;
+    }
+
+    body.admin-shell .assignment-table thead th {
+      padding: .85rem .75rem !important;
+      background: #0b3825 !important;
+      color: #d8f6e3 !important;
+      font-size: .7rem !important;
+      letter-spacing: .07em !important;
+      line-height: 1.35 !important;
+    }
+
+    body.admin-shell .assignment-table tbody tr[data-equipment-id] {
+      height: 4rem;
+      background: var(--assignment-row) !important;
+      transition: background 140ms ease;
+    }
+
+    body.admin-shell .assignment-table tbody tr[data-equipment-id]:nth-child(even) {
+      background: var(--assignment-row-alt) !important;
+    }
+
+    body.admin-shell .assignment-table tbody tr[data-equipment-id]:hover {
+      background: rgba(34, 197, 94, .11) !important;
+    }
+
+    body.admin-shell .assignment-table tbody td {
+      padding: .65rem .75rem !important;
+      border-bottom: 1px solid var(--assignment-border) !important;
+      color: var(--assignment-ink) !important;
+      font-size: .8rem !important;
+      line-height: 1.4 !important;
+    }
+
+    body.admin-shell .assignment-table tbody .text-white,
+    body.admin-shell .assignment-table tbody .text-slate-300 {
+      color: var(--assignment-ink) !important;
+    }
+
+    body.admin-shell .assignment-table tbody .text-slate-400 {
+      color: var(--assignment-muted) !important;
+    }
+
+    body.admin-shell .assignment-table .equipment-id-tooltip-trigger {
+      color: #34d399;
+      font-size: .85rem;
+      font-weight: 800;
+      text-decoration: underline dotted rgba(52, 211, 153, .55);
+      text-underline-offset: .2em;
+    }
+
+    body.admin-shell .assignment-table .assignment-location-cell {
+      overflow-wrap: anywhere;
+      color: var(--assignment-ink) !important;
+      font-size: .78rem;
+    }
+
+    body.admin-shell .assignment-table .assignment-status-pill {
+      display: inline-flex;
+      max-width: 100%;
+      align-items: center;
+      padding: .25rem .5rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .1);
+      color: var(--assignment-ink);
+      font-size: .67rem !important;
+      font-weight: 750 !important;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    body.admin-shell .assignment-table .assignment-status-pill.status-unserviceable,
+    body.admin-shell .assignment-table .assignment-status-pill.status-unavailable {
+      border-color: rgba(245, 158, 11, .3);
+      background: rgba(245, 158, 11, .12);
+      color: #fcd98b;
+    }
+
+    body.admin-shell .assignment-table .assignment-status-pill.status-lost,
+    body.admin-shell .assignment-table .assignment-status-pill.status-missing {
+      border-color: rgba(248, 113, 113, .34);
+      background: rgba(248, 113, 113, .13);
+      color: #fecaca;
+    }
+
+    body.admin-shell .assignment-table .assignment-condition-label {
+      display: block;
+      margin-top: .25rem;
+      color: var(--assignment-muted);
+      font-size: .7rem;
+      line-height: 1.25;
+      text-transform: capitalize;
+    }
+
+    body.admin-shell .assignment-table .assignment-faculty-name {
+      color: var(--assignment-ink);
+      font-size: .79rem;
+      font-weight: 750;
+    }
+
+    body.admin-shell .assignment-table .assignment-faculty-email {
+      margin-top: .18rem;
+      overflow-wrap: anywhere;
+      color: var(--assignment-muted);
+      font-size: .68rem;
+    }
+
+    body.admin-shell .assignment-table .assignment-unassigned-label {
+      display: inline-flex;
+      padding: .25rem .48rem;
+      border: 1px solid rgba(245, 158, 11, .3);
+      border-radius: 999px;
+      background: rgba(245, 158, 11, .1);
+      color: #f4c66d;
+      font-size: .7rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    body.admin-shell .assignment-table .assignment-history-cell {
+      padding: 1rem 1.2rem !important;
+      background: rgba(2, 18, 11, .42) !important;
+    }
+
+    body.admin-shell .assignment-table .assignment-history-title {
+      color: #86efac;
+      font-size: .8rem;
+      font-weight: 800;
+    }
+
+    body.admin-shell .assignment-table .assignment-history-cell .text-white,
+    body.admin-shell .assignment-table .assignment-history-cell .text-slate-300 {
+      color: var(--assignment-ink) !important;
+    }
+
+    body.admin-shell .assignment-table .assignment-history-cell .text-slate-400 {
+      color: var(--assignment-muted) !important;
+    }
+
+    body.admin-shell .assignment-table .faculty-select {
+      min-height: 2.45rem;
+      padding: .45rem .55rem;
+      border: 1px solid var(--assignment-border);
+      border-radius: .65rem;
+      background-color: var(--assignment-field);
+      color: var(--assignment-ink);
+      font-size: .74rem;
+    }
+
+    body.admin-shell .assignment-table .save-assignment,
+    body.admin-shell .assignment-table .show-history {
+      display: inline-flex;
+      min-height: 2.45rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--assignment-border);
+      border-radius: .65rem;
+      font-size: .75rem;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    body.admin-shell .assignment-table .save-assignment {
+      padding: .45rem .65rem;
+      background: #16834a;
+      color: #fff;
+    }
+
+    body.admin-shell .assignment-table .show-history {
+      width: 2.45rem;
+      padding: .4rem;
+      background: rgba(34, 197, 94, .08);
+      color: #34d399;
+    }
+
+    body.admin-shell .assignment-table .save-assignment:hover:not(:disabled),
+    body.admin-shell .assignment-table .show-history:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: #129257;
+      color: #fff;
+    }
+
+    body.admin-shell .assignment-table button:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    body.admin-shell .assignment-table-state {
+      padding: 2.5rem 1rem !important;
+      color: var(--assignment-muted) !important;
+      text-align: center;
+    }
+
+    body.admin-shell #assignmentPaginationFooter {
+      min-height: 3.8rem;
+      padding: .7rem 1rem;
+      border-color: var(--assignment-border);
+      background: rgba(2, 18, 11, .2);
+    }
+
+    body.admin-shell #assignmentPaginationInfo {
+      color: var(--assignment-muted) !important;
+      font-size: .78rem;
+    }
+
+    body.admin-shell #assignmentPagination button {
+      min-height: 2.35rem;
+      border-color: var(--assignment-border) !important;
+      background-color: rgba(34, 197, 94, .07) !important;
+      color: var(--assignment-ink) !important;
+      font-size: .76rem;
+    }
+
+    body.admin-shell #assignmentPagination button[aria-current="page"] {
+      border-color: #16834a !important;
+      background: #16834a !important;
+      color: #fff !important;
+    }
+
+    body.admin-shell #assignmentPagination button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+
+    body.admin-shell #assignmentMessage {
+      flex: 0 0 auto;
+      margin: 0;
+      border-radius: .8rem;
+    }
+
+    html.theme-light body.admin-shell #assignmentMessage.border-emerald-500\/30 {
+      border-color: #b7d9c3;
+      background: #edf8f0;
+      color: #215a38;
+    }
+
+    html.theme-light body.admin-shell #assignmentMessage.border-rose-500\/30 {
+      border-color: #edc4c0;
+      background: #fff3f1;
+      color: #923d35;
+    }
+
+    html.theme-light body.admin-shell .assignment-table thead th {
+      background: #e7f3eb !important;
+      color: #285b40 !important;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-table tbody tr[data-equipment-id] {
+      background: #fbfdfb !important;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-table tbody tr[data-equipment-id]:nth-child(even) {
+      background: #f2f7f3 !important;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-table tbody tr[data-equipment-id]:hover {
+      background: #eaf6ee !important;
+    }
+
+    html.theme-light body.admin-shell .assignment-table .equipment-id-tooltip-trigger {
+      color: #087443;
+      text-decoration-color: #57a876;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-search-field input {
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: #183b2b !important;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-table .assignment-history-cell {
+      background: #f4f8f5 !important;
+    }
+
+    html.theme-light body.admin-shell .main-container.theme-light .assignment-table .assignment-history-title {
+      color: #17603c;
+    }
+
+    html.theme-light body.admin-shell .assignment-table .assignment-status-pill.status-unserviceable,
+    html.theme-light body.admin-shell .assignment-table .assignment-status-pill.status-unavailable {
+      color: #80520c;
+    }
+
+    html.theme-light body.admin-shell .assignment-table .assignment-status-pill.status-lost,
+    html.theme-light body.admin-shell .assignment-table .assignment-status-pill.status-missing {
+      color: #9f3428;
+    }
+
+    html.theme-light body.admin-shell .assignment-table .assignment-unassigned-label {
+      border-color: #ead08a;
+      background: #fff5d9;
+      color: #80520c;
+    }
+
+    html.theme-light body.admin-shell #assignmentPaginationFooter {
+      background: rgba(235, 245, 238, .72);
+    }
+
+    @media (max-width: 1120px) {
+      body.admin-shell .assignment-toolbar-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: .8rem;
+      }
+
+      body.admin-shell .assignment-toolbar-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      body.admin-shell .assignment-filter-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(12rem, .85fr);
+      }
+
+      body.admin-shell .assignment-search {
+        grid-column: 1 / -1;
+      }
+
+      body.admin-shell .assignment-bulk-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto auto;
+      }
+    }
+
+    @media (max-width: 767px) {
+      body.admin-shell .assignment-content {
+        padding: .65rem;
+      }
+
+      body.admin-shell .assignment-controls {
+        padding: .9rem;
+      }
+
+      body.admin-shell .assignment-toolbar-actions {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      body.admin-shell .assignment-overview-stats {
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      body.admin-shell .assignment-overview-stat {
+        min-width: 0;
+      }
+
+      body.admin-shell .assignment-refresh-button {
+        align-self: flex-end;
+      }
+
+      body.admin-shell .assignment-filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      body.admin-shell .assignment-search {
+        grid-column: auto;
+      }
+
+      body.admin-shell .assignment-bulk-controls {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      body.admin-shell .assignment-bulk-summary,
+      body.admin-shell .assignment-bulk-controls select {
+        grid-column: 1 / -1;
+      }
+
+      body.admin-shell .assignment-bulk-controls #bulkAssignButton {
+        justify-self: stretch;
+      }
+
+      body.admin-shell #assignmentPaginationFooter {
+        align-items: flex-start;
+      }
+
+      body.admin-shell #assignmentPagination {
+        justify-content: flex-start;
+      }
+    }
+
+    /* Keep the assignment workspace dense enough to show more inventory at once. */
+    body.admin-shell .main-container.assignment-container > .assignment-content {
+      padding: .35rem .7rem .55rem !important;
+    }
+
+    body.admin-shell .assignment-content > .comlab-page-header-spacer {
+      margin-bottom: .25rem !important;
+    }
+
+    body.admin-shell .assignment-controls {
+      gap: .65rem;
+      margin-bottom: .55rem !important;
+      padding: .72rem .9rem;
+      border-radius: .95rem;
+    }
+
+    body.admin-shell .assignment-toolbar-heading {
+      gap: 1rem;
+    }
+
+    body.admin-shell .assignment-toolbar-copy > p:last-child {
+      margin-top: .2rem;
+      font-size: .75rem;
+      line-height: 1.35;
+    }
+
+    body.admin-shell .assignment-overview-stats {
+      gap: .4rem;
+    }
+
+    body.admin-shell .assignment-overview-stat {
+      min-width: 5.1rem;
+      gap: .08rem;
+      padding: .34rem .5rem;
+    }
+
+    body.admin-shell .assignment-refresh-button {
+      min-height: 2.35rem;
+      padding: .4rem .65rem;
+    }
+
+    body.admin-shell .assignment-filter-grid {
+      gap: .6rem;
+      padding-top: .58rem;
+    }
+
+    body.admin-shell .assignment-search-field {
+      min-height: 2.45rem;
+      padding-inline: .65rem;
+    }
+
+    body.admin-shell .assignment-search-field input,
+    body.admin-shell .assignment-filter-field select {
+      min-height: 2.35rem;
+    }
+
+    body.admin-shell .assignment-bulk-controls {
+      gap: .55rem;
+      margin-bottom: .55rem !important;
+      padding: .42rem .65rem;
+      border-radius: .85rem;
+    }
+
+    body.admin-shell .assignment-bulk-summary {
+      gap: .5rem;
+    }
+
+    body.admin-shell .assignment-bulk-icon {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    body.admin-shell .assignment-bulk-summary small {
+      font-size: .64rem;
+      line-height: 1.25;
+    }
+
+    body.admin-shell .assignment-bulk-controls select,
+    body.admin-shell .assignment-bulk-controls button {
+      min-height: 2.25rem;
+      padding-block: .38rem;
+    }
+
+    body.admin-shell .assignment-table thead th {
+      padding: .62rem .65rem !important;
+    }
+
+    body.admin-shell .assignment-table tbody tr[data-equipment-id] {
+      height: 3.35rem;
+    }
+
+    body.admin-shell .assignment-table tbody td {
+      padding: .42rem .62rem !important;
+    }
+
+    body.admin-shell .assignment-table .faculty-select,
+    body.admin-shell .assignment-table .save-assignment,
+    body.admin-shell .assignment-table .show-history {
+      min-height: 2.15rem;
+    }
+
+    body.admin-shell .assignment-table .show-history {
+      width: 2.15rem;
+    }
+
+    body.admin-shell #assignmentPaginationFooter {
+      min-height: 3.15rem;
+      padding: .42rem .75rem;
+    }
+
+    @media (max-width: 1120px) {
+      body.admin-shell .assignment-controls {
+        gap: .55rem;
+        padding: .65rem .75rem;
+      }
+
+      body.admin-shell .assignment-toolbar-heading {
+        gap: .55rem;
+      }
+
+      body.admin-shell .assignment-filter-grid {
+        gap: .5rem;
+        padding-top: .5rem;
+      }
+
+      body.admin-shell .assignment-bulk-controls {
+        gap: .45rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      body.admin-shell .main-container.assignment-container > .assignment-content {
+        padding: .3rem .45rem .45rem !important;
+      }
+
+      body.equipment-assignment-page .system-dashboard-heading {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: .5rem;
+      }
+
+      body.equipment-assignment-page .system-dashboard-heading-main {
+        flex: 0 0 auto !important;
+        justify-content: flex-start;
+      }
+
+      body.equipment-assignment-page .system-dashboard-heading #mobileMenuToggle {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        z-index: auto !important;
+        display: inline-flex !important;
+        width: 2.5rem;
+        height: 2.5rem;
+        flex: 0 0 2.5rem;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+      }
+
+      body.equipment-assignment-page .system-dashboard-heading-actions {
+        width: auto;
+        flex: 0 1 auto;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: .35rem;
+        margin-left: auto;
+      }
+
+      body.admin-shell .assignment-controls {
+        gap: .6rem;
+        margin-bottom: .45rem !important;
+        padding: .65rem;
+      }
+
+      body.admin-shell .assignment-toolbar-copy {
+        min-width: 0;
+      }
+
+      body.admin-shell .assignment-overview-stat {
+        padding: .35rem .45rem;
+      }
+
+      body.admin-shell .assignment-bulk-controls {
+        gap: .45rem;
+        margin-bottom: .45rem !important;
+        padding: .55rem;
+      }
+
+      body.admin-shell .assignment-table tbody tr[data-equipment-id] {
+        height: 3.2rem;
+      }
+
+      body.admin-shell #assignmentPaginationFooter {
+        min-height: 0;
+        padding: .5rem .6rem;
+      }
+    }
+  </style>
+</head>
+<body class="app-shell admin-shell system-layout-page equipment-assignment-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+  <div class="main-container assignment-container">
+    <main class="page-content assignment-content">
+      <header class="system-dashboard-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+          <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white" aria-label="User profile">
+            <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-user-initials>AD</span>
+            <span class="system-profile-badge-copy text-white">
+              <span class="system-profile-badge-name text-white" data-user-name>Administrator</span>
+              <span class="system-profile-badge-role text-emerald-400" data-user-role>Admin</span>
+            </span>
+          </div>
+        </div>
+      </header>
+      <section class="assignment-controls mb-3" aria-labelledby="assignmentOverviewTitle">
+        <div class="assignment-toolbar-heading">
+          <div class="assignment-toolbar-copy">
+            <p class="assignment-toolbar-kicker">ACCOUNTABILITY REGISTER</p>
+            <h2 id="assignmentOverviewTitle">Manage equipment assignments</h2>
+          </div>
+          <div class="assignment-toolbar-actions">
+            <div class="assignment-overview-stats" aria-label="Equipment assignment summary">
+              <span class="assignment-overview-stat"><span>Matching</span><strong id="equipmentCount">Loading…</strong></span>
+              <span class="assignment-overview-stat"><span>Assigned</span><strong id="assignmentAssignedCount">—</strong></span>
+              <span class="assignment-overview-stat"><span>Unassigned</span><strong id="assignmentUnassignedCount">—</strong></span>
+              <span class="assignment-overview-stat"><span>Faculty</span><strong id="facultyCount">Loading…</strong></span>
+            </div>
+            <button id="refreshAssignments" type="button" class="assignment-refresh-button">
+              <i class="fas fa-rotate-right" aria-hidden="true"></i><span>Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div class="assignment-filter-grid">
+          <div class="assignment-search">
+            <label class="assignment-field-label" for="assignmentSearch">Search equipment</label>
+            <div class="assignment-search-field">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input id="assignmentSearch" type="search" autocomplete="off" spellcheck="false" placeholder="ID, serial, location, status, or Faculty" aria-label="Search equipment by ID, serial number, location, status, or Faculty">
+              <button id="clearAssignmentSearch" class="assignment-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+              </button>
+              <kbd class="assignment-search-shortcut" aria-hidden="true">Ctrl K</kbd>
+            </div>
+          </div>
+          <label class="assignment-filter-field" for="assignmentStatusFilter">
+            <span>Assignment status</span>
+            <select id="assignmentStatusFilter">
+              <option value="all">All equipment</option>
+              <option value="assigned">Assigned items</option>
+              <option value="unassigned">Unassigned items</option>
+            </select>
+          </label>
+          <label class="assignment-filter-field" for="assignmentFacultyFilter">
+            <span>Accountable Faculty</span>
+            <select id="assignmentFacultyFilter">
+              <option value="all">All Faculty</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="assignment-bulk-controls mb-3" aria-label="Bulk equipment assignment">
+        <div class="assignment-bulk-summary">
+          <span class="assignment-bulk-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+          <span><strong id="assignmentSelectionCount" aria-live="polite">0 selected</strong><small>Choose equipment rows to assign them together.</small></span>
+        </div>
+        <label class="sr-only" for="bulkFacultySelect">Faculty for selected equipment</label>
+        <select id="bulkFacultySelect" disabled>
+          <option value="">Select faculty for selected equipment</option>
+        </select>
+        <button id="bulkAssignButton" type="button" disabled>
+          <i class="fas fa-user-check" aria-hidden="true"></i><span>Assign selected</span>
+        </button>
+        <button id="clearAssignmentSelection" type="button" disabled>
+          <i class="fas fa-xmark" aria-hidden="true"></i><span>Clear</span>
+        </button>
+      </section>
+
+      <p id="assignmentMessage" class="mb-3 hidden rounded-xl border px-4 py-3 text-sm" role="status"></p>
+
+      <section class="assignment-table-card overflow-hidden rounded-2xl border border-emerald-800/50 bg-[#07111f]">
+        <div class="assignment-table-scroll">
+          <table class="assignment-table w-full text-left text-sm">
+            <colgroup>
+              <col style="width: 3%">
+              <col style="width: 14%">
+              <col style="width: 19%">
+              <col style="width: 13%">
+              <col style="width: 21%">
+              <col style="width: 30%">
+            </colgroup>
+            <thead class="bg-emerald-950/60 text-xs uppercase tracking-wider text-emerald-200">
+              <tr>
+                <th class="assignment-select-cell">
+                  <input id="selectVisibleAssignments" class="assignment-select-checkbox" type="checkbox" aria-label="Select equipment on this page">
+                </th>
+                <th class="px-4 py-3">Equipment</th>
+                <th class="px-4 py-3">Location</th>
+                <th class="px-4 py-3">Status / Condition</th>
+                <th class="px-4 py-3">Accountable Faculty</th>
+                <th class="px-4 py-3">Assignment</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentTableBody" class="divide-y divide-emerald-900/50">
+              <tr><td colspan="6" class="assignment-table-state">Loading equipment accountability…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer id="assignmentPaginationFooter" class="flex flex-col gap-2 border-t border-emerald-900/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div id="assignmentPaginationInfo" class="text-sm text-slate-400">Showing 0 of 0 equipment</div>
+          <nav id="assignmentPagination" class="flex flex-wrap items-center justify-end gap-2" aria-label="Equipment assignment pagination"></nav>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <script>
+    const state = { equipment: [], faculty: [], histories: new Set(), selectedEquipmentIds: new Set(), loading: false, bulkAssigning: false, currentPage: 1 };
+    const rowsPerPage = 12;
+    const tableBody = document.getElementById('assignmentTableBody');
+    const message = document.getElementById('assignmentMessage');
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[character]);
+    }
+
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.className = `mb-4 rounded-xl border px-4 py-3 text-sm ${isError
+        ? 'border-rose-500/30 bg-rose-950/30 text-rose-200'
+        : 'border-emerald-500/30 bg-emerald-950/30 text-emerald-200'}`;
+    }
+
+    function updateBulkSelectionControls(pageItems = getVisibleEquipment().slice((state.currentPage - 1) * rowsPerPage, state.currentPage * rowsPerPage)) {
+      const selectedCount = state.selectedEquipmentIds.size;
+      const facultySelect = document.getElementById('bulkFacultySelect');
+      const assignButton = document.getElementById('bulkAssignButton');
+      const clearButton = document.getElementById('clearAssignmentSelection');
+      const selectVisible = document.getElementById('selectVisibleAssignments');
+      document.getElementById('assignmentSelectionCount').textContent = `${selectedCount} selected`;
+      facultySelect.disabled = !selectedCount || state.bulkAssigning || !state.faculty.length;
+      assignButton.disabled = !selectedCount || !facultySelect.value || state.bulkAssigning || state.loading;
+      clearButton.disabled = !selectedCount || state.bulkAssigning;
+      if (selectVisible) {
+        const selectedOnPage = pageItems.filter((item) => state.selectedEquipmentIds.has(Number(item.id))).length;
+        selectVisible.checked = pageItems.length > 0 && selectedOnPage === pageItems.length;
+        selectVisible.indeterminate = selectedOnPage > 0 && selectedOnPage < pageItems.length;
+        selectVisible.disabled = !pageItems.length || state.bulkAssigning;
+      }
+    }
+
+    function getVisibleEquipment() {
+      const searchTerms = document.getElementById('assignmentSearch').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const assignmentStatus = document.getElementById('assignmentStatusFilter').value;
+      const facultyId = document.getElementById('assignmentFacultyFilter').value;
+      return state.equipment.filter((item) => {
+        const assignedFacultyId = item.accountableFaculty?.id == null ? '' : String(item.accountableFaculty.id);
+        if (assignmentStatus === 'assigned' && !assignedFacultyId) return false;
+        if (assignmentStatus === 'unassigned' && assignedFacultyId) return false;
+        if (facultyId !== 'all' && assignedFacultyId !== facultyId) return false;
+        const searchableText = [
+          item.equipmentId, item.name, item.category, item.serialNumber, item.location,
+          item.laboratoryRoom, item.campus, item.status, item.condition,
+          item.accountableFaculty?.name, item.accountableFaculty?.email
+        ].filter(Boolean).join(' ').toLowerCase();
+        return !searchTerms.length || searchTerms.every((term) => searchableText.includes(term));
+      });
+    }
+
+    function renderRows() {
+      const visible = getVisibleEquipment();
+      document.getElementById('equipmentCount').textContent = String(visible.length);
+      document.getElementById('clearAssignmentSearch').hidden = !document.getElementById('assignmentSearch').value;
+      document.getElementById('facultyCount').textContent = String(state.faculty.length);
+      const assignedCount = state.equipment.filter((item) => item.accountableFaculty?.id != null).length;
+      document.getElementById('assignmentAssignedCount').textContent = String(assignedCount);
+      document.getElementById('assignmentUnassignedCount').textContent = String(state.equipment.length - assignedCount);
+      const totalPages = Math.max(1, Math.ceil(visible.length / rowsPerPage));
+      state.currentPage = Math.min(Math.max(1, state.currentPage), totalPages);
+      const startIndex = (state.currentPage - 1) * rowsPerPage;
+      const pageItems = visible.slice(startIndex, startIndex + rowsPerPage);
+      const paginationInfo = document.getElementById('assignmentPaginationInfo');
+      const pagination = document.getElementById('assignmentPagination');
+      const firstItem = visible.length ? startIndex + 1 : 0;
+      const lastItem = visible.length ? Math.min(startIndex + rowsPerPage, visible.length) : 0;
+      paginationInfo.textContent = `Showing ${firstItem}-${lastItem} of ${visible.length} equipment`;
+      const pageNumbers = totalPages <= 5
+        ? Array.from({ length: totalPages }, (_, index) => index + 1)
+        : state.currentPage <= 3
+          ? [1, 2, 3, 'ellipsis', totalPages]
+          : state.currentPage >= totalPages - 2
+            ? [1, 'ellipsis', totalPages - 2, totalPages - 1, totalPages]
+            : [1, 'ellipsis', state.currentPage - 1, state.currentPage, state.currentPage + 1, 'ellipsis', totalPages];
+      pagination.innerHTML = visible.length ? `
+        <button type="button" data-assignment-page="${state.currentPage - 1}" class="rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200 transition hover:bg-emerald-900/60 disabled:cursor-not-allowed disabled:opacity-40" ${state.currentPage === 1 ? 'disabled' : ''} aria-label="Previous page">Previous</button>
+        ${pageNumbers.map((page) => page === 'ellipsis'
+          ? '<span class="px-1 text-sm text-slate-400" aria-hidden="true">…</span>'
+          : `
+          <button type="button" data-assignment-page="${page}" class="flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition ${page === state.currentPage ? 'border-emerald-500 bg-emerald-600 text-white' : 'border-emerald-800/50 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-900/60'}" ${page === state.currentPage ? 'aria-current="page"' : ''} aria-label="Page ${page}">${page}</button>
+        `).join('')}
+        <button type="button" data-assignment-page="${state.currentPage + 1}" class="rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200 transition hover:bg-emerald-900/60 disabled:cursor-not-allowed disabled:opacity-40" ${state.currentPage === totalPages ? 'disabled' : ''} aria-label="Next page">Next</button>
+      ` : '';
+      if (!state.faculty.length && state.equipment.length) {
+        showMessage('No Faculty accounts are registered yet. Register or add a Faculty account before assigning equipment.');
+      }
+      const bulkFacultySelect = document.getElementById('bulkFacultySelect');
+      const selectedFacultyId = bulkFacultySelect.value;
+      bulkFacultySelect.innerHTML = `<option value="">Select faculty for selected equipment</option>${state.faculty.map((person) =>
+        `<option value="${person.id}">${escapeHtml(person.name)}${person.campus ? ` — ${escapeHtml(person.campus)}` : ''}</option>`
+      ).join('')}`;
+      bulkFacultySelect.value = state.faculty.some((person) => String(person.id) === selectedFacultyId) ? selectedFacultyId : '';
+      const facultyFilter = document.getElementById('assignmentFacultyFilter');
+      const selectedFilterFacultyId = facultyFilter.value;
+      facultyFilter.innerHTML = `<option value="all">All Faculty</option>${state.faculty.map((person) =>
+        `<option value="${person.id}">${escapeHtml(person.name)}${person.campus ? ` — ${escapeHtml(person.campus)}` : ''}</option>`
+      ).join('')}`;
+      facultyFilter.value = state.faculty.some((person) => String(person.id) === selectedFilterFacultyId)
+        ? selectedFilterFacultyId
+        : 'all';
+      if (!visible.length) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="assignment-table-state">${
+          state.equipment.length ? 'No equipment matches the selected filters or search.' : 'No equipment found for this campus.'
+        }</td></tr>`;
+        updateBulkSelectionControls([]);
+        return;
+      }
+
+      tableBody.innerHTML = pageItems.map((item) => {
+        const facultyOptions = state.faculty.map((person) =>
+          `<option value="${person.id}" ${Number(item.accountableFaculty?.id) === Number(person.id) ? 'selected' : ''}>${escapeHtml(person.name)}${person.campus ? ` — ${escapeHtml(person.campus)}` : ''}</option>`
+        ).join('');
+        const assigned = item.accountableFaculty
+          ? `<div class="assignment-faculty-name">${escapeHtml(item.accountableFaculty.name)}</div><div class="assignment-faculty-email">${escapeHtml(item.accountableFaculty.email || '')}</div>`
+          : '<span class="assignment-unassigned-label">Not assigned</span>';
+        const location = [item.location, item.laboratoryRoom, item.campus].filter(Boolean).join(' · ') || 'Not specified';
+        const equipmentDetails = [item.name, item.serialNumber ? `SN ${item.serialNumber}` : ''].filter(Boolean).join(' · ') || item.category || 'Equipment details unavailable';
+        const itemStatus = String(item.status || 'Unknown');
+        const statusSlug = itemStatus.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const condition = String(item.condition || '—');
+
+        return `<tr data-equipment-id="${item.id}">
+          <td class="assignment-select-cell">
+            <input class="assignment-select-checkbox equipment-row-checkbox" type="checkbox" data-equipment-id="${item.id}" ${state.selectedEquipmentIds.has(Number(item.id)) ? 'checked' : ''} ${state.bulkAssigning ? 'disabled' : ''} aria-label="Select ${escapeHtml(item.equipmentId)}">
+          </td>
+          <td class="px-3 py-2">
+            <span class="equipment-id-tooltip-trigger" tabindex="0" data-tooltip="${escapeHtml(equipmentDetails)}" aria-label="${escapeHtml(item.equipmentId)}; hover or focus for equipment details">${escapeHtml(item.equipmentId)}</span>
+          </td>
+          <td class="assignment-location-cell">${escapeHtml(location)}</td>
+          <td class="px-3 py-2">
+            <span class="assignment-status-pill status-${escapeHtml(statusSlug)}">${escapeHtml(itemStatus)}</span>
+            <span class="assignment-condition-label">${escapeHtml(condition)}</span>
+          </td>
+          <td class="px-3 py-2 text-sm">${assigned}</td>
+          <td class="px-3 py-2">
+            <div class="flex items-center gap-1.5">
+              <select class="faculty-select rounded-lg border border-emerald-800/60 bg-[#020617] text-white" ${state.bulkAssigning ? 'disabled' : ''} aria-label="Accountable Faculty for ${escapeHtml(item.equipmentId)}">
+                <option value="">Not assigned</option>${facultyOptions}
+              </select>
+              <button type="button" class="save-assignment shrink-0 rounded-lg bg-emerald-600 px-2.5 py-2 text-sm font-semibold text-white hover:bg-emerald-500" ${state.loading || state.bulkAssigning ? 'disabled' : ''}>
+                <span>Save</span>
+              </button>
+              <button type="button" class="show-history shrink-0 rounded-lg border border-emerald-800/60 px-2.5 py-2 text-emerald-200 hover:bg-emerald-900/40" ${state.bulkAssigning ? 'disabled' : ''} title="Assignment history" aria-label="View assignment history for ${escapeHtml(item.equipmentId)}">
+                <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+              </button>
+            </div>
+          </td>
+        </tr>${state.histories.has(Number(item.id)) ? `<tr data-history-for="${item.id}"><td colspan="6" class="assignment-history-cell"><div class="assignment-history-title">Assignment history</div><div class="history-content mt-2 text-sm text-slate-300">Loading history…</div></td></tr>` : ''}`;
+      }).join('');
+      updateBulkSelectionControls(pageItems);
+      pageItems.filter((item) => state.histories.has(Number(item.id))).forEach(loadHistoryIntoRow);
+    }
+
+    async function loadAssignments() {
+      state.loading = true;
+      const refreshButton = document.getElementById('refreshAssignments');
+      const refreshIcon = refreshButton.querySelector('i');
+      refreshButton.disabled = true;
+      refreshButton.setAttribute('aria-busy', 'true');
+      refreshIcon.classList.add('fa-spin');
+      updateBulkSelectionControls();
+      let loaded = false;
+      try {
+        const response = await fetch('/api/equipment-assignments', { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Failed to load equipment assignments.');
+        state.equipment = Array.isArray(data.equipment) ? data.equipment : [];
+        state.faculty = Array.isArray(data.faculty) ? data.faculty : [];
+        const availableEquipmentIds = new Set(state.equipment.map((item) => Number(item.id)));
+        state.selectedEquipmentIds = new Set([...state.selectedEquipmentIds].filter((id) => availableEquipmentIds.has(id)));
+        state.currentPage = 1;
+        message.classList.add('hidden');
+        loaded = true;
+      } catch (error) {
+        state.equipment = [];
+        state.faculty = [];
+        state.currentPage = 1;
+        showMessage(error.message || 'Failed to load equipment accountability.', true);
+      } finally {
+        state.loading = false;
+        refreshButton.disabled = false;
+        refreshButton.removeAttribute('aria-busy');
+        refreshIcon.classList.remove('fa-spin');
+        renderRows();
+      }
+      return loaded;
+    }
+
+    async function saveAssignment(row) {
+      if (state.bulkAssigning || state.loading) return;
+      const equipmentId = Number(row.dataset.equipmentId);
+      const facultyId = row.querySelector('.faculty-select').value || null;
+      const button = row.querySelector('.save-assignment');
+      const defaultButtonContent = '<span>Save</span>';
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Saving</span>';
+      try {
+        const response = await fetch(`/api/equipment-assignments/${equipmentId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ facultyId })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Failed to save assignment.');
+        const refreshed = await loadAssignments();
+        if (refreshed) showMessage(data.unchanged ? data.message : 'Equipment accountability updated.');
+      } catch (error) {
+        showMessage(error.message || 'Failed to save equipment accountability.', true);
+        button.disabled = false;
+        button.innerHTML = defaultButtonContent;
+      }
+    }
+
+    async function assignSelectedEquipment() {
+      const equipmentIds = [...state.selectedEquipmentIds];
+      const facultyId = document.getElementById('bulkFacultySelect').value;
+      if (!equipmentIds.length || !facultyId || state.bulkAssigning || state.loading) return;
+
+      state.bulkAssigning = true;
+      const button = document.getElementById('bulkAssignButton');
+      const rowControls = tableBody.querySelectorAll('.save-assignment, .faculty-select, .equipment-row-checkbox');
+      rowControls.forEach((control) => { control.disabled = true; });
+      updateBulkSelectionControls();
+      const successfulIds = [];
+      const failures = [];
+
+      for (let index = 0; index < equipmentIds.length; index += 1) {
+        const equipmentId = equipmentIds[index];
+        button.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Assigning ${index + 1}/${equipmentIds.length}`;
+        try {
+          const response = await fetch(`/api/equipment-assignments/${equipmentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ facultyId })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || 'Assignment failed.');
+          successfulIds.push(equipmentId);
+        } catch (error) {
+          const item = state.equipment.find((equipment) => Number(equipment.id) === equipmentId);
+          failures.push(`${item?.equipmentId || `#${equipmentId}`}: ${error.message || 'Assignment failed.'}`);
+        }
+      }
+
+      successfulIds.forEach((id) => state.selectedEquipmentIds.delete(id));
+      state.bulkAssigning = false;
+      button.innerHTML = '<i class="fas fa-user-check" aria-hidden="true"></i><span>Assign selected</span>';
+      const refreshed = await loadAssignments();
+      if (!refreshed) {
+        showMessage(`Saved ${successfulIds.length} assignment${successfulIds.length === 1 ? '' : 's'}, but the equipment list could not be refreshed.`, true);
+        return;
+      }
+      if (failures.length) {
+        const details = failures.slice(0, 3).join(' ');
+        const remaining = failures.length > 3 ? ` (+${failures.length - 3} more)` : '';
+        showMessage(`Assigned ${successfulIds.length} of ${equipmentIds.length}. Failed: ${details}${remaining}`, true);
+      } else {
+        const faculty = state.faculty.find((person) => String(person.id) === facultyId);
+        showMessage(`Assigned ${successfulIds.length} equipment item${successfulIds.length === 1 ? '' : 's'} to ${faculty?.name || 'the selected faculty'}.`);
+      }
+    }
+
+    async function loadHistoryIntoRow(item) {
+      const row = tableBody.querySelector(`[data-history-for="${Number(item.id)}"]`);
+      const target = row?.querySelector('.history-content');
+      if (!target || target.dataset.loaded === 'true') return;
+      try {
+        const response = await fetch(`/api/equipment-assignments/${Number(item.id)}/history`, { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Unable to load assignment history.');
+        target.dataset.loaded = 'true';
+        target.innerHTML = data.history.length ? data.history.map((entry) => `
+          <div class="border-t border-emerald-900/50 py-2">
+            <span class="font-medium text-white">${escapeHtml(entry.faculty?.name || 'Unknown Faculty')}</span>
+            <span class="text-slate-400"> · Assigned ${escapeHtml(entry.assignedAt ? new Date(entry.assignedAt).toLocaleString() : '—')}</span>
+            ${entry.unassignedAt ? `<span class="text-slate-400"> · Removed ${escapeHtml(new Date(entry.unassignedAt).toLocaleString())}</span>` : '<span class="text-emerald-300"> · Current</span>'}
+            <span class="text-slate-400"> · By ${escapeHtml(entry.assignedBy?.name || 'Unknown admin')}</span>
+            ${entry.remarks ? `<div class="text-xs text-slate-400">${escapeHtml(entry.remarks)}</div>` : ''}
+            ${entry.unassignmentRemarks ? `<div class="text-xs text-amber-200">Removal note: ${escapeHtml(entry.unassignmentRemarks)}</div>` : ''}
+          </div>`).join('') : '<div class="text-slate-400">No assignment history recorded.</div>';
+      } catch (error) {
+        target.textContent = error.message || 'Unable to load assignment history.';
+      }
+    }
+
+    tableBody.addEventListener('click', (event) => {
+      const row = event.target.closest('tr[data-equipment-id]');
+      if (!row) return;
+      if (event.target.closest('.save-assignment')) {
+        saveAssignment(row);
+        return;
+      }
+      if (event.target.closest('.show-history')) {
+        const id = Number(row.dataset.equipmentId);
+        if (state.histories.has(id)) state.histories.delete(id);
+        else state.histories.add(id);
+        renderRows();
+      }
+    });
+
+    tableBody.addEventListener('change', (event) => {
+      const checkbox = event.target.closest('.equipment-row-checkbox');
+      if (!checkbox) return;
+      const equipmentId = Number(checkbox.dataset.equipmentId);
+      if (checkbox.checked) state.selectedEquipmentIds.add(equipmentId);
+      else state.selectedEquipmentIds.delete(equipmentId);
+      const visible = getVisibleEquipment();
+      updateBulkSelectionControls(visible.slice((state.currentPage - 1) * rowsPerPage, state.currentPage * rowsPerPage));
+    });
+
+    document.getElementById('selectVisibleAssignments').addEventListener('change', (event) => {
+      const visible = getVisibleEquipment();
+      const pageItems = visible.slice((state.currentPage - 1) * rowsPerPage, state.currentPage * rowsPerPage);
+      pageItems.forEach((item) => {
+        if (event.target.checked) state.selectedEquipmentIds.add(Number(item.id));
+        else state.selectedEquipmentIds.delete(Number(item.id));
+      });
+      renderRows();
+    });
+
+    document.getElementById('bulkFacultySelect').addEventListener('change', () => updateBulkSelectionControls());
+    document.getElementById('bulkAssignButton').addEventListener('click', assignSelectedEquipment);
+    document.getElementById('clearAssignmentSelection').addEventListener('click', () => {
+      state.selectedEquipmentIds.clear();
+      renderRows();
+    });
+
+    const assignmentSearch = document.getElementById('assignmentSearch');
+    assignmentSearch.addEventListener('input', () => {
+      state.currentPage = 1;
+      renderRows();
+    });
+    document.getElementById('assignmentStatusFilter').addEventListener('change', () => {
+      state.currentPage = 1;
+      renderRows();
+    });
+    document.getElementById('assignmentFacultyFilter').addEventListener('change', () => {
+      state.currentPage = 1;
+      renderRows();
+    });
+    document.getElementById('clearAssignmentSearch').addEventListener('click', () => {
+      assignmentSearch.value = '';
+      state.currentPage = 1;
+      renderRows();
+      assignmentSearch.focus();
+    });
+    assignmentSearch.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && assignmentSearch.value) {
+        assignmentSearch.value = '';
+        state.currentPage = 1;
+        renderRows();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        assignmentSearch.focus();
+        assignmentSearch.select();
+      }
+    });
+    document.getElementById('assignmentPagination').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-assignment-page]');
+      if (!button || button.disabled) return;
+      const page = Number(button.dataset.assignmentPage);
+      if (!Number.isInteger(page) || page < 1) return;
+      state.currentPage = page;
+      renderRows();
+    });
+    document.getElementById('refreshAssignments').addEventListener('click', loadAssignments);
+    loadAssignments();
+  </script>
+</body>
+</html>

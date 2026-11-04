@@ -1,82 +1,75 @@
 import { sequelize } from '../models/db.js';
 import { QueryTypes } from 'sequelize';
 
+const normalizeLabNumber = (value) => {
+    const label = String(value || '').trim().toLowerCase();
+    const labMatch = label.match(/(?:com\s*lab|laboratory|lab)\s*([12])\b/);
+    if (labMatch) return Number(labMatch[1]);
+    const roomMatch = label.match(/room\s*(202|204)\b/);
+    if (roomMatch) return roomMatch[1] === '202' ? 1 : 2;
+    return null;
+};
+
+const normalizeCampus = (value) => String(value || '')
+    .trim()
+    .replace(/\s*campus\s*$/i, '')
+    .trim()
+    .toLowerCase();
+
 /**
  * Get available PC stations for a laboratory
  * Returns list of PC sets (computer stations) with their availability status
  */
 export const getPCAvailability = async (req, res) => {
     try {
-        let { campus, laboratory, attendanceId } = req.query;
+        const { campus, laboratory } = req.query;
 
-        if (attendanceId) {
-            const attendance = await sequelize.query(
-                `SELECT a.lab
-                 FROM attendance a
-                 INNER JOIN attendance_sessions ats ON ats.token = a.sessionToken
-                 WHERE a.id = ? AND ats.expiresAt > NOW()
-                 LIMIT 1`,
-                {
-                    replacements: [attendanceId],
-                    type: QueryTypes.SELECT
-                }
-            );
-            if (attendance.length > 0 && attendance[0].lab) {
-                laboratory = attendance[0].lab;
-            }
+        const labNumber = laboratory ? normalizeLabNumber(laboratory) : null;
+        if (laboratory && !labNumber) {
+            return res.status(400).json({ error: 'Unable to determine the laboratory for this PC selection.' });
         }
 
-        // Get all PC Sets (equipment with setId) for this campus and laboratory
-        // A PC station is considered occupied if ANY equipment in the set is in use
+        // A station belongs to the laboratory recorded on its PC set, not the
+        // historical room value of each component assigned to the set.
         let query = `
             SELECT 
-                e.setId,
-                e.campus,
-                e.laboratoryRoom,
-                e.location,
+                es.setId,
+                MIN(e.campus) as campus,
+                MIN(e.laboratoryRoom) as laboratoryRoom,
+                es.location,
                 MIN(e.id) as representativeId,
                 MIN(e.equipmentId) as equipmentId,
                 MIN(e.name) as name,
                 MIN(e.assetNumber) as assetNumber,
-                CASE 
-                    WHEN COUNT(DISTINCT CASE
-                        WHEN eul.attendanceId IS NULL OR ats.id IS NOT NULL THEN eul.id
-                    END) > 0 THEN 1
-                    ELSE 0
-                END as isOccupied,
-                GROUP_CONCAT(DISTINCT CASE
-                    WHEN eul.attendanceId IS NULL OR ats.id IS NOT NULL THEN u.name
-                END) as occupiedByName
-            FROM equipment e
-            LEFT JOIN equipment_usage_logs eul ON e.setId IS NOT NULL 
-                AND e.id = eul.equipmentId 
-                AND eul.usageEndTime IS NULL
-            LEFT JOIN attendance a ON a.id = eul.attendanceId
-            LEFT JOIN attendance_sessions ats ON ats.token = a.sessionToken
-                AND (eul.attendanceId IS NULL OR ats.expiresAt > NOW())
-            LEFT JOIN users u ON eul.userId = u.id
-            WHERE e.setId IS NOT NULL
-                AND e.setId != ''
+                CASE WHEN COUNT(DISTINCT eul.id) > 0 THEN 1 ELSE 0 END as isOccupied,
+                GROUP_CONCAT(DISTINCT u.name) as occupiedByName
+            FROM equipment_sets es
+            INNER JOIN equipment e ON BINARY e.setId = BINARY es.setId
                 AND e.status = 'Serviceable'
+            LEFT JOIN equipment_usage_logs eul ON e.id = eul.equipmentId
+                AND eul.usageEndTime IS NULL
+            LEFT JOIN users u ON eul.userId = u.id
+            WHERE es.status = 'active'
         `;
 
         const replacements = [];
 
         // Add campus filter if provided
         if (campus) {
-            query += ` AND e.campus = ?`;
-            replacements.push(campus);
+            const canonicalCampus = normalizeCampus(campus);
+            query += ` AND LOWER(TRIM(e.campus)) IN (?, ?)`;
+            replacements.push(canonicalCampus, `${canonicalCampus} campus`);
         }
 
         // Add laboratory filter if provided
-        if (laboratory) {
-            query += ` AND e.laboratoryRoom = ?`;
-            replacements.push(laboratory);
+        if (labNumber) {
+            query += ` AND UPPER(REPLACE(TRIM(es.location), ' ', '')) = ?`;
+            replacements.push(`COMLAB${labNumber}`);
         }
 
         query += ` 
-            GROUP BY e.setId, e.campus, e.laboratoryRoom, e.location
-            ORDER BY e.setId ASC
+            GROUP BY es.setId, es.location
+            ORDER BY es.setId ASC
         `;
 
         const pcSets = await sequelize.query(query, {
@@ -140,33 +133,6 @@ export const assignPC = async (req, res) => {
         const sessionUserId = req.session?.userId;
         const effectiveUserId = userId || sessionUserId;
 
-        if (!attendanceId) {
-            return res.status(403).json({
-                error: 'Please scan the class QR code and record attendance before selecting a PC station.'
-            });
-        }
-
-        const attendance = await sequelize.query(
-            `SELECT a.id
-             FROM attendance a
-             INNER JOIN attendance_sessions ats ON ats.token = a.sessionToken
-             LEFT JOIN users u ON u.id = ?
-             WHERE a.id = ?
-               AND (BINARY a.studentId = BINARY u.student_number OR BINARY a.studentId = BINARY CAST(? AS CHAR))
-               AND ats.expiresAt > NOW()
-             LIMIT 1`,
-            {
-                replacements: [effectiveUserId, attendanceId, effectiveUserId],
-                type: QueryTypes.SELECT
-            }
-        );
-
-        if (attendance.length === 0) {
-            return res.status(403).json({
-                error: 'Your attendance is not active for this class session. Scan the current class QR code first.'
-            });
-        }
-
         // Validate required fields - need either setId or equipmentId
         if (!effectiveUserId) {
             return res.status(400).json({ 
@@ -184,7 +150,7 @@ export const assignPC = async (req, res) => {
         let targetEquipmentId = equipmentId;
         if (setId && !equipmentId) {
             const equipmentInSet = await sequelize.query(
-                `SELECT id FROM equipment WHERE setId = ? LIMIT 1`,
+                `SELECT id FROM equipment WHERE setId = ? AND status = 'Serviceable' ORDER BY category, id LIMIT 1`,
                 {
                     replacements: [setId],
                     type: QueryTypes.SELECT
@@ -200,31 +166,49 @@ export const assignPC = async (req, res) => {
             targetEquipmentId = equipmentInSet[0].id;
         }
 
+        const requestedLabNumber = laboratory ? normalizeLabNumber(laboratory) : null;
+        if (laboratory && !requestedLabNumber) {
+            return res.status(400).json({ error: 'Unable to determine the laboratory for this PC selection.' });
+        }
+
+        const station = await sequelize.query(
+            `SELECT es.setId, es.location, MIN(e.campus) AS campus
+             FROM equipment_sets es
+             INNER JOIN equipment e ON BINARY e.setId = BINARY es.setId
+             WHERE es.status = 'active'
+               AND e.status = 'Serviceable'
+               AND ${setId ? 'es.setId = ?' : 'e.id = ?'}
+             GROUP BY es.setId, es.location`,
+            {
+                replacements: [setId || targetEquipmentId],
+                type: QueryTypes.SELECT
+            }
+        );
+        if (!station.length) {
+            return res.status(404).json({ error: 'The selected PC station is not available.' });
+        }
+        const selectedSetId = station[0].setId;
+        const stationLabNumber = normalizeLabNumber(station[0].location);
+        if (
+            (requestedLabNumber && stationLabNumber !== requestedLabNumber) ||
+            (campus && normalizeCampus(station[0].campus) !== normalizeCampus(campus))
+        ) {
+            return res.status(409).json({ error: 'Please select a PC station in your selected campus and laboratory.' });
+        }
+
         // Check if PC set is already occupied (check all equipment in the set)
-        const setQuery = setId
+        const setQuery = selectedSetId
             ? `SELECT eul.id, eul.userId, e.setId 
                FROM equipment_usage_logs eul
                JOIN equipment e ON eul.equipmentId = e.id
-               WHERE e.setId = ? AND eul.usageEndTime IS NULL
-                 AND (eul.attendanceId IS NULL OR EXISTS (
-                     SELECT 1
-                     FROM attendance a
-                     INNER JOIN attendance_sessions ats ON ats.token = a.sessionToken
-                     WHERE a.id = eul.attendanceId AND ats.expiresAt > NOW()
-                 ))`
+               WHERE e.setId = ? AND eul.usageEndTime IS NULL`
             : `SELECT id, userId FROM equipment_usage_logs 
-               WHERE equipmentId = ? AND usageEndTime IS NULL
-                 AND (attendanceId IS NULL OR EXISTS (
-                     SELECT 1
-                     FROM attendance a
-                     INNER JOIN attendance_sessions ats ON ats.token = a.sessionToken
-                     WHERE a.id = attendanceId AND ats.expiresAt > NOW()
-                 ))`;
+               WHERE equipmentId = ? AND usageEndTime IS NULL`;
 
         const existingUsage = await sequelize.query(
             setQuery,
             {
-                replacements: [setId || targetEquipmentId],
+                replacements: [selectedSetId || targetEquipmentId],
                 type: QueryTypes.SELECT
             }
         );
@@ -280,7 +264,7 @@ export const assignPC = async (req, res) => {
              (attendanceId, equipmentId, serialNumber, userId, campusId, laboratoryId, pcSetId, usageStartTime)
              VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
             {
-                replacements: [attendanceId, targetEquipmentId, serialNumber, effectiveUserId, equipmentCampus, equipmentLab, equipmentSetId],
+                replacements: [attendanceId || null, targetEquipmentId, serialNumber, effectiveUserId, equipmentCampus, equipmentLab, equipmentSetId],
                 type: QueryTypes.INSERT
             }
         );
@@ -292,7 +276,7 @@ export const assignPC = async (req, res) => {
             equipmentId: targetEquipmentId,
             setId: equipmentSetId,
             userId: effectiveUserId,
-            attendanceId,
+            attendanceId: attendanceId || null,
             scheduleId,
             campus: equipmentCampus,
             laboratory: equipmentLab
@@ -372,17 +356,15 @@ export const getCurrentPCAssignment = async (req, res) => {
             `SELECT 
                 eul.id as usageLogId,
                 eul.equipmentId,
-                eul.usageStartTime,
-                e.name as equipmentName,
+               COALESCE(eul.pcSetId, e.setId) as pcSetId,
+               eul.usageStartTime,
+               e.name as equipmentName,
                 e.assetNumber,
                 e.laboratoryRoom,
                 TIMESTAMPDIFF(MINUTE, eul.usageStartTime, NOW()) as durationMinutes
              FROM equipment_usage_logs eul
              JOIN equipment e ON eul.equipmentId = e.id
-             LEFT JOIN attendance a ON a.id = eul.attendanceId
-             LEFT JOIN attendance_sessions ats ON ats.token = a.sessionToken
              WHERE eul.userId = ? AND eul.usageEndTime IS NULL
-               AND (eul.attendanceId IS NULL OR ats.expiresAt > NOW())
              ORDER BY eul.usageStartTime DESC
              LIMIT 1`,
             {

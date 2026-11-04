@@ -113,7 +113,7 @@ This code will expire in 10 minutes.
 If you did not request this, you can safely ignore this email.
 
 ---
-ComLab - Computer Laboratory Management System
+ComLab - Computer Laboratory Facilities Management System
 `;
 
   // Simplified HTML for better Gmail compatibility
@@ -172,7 +172,7 @@ ComLab - Computer Laboratory Management System
               <hr style="margin:30px 0;border:none;border-top:1px solid rgba(255,255,255,0.1);">
 
               <p style="margin:0;color:#475569;font-size:12px;text-align:center;">
-                ComLab — Computer Laboratory Management System<br>
+                ComLab — Computer Laboratory Facilities Management System<br>
                 Do not reply to this email.
               </p>
             </td>

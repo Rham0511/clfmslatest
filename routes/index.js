@@ -12,17 +12,20 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import multer from "multer";
+import bcryptjs from "bcryptjs";
 import { User } from "../models/userModel.js";
 import { Equipment } from "../models/equipmentModel.js";
 import { BorrowRecord } from "../models/borrowRecordModel.js";
 import { MaintenanceRequest } from "../models/maintenanceRequestModel.js";
 import { loginPage, registerPage, loginUser, registerUser, dashboardPage, logoutUser, forgotPasswordPage, forgotPassword, verifyOtpPage, verifyOtp, resendOtp, resetPasswordPage, resetPassword, verifyEmail, updateProfile, uploadStudentPhoto } from "../controllers/authController.js";
 import { homePage } from "../controllers/homeController.js";
-import { inventoryPage, viewEquipmentPage, getEquipment, getStudentEquipment, getEquipmentCampusTotals, createEquipment, updateEquipment, updateEquipmentStatus, deleteEquipment, getEquipmentQr, getEquipmentCategories, createEquipmentCategory, deleteEquipmentCategory, reportEquipmentMissing, markEquipmentFound, transferEquipmentSet, getMissingEquipment, getEquipmentHistory } from "../controllers/equipmentController.js";
-import { listBorrowRecords, createBorrowRecord, returnBorrowRecord, getBorrowHistory, approveBorrowRecord, rejectBorrowRecord, listBorrowNotifications, markBorrowNotificationRead, markBorrowRecordLost } from "../controllers/borrowController.js";
+import { inventoryPage, scanEquipmentQr, redirectLegacyEquipmentQr, resolveEquipmentQrToken, getEquipment, getStudentEquipment, getEquipmentCampusTotals, createEquipment, updateEquipment, updateEquipmentStatus, deleteEquipment, getEquipmentQr, getEquipmentCategories, createEquipmentCategory, deleteEquipmentCategory, reportEquipmentMissing, markEquipmentFound, transferEquipmentSet, getMissingEquipment, getEquipmentHistory, getEquipmentBorrowCycle, logEquipmentScan, getEquipmentScanHistory } from "../controllers/equipmentController.js";
+import { listBorrowRecords, createBorrowRecord, createStudentQrBorrowRecord, createFacultyQrBorrowRecord, getFacultyQrBorrowStatus, getStudentQrBorrowStatus, returnBorrowRecord, requestBorrowReturn, cancelBorrowRecord, releaseBorrowRecord, getBorrowHistory, listBorrowAudit, approveBorrowRecord, rejectBorrowRecord, listBorrowNotifications, markBorrowNotificationRead, markBorrowRecordLost } from "../controllers/borrowController.js";
 import { listEquipmentAvailability, getEquipmentBorrowingHistory } from "../controllers/equipmentAvailabilityController.js";
-import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, scanAttendance, createAttendanceSession } from "../controllers/attendanceController.js";
+import { listEquipmentAssignments, updateEquipmentAssignment, getEquipmentAssignmentHistory, listMyEquipmentAssignments, getMyEquipmentAssignmentHistory } from "../controllers/equipmentAssignmentController.js";
+import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, getFacultyScheduleAttendanceHistory, exportFacultyScheduleAttendanceHistory, scanAttendance, createAttendanceSession, getStudentAttendanceQrRoster, createStudentAttendanceQrs } from "../controllers/attendanceController.js";
 import { getAuditLogs, logAuditEntry } from "../controllers/auditController.js";
+import { getPCStationQr, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
 import { getAuditTrail } from "../controllers/auditTrailController.js";
 import { getPCAvailability, assignPC, endPCSession, getCurrentPCAssignment } from "../controllers/pcAssignmentController.js";
 import { getScheduleSeatingChart } from "../controllers/seatingChartController.js";
@@ -32,6 +35,8 @@ import { ClassListEntry } from "../models/classListEntryModel.js";
 import { AttendanceSession } from "../models/attendanceSessionModel.js";
 import { Attendance } from "../models/attendanceModel.js";
 import { sequelize } from "../models/db.js";
+import { ensureArchiveRecordsTable, getArchivedEntityIds } from "../models/archiveRecords.js";
+import { formatComputerLabLocation, normalizeLabLabel } from "../models/computerLabService.js";
 import { DataTypes, Op, QueryTypes } from "sequelize";
 import XLSX from "xlsx";
 
@@ -43,6 +48,22 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 const upload = multer({ storage });
+const scheduleClassListUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, callback) => {
+    if (/\.(xlsx|xls|csv)$/i.test(file.originalname)) return callback(null, true);
+    return callback(new Error("Class list must be an .xlsx, .xls, or .csv file."));
+  }
+});
+const handleScheduleClassListUpload = (req, res, next) => scheduleClassListUpload.single("classListFile")(req, res, (error) => {
+  if (!error) return next();
+  const tooLarge = error.code === "LIMIT_FILE_SIZE";
+  console.error("Schedule class list upload rejected.", error);
+  return res.status(tooLarge ? 413 : 400).json({
+    error: tooLarge ? "Class list file must be 10 MB or smaller." : error.message || "Unable to upload the class list."
+  });
+});
 
 const getUploadedFileBuffer = (uploadedFile) => {
   if (uploadedFile?.buffer) return uploadedFile.buffer;
@@ -56,14 +77,31 @@ const router = express.Router();
 
 const staticHtmlPages = [
   "admin-dashboard",
+  "admin-profile",
+  "admin-computer-labs",
+  "admin-faculty-management",
+  "admin-technician-accomplishments",
+  "equipment-assignment",
+  "faculty-dashboard",
+  "faculty-borrow-equipment",
+  "faculty-mir-items",
+  "faculty-audit-history",
+  "faculty-equipment-availability",
+  "faculty-profile",
+  "faculty-my-requests",
+  "faculty-report-equipment",
+  "faculty-laboratory-schedules",
   "student-dashboard",
+  "student-audit-history",
   "student-borrow-equipment",
+  "student-scan-attendance",
   "student-profile",
   "student-my-requests",
   "student-report-issue",
   "student-report-equipment",
   "my-pc-station",
   "technician-dashboard",
+  "technician-profile",
   "attendance",
   "maintenance-reports",
   "borrow-equipment"
@@ -94,13 +132,55 @@ const requireAdminForAudit = async (req, res, next) => {
 
   res.status(403).send("Forbidden: admin only.");
 };
+const requireScheduleUpdateAccess = async (req, res, next) => {
+  if (!req.session?.userId) return res.status(401).json({ error: "Please log in to update laboratory schedules." });
+  try {
+    const user = await User.findByPk(req.session.userId, {
+      attributes: ["id", "role", "campus"]
+    });
+    if (!user) return res.status(401).json({ error: "Your account could not be verified." });
+    const role = normalizeRoleName(user.role);
+    if (!["faculty", "instructor"].includes(role)) {
+      return res.status(403).json({ error: "Only the assigned faculty instructor or an administrator can update this schedule." });
+    }
+    const schedule = await LaboratorySchedule.findByPk(req.params.id);
+    if (!schedule) return res.status(404).json({ error: "Schedule not found." });
+    const isOwner = String(schedule.instructorUserId || "") === String(user.id);
+    const userCampus = normalizeCampus(user.campus) || await getUserCampusFromSession(req);
+    if (!isOwner || !userCampus || !canManageRecord(userCampus, schedule.campus)) {
+      return res.status(403).json({ error: "You can update only schedules assigned to you at your campus." });
+    }
+    req.scheduleManager = user;
+    return next();
+  } catch (error) {
+    console.error("Failed to authorize laboratory schedule update.", error);
+    return res.status(500).json({ error: "Failed to authorize schedule update." });
+  }
+};
+const requireScheduleCreatorRole = async (req, res, next) => {
+  if (!req.session?.userId) return res.status(401).json({ error: "Please log in to create laboratory schedules." });
+  try {
+    const user = await User.findByPk(req.session.userId, {
+      attributes: ["id", "name", "role", "campus"]
+    });
+    const role = normalizeRoleName(user?.role);
+    if (!user || !isAdminRole(role)) {
+      return res.status(403).json({ error: "Only administrators can create laboratory schedules." });
+    }
+    req.scheduleCreator = user;
+    return next();
+  } catch (error) {
+    console.error("Failed to authorize laboratory schedule creation.", error);
+    return res.status(500).json({ error: "Failed to authorize schedule creation." });
+  }
+};
 
 const pageConfigs = {
   "attendance-monitoring": {
     title: "Attendance Monitoring",
     description: "",
-    backRoute: "/admin-dashboard",
-    backLabel: "Back to Admin Dashboard",
+    backRoute: "/faculty-dashboard",
+    backLabel: "Back to Faculty Dashboard",
     content: `
       <style>
         :root {
@@ -195,9 +275,9 @@ const pageConfigs = {
 
         .attendance-summary-label {
           color: #bbf7d0;
-          font-size: 0.82rem;
+          font-size: 0.92rem;
           text-transform: uppercase;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.12em;
           font-weight: 700;
         }
 
@@ -226,7 +306,7 @@ const pageConfigs = {
         }
 
         .attendance-filter-label {
-          font-size: 0.96rem;
+          font-size: 1rem;
           font-weight: 700;
           color: #cbd5e1;
           letter-spacing: 0.02em;
@@ -241,7 +321,7 @@ const pageConfigs = {
           border-radius: 0.75rem;
           padding: 0.9rem 1.2rem;
           outline: none;
-          font-size: 0.95rem;
+          font-size: 1rem;
           line-height: 1.4;
         }
 
@@ -253,13 +333,31 @@ const pageConfigs = {
 
         .attendance-table-wrap {
           overflow-x: auto;
-          overflow-y: hidden;
-          max-height: 24rem;
+          overflow-y: auto;
+          max-height: 44rem;
           border-radius: 16px;
           border: 1px solid rgba(74,222,128,.12);
           background: rgba(74,222,128,.04);
           box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
           margin-bottom: 1.1rem;
+          scrollbar-color: rgba(74,222,128,.55) rgba(6,16,11,.75);
+          scrollbar-width: thin;
+        }
+
+        .attendance-table-wrap::-webkit-scrollbar {
+          width: 0.5rem;
+          height: 0.5rem;
+        }
+
+        .attendance-table-wrap::-webkit-scrollbar-track {
+          background: rgba(6,16,11,.75);
+          border-radius: 9999px;
+        }
+
+        .attendance-table-wrap::-webkit-scrollbar-thumb {
+          background: rgba(74,222,128,.55);
+          border: 1px solid rgba(6,16,11,.75);
+          border-radius: 9999px;
         }
 
         .attendance-table {
@@ -268,11 +366,14 @@ const pageConfigs = {
         }
 
         .attendance-table th {
+          position: sticky;
+          top: 0;
+          z-index: 1;
           text-align: left;
           padding: 0.95rem 0.9rem;
-          font-size: 0.8rem;
+          font-size: 0.92rem;
           text-transform: uppercase;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.1em;
           font-weight: 700;
           color: #D1FAE5;
           background: linear-gradient(180deg, rgba(18,49,36,.95), rgba(20,59,42,.95));
@@ -283,7 +384,7 @@ const pageConfigs = {
         .attendance-table td {
           text-align: left;
           padding: 0.95rem 0.9rem;
-          font-size: 0.95rem;
+          font-size: 1rem;
           border-bottom: 1px solid rgba(148, 163, 184, 0.12);
           white-space: nowrap;
           line-height: 1.5;
@@ -304,7 +405,7 @@ const pageConfigs = {
           color: var(--text);
           border-radius: 999px;
           padding: 0.6rem 0.9rem;
-          font-size: 0.92rem;
+          font-size: 1rem;
           font-weight: 700;
           transition: all 0.2s ease;
           box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
@@ -335,7 +436,7 @@ const pageConfigs = {
           color: var(--text);
           border-radius: 999px;
           padding: 0 0.8rem;
-          font-size: 0.9rem;
+          font-size: 0.98rem;
           font-weight: 700;
           display: inline-flex;
           align-items: center;
@@ -369,8 +470,24 @@ const pageConfigs = {
         }
 
         .attendance-pagination-info {
-          font-size: 0.95rem;
+          font-size: 1rem;
           color: #cbd5e1;
+        }
+
+        body.attendance-monitoring-page .main-container.theme-light .page-content :is(
+          h1, h2, h3, h4, h5, h6, p, span, label, th, td, button, input, select, option, textarea, a, li, strong, b, small
+        ) {
+          font-weight: 600 !important;
+        }
+
+        body.attendance-monitoring-page .main-container.theme-light .page-content :is(h1, h2, h3, h4, h5, h6) {
+          font-weight: 700 !important;
+        }
+
+        body.attendance-monitoring-page .main-container.theme-light .attendance-summary-label,
+        body.attendance-monitoring-page .main-container.theme-light .attendance-filter-label,
+        body.attendance-monitoring-page .main-container.theme-light .attendance-table th {
+          font-weight: 700 !important;
         }
 
         @media (max-width: 1024px) {
@@ -383,14 +500,134 @@ const pageConfigs = {
         }
 
         @media (max-width: 720px) {
-          .attendance-summary-grid,
-          .attendance-filter-row {
-            grid-template-columns: 1fr;
+          body.faculty-portal {
+            min-height: 100%;
+            height: auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
           }
+
+          body.faculty-portal .main-container,
+          body.faculty-portal .page-content {
+            height: auto;
+            min-height: 100%;
+            overflow-y: visible;
+          }
+
+          body.faculty-portal .page-content {
+            padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
+          }
+
+          .attendance-page-header {
+            align-items: center;
+            min-height: 4.5rem;
+            margin-bottom: .75rem;
+            padding: .85rem .9rem .85rem 4.25rem;
+            border-radius: 1rem;
+          }
+
+          .attendance-page-title {
+            font-size: clamp(1.15rem, 5vw, 1.5rem);
+            line-height: 1.2;
+            letter-spacing: -.025em;
+          }
+
+          .attendance-page-card {
+            padding: .8rem;
+            border-radius: 1.15rem;
+          }
+
+          .attendance-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .65rem;
+            margin-bottom: .8rem;
+          }
+
+          .attendance-summary-card {
+            min-height: 6.4rem;
+            padding: .75rem;
+            border-radius: .95rem;
+          }
+
+          .attendance-summary-icon {
+            top: .6rem;
+            right: .6rem;
+            width: 2rem;
+            height: 2rem;
+            border-radius: .65rem;
+            font-size: 1rem;
+          }
+
+          .attendance-summary-label {
+            max-width: calc(100% - 1.8rem);
+            font-size: .76rem;
+            letter-spacing: .08em;
+            line-height: 1.35;
+          }
+
+          .attendance-summary-value {
+            margin-top: .35rem;
+            font-size: 1.65rem;
+            line-height: 1;
+          }
+
+          .attendance-filter-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .6rem;
+            margin-bottom: .8rem;
+            padding-top: .75rem;
+          }
+
+          .attendance-filter-field:first-child {
+            grid-column: 1 / -1;
+          }
+
+          .attendance-filter-field {
+            min-width: 0;
+            gap: .35rem;
+          }
+
+          .attendance-filter-label {
+            font-size: .88rem;
+          }
+
+          .attendance-filter-input,
+          .attendance-filter-select {
+            min-width: 0;
+            padding: .7rem .75rem;
+            font-size: 16px;
+          }
+
+          .attendance-table-wrap {
+            height: auto;
+            max-height: none;
+            margin-bottom: .65rem;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-inline: contain;
+          }
+
+          .attendance-table {
+            min-width: 48rem;
+          }
+
           .attendance-table th,
           .attendance-table td {
-            font-size: 0.9rem;
-            padding: 0.8rem 0.7rem;
+            font-size: .9rem;
+            padding: .65rem .55rem;
+          }
+
+          .attendance-action-btn {
+            padding: .48rem .7rem;
+            font-size: .9rem;
+          }
+
+          .attendance-pagination-row {
+            justify-content: space-between;
+            gap: .5rem;
+          }
+
+          .attendance-pagination-info {
+            font-size: .9rem;
           }
         }
       </style>
@@ -768,7 +1005,7 @@ const pageConfigs = {
           </div>
         </div>
       </div>
-      <script src="/js/attendance-monitoring.js?v=20261003" defer></script>
+      <script src="/js/attendance-monitoring.js?v=20261006" defer></script>
     `
   },
   "laboratory-schedules": {
@@ -838,6 +1075,31 @@ const pageConfigs = {
           border-radius: 24px;
           padding: 0.7rem 0.85rem 0.85rem;
           box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+        }
+        .seating-chart-modal {
+          position: fixed;
+          inset: 0 0 0 var(--sidebar-width);
+          z-index: 1301;
+          box-sizing: border-box;
+          padding: clamp(0.5rem, 2vw, 1.5rem);
+        }
+        .seating-chart-modal__dialog {
+          width: min(100%, 72rem);
+          max-height: calc(100vh - 1rem);
+          max-height: calc(100dvh - 1rem);
+          margin: 0;
+          overscroll-behavior: contain;
+        }
+        body.app-shell .main-container.seating-chart-open { z-index: auto; }
+        @media (max-width: 768px) {
+          .seating-chart-modal {
+            inset: 0;
+            padding: 0.5rem;
+          }
+          .seating-chart-modal__dialog {
+            max-height: calc(100vh - 1rem);
+            max-height: calc(100dvh - 1rem);
+          }
         }
         .page-content .card,
         .page-content .card.sm,
@@ -956,16 +1218,75 @@ const pageConfigs = {
           font-weight: 700;
         }
         .schedule-manager-card {
-          padding: 1rem 1.05rem 0.85rem;
-          border-radius: 1.25rem;
-          border: 1px solid rgba(74,222,128,.16);
-          background: linear-gradient(180deg, rgba(13, 31, 23, 0.96), rgba(8, 20, 15, 0.92));
-          box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 10px 28px rgba(6,64,43,.12);
+          padding: clamp(1rem, 2vw, 1.5rem);
+          border-radius: 1.4rem;
+          border: 1px solid rgba(110,231,183,.2);
+          background:
+            radial-gradient(ellipse at 0% 0%, rgba(34,197,94,.09), transparent 35%),
+            linear-gradient(155deg, rgba(12,34,24,.98), rgba(6,20,14,.98));
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 20px 50px rgba(0,0,0,.18);
         }
+        .schedule-manager-intro {
+          display: flex;
+          align-items: center;
+          gap: .9rem;
+          margin: 0 0 1.1rem;
+        }
+        .schedule-manager-icon {
+          display: grid;
+          place-items: center;
+          flex: 0 0 auto;
+          width: 3rem;
+          height: 3rem;
+          border: 1px solid rgba(110,231,183,.25);
+          border-radius: 1rem;
+          background: linear-gradient(145deg, rgba(34,197,94,.2), rgba(16,87,55,.18));
+          color: #86efac;
+          font-size: 1.1rem;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .schedule-manager-heading { min-width: 0; }
+        .schedule-manager-eyebrow {
+          margin: 0 0 .2rem;
+          color: #6ee7b7;
+          font-size: .64rem;
+          font-weight: 800;
+          letter-spacing: .15em;
+          text-transform: uppercase;
+        }
+        .schedule-manager-heading .schedule-manager-title {
+          margin: 0;
+          color: #f0fdf4;
+          font-size: clamp(1.2rem, 2vw, 1.55rem);
+          font-weight: 800;
+          letter-spacing: -.035em;
+          line-height: 1.15;
+        }
+        .schedule-manager-description {
+          margin: .25rem 0 0;
+          color: #a8c8b5;
+          font-size: .8rem;
+          line-height: 1.45;
+        }
+        .schedule-manager-hours {
+          display: inline-flex;
+          align-items: center;
+          gap: .45rem;
+          margin-left: auto;
+          padding: .55rem .75rem;
+          border: 1px solid rgba(110,231,183,.14);
+          border-radius: 999px;
+          background: rgba(2,18,11,.38);
+          color: #b8d9c5;
+          font-size: .72rem;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .schedule-manager-hours i { color: #6ee7b7; }
         .schedule-manager-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-end;
           gap: 0.9rem;
           margin-bottom: 0.9rem;
         }
@@ -994,10 +1315,302 @@ const pageConfigs = {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.7rem;
+          gap: .7rem;
           margin-bottom: 0.95rem;
-          padding-bottom: 0.9rem;
-          border-bottom: 1px solid rgba(74,222,128,.1);
+          padding: .8rem;
+          border: 1px solid rgba(110,231,183,.12);
+          border-radius: 1rem;
+          background: rgba(2,16,10,.38);
+        }
+        .schedule-filter-group {
+          display: flex;
+          align-items: center;
+          gap: .55rem;
+          min-width: 0;
+          color: #a7f3d0;
+          font-size: .66rem;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+        }
+        .schedule-instructor-filter {
+          display: flex;
+          flex: 0 1 auto;
+          min-width: 0;
+        }
+        .schedule-lab-filters {
+          display: flex;
+          flex-wrap: nowrap;
+          flex: 0 0 auto;
+          gap: .35rem;
+          padding: .22rem;
+          border: 1px solid rgba(110,231,183,.12);
+          border-radius: .85rem;
+          background: rgba(1,12,8,.54);
+        }
+        .schedule-lab-filter {
+          min-height: 2.15rem;
+          padding: .42rem .72rem;
+          border: 1px solid transparent;
+          border-radius: .65rem;
+          background: transparent;
+          color: #a9c5b4;
+          font-size: .72rem;
+          font-weight: 700;
+          white-space: nowrap;
+          transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+        }
+        .schedule-lab-filter:hover,
+        .schedule-lab-filter.is-active {
+          border-color: rgba(110,231,183,.22);
+          background: linear-gradient(180deg, rgba(22,101,61,.56), rgba(13,66,41,.5));
+          color: #d1fae5;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .schedule-count {
+          flex: 0 0 auto;
+          margin-left: auto;
+          color: #a7f3d0;
+          font-size: .7rem;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+        .schedule-calendar-scroll {
+          overflow-x: auto;
+          overflow-y: hidden;
+          border: 1px solid rgba(110,231,183,.18);
+          border-radius: 1.1rem;
+          background: rgba(2,12,8,.5);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 12px 28px rgba(0,0,0,.12);
+          scrollbar-color: rgba(34,197,94,.45) rgba(2,6,23,.45);
+        }
+        .schedule-calendar {
+          min-width: 930px;
+        }
+        .schedule-calendar-header,
+        .schedule-calendar-body {
+          display: grid;
+          grid-template-columns: 126px repeat(5, minmax(160px, 1fr));
+        }
+        .schedule-calendar-header {
+          position: sticky;
+          top: 0;
+          z-index: 5;
+          background: linear-gradient(180deg, #10271b, #0b1d14);
+          border-bottom: 1px solid rgba(110,231,183,.2);
+          box-shadow: 0 5px 12px rgba(0,0,0,.1);
+        }
+        .schedule-calendar-day-heading {
+          padding: .85rem .35rem;
+          border-left: 1px solid rgba(110,231,183,.1);
+          color: #d8f7e4;
+          text-align: center;
+          font-size: .72rem;
+          font-weight: 800;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+        }
+        .schedule-calendar-day-heading.is-today {
+          background: rgba(34,197,94,.13);
+          color: #86efac;
+          box-shadow: inset 0 -2px #34d399;
+        }
+        .schedule-calendar-body {
+          position: relative;
+          grid-auto-rows: 40px;
+          min-height: 800px;
+        }
+        .schedule-calendar-time {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding: 0 .65rem 0 0;
+          border-top: 1px solid rgba(110,231,183,.09);
+          background: rgba(11,29,20,.36);
+          color: #b8d9c5;
+          font-size: .7rem;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .schedule-day-column {
+          position: relative;
+          grid-row: 1 / -1;
+          border-left: 1px solid rgba(110,231,183,.1);
+          background-color: rgba(14,38,26,.15);
+          background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 39px, rgba(110,231,183,.105) 39px, rgba(110,231,183,.105) 40px);
+        }
+        .schedule-day-column:nth-of-type(even) { background-color: rgba(20,49,34,.19); }
+        .schedule-day-column.is-today {
+          background-color: rgba(34,197,94,.045);
+          box-shadow: inset 1px 0 rgba(52,211,153,.16), inset -1px 0 rgba(52,211,153,.16);
+        }
+        .schedule-event {
+          position: absolute;
+          z-index: 2;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: .2rem;
+          padding: .38rem .45rem;
+          border: 1px solid rgba(255,255,255,.48);
+          border-radius: .8rem;
+          background-image: linear-gradient(145deg, rgba(255,255,255,.12), transparent 58%), linear-gradient(0deg, rgba(0,0,0,.07), rgba(0,0,0,.07));
+          cursor: pointer;
+          text-align: center;
+          box-shadow: 0 7px 18px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.14);
+          box-sizing: border-box;
+        }
+        .schedule-event:hover,
+        .schedule-event:focus-visible {
+          z-index: 4;
+          filter: brightness(1.08);
+          outline: 2px solid #f0fdf4;
+          outline-offset: 1px;
+        }
+        .schedule-event-subject,
+        .schedule-event-instructor,
+        .schedule-event-time {
+          display: block;
+          overflow: hidden;
+          margin-top: 0;
+          font-size: .78rem;
+          font-weight: 650;
+          line-height: 1.12;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .schedule-event-subject {
+          font-size: .98rem;
+          font-weight: 850;
+          letter-spacing: -.02em;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+        .schedule-event--compact .schedule-event-subject {
+          font-size: .86rem;
+          -webkit-line-clamp: 1;
+        }
+        .schedule-event-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: .1rem;
+          min-width: 0;
+        }
+        .schedule-event-meta > span {
+          width: 100%;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .schedule-event-time {
+          font-size: .72rem !important;
+          font-weight: 800 !important;
+        }
+        .schedule-event-cohort {
+          display: block;
+          max-width: 100%;
+          overflow: hidden;
+          font-size: .68rem;
+          font-weight: 800;
+          line-height: 1rem;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .schedule-event--compact .schedule-event-cohort {
+          font-size: .62rem;
+          line-height: .8rem;
+        }
+        .schedule-event-instructor {
+          font-size: .88rem !important;
+          font-style: normal;
+          font-weight: 700 !important;
+        }
+        .schedule-context-menu {
+          position: fixed;
+          z-index: 12000;
+          display: none;
+          min-width: 190px;
+          padding: .4rem;
+          border: 1px solid rgba(110,231,183,.34);
+          border-radius: .9rem;
+          background: rgba(7,20,14,.98);
+          box-shadow: 0 18px 48px rgba(0,0,0,.58);
+          backdrop-filter: blur(14px);
+        }
+        .schedule-context-menu.is-open {
+          display: grid;
+          gap: .2rem;
+        }
+        .schedule-context-action {
+          display: flex;
+          align-items: center;
+          gap: .65rem;
+          width: 100%;
+          min-height: 2.55rem;
+          padding: .55rem .7rem;
+          border: 0;
+          border-radius: .55rem;
+          background: transparent;
+          color: #ecfdf5;
+          font-size: .9rem;
+          font-weight: 700;
+          text-align: left;
+          cursor: pointer;
+        }
+        .schedule-context-action:hover,
+        .schedule-context-action:focus-visible {
+          outline: none;
+          background: rgba(16,185,129,.2);
+        }
+        .schedule-context-action--danger {
+          color: #fecaca;
+        }
+        .schedule-context-action--danger:hover,
+        .schedule-context-action--danger:focus-visible {
+          background: rgba(239,68,68,.18);
+        }
+        .schedule-context-action[hidden] {
+          display: none;
+        }
+        .schedule-toolbar .schedule-manager-button {
+          flex: 0 0 auto;
+          min-height: 2.25rem;
+          margin-left: 0;
+          padding: .45rem .72rem;
+          white-space: nowrap;
+        }
+        .schedule-filter {
+          width: 10.5rem;
+          min-width: 0;
+          height: 2.25rem;
+          font-size: .75rem;
+        }
+        @media (max-width: 1180px) and (min-width: 768px) {
+          .schedule-toolbar {
+            gap: .38rem;
+          }
+          .schedule-filter {
+            width: 9rem;
+          }
+          .schedule-lab-filter {
+            padding-right: .48rem;
+            padding-left: .48rem;
+            font-size: .66rem;
+          }
+        }
+        .schedule-calendar-empty {
+          grid-column: 2 / -1;
+          align-self: center;
+          padding: .75rem;
+          color: #94a3b8;
+          font-size: .85rem;
+          text-align: center;
         }
         .schedule-search-wrap {
           position: relative;
@@ -1029,6 +1642,35 @@ const pageConfigs = {
         }
         .schedule-filter {
           min-width: 130px;
+        }
+        .schedule-color-control {
+          display: flex;
+          align-items: center;
+          gap: .8rem;
+          min-height: 3rem;
+          padding: .45rem .7rem;
+          border: 1px solid rgba(74,222,128,.22);
+          border-radius: .9rem;
+          background: rgba(11,26,19,.72);
+        }
+        .schedule-color-control input[type="color"] {
+          width: 2.5rem;
+          height: 2.2rem;
+          padding: .15rem;
+          border: 1px solid rgba(255,255,255,.35);
+          border-radius: .6rem;
+          background: transparent;
+          cursor: pointer;
+        }
+        .schedule-color-value {
+          min-width: 5.25rem;
+          padding: .35rem .55rem;
+          border: 1px solid rgba(255,255,255,.25);
+          border-radius: .55rem;
+          font-size: .82rem;
+          font-weight: 700;
+          letter-spacing: .04em;
+          text-align: center;
         }
         .schedule-table-wrap {
           overflow-x: auto;
@@ -1124,6 +1766,44 @@ const pageConfigs = {
           background: rgba(239,68,68,.12);
           border-color: rgba(248,113,113,.32);
         }
+        .schedule-details-actions {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: .65rem;
+        }
+        .schedule-details-button {
+          display: inline-flex;
+          min-height: 2.75rem;
+          align-items: center;
+          justify-content: center;
+          gap: .5rem;
+          padding: .65rem .8rem;
+          border: 1px solid rgba(74,222,128,.28);
+          border-radius: .8rem;
+          background: rgba(16,87,55,.24);
+          color: #d1fae5;
+          font-size: .82rem;
+          font-weight: 700;
+          white-space: nowrap;
+          transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+        }
+        .schedule-details-button:hover {
+          transform: translateY(-1px);
+          border-color: rgba(74,222,128,.55);
+          background: rgba(16,87,55,.48);
+        }
+        .schedule-details-button:focus-visible {
+          outline: 2px solid #4ade80;
+          outline-offset: 2px;
+        }
+        .schedule-details-button--primary {
+          border-color: rgba(74,222,128,.52);
+          background: linear-gradient(180deg, rgba(22,163,74,.85), rgba(21,128,61,.85));
+          color: #fff;
+        }
+        .schedule-details-button--primary:hover {
+          background: linear-gradient(180deg, rgba(34,197,94,.95), rgba(22,163,74,.95));
+        }
         #schedulePagination {
           margin-top: 0.75rem;
           gap: 0.45rem;
@@ -1153,9 +1833,11 @@ const pageConfigs = {
           color: #86efac !important;
         }
         @media (max-width: 767px) {
-          .schedule-summary-grid {
-            grid-template-columns: 1fr;
-          }
+          .schedule-manager-intro { align-items: flex-start; }
+          .schedule-manager-icon { width: 2.65rem; height: 2.65rem; border-radius: .85rem; }
+          .schedule-manager-hours { display: none; }
+          .schedule-manager-description { max-width: 32rem; }
+          .schedule-toolbar { align-items: stretch; }
           .schedule-manager-header {
             align-items: flex-start;
             flex-direction: column;
@@ -1168,102 +1850,96 @@ const pageConfigs = {
           .schedule-filter {
             width: 100%;
           }
+          .schedule-filter-group {
+            width: 100%;
+          }
+          .schedule-toolbar .schedule-manager-button {
+            width: 100%;
+            margin-left: 0;
+          }
+          .schedule-instructor-filter,
+          .schedule-lab-filters { width: 100%; }
+          .schedule-instructor-filter .schedule-filter-group { align-items: stretch; flex-direction: column; gap: .35rem; }
+          .schedule-lab-filters > * { flex: 1 1 0; }
+          .schedule-lab-filter { padding-right: .45rem; padding-left: .45rem; font-size: .66rem; }
+          .schedule-count {
+            width: 100%;
+            margin-left: 0;
+          }
+        }
+        .page-content .schedule-manager-card {
+          padding: clamp(1rem, 2vw, 1.5rem) !important;
+          border: 1px solid rgba(110,231,183,.2) !important;
+          background:
+            radial-gradient(ellipse at 0% 0%, rgba(34,197,94,.09), transparent 35%),
+            linear-gradient(155deg, rgba(12,34,24,.98), rgba(6,20,14,.98)) !important;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 20px 50px rgba(0,0,0,.18) !important;
+        }
+        .page-content .schedule-manager-card:hover {
+          transform: none;
+          border-color: rgba(110,231,183,.25) !important;
         }
       </style>
-      <section class="schedule-summary-grid">
-        <div class="schedule-summary-card schedule-summary-card--wide schedule-summary-card--next card bg-[#022814]/60 border border-emerald-400/40 rounded-2xl p-5 shadow-lg shadow-emerald-950/20 backdrop-blur-md">
-          <div class="schedule-summary-header">
-            <div>
-              <p class="schedule-summary-label">Next Session</p>
-            </div>
-            <div class="schedule-summary-icon"><i class="fas fa-flask"></i></div>
-          </div>
-          <div>
-            <h2 id="nextSessionTitle" class="schedule-summary-value">No upcoming sessions</h2>
-            <p id="nextSessionMeta" class="schedule-summary-detail">No laboratory schedules available.</p>
-          </div>
-        </div>
-        <div class="schedule-summary-card card bg-[#022814]/60 border border-emerald-500/20 rounded-2xl p-5 shadow-lg shadow-emerald-950/20 backdrop-blur-md">
-          <div class="schedule-summary-header">
-            <div>
-              <p class="schedule-summary-label">Available Rooms</p>
-            </div>
-            <div class="schedule-summary-icon"><i class="fas fa-door-open"></i></div>
-          </div>
-          <h2 id="availableRoomsCount" class="schedule-summary-value">0</h2>
-        </div>
-        <div class="schedule-summary-card card bg-[#022814]/60 border border-emerald-500/20 rounded-2xl p-5 shadow-lg shadow-emerald-950/20 backdrop-blur-md">
-          <div class="schedule-summary-header">
-            <div>
-              <p class="schedule-summary-label">Confirmed Labs</p>
-            </div>
-            <div class="schedule-summary-icon"><i class="fas fa-calendar-check"></i></div>
-          </div>
-          <h2 id="confirmedLabsCount" class="schedule-summary-value">0</h2>
-        </div>
-      </section>
       <section class="schedule-manager-card card">
-        <div class="schedule-manager-header">
-          <h3 class="schedule-manager-title">Weekly Schedule</h3>
-          <button id="openScheduleModalBtn" type="button" class="schedule-manager-button" onclick="window.openScheduleModal && window.openScheduleModal()">
-            <i class="fas fa-plus"></i> Add Schedule
-          </button>
-        </div>
-        <div class="schedule-toolbar">
-          <div class="schedule-search-wrap">
-            <i class="fas fa-search"></i>
-            <input id="scheduleSearch" type="search" placeholder="Search Schedule" class="schedule-search" />
+        <header class="schedule-manager-intro">
+          <span class="schedule-manager-icon" aria-hidden="true"><i class="fas fa-calendar-week"></i></span>
+          <div class="schedule-manager-heading">
+            <p class="schedule-manager-eyebrow">Academic planning</p>
+            <h2 class="schedule-manager-title">Weekly laboratory schedule</h2>
+            <p class="schedule-manager-description">Monitor class schedules, filter the weekly timetable, and inspect laboratory availability.</p>
           </div>
-          <select id="scheduleFilterDay" class="schedule-filter">
-            <option value="">All Days</option>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
-          </select>
-          <select id="scheduleFilterCampus" class="schedule-filter">
-            <option value="">All Campuses</option>
-            <option value="Bongabong">Bongabong Campus</option>
-            <option value="Calapan">Calapan Campus</option>
-            <option value="Victoria">Victoria Campus</option>
-          </select>
-          <select id="scheduleFilterRoom" class="schedule-filter">
-            <option value="">All Rooms</option>
-            <option value="Laboratory 1 — Room 202">Lab 1 — Room 202</option>
-            <option value="Laboratory 2 — Room 204">Lab 2 — Room 204</option>
-          </select>
+          <span class="schedule-manager-hours"><i class="fas fa-clock" aria-hidden="true"></i> Monday–Friday <span aria-hidden="true">·</span> 7:30 AM–5:30 PM</span>
+        </header>
+        <div class="schedule-toolbar">
+          <div class="schedule-instructor-filter">
+            <label class="schedule-filter-group">
+              <span>Instructor</span>
+              <select id="scheduleFilterInstructor" class="schedule-filter">
+                <option value="">All Instructors</option>
+              </select>
+            </label>
+          </div>
+          <div class="schedule-lab-filters" role="group" aria-label="Filter by laboratory">
+            <button type="button" class="schedule-lab-filter is-active" data-lab-filter="" aria-pressed="true">All Laboratories</button>
+            <button type="button" class="schedule-lab-filter" data-lab-filter="1" aria-pressed="false">COMLAB 1</button>
+            <button type="button" class="schedule-lab-filter" data-lab-filter="2" aria-pressed="false">COMLAB 2</button>
+          </div>
+          <span id="scheduleCount" class="schedule-count" aria-live="polite">Loading schedules…</span>
         </div>
 
-        <div class="schedule-table-wrap">
-          <table class="schedule-table">
-            <thead>
-              <tr>
-                <th>Day</th>
-                <th>Laboratory Room</th>
-                <th>Time</th>
-                <th>Subject / Class</th>
-                <th>Instructor</th>
-                <th>Campus</th>
-                <th>Roster</th>
-                <th class="min-w-[220px]">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="scheduleTableBody"></tbody>
-          </table>
+        <div class="schedule-calendar-scroll">
+          <div id="scheduleCalendar" class="schedule-calendar" aria-label="Weekly laboratory schedule"></div>
         </div>
-
-        <div id="schedulePagination" class="mt-3 flex items-center justify-end gap-2"></div>
       </section>
+
+      <div id="scheduleContextMenu" class="schedule-context-menu" role="menu" aria-label="Schedule actions" aria-hidden="true">
+        <button type="button" class="schedule-context-action" data-schedule-action="view" role="menuitem"><i class="fas fa-eye"></i> View details</button>
+      </div>
+
+      <div id="scheduleDetailsModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/80 backdrop-blur-sm px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="scheduleDetailsTitle">
+        <section class="w-full max-w-lg rounded-3xl border border-emerald-400/20 bg-[#0d1712] p-5 shadow-2xl">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p id="scheduleDetailsLab" class="text-xs font-bold uppercase tracking-[.18em] text-emerald-300"></p>
+              <h3 id="scheduleDetailsTitle" class="mt-1 text-xl font-bold text-white"></h3>
+            </div>
+            <button type="button" onclick="window.closeScheduleDetails && window.closeScheduleDetails()" class="rounded-lg px-2 text-xl text-slate-400 hover:text-white" aria-label="Close details">&times;</button>
+          </div>
+          <dl id="scheduleDetailsList" class="mt-5 grid gap-3 text-sm"></dl>
+          <div class="schedule-details-actions mt-6 border-t border-white/10 pt-4">
+            <button id="scheduleDetailsSeatingButton" type="button" class="schedule-details-button"><i class="fas fa-chair" aria-hidden="true"></i> Seating</button>
+            <button id="scheduleDetailsQrButton" type="button" class="schedule-details-button schedule-details-button--primary"><i class="fas fa-qrcode" aria-hidden="true"></i> Attendance QR</button>
+            <button type="button" onclick="window.closeScheduleDetails && window.closeScheduleDetails()" class="schedule-details-button"><i class="fas fa-xmark" aria-hidden="true"></i> Close</button>
+          </div>
+        </section>
+      </div>
 
       <div id="scheduleModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 py-6 overflow-hidden">
         <div class="modal-content mx-auto w-full max-w-2xl rounded-3xl border-2 border-emerald-800/60 bg-[#0d1712] p-6 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
           <div class="flex items-start justify-between gap-4 mb-6">
             <div>
               <h3 id="scheduleModalTitle" class="text-2xl font-semibold text-white">Add Lab Schedule</h3>
-              <p id="scheduleModalSubtitle" class="text-sm text-gray-400">Create a new session and assign it to a weekday.</p>
+              <p id="scheduleModalSubtitle" class="text-sm text-gray-400">Create a weekly schedule and assign it to a weekday.</p>
             </div>
             <button id="closeScheduleModalBtn" type="button" onclick="window.closeScheduleModal && window.closeScheduleModal()" class="text-gray-400 hover:text-white text-2xl">
               <i class="fas fa-times"></i>
@@ -1273,7 +1949,7 @@ const pageConfigs = {
             <div class="modal-body overflow-y-auto flex-1 min-h-0 space-y-4 pr-1">
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Day</label>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Weekly day</label>
                   <select id="scheduleDay" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required>
                     <option value="Monday">Monday</option>
                     <option value="Tuesday">Tuesday</option>
@@ -1285,33 +1961,56 @@ const pageConfigs = {
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Laboratory Room</label>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Laboratory</label>
                   <select id="scheduleRoom" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required>
-                    <option value="">Select Laboratory Room</option>
-                    <option value="Laboratory 1 — Room 202">Laboratory 1 — Room 202</option>
-                    <option value="Laboratory 2 — Room 204">Laboratory 2 — Room 204</option>
+                    <option value="">Select Laboratory</option>
+                    <option value="Laboratory 1 — Room 202">COMLAB 1 — Room 202</option>
+                    <option value="Laboratory 2 — Room 204">COMLAB 2 — Room 204</option>
                   </select>
                 </div>
               </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Subject / Course</label>
                   <input id="scheduleTitle" type="text" placeholder="e.g., Circuit Design" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-300 mb-2">Instructor</label>
-                  <input id="scheduleInstructor" type="text" placeholder="e.g., Prof. Santos" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" />
+                  <select id="scheduleInstructorId" required class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none">
+                    <option value="">Select Faculty</option>
+                  </select>
                 </div>
-              </div>
-              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label for="scheduleYearLevel" class="block text-sm font-medium text-gray-300 mb-2">Year level</label>
+                  <select id="scheduleYearLevel" required class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none">
+                    <option value="">Select Year Level</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="scheduleSection" class="block text-sm font-medium text-gray-300 mb-2">Section</label>
+                  <select id="scheduleSection" required class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none">
+                    <option value="">Select Section</option>
+                    <option value="F1">F1</option>
+                    <option value="F2">F2</option>
+                    <option value="F3">F3</option>
+                  </select>
+                  <p class="mt-1 text-xs text-slate-400">Example class: 4th Year · F1</p>
+                </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-300 mb-2">Campus</label>
-                  <select id="scheduleCampus" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required>
-                    <option value="">Select Campus</option>
-                    <option value="Bongabong">Bongabong</option>
-                    <option value="Calapan">Calapan</option>
-                    <option value="Victoria">Victoria</option>
-                  </select>
+                  <input id="scheduleCampus" type="text" readonly required aria-readonly="true" placeholder="Uses instructor or Supply Office campus" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label for="scheduleColor" class="block text-sm font-medium text-gray-300 mb-2">Schedule color</label>
+                  <div class="schedule-color-control">
+                    <input id="scheduleColor" type="color" value="#16a34a" aria-label="Choose schedule color" />
+                    <output id="scheduleColorValue" class="schedule-color-value" for="scheduleColor">#16A34A</output>
+                    <span class="text-xs text-slate-300">Used on the weekly schedule map</span>
+                  </div>
                 </div>
               </div>
               <div class="grid gap-4 md:grid-cols-2">
@@ -1319,108 +2018,12 @@ const pageConfigs = {
                   <label class="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
                   <select id="scheduleStartTime" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required>
                     <option value="">Select Start Time</option>
-                    <option value="12:00 AM">12:00 AM</option>
-                    <option value="12:30 AM">12:30 AM</option>
-                    <option value="1:00 AM">1:00 AM</option>
-                    <option value="1:30 AM">1:30 AM</option>
-                    <option value="2:00 AM">2:00 AM</option>
-                    <option value="2:30 AM">2:30 AM</option>
-                    <option value="3:00 AM">3:00 AM</option>
-                    <option value="3:30 AM">3:30 AM</option>
-                    <option value="4:00 AM">4:00 AM</option>
-                    <option value="4:30 AM">4:30 AM</option>
-                    <option value="5:00 AM">5:00 AM</option>
-                    <option value="5:30 AM">5:30 AM</option>
-                    <option value="6:00 AM">6:00 AM</option>
-                    <option value="6:30 AM">6:30 AM</option>
-                    <option value="7:00 AM">7:00 AM</option>
-                    <option value="7:30 AM">7:30 AM</option>
-                    <option value="8:00 AM">8:00 AM</option>
-                    <option value="8:30 AM">8:30 AM</option>
-                    <option value="9:00 AM">9:00 AM</option>
-                    <option value="9:30 AM">9:30 AM</option>
-                    <option value="10:00 AM">10:00 AM</option>
-                    <option value="10:30 AM">10:30 AM</option>
-                    <option value="11:00 AM">11:00 AM</option>
-                    <option value="11:30 AM">11:30 AM</option>
-                    <option value="12:00 PM">12:00 PM</option>
-                    <option value="12:30 PM">12:30 PM</option>
-                    <option value="1:00 PM">1:00 PM</option>
-                    <option value="1:30 PM">1:30 PM</option>
-                    <option value="2:00 PM">2:00 PM</option>
-                    <option value="2:30 PM">2:30 PM</option>
-                    <option value="3:00 PM">3:00 PM</option>
-                    <option value="3:30 PM">3:30 PM</option>
-                    <option value="4:00 PM">4:00 PM</option>
-                    <option value="4:30 PM">4:30 PM</option>
-                    <option value="5:00 PM">5:00 PM</option>
-                    <option value="5:30 PM">5:30 PM</option>
-                    <option value="6:00 PM">6:00 PM</option>
-                    <option value="6:30 PM">6:30 PM</option>
-                    <option value="7:00 PM">7:00 PM</option>
-                    <option value="7:30 PM">7:30 PM</option>
-                    <option value="8:00 PM">8:00 PM</option>
-                    <option value="8:30 PM">8:30 PM</option>
-                    <option value="9:00 PM">9:00 PM</option>
-                    <option value="9:30 PM">9:30 PM</option>
-                    <option value="10:00 PM">10:00 PM</option>
-                    <option value="10:30 PM">10:30 PM</option>
-                    <option value="11:00 PM">11:00 PM</option>
-                    <option value="11:30 PM">11:30 PM</option>
                   </select>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-300 mb-2">End Time</label>
                   <select id="scheduleEndTime" class="w-full rounded-2xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-white focus:border-green-500 focus:outline-none" required>
                     <option value="">Select End Time</option>
-                    <option value="12:30 AM">12:30 AM</option>
-                    <option value="1:00 AM">1:00 AM</option>
-                    <option value="1:30 AM">1:30 AM</option>
-                    <option value="2:00 AM">2:00 AM</option>
-                    <option value="2:30 AM">2:30 AM</option>
-                    <option value="3:00 AM">3:00 AM</option>
-                    <option value="3:30 AM">3:30 AM</option>
-                    <option value="4:00 AM">4:00 AM</option>
-                    <option value="4:30 AM">4:30 AM</option>
-                    <option value="5:00 AM">5:00 AM</option>
-                    <option value="5:30 AM">5:30 AM</option>
-                    <option value="6:00 AM">6:00 AM</option>
-                    <option value="6:30 AM">6:30 AM</option>
-                    <option value="7:00 AM">7:00 AM</option>
-                    <option value="7:30 AM">7:30 AM</option>
-                    <option value="8:00 AM">8:00 AM</option>
-                    <option value="8:30 AM">8:30 AM</option>
-                    <option value="9:00 AM">9:00 AM</option>
-                    <option value="9:30 AM">9:30 AM</option>
-                    <option value="10:00 AM">10:00 AM</option>
-                    <option value="10:30 AM">10:30 AM</option>
-                    <option value="11:00 AM">11:00 AM</option>
-                    <option value="11:30 AM">11:30 AM</option>
-                    <option value="12:00 PM">12:00 PM</option>
-                    <option value="12:30 PM">12:30 PM</option>
-                    <option value="1:00 PM">1:00 PM</option>
-                    <option value="1:30 PM">1:30 PM</option>
-                    <option value="2:00 PM">2:00 PM</option>
-                    <option value="2:30 PM">2:30 PM</option>
-                    <option value="3:00 PM">3:00 PM</option>
-                    <option value="3:30 PM">3:30 PM</option>
-                    <option value="4:00 PM">4:00 PM</option>
-                    <option value="4:30 PM">4:30 PM</option>
-                    <option value="5:00 PM">5:00 PM</option>
-                    <option value="5:30 PM">5:30 PM</option>
-                    <option value="6:00 PM">6:00 PM</option>
-                    <option value="6:30 PM">6:30 PM</option>
-                    <option value="7:00 PM">7:00 PM</option>
-                    <option value="7:30 PM">7:30 PM</option>
-                    <option value="8:00 PM">8:00 PM</option>
-                    <option value="8:30 PM">8:30 PM</option>
-                    <option value="9:00 PM">9:00 PM</option>
-                    <option value="9:30 PM">9:30 PM</option>
-                    <option value="10:00 PM">10:00 PM</option>
-                    <option value="10:30 PM">10:30 PM</option>
-                    <option value="11:00 PM">11:00 PM</option>
-                    <option value="11:30 PM">11:30 PM</option>
-                    <option value="11:59 PM">11:59 PM</option>
                   </select>
                 </div>
               </div>
@@ -1485,15 +2088,19 @@ const pageConfigs = {
                   </select>
                 </div>
                 <div class="flex items-end">
-                  <button type="button" onclick="event.preventDefault(); generateCurrentQr();" class="w-full rounded-2xl bg-green-600 px-4 py-3 text-white hover:bg-green-700">Generate QR</button>
+                  <button id="generateQrButton" type="button" onclick="event.preventDefault(); generateCurrentQr();" class="w-full rounded-2xl bg-green-600 px-4 py-3 text-white hover:bg-green-700">Generate QR</button>
                 </div>
               </div>
                 <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                 <div id="qrPreview" class="flex min-h-[180px] items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/70 p-4 text-sm text-gray-400">No QR generated yet.</div>
                 <div class="mt-4 flex flex-wrap gap-3">
-                  <button type="button" onclick="downloadCurrentQr()" class="rounded-2xl border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Download QR</button>
-                  <button type="button" onclick="printCurrentQr()" class="rounded-2xl border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Print QR</button>
-                  <button type="button" onclick="regenerateCurrentQr()" class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20">Regenerate QR</button>
+                  <button id="downloadQrButton" type="button" onclick="downloadCurrentQr()" class="rounded-2xl border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Download QR</button>
+                  <button id="printQrButton" type="button" onclick="printCurrentQr()" class="rounded-2xl border border-slate-700 bg-transparent px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">Print QR</button>
+                  <button id="regenerateQrButton" type="button" onclick="regenerateCurrentQr()" class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20">Regenerate QR</button>
+                </div>
+                <div class="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-gray-300">
+                  <span>Class Status</span>
+                  <span id="classStatusBadge" class="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">Upcoming</span>
                 </div>
                 <div id="qrStatusRow" class="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-gray-300">
                   <span>QR Status</span>
@@ -1594,1508 +2201,11 @@ const pageConfigs = {
         </style>
 
         <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.3/dist/xlsx.full.min.js"></script>
-        <script>
-          let activeQrScheduleIndex = null;
-          let scheduleData = [];
-          let schedulePaginationState = {
-            currentPage: 1,
-            rowsPerPage: 5,
-            totalPages: 1
-          };
-          let editingScheduleId = null;
-
-          function getStatusBadge(status) {
-            const map = {
-              Confirmed: 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/40',
-              'In Progress': 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/40',
-              Pending: 'bg-emerald-950/40 text-amber-200 border border-amber-700/30'
-            };
-            return map[status] || 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/40';
-          }
-
-          function getQrStatus(item) {
-            if (!item || !item.qr || !item.qr.url) return 'Not generated';
-            return item.qr.expiresAt && item.qr.expiresAt > Date.now() ? 'Active' : 'Expired';
-          }
-
-          function getQrStatusClass(item) {
-            const status = getQrStatus(item);
-            if (status === 'Active') return 'bg-emerald-500/10 text-emerald-200';
-            if (status === 'Not generated') return 'bg-slate-600/70 text-slate-200';
-            return 'bg-amber-500/10 text-amber-200';
-          }
-
-          const attendanceMonitorEndpoint = '/api/instructor/attendance-dashboard';
-          const attendanceMonitorStatsEndpoint = '/api/attendance/stats';
-          const attendanceSessionEndpoint = '/api/attendance/session';
-          let attendanceSessions = [];
-          let attendanceRefreshId = null;
-          let attendanceTablePaginationState = {
-            currentPage: 1,
-            rowsPerPage: 3,
-            totalPages: 1
-          };
-
-          async function fetchAttendanceStats() {
-            const totalSessionsEl = document.getElementById('totalSessionsValue');
-            const presentTodayEl = document.getElementById('presentTodayValue');
-            const absentTodayEl = document.getElementById('absentTodayValue');
-            const lateTodayEl = document.getElementById('lateTodayValue');
-            if (!totalSessionsEl) {
-              return;
-            }
-
-            try {
-              const response = await fetch(attendanceMonitorStatsEndpoint, { cache: 'no-store' });
-              if (!response.ok) throw new Error('Failed to load attendance stats');
-              const stats = await response.json();
-              totalSessionsEl.textContent = stats.total ?? 0;
-              if (presentTodayEl) presentTodayEl.textContent = stats.present ?? 0;
-              if (absentTodayEl) absentTodayEl.textContent = stats.absent ?? 0;
-              if (lateTodayEl) lateTodayEl.textContent = stats.late ?? 0;
-            } catch (err) {
-              console.error(err);
-            }
-          }
-
-          async function fetchAttendanceRecords() {
-            const tbody = document.getElementById('attendanceMonitorTableBody');
-            if (!tbody) {
-              return;
-            }
-
-            try {
-              const response = await fetch(attendanceMonitorEndpoint, { cache: 'no-store' });
-              if (!response.ok) throw new Error('Failed to load attendance sessions');
-              const payload = await response.json();
-              attendanceSessions = Array.isArray(payload.sessions) ? payload.sessions : [];
-              renderAttendanceSessionTable(attendanceSessions);
-            } catch (err) {
-              console.error(err);
-            }
-          }
-
-          function stopAttendanceRefresh() {
-            if (attendanceRefreshId !== null) {
-              window.clearInterval(attendanceRefreshId);
-              attendanceRefreshId = null;
-            }
-          }
-
-          function startAttendanceRefresh() {
-            if (attendanceRefreshId !== null) return;
-            attendanceRefreshId = window.setInterval(() => {
-              fetchAttendanceRecords();
-              fetchAttendanceStats();
-            }, 30000);
-          }
-
-          window.addEventListener('pagehide', stopAttendanceRefresh, { once: true });
-
-          function getAttendanceStatusClass(status) {
-            const value = (status || '').toLowerCase();
-            if (value === 'late') return 'bg-amber-500/10 text-amber-200';
-            if (value === 'absent') return 'bg-red-500/10 text-red-200';
-            return 'bg-emerald-500/10 text-emerald-200';
-          }
-
-          function formatSessionDate(value) {
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) return '—';
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          }
-
-          function renderAttendanceTablePagination(filteredSessions) {
-            const paginationContainer = document.getElementById('attendancePagination');
-            const paginationInfo = document.getElementById('attendancePaginationInfo');
-            if (!paginationContainer) return;
-
-            const totalPages = Math.max(1, Math.ceil(filteredSessions.length / attendanceTablePaginationState.rowsPerPage));
-            attendanceTablePaginationState.totalPages = totalPages;
-            attendanceTablePaginationState.currentPage = Math.min(attendanceTablePaginationState.currentPage, totalPages);
-
-            if (paginationInfo) {
-              if (!filteredSessions.length) {
-                paginationInfo.textContent = 'Showing 0 of 0';
-              } else {
-                const startIndex = (attendanceTablePaginationState.currentPage - 1) * attendanceTablePaginationState.rowsPerPage + 1;
-                const endIndex = Math.min(attendanceTablePaginationState.currentPage * attendanceTablePaginationState.rowsPerPage, filteredSessions.length);
-                paginationInfo.textContent = 'Showing ' + startIndex + '-' + endIndex + ' of ' + filteredSessions.length;
-              }
-            }
-
-            if (totalPages <= 1) {
-              paginationContainer.innerHTML = '';
-              return;
-            }
-
-            const createButton = (label, page, isActive) => {
-              const button = document.createElement('button');
-              button.type = 'button';
-              button.textContent = label;
-              button.className = 'attendance-pagination-btn';
-              if (isActive) button.classList.add('active');
-
-              button.disabled = page < 1 || page > totalPages || (label === 'Previous' && attendanceTablePaginationState.currentPage <= 1) || (label === 'Next' && attendanceTablePaginationState.currentPage >= totalPages);
-              button.addEventListener('click', () => {
-                if (page >= 1 && page <= totalPages) {
-                  attendanceTablePaginationState.currentPage = page;
-                  renderAttendanceSessionTable(attendanceSessions);
-                }
-              });
-              return button;
-            };
-
-            paginationContainer.innerHTML = '';
-            paginationContainer.appendChild(createButton('Previous', attendanceTablePaginationState.currentPage - 1, false));
-
-            const visiblePages = Array.from({ length: Math.min(3, totalPages) }, (_, index) => index + 1);
-            visiblePages.forEach((page) => {
-              paginationContainer.appendChild(createButton(String(page), page, page === attendanceTablePaginationState.currentPage));
-            });
-
-            paginationContainer.appendChild(createButton('Next', attendanceTablePaginationState.currentPage + 1, false));
-          }
-
-          function renderAttendanceSessionTable(sessions) {
-            const tbody = document.getElementById('attendanceMonitorTableBody');
-            if (!tbody) return;
-            if (!sessions.length) {
-              tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-400">No completed attendance sessions available yet.</td></tr>';
-              const paginationContainer = document.getElementById('attendancePagination');
-              if (paginationContainer) paginationContainer.innerHTML = '';
-              const paginationInfo = document.getElementById('attendancePaginationInfo');
-              if (paginationInfo) paginationInfo.textContent = 'Showing 0 of 0';
-              return;
-            }
-
-            const filterValue = document.getElementById('attendanceSearch')?.value.toLowerCase() || '';
-            const filtered = sessions.filter((session) => {
-              const content = ((session.subject || '') + ' ' + (session.laboratory || '') + ' ' + (session.instructor || '')).toLowerCase();
-              return !filterValue || content.includes(filterValue);
-            }).sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
-
-            const totalPages = Math.max(1, Math.ceil(filtered.length / attendanceTablePaginationState.rowsPerPage));
-            attendanceTablePaginationState.totalPages = totalPages;
-            attendanceTablePaginationState.currentPage = Math.min(attendanceTablePaginationState.currentPage, totalPages);
-
-            const startIndex = (attendanceTablePaginationState.currentPage - 1) * attendanceTablePaginationState.rowsPerPage;
-            const pagedSessions = filtered.slice(startIndex, startIndex + attendanceTablePaginationState.rowsPerPage);
-
-            tbody.innerHTML = '';
-            pagedSessions.forEach((session) => {
-              const row = document.createElement('tr');
-              row.className = 'hover:bg-slate-900/70';
-              const timeLabel = [session.startTime, session.endTime].filter(Boolean).join(' - ') || session.time || '—';
-              const totalAttendance = (session.studentsPresent ?? 0) + (session.studentsLate ?? 0) + (session.studentsAbsent ?? 0);
-              const countsLabel = '<div class="flex flex-col gap-1">' +
-                '<div class="text-sm font-semibold text-white">' + totalAttendance + ' student' + (totalAttendance === 1 ? '' : 's') + '</div>' +
-                '<div class="text-xs text-slate-400">' +
-                'P:<span class="text-emerald-400 font-medium">' + (session.studentsPresent ?? 0) + '</span> • ' +
-                'L:<span class="text-amber-400 font-medium">' + (session.studentsLate ?? 0) + '</span> • ' +
-                'A:<span class="text-red-400 font-medium">' + (session.studentsAbsent ?? 0) + '</span>' +
-                '</div>' +
-                '</div>';
-              row.innerHTML =
-                '<td class="px-4 py-4 text-white">' + (session.subject || '—') + '</td>' +
-                '<td class="px-4 py-4">' + (session.laboratory || '—') + '</td>' +
-                '<td class="px-4 py-4">' + (session.instructor || '—') + '</td>' +
-                '<td class="px-4 py-4">' + formatSessionDate(session.date || session.createdAt) + '</td>' +
-                '<td class="px-4 py-4">' + (timeLabel || '—') + '</td>' +
-                '<td class="px-4 py-4">' + countsLabel + '</td>' +
-                '<td class="px-4 py-4"><button type="button" class="view-details inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"><i class="fas fa-eye"></i> View Details</button></td>';
-              tbody.appendChild(row);
-              const viewBtn = row.querySelector('button.view-details');
-              if (viewBtn) {
-                viewBtn.addEventListener('click', function () {
-                  try { openAttendanceSessionModal(session.id || session.token || ''); } catch (e) { console.error(e); }
-                });
-              }
-            });
-
-            renderAttendanceTablePagination(filtered);
-          }
-
-          function attachAttendanceFilters() {
-            const searchInput = document.getElementById('attendanceSearch');
-            if (searchInput) {
-              searchInput.addEventListener('input', () => {
-                attendanceTablePaginationState.currentPage = 1;
-                renderAttendanceSessionTable(attendanceSessions);
-              });
-            }
-          }
-
-          function attachScheduleFilters() {
-            const search = document.getElementById('scheduleSearch');
-            const day = document.getElementById('scheduleFilterDay');
-            const campus = document.getElementById('scheduleFilterCampus');
-            const room = document.getElementById('scheduleFilterRoom');
-            if (search && !search._attached) {
-              search.addEventListener('input', () => { schedulePaginationState.currentPage = 1; renderSchedules(); });
-              search._attached = true;
-            }
-            if (day && !day._attached) {
-              day.addEventListener('change', () => { schedulePaginationState.currentPage = 1; renderSchedules(); });
-              day._attached = true;
-            }
-            if (campus && !campus._attached) {
-              campus.addEventListener('change', () => { schedulePaginationState.currentPage = 1; renderSchedules(); });
-              campus._attached = true;
-            }
-            if (room && !room._attached) {
-              room.addEventListener('change', () => { schedulePaginationState.currentPage = 1; renderSchedules(); });
-              room._attached = true;
-            }
-          }
-
-          function normalizeScheduleFilterValue(value) {
-            if (value === null || value === undefined) return '';
-            return String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
-          }
-
-          function roomMatchesFilter(actualRoom, expectedRoom) {
-            const actual = normalizeScheduleFilterValue(actualRoom);
-            const expected = normalizeScheduleFilterValue(expectedRoom);
-            if (!actual || !expected) return !actual && !expected;
-            if (actual === expected) return true;
-
-            const aliases = {
-              'room 201': 'laboratory 1 room 202',
-              'room 202': 'laboratory 1 room 202',
-              'room 203': 'laboratory 2 room 204',
-              'room 204': 'laboratory 2 room 204',
-              'lab 1': 'laboratory 1 room 202',
-              'lab 2': 'laboratory 2 room 204',
-              'laboratory 1': 'laboratory 1 room 202',
-              'laboratory 2': 'laboratory 2 room 204',
-              'bongabong campus': 'bongabong',
-              'calapan campus': 'calapan',
-              'victoria campus': 'victoria'
-            };
-
-            return actual === aliases[expected] || expected === aliases[actual] || actual.includes(expected) || expected.includes(actual);
-          }
-
-          function campusMatchesFilter(actualCampus, expectedCampus) {
-            const actual = normalizeScheduleFilterValue(actualCampus);
-            const expected = normalizeScheduleFilterValue(expectedCampus);
-            if (!actual || !expected) return !actual && !expected;
-            if (actual === expected) return true;
-            if (actual === 'bongabong campus') return expected === 'bongabong';
-            if (expected === 'bongabong campus') return actual === 'bongabong';
-            return actual.includes(expected) || expected.includes(actual);
-          }
-
-          function getScheduleListFromPayload(payload) {
-            if (Array.isArray(payload)) return payload;
-            if (!payload || typeof payload !== 'object') return [];
-            const candidates = [
-              payload.schedules,
-              payload.data,
-              payload.items,
-              payload.results,
-              payload.rows,
-              payload.schedule
-            ];
-            for (const entry of candidates) {
-              if (Array.isArray(entry)) return entry;
-            }
-            return [];
-          }
-
-          function normalizeScheduleRecord(item) {
-            if (!item || typeof item !== 'object') return null;
-            return {
-              ...item,
-              id: item.id ?? null,
-              subject: item.subject || item.title || '',
-              instructor: item.instructor || '',
-              laboratoryRoom: item.laboratoryRoom || item.room || '',
-              campus: item.campus || '',
-              dayOfWeek: item.dayOfWeek || item.day || '',
-              startTime: item.startTime || '',
-              endTime: item.endTime || '',
-              status: item.status || 'Confirmed',
-              qrEnabled: Boolean(item.qrEnabled)
-            };
-          }
-
-          function getScheduleById(id) {
-            if (id === null || id === undefined || id === '') return null;
-            const targetId = String(id);
-            return scheduleData.find((schedule) => String(schedule.id) === targetId) || null;
-          }
-
-          function normalizeScheduleForQr(item) {
-            const schedule = normalizeScheduleRecord(item);
-            if (!schedule) return null;
-            const timeLabel = [schedule.startTime, schedule.endTime].filter(Boolean).join(' - ');
-            return {
-              ...schedule,
-              title: schedule.subject || 'Untitled Session',
-              subject: schedule.subject || 'Untitled Session',
-              laboratoryRoom: schedule.laboratoryRoom || 'No room',
-              dayOfWeek: schedule.dayOfWeek || 'Monday',
-              startTime: schedule.startTime || '',
-              endTime: schedule.endTime || '',
-              campus: schedule.campus || 'Main Campus',
-              instructor: schedule.instructor || 'No instructor',
-              status: schedule.status || 'Confirmed',
-              day: schedule.dayOfWeek || 'Monday',
-              time: timeLabel || '',
-              room: schedule.laboratoryRoom || 'No room'
-            };
-          }
-
-          async function createAttendanceSession(item, minutes) {
-            const normalizedItem = normalizeScheduleForQr(item);
-            try {
-              const response = await fetch(attendanceSessionEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  scheduleId: normalizedItem.id,
-                  expirationMinutes: minutes
-                })
-              });
-
-              if (!response.ok) {
-                const payload = await response.json().catch(() => null);
-                const message = payload?.error || payload?.message || 'Unable to create attendance session';
-                throw new Error(message);
-              }
-
-              return await response.json();
-            } catch (err) {
-              console.error('Failed to generate attendance QR.');
-              console.error(err?.stack || err);
-              alert(err?.message || 'Unable to generate attendance QR.');
-              return null;
-            }
-          }
-
-          function buildQrPayload(item, minutes) {
-            const token = 'lab-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-            return {
-              token,
-              url: window.location.origin + '/api/attendance/scan?token=' + token,
-              payload: '',
-              title: item.title,
-              room: item.room,
-              day: item.day,
-              time: item.time,
-              minutes: minutes,
-              generatedAt: new Date().toISOString()
-            };
-          }
-
-          async function fetchSchedules() {
-            try {
-              scheduleData = [];
-              schedulePaginationState.currentPage = 1;
-              renderSchedules();
-
-              const response = await fetch('/api/laboratory-schedules', { cache: 'no-store', credentials: 'same-origin' });
-              if (!response.ok) {
-                const errorPayload = await response.json().catch(() => ({}));
-                throw new Error(errorPayload?.error || 'Failed to load schedules');
-              }
-
-              const payload = await response.json();
-              const rawSchedules = getScheduleListFromPayload(payload);
-              scheduleData = rawSchedules
-                .map((item) => normalizeScheduleRecord(item))
-                .filter(Boolean)
-                .filter((item) => {
-                  const activeCampus = normalizeScheduleFilterValue(window.__CURRENT_USER_CAMPUS__);
-                  return !activeCampus || campusMatchesFilter(item.campus, activeCampus);
-                });
-
-              schedulePaginationState.currentPage = 1;
-              try { attachScheduleFilters(); } catch (e) {}
-              renderSchedules();
-            } catch (err) {
-              console.error(err);
-              scheduleData = [];
-              schedulePaginationState.currentPage = 1;
-              renderSchedules();
-            }
-          }
-
-          async function confirmScheduleDeletion(id) {
-            if (!window.confirm('Are you sure you want to delete this laboratory schedule?')) return;
-            try {
-              const response = await fetch('/api/laboratory-schedules/' + encodeURIComponent(id), { method: 'DELETE' });
-              const payload = await response.json().catch(() => ({}));
-              if (!response.ok) throw new Error(payload.error || 'Unable to delete schedule');
-              scheduleData = scheduleData.filter((item) => String(item.id) !== String(id));
-              renderSchedules();
-              window.alert('Schedule deleted successfully.');
-            } catch (err) {
-              console.error(err);
-              window.alert(err.message || 'Unable to delete schedule.');
-            }
-          }
-
-          function renderScheduleSummary() {
-            const nextTitle = document.getElementById('nextSessionTitle');
-            const nextMeta = document.getElementById('nextSessionMeta');
-            const availableRooms = document.getElementById('availableRoomsCount');
-            const confirmedLabs = document.getElementById('confirmedLabsCount');
-
-            if (!nextTitle || !nextMeta || !availableRooms || !confirmedLabs) return;
-
-            const confirmedCount = scheduleData.filter((item) => (item.status || 'Confirmed') === 'Confirmed').length;
-            const roomSet = new Set(scheduleData.map((item) => item.laboratoryRoom).filter(Boolean));
-            const upcoming = [...scheduleData]
-              .filter((item) => item.dayOfWeek && item.startTime)
-              .sort((a, b) => {
-                const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                const dayDiff = (dayOrder.indexOf(a.dayOfWeek) + 7) % 7 - (dayOrder.indexOf(b.dayOfWeek) + 7) % 7;
-                if (dayDiff !== 0) return dayDiff;
-                return String(a.startTime).localeCompare(String(b.startTime));
-              })[0];
-
-            availableRooms.textContent = roomSet.size;
-            confirmedLabs.textContent = confirmedCount;
-
-            if (upcoming) {
-              nextTitle.textContent = upcoming.subject || 'Untitled Session';
-              nextMeta.textContent = upcoming.dayOfWeek + ' • ' + upcoming.startTime + ' - ' + upcoming.endTime + ' • ' + (upcoming.laboratoryRoom || 'No room');
-              nextMeta.className = 'mt-2 text-sm font-semibold text-lime-300';
-            } else {
-              nextTitle.textContent = 'No upcoming sessions';
-              nextMeta.textContent = 'No laboratory schedules available.';
-              nextMeta.className = 'mt-2 text-sm font-semibold text-lime-300';
-            }
-          }
-
-          function renderSchedules() {
-            const tableBody = document.getElementById('scheduleTableBody');
-            const paginationContainer = document.getElementById('schedulePagination');
-            if (!tableBody) return;
-
-            const searchValue = (document.getElementById('scheduleSearch')?.value || '').trim().toLowerCase();
-            const dayFilter = document.getElementById('scheduleFilterDay')?.value || '';
-            const campusFilter = document.getElementById('scheduleFilterCampus')?.value || '';
-            const roomFilter = document.getElementById('scheduleFilterRoom')?.value || '';
-
-            if (!scheduleData.length && !searchValue && !dayFilter && !campusFilter && !roomFilter) {
-              tableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-300">Loading schedules...</td></tr>';
-              if (paginationContainer) paginationContainer.innerHTML = '';
-              renderScheduleSummary();
-              return;
-            }
-
-            const filteredSchedules = scheduleData.filter((item) => {
-              const subject = item.subject || '';
-              const instructor = item.instructor || '';
-              const labRoom = item.laboratoryRoom || item.room || '';
-              const campus = item.campus || '';
-              const day = item.dayOfWeek || item.day || '';
-              const start = item.startTime || '';
-              const end = item.endTime || '';
-              const haystack = [subject, instructor, labRoom, campus, day, start, end].join(' ').toLowerCase();
-
-              const matchesSearch = !searchValue || haystack.includes(searchValue);
-              const matchesDay = !dayFilter || day === dayFilter;
-              const matchesCampus = !campusFilter || campusMatchesFilter(campus, campusFilter);
-              const matchesRoom = !roomFilter || roomMatchesFilter(labRoom, roomFilter);
-              return matchesSearch && matchesDay && matchesCampus && matchesRoom;
-            });
-
-            if (!filteredSchedules.length) {
-              tableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-slate-300">No laboratory schedules found.</td></tr>';
-              if (paginationContainer) paginationContainer.innerHTML = '';
-              renderScheduleSummary();
-              return;
-            }
-
-            const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const orderedSchedules = filteredSchedules.slice().sort((a, b) => {
-              const aDay = a.dayOfWeek || a.day || '';
-              const bDay = b.dayOfWeek || b.day || '';
-              const dayDiff = (dayOrder.indexOf(aDay) === -1 ? 99 : dayOrder.indexOf(aDay)) - (dayOrder.indexOf(bDay) === -1 ? 99 : dayOrder.indexOf(bDay));
-              if (dayDiff !== 0) return dayDiff;
-              return String(a.startTime || '').localeCompare(String(b.startTime || ''));
-            });
-
-            const totalPages = Math.max(1, Math.ceil(orderedSchedules.length / schedulePaginationState.rowsPerPage));
-            schedulePaginationState.totalPages = totalPages;
-            schedulePaginationState.currentPage = Math.min(schedulePaginationState.currentPage, totalPages);
-
-            const pageStart = (schedulePaginationState.currentPage - 1) * schedulePaginationState.rowsPerPage;
-            const pageSchedules = orderedSchedules.slice(pageStart, pageStart + schedulePaginationState.rowsPerPage);
-
-            tableBody.innerHTML = '';
-            pageSchedules.forEach((item) => {
-              const row = document.createElement('tr');
-              row.className = 'hover:bg-emerald-950/30 transition-colors';
-              const timeLabel = [item.startTime, item.endTime].filter(Boolean).join(' - ') || '—';
-              const rosterCount = Number(item.classListCount || 0);
-              row.innerHTML =
-                '<td class="px-4 py-4 text-white">' + (item.dayOfWeek || item.day || '—') + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + (item.laboratoryRoom || item.room || '—') + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + timeLabel + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + (item.subject || item.title || 'Untitled Session') + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + (item.instructor || 'No instructor') + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + (item.campus || '—') + '</td>' +
-                '<td class="px-4 py-4 text-slate-200">' + rosterCount + ' student' + (rosterCount === 1 ? '' : 's') + '</td>' +
-                '<td class="min-w-[280px] px-4 py-4"><div class="flex flex-row items-center justify-end gap-2 whitespace-nowrap">' +
-                  '<button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg border border-purple-500/30 transition-all" onclick="openSeatingChartModal(' + (item.id ?? '') + ')"><i class="fas fa-chair"></i> View Seating</button>' +
-                  '<button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-lg border border-emerald-500/30 transition-all" onclick="openQrModal(' + (item.id ?? '') + ')"><i class="fas fa-qrcode"></i> QR</button>' +
-                  '<button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg border border-blue-500/30 transition-all" onclick="openEditScheduleModal(' + (item.id ?? '') + ')"><i class="fas fa-edit"></i> Edit</button>' +
-                  '<button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg border border-red-500/30 transition-all" onclick="confirmScheduleDeletion(' + (item.id ?? '') + ')"><i class="fas fa-trash"></i> Delete</button>' +
-                '</div></td>';
-              tableBody.appendChild(row);
-            });
-
-            renderScheduleSummary();
-            renderSchedulePagination(totalPages);
-          }
-
-          function getTruncatedPaginationItems(totalPages, currentPage) {
-            if (totalPages <= 1) return [];
-            if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
-
-            const items = [1];
-            if (currentPage <= 2) {
-              items.push(2);
-              items.push('...');
-              items.push(totalPages);
-            } else if (currentPage >= totalPages - 1) {
-              items.push('...');
-              items.push(totalPages - 1);
-              items.push(totalPages);
-            } else {
-              items.push('...');
-              items.push(currentPage);
-              items.push(currentPage + 1);
-              items.push('...');
-              items.push(totalPages);
-            }
-            return items;
-          }
-
-          function renderSchedulePagination(totalPages) {
-            const paginationContainer = document.getElementById('schedulePagination');
-            if (!paginationContainer) return;
-            if (totalPages <= 1) {
-              paginationContainer.innerHTML = '';
-              return;
-            }
-
-            const activePage = schedulePaginationState.currentPage;
-            paginationContainer.innerHTML = '';
-
-            const createButton = (page, label, isActive, isPageNumber = false) => {
-              const button = document.createElement('button');
-              button.type = 'button';
-              button.textContent = label;
-              button.disabled = page === activePage;
-
-              if (isPageNumber) {
-                button.className = isActive
-                  ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-400 bg-emerald-500 font-bold text-black shadow-[0_0_14px_rgba(34,197,94,.3)] transition'
-                  : 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-800/40 bg-emerald-950/40 text-emerald-300 transition hover:bg-emerald-900/60';
-              } else {
-                button.className = 'rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-3 py-1.5 text-sm text-emerald-300 transition hover:bg-emerald-900/50';
-              }
-
-              if (button.disabled) {
-                button.classList.add('cursor-not-allowed', 'opacity-40');
-              } else {
-                button.addEventListener('click', function () {
-                  schedulePaginationState.currentPage = page;
-                  renderSchedules();
-                });
-              }
-              return button;
-            };
-
-            const prevButton = createButton(Math.max(1, activePage - 1), 'Previous', false, false);
-            prevButton.disabled = activePage <= 1;
-            paginationContainer.appendChild(prevButton);
-
-            const visiblePages = getTruncatedPaginationItems(totalPages, activePage);
-            visiblePages.forEach((pageItem) => {
-              if (pageItem === '...') {
-                const ellipsis = document.createElement('span');
-                ellipsis.className = 'px-1 font-bold text-emerald-500/60';
-                ellipsis.textContent = '...';
-                paginationContainer.appendChild(ellipsis);
-                return;
-              }
-
-              paginationContainer.appendChild(createButton(pageItem, String(pageItem), pageItem === activePage, true));
-            });
-
-            const nextButton = createButton(Math.min(totalPages, activePage + 1), 'Next', false, false);
-            nextButton.disabled = activePage >= totalPages;
-            paginationContainer.appendChild(nextButton);
-          }
-
-          window.openScheduleModal = function openScheduleModal() {
-            console.log('[Add Schedule] openScheduleModal() called');
-            editingScheduleId = null;
-            const form = document.getElementById('scheduleForm');
-            if (form) form.reset();
-            const campusField = document.getElementById('scheduleCampus');
-            const authenticatedCampus = String(window.__CURRENT_USER_CAMPUS__ || '').trim().replace(/\s*Campus\s*$/i, '');
-            if (campusField && authenticatedCampus) {
-              campusField.value = authenticatedCampus;
-            }
-            document.getElementById('scheduleModalTitle').textContent = 'Add Lab Schedule';
-            document.getElementById('scheduleModalSubtitle').textContent = 'Create a new session and assign it to a weekday.';
-            document.getElementById('scheduleSubmitButton').textContent = 'Create Schedule';
-            resetClassListUploadState();
-            const modal = document.getElementById('scheduleModal');
-            console.log('[Add Schedule] Modal element inside openScheduleModal:', modal);
-            if (!modal) {
-              console.warn('[Add Schedule] scheduleModal element not found - aborting open');
-              return;
-            }
-            console.log('[Add Schedule] Removing hidden and adding display classes');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex', 'show');
-            modal.style.display = 'flex';
-            modal.style.opacity = '1';
-            // prevent body scrolling when modal is open
-            try { document.body.classList.add('overflow-hidden'); } catch (e) {}
-            console.log('[Add Schedule] Modal should now be visible.');
-          };
-
-          function openEditScheduleModal(scheduleOrId) {
-            const schedule = normalizeScheduleRecord(typeof scheduleOrId === 'object' ? scheduleOrId : getScheduleById(scheduleOrId));
-            if (!schedule) return;
-            editingScheduleId = schedule.id;
-            document.getElementById('scheduleModalTitle').textContent = 'Edit Lab Schedule';
-            document.getElementById('scheduleModalSubtitle').textContent = 'Update the existing session details.';
-            document.getElementById('scheduleSubmitButton').textContent = 'Update Schedule';
-            document.getElementById('scheduleDay').value = schedule.dayOfWeek || 'Monday';
-            document.getElementById('scheduleTitle').value = schedule.subject || '';
-            document.getElementById('scheduleInstructor').value = schedule.instructor || '';
-            // Preselect canonical room and campus in edit modal. If legacy values exist, attempt normalization.
-            const roomSelect = document.getElementById('scheduleRoom');
-            const campusSelect = document.getElementById('scheduleCampus');
-            const normalizedRoom = (function(v) {
-              if (!v) return '';
-              const map = { 'room 202': 'Laboratory 1 — Room 202', 'room202': 'Laboratory 1 — Room 202', 'rm 202': 'Laboratory 1 — Room 202', 'laboratory 1': 'Laboratory 1 — Room 202', 'lab 1': 'Laboratory 1 — Room 202', 'room 204': 'Laboratory 2 — Room 204', 'room204': 'Laboratory 2 — Room 204', 'rm 204': 'Laboratory 2 — Room 204', 'laboratory 2': 'Laboratory 2 — Room 204', 'lab 2': 'Laboratory 2 — Room 204' };
-              const key = String(v).trim().toLowerCase();
-              return map[key] || v || '';
-            })(schedule.laboratoryRoom || '');
-            const normalizedCampus = (function(v) { if (!v) return ''; const candidates = ['Bongabong','Calapan','Victoria']; const found = candidates.find(c=>c.toLowerCase()===String(v).trim().toLowerCase()); return found||v||''; })(schedule.campus || '');
-            if (roomSelect) roomSelect.value = normalizedRoom || '';
-            if (campusSelect) campusSelect.value = normalizedCampus || '';
-            document.getElementById('scheduleStartTime').value = schedule.startTime || '';
-            document.getElementById('scheduleEndTime').value = schedule.endTime || '';
-            document.getElementById('scheduleQrEnabled').checked = Boolean(schedule.qrEnabled);
-            resetClassListUploadState();
-            const modal = document.getElementById('scheduleModal');
-            if (!modal) return;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex', 'show');
-            modal.style.display = 'flex';
-            modal.style.opacity = '1';
-          }
-
-          let parsedClassListPayload = null;
-
-          function resetClassListUploadState() {
-            parsedClassListPayload = null;
-            const message = document.getElementById('scheduleClassListMessage');
-            const meta = document.getElementById('scheduleClassListMeta');
-            const validation = document.getElementById('scheduleClassListValidation');
-            const fileInput = document.getElementById('scheduleClassListFile');
-            if (message) message.innerHTML = 'No class list selected.';
-            if (meta) meta.innerHTML = '';
-            if (validation) validation.classList.add('hidden');
-            if (fileInput) fileInput.value = '';
-          }
-
-          function updateClassListUploadState({ message, meta, isSuccess, isError }) {
-            const messageNode = document.getElementById('scheduleClassListMessage');
-            const metaNode = document.getElementById('scheduleClassListMeta');
-            const validation = document.getElementById('scheduleClassListValidation');
-            if (messageNode) {
-              messageNode.className = isSuccess ? 'text-emerald-300 font-semibold' : isError ? 'text-red-200 font-semibold' : 'text-slate-400';
-              messageNode.textContent = message;
-            }
-            if (metaNode) {
-              metaNode.innerHTML = meta || '';
-            }
-            if (validation) {
-              validation.classList.toggle('hidden', !isError);
-              if (!isError) {
-                validation.textContent = 'Please upload the official class list before creating the laboratory schedule.';
-              }
-            }
-          }
-
-          window.closeScheduleModal = function closeScheduleModal() {
-            const modal = document.getElementById('scheduleModal');
-            if (!modal) return;
-            modal.classList.remove('show');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-            modal.style.opacity = '0';
-            const form = document.getElementById('scheduleForm');
-            if (form) form.reset();
-            editingScheduleId = null;
-            resetClassListUploadState();
-            try { document.body.classList.remove('overflow-hidden'); } catch (e) {}
-          };
-          window.handleClassListFileChange = handleClassListFileChange;
-          window.handleScheduleSubmit = handleScheduleSubmit;
-
-          function normalizeClassListRow(row) {
-            if (!row || typeof row !== 'object') return null;
-            const normalized = {};
-            Object.entries(row).forEach(([key, value]) => {
-              const normalizedKey = String(key).trim().toLowerCase();
-              normalized[normalizedKey] = String(value ?? '').trim();
-            });
-            const lastName = normalized.lastname || normalized['last name'] || '';
-            const firstName = normalized.firstname || normalized['first name'] || '';
-            const middleInitial = normalized.middleinitial || normalized['middle initial'] || '';
-            const fullName = normalized.fullname || normalized.name || normalized['full name'] || '';
-            const courseSection = normalized.coursesection || normalized.course_section || normalized['course section'] || '';
-            const program = normalized.program || '';
-            const year = normalized.year || '';
-            const section = normalized.section || '';
-            const email = normalized.email || '';
-            if (!fullName && !(lastName && firstName)) return null;
-            return {
-              lastName,
-              firstName,
-              middleInitial,
-              fullName,
-              courseSection,
-              program,
-              year,
-              section,
-              email
-            };
-          }
-
-          function parseCsvToClassList(csv) {
-            const lines = csv.split(/\\r?\\n/).map((line) => line.trim()).filter(Boolean);
-            if (!lines.length) return [];
-            const headerRow = lines[0].split(/,|\\t/).map((field) => field.trim().toLowerCase());
-            const hasHeaders = ['lastname', 'firstname', 'middleinitial'].every((key) => headerRow.includes(key));
-            return lines.slice(hasHeaders ? 1 : 0).map((line) => {
-              const values = line.split(/,|\\t/).map((cell) => cell.trim());
-              return {
-                lastName: values[headerRow.indexOf('lastname')] || values[0] || '',
-                firstName: values[headerRow.indexOf('firstname')] || values[1] || '',
-                middleInitial: values[headerRow.indexOf('middleinitial')] || values[2] || '',
-                fullName: values[headerRow.indexOf('fullname')] || '',
-                courseSection: values[headerRow.indexOf('coursesection')] || '',
-                program: values[headerRow.indexOf('program')] || '',
-                year: values[headerRow.indexOf('year')] || '',
-                section: values[headerRow.indexOf('section')] || '',
-                email: values[headerRow.indexOf('email')] || ''
-              };
-            }).filter((row) => row.fullName || (row.lastName && row.firstName));
-          }
-
-          function parseExcelToClassList(workbook) {
-            const sheetNames = workbook?.SheetNames || [];
-            if (!sheetNames.length) return [];
-            const sheet = workbook.Sheets[sheetNames[0]];
-            const rows = window.XLSX.utils.sheet_to_json(sheet, { defval: '' });
-            return rows.map(normalizeClassListRow).filter(Boolean);
-          }
-
-          function handleClassListFileChange(files) {
-            const file = files?.[0];
-            if (!file) {
-              resetClassListUploadState();
-              return;
-            }
-            const fileName = file.name || 'Selected file';
-            const extension = (file.name.split('.').pop() || '').toLowerCase();
-            const isExcel = ['xlsx', 'xls'].includes(extension);
-            const isCsv = extension === 'csv';
-            if (!isExcel && !isCsv) {
-              parsedClassListPayload = null;
-              updateClassListUploadState({
-                message: 'Please upload a supported class list file (.xlsx, .xls, .csv).',
-                meta: '',
-                isError: true
-              });
-              return;
-            }
-
-            parsedClassListPayload = [];
-            updateClassListUploadState({
-              message: '✓ Class list file selected',
-              meta: '<span class="font-semibold text-emerald-200">Ready to upload</span><span class="text-slate-400">• ' + fileName + '</span>',
-              isSuccess: true
-            });
-          }
-
-          async function handleScheduleSubmit(event) {
-            event.preventDefault();
-            const isEditing = Boolean(editingScheduleId);
-            const day = document.getElementById('scheduleDay').value;
-            const title = document.getElementById('scheduleTitle').value.trim();
-            const instructor = document.getElementById('scheduleInstructor').value.trim();
-            const room = document.getElementById('scheduleRoom').value.trim();
-            const campus = document.getElementById('scheduleCampus').value.trim();
-            const statusElem = document.getElementById('scheduleStatus');
-            const status = statusElem ? statusElem.value : 'Confirmed';
-            const startTime = document.getElementById('scheduleStartTime').value.trim();
-            const endTime = document.getElementById('scheduleEndTime').value.trim();
-            const qrEnabled = document.getElementById('scheduleQrEnabled').checked;
-            const classListValidation = document.getElementById('scheduleClassListValidation');
-            const classListFileInput = document.getElementById('scheduleClassListFile');
-            const hasClassListSelection = Boolean(classListFileInput?.files?.length || classListFileInput?.value);
-            const classList = Array.isArray(parsedClassListPayload) ? parsedClassListPayload : [];
-
-            if (!day || !title || !room || !campus || !startTime || !endTime) {
-              alert('Please complete all required schedule fields.');
-              return;
-            }
-
-            // Class list is now optional - no validation required
-            classListValidation?.classList.add('hidden');
-
-            try {
-              const formData = new FormData();
-              formData.append('subject', title);
-              formData.append('instructor', instructor);
-              formData.append('laboratoryRoom', room);
-              formData.append('campus', campus);
-              formData.append('dayOfWeek', day);
-              formData.append('startTime', startTime);
-              formData.append('endTime', endTime);
-              // Keep sending status if present to maintain backward compatibility; server uses default if omitted.
-              if (status) formData.append('status', status);
-              formData.append('qrEnabled', qrEnabled ? 'true' : 'false');
-              if (classList.length) {
-                formData.append('classList', JSON.stringify(classList));
-              }
-              if (classListFileInput?.files?.[0]) {
-                formData.append('classListFile', classListFileInput.files[0]);
-              }
-
-              const response = await fetch(isEditing ? '/api/laboratory-schedules/' + encodeURIComponent(editingScheduleId) : '/api/laboratory-schedules', {
-                method: isEditing ? 'PUT' : 'POST',
-                credentials: 'same-origin',
-                body: formData
-              });
-
-              if (!response.ok) {
-                const result = await response.json().catch(() => ({}));
-                throw new Error(result.message || result.error || 'Unable to save schedule');
-              }
-
-              const result = await response.json().catch(() => ({}));
-              closeScheduleModal();
-              await fetchSchedules();
-              if (isEditing) {
-                window.alert('Schedule updated successfully.');
-              } else {
-                window.alert('Schedule created successfully.');
-              }
-
-              if (qrEnabled && !isEditing) {
-                const item = result.schedule || result;
-                if (item?.id) {
-                  const qrResponse = await createAttendanceSession({
-                    id: item.id,
-                    title: item.subject,
-                    day: item.dayOfWeek,
-                    time: item.startTime + ' - ' + item.endTime,
-                    room: item.laboratoryRoom,
-                    status: item.status
-                  }, 15);
-                  if (qrResponse?.session) {
-                    await fetchSchedules();
-                  }
-                }
-              }
-            } catch (err) {
-              console.error(err);
-              alert((isEditing ? 'Failed to update schedule: ' : 'Failed to create schedule: ') + (err.message || 'Please try again.'));
-            }
-          }
-
-          function openQrModal(scheduleOrId) {
-            const modal = document.getElementById('qrModal');
-            const schedule = normalizeScheduleRecord(typeof scheduleOrId === 'object' ? scheduleOrId : getScheduleById(scheduleOrId));
-            const normalizedItem = normalizeScheduleForQr(schedule);
-            if (!normalizedItem) return;
-            activeQrScheduleIndex = scheduleData.findIndex((item) => String(item.id) === String(normalizedItem.id));
-            if (activeQrScheduleIndex < 0) {
-              activeQrScheduleIndex = typeof scheduleOrId === 'number' ? scheduleData.findIndex((item) => String(item.id) === String(scheduleOrId)) : null;
-            }
-            const subtitle = document.getElementById('qrModalSubtitle');
-            subtitle.textContent = normalizedItem.subject + ' • ' + normalizedItem.dayOfWeek + ' • ' + normalizedItem.startTime + ' - ' + normalizedItem.endTime + ' • ' + normalizedItem.laboratoryRoom;
-            modal.classList.add('show');
-            modal.classList.remove('hidden');
-            window.setTimeout(() => renderQrPreview(normalizedItem), 0);
-          }
-
-          function closeQrModal() {
-            const modal = document.getElementById('qrModal');
-            modal.classList.remove('show');
-            modal.classList.add('hidden');
-          }
-
-          function renderQrPreview(item) {
-            const preview = document.getElementById('qrPreview');
-            const statusBadge = document.getElementById('qrStatusBadge');
-            if (!item) return;
-            preview.innerHTML = '';
-            if (!item.qr || !item.qr.url) {
-              preview.innerHTML = '<div class="text-center text-gray-400">No QR generated yet. Choose an expiration window and generate one.</div>';
-              statusBadge.textContent = 'Not generated';
-              statusBadge.className = 'rounded-full bg-slate-600/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200';
-              return;
-            }
-            const wrapper = document.createElement('div');
-            wrapper.className = 'flex flex-col items-center gap-3';
-            const qrContainer = document.createElement('div');
-            qrContainer.className = 'rounded-2xl bg-white p-5';
-            qrContainer.style.width = '380px';
-            qrContainer.style.maxWidth = '100%';
-            qrContainer.style.display = 'flex';
-            qrContainer.style.alignItems = 'center';
-            qrContainer.style.justifyContent = 'center';
-            qrContainer.style.padding = '24px';
-            const qrInfo = document.createElement('div');
-            qrInfo.className = 'text-center';
-            qrInfo.innerHTML = '<p class="text-sm font-semibold text-white">' + (item.subject || item.title || 'Untitled Session') + '</p><p class="text-xs text-gray-400">' + (item.dayOfWeek || item.day || 'Monday') + ' • ' + (item.time || (item.startTime + ' - ' + item.endTime)) + '</p><p class="text-xs text-gray-500">' + (item.laboratoryRoom || item.room || 'No room') + '</p>';
-            wrapper.appendChild(qrContainer);
-            wrapper.appendChild(qrInfo);
-            preview.appendChild(wrapper);
-
-            const qrImage = document.createElement('img');
-            qrImage.alt = 'Attendance QR';
-            qrImage.src = item.qr.qrCode || item.qr.imageDataUrl || item.qr.url || '';
-            qrImage.width = 320;
-            qrImage.height = 320;
-            qrImage.style.width = '320px';
-            qrImage.style.height = '320px';
-            qrImage.style.maxWidth = '100%';
-            qrImage.style.objectFit = 'contain';
-            qrImage.style.display = 'block';
-            qrContainer.appendChild(qrImage);
-
-            item.qr.imageDataUrl = item.qr.qrCode || item.qr.imageDataUrl || '';
-            statusBadge.textContent = getQrStatus(item);
-            statusBadge.className = 'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ' + getQrStatusClass(item);
-          }
-
-          async function generateCurrentQr() {
-            const item = activeQrScheduleIndex !== null && activeQrScheduleIndex >= 0 ? normalizeScheduleRecord(scheduleData[activeQrScheduleIndex]) : null;
-            if (!item) return;
-            const minutes = parseInt(document.getElementById('qrExpirySelect').value, 10) || 15;
-            const response = await createAttendanceSession(item, minutes);
-            if (!response?.session) return;
-
-            const qrData = response.session.qrCode || response.session.qrImage || '';
-            const nextQr = {
-              token: response.session.token,
-              url: response.session.scanUrl,
-              qrCode: qrData,
-              expiresAt: new Date(response.session.expiresAt).getTime(),
-              title: item.subject || item.title || 'Untitled Session',
-              room: item.laboratoryRoom || item.room || 'No room',
-              day: item.dayOfWeek || item.day || 'Monday',
-              time: [item.startTime, item.endTime].filter(Boolean).join(' - '),
-              imageDataUrl: qrData
-            };
-
-            item.qr = nextQr;
-            if (activeQrScheduleIndex !== null && activeQrScheduleIndex >= 0) {
-              scheduleData[activeQrScheduleIndex] = { ...scheduleData[activeQrScheduleIndex], qr: nextQr };
-            }
-            renderQrPreview(item);
-            renderSchedules();
-          }
-
-          function regenerateCurrentQr() {
-            generateCurrentQr();
-          }
-
-          function getCurrentQrDataUrl(item) {
-            const preview = document.getElementById('qrPreview');
-            const img = preview && preview.querySelector('img');
-            if (img && img.currentSrc) return img.currentSrc;
-            if (img && img.src) return img.src;
-            if (!item || !item.qr) return null;
-            const candidates = [item.qr.imageDataUrl, item.qr.qrCode, item.qr.url];
-            for (const candidate of candidates) {
-              if (typeof candidate === 'string' && candidate.trim()) {
-                return candidate;
-              }
-            }
-            return null;
-          }
-
-          function downloadCurrentQr() {
-            const item = activeQrScheduleIndex !== null && activeQrScheduleIndex >= 0 ? normalizeScheduleRecord(scheduleData[activeQrScheduleIndex]) : null;
-            const dataUrl = getCurrentQrDataUrl(item);
-            if (!item || !dataUrl) {
-              alert('No QR image is available yet. Generate a QR first.');
-              return;
-            }
-
-            const link = document.createElement('a');
-            link.download = 'attendance-qr-' + (item.subject || item.title || 'schedule').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.png';
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-          }
-
-          function printCurrentQr() {
-            const item = activeQrScheduleIndex !== null && activeQrScheduleIndex >= 0 ? normalizeScheduleRecord(scheduleData[activeQrScheduleIndex]) : null;
-            const dataUrl = getCurrentQrDataUrl(item);
-            if (!item || !dataUrl) {
-              alert('No QR image is available yet. Generate a QR first.');
-              return;
-            }
-
-            const printWindow = window.open('', '_blank', 'width=800,height=900');
-            if (!printWindow) {
-              alert('Please allow pop-ups so the QR sticker can be printed.');
-              return;
-            }
-
-            const title = String(item.subject || item.title || 'Untitled Session');
-            const scheduleText = [item.dayOfWeek || item.day || 'Monday', [item.startTime, item.endTime].filter(Boolean).join(' - ') || item.time || ''].filter(Boolean).join(' • ');
-            const roomText = item.laboratoryRoom || item.room || 'No room';
-            const html = '<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Attendance QR</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:24px;background:#fff;color:#111}h2{margin-bottom:8px}p{margin:4px 0}img{max-width:320px;margin-top:16px}</style></head><body><h2>' + title + '</h2><p>' + scheduleText + '</p><p>' + roomText + '</p><img src="' + dataUrl + '" /></body></html>';
-            printWindow.document.open();
-            printWindow.document.write(html);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-              printWindow.print();
-            }, 350);
-          }
-
-          async function openAttendanceSessionModal(sessionId) {
-            const modal = document.getElementById('attendanceSessionModal');
-            const content = document.getElementById('attendanceSessionModalContent');
-            const title = document.getElementById('attendanceSessionModalTitle');
-            const subtitle = document.getElementById('attendanceSessionModalSubtitle');
-            if (!modal || !content) return;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            title.textContent = 'Loading attendance details...';
-            subtitle.textContent = 'Fetching the final attendance breakdown.';
-            content.innerHTML = '<div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-center text-slate-400">Loading session details...</div>';
-
-            try {
-              const response = await fetch('/api/instructor/attendance-dashboard/' + encodeURIComponent(sessionId), { cache: 'no-store' });
-              if (!response.ok) throw new Error('Unable to load attendance details');
-              const payload = await response.json();
-              const session = payload.session || {};
-              const records = Array.isArray(payload.records) ? payload.records : [];
-              const present = records.filter((row) => row.attendanceStatus === 'Present');
-              const late = records.filter((row) => row.attendanceStatus === 'Late');
-              const absent = records.filter((row) => row.attendanceStatus === 'Absent');
-              const attendanceSessionState = {
-                currentPage: 1,
-                rowsPerPage: 3,
-                filter: 'All',
-                records: records,
-                sessionKey: session.id || session.token || ''
-              };
-              const tabs = ['All', 'Present', 'Late', 'Absent'];
-              const filter = 'All';
-
-              title.textContent = session.subject || 'Attendance Details';
-              subtitle.textContent = [session.laboratory || session.room, session.instructor].filter(Boolean).join(' • ');
-              
-              // Enhanced UI with better visual hierarchy and modern card design
-              const metaRows = [
-                // Session Info Section - Compact 2-column layout
-                '<div class="space-y-4">',
-                '<div class="rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 to-slate-900/70 p-5">',
-                '<h4 class="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-4 flex items-center gap-2">',
-                '<i class="fas fa-info-circle"></i> Session Information',
-                '</h4>',
-                '<div class="grid gap-4 md:grid-cols-2">',
-                '<div class="flex items-start gap-3">',
-                '<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">',
-                '<i class="fas fa-book-open"></i>',
-                '</div>',
-                '<div class="flex-1 min-w-0">',
-                '<p class="text-xs text-slate-400 mb-1">Subject</p>',
-                '<p class="text-sm font-semibold text-white truncate">' + (session.subject || '—') + '</p>',
-                '</div>',
-                '</div>',
-                '<div class="flex items-start gap-3">',
-                '<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">',
-                '<i class="fas fa-chalkboard-teacher"></i>',
-                '</div>',
-                '<div class="flex-1 min-w-0">',
-                '<p class="text-xs text-slate-400 mb-1">Instructor</p>',
-                '<p class="text-sm font-semibold text-white truncate">' + (session.instructor || '—') + '</p>',
-                '</div>',
-                '</div>',
-                '<div class="flex items-start gap-3">',
-                '<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">',
-                '<i class="fas fa-flask"></i>',
-                '</div>',
-                '<div class="flex-1 min-w-0">',
-                '<p class="text-xs text-slate-400 mb-1">Laboratory</p>',
-                '<p class="text-sm font-semibold text-white truncate">' + (session.laboratory || '—') + '</p>',
-                '</div>',
-                '</div>',
-                '<div class="flex items-start gap-3">',
-                '<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">',
-                '<i class="fas fa-calendar-alt"></i>',
-                '</div>',
-                '<div class="flex-1 min-w-0">',
-                '<p class="text-xs text-slate-400 mb-1">Date</p>',
-                '<p class="text-sm font-semibold text-white">' + formatSessionDate(session.date || session.createdAt) + '</p>',
-                '</div>',
-                '</div>',
-                '</div>',
-                '</div>',
-                
-                // Stats Cards - Large prominent display
-                '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">',
-                '<div class="relative overflow-hidden rounded-xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/20 to-emerald-900/30 p-5 shadow-lg shadow-emerald-500/10">',
-                '<div class="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-emerald-500/20 blur-2xl"></div>',
-                '<div class="relative">',
-                '<div class="mb-2 flex items-center gap-2">',
-                '<i class="fas fa-check-circle text-lg text-emerald-400"></i>',
-                '<p class="text-xs font-medium uppercase tracking-wide text-emerald-300">Present</p>',
-                '</div>',
-                '<p class="text-4xl font-bold text-white">' + present.length + '</p>',
-                '<p class="mt-1 text-xs text-emerald-200/70">' + (records.length ? Math.round((present.length / records.length) * 100) : 0) + '% attendance</p>',
-                '</div>',
-                '</div>',
-                
-                '<div class="relative overflow-hidden rounded-xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/20 to-amber-900/30 p-5 shadow-lg shadow-amber-500/10">',
-                '<div class="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-amber-500/20 blur-2xl"></div>',
-                '<div class="relative">',
-                '<div class="mb-2 flex items-center gap-2">',
-                '<i class="fas fa-clock text-lg text-amber-400"></i>',
-                '<p class="text-xs font-medium uppercase tracking-wide text-amber-300">Late</p>',
-                '</div>',
-                '<p class="text-4xl font-bold text-white">' + late.length + '</p>',
-                '<p class="mt-1 text-xs text-amber-200/70">' + (records.length ? Math.round((late.length / records.length) * 100) : 0) + '% tardy</p>',
-                '</div>',
-                '</div>',
-                
-                '<div class="relative overflow-hidden rounded-xl border-2 border-red-500/40 bg-gradient-to-br from-red-500/20 to-red-900/30 p-5 shadow-lg shadow-red-500/10">',
-                '<div class="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-red-500/20 blur-2xl"></div>',
-                '<div class="relative">',
-                '<div class="mb-2 flex items-center gap-2">',
-                '<i class="fas fa-times-circle text-lg text-red-400"></i>',
-                '<p class="text-xs font-medium uppercase tracking-wide text-red-300">Absent</p>',
-                '</div>',
-                '<p class="text-4xl font-bold text-white">' + absent.length + '</p>',
-                '<p class="mt-1 text-xs text-red-200/70">' + (records.length ? Math.round((absent.length / records.length) * 100) : 0) + '% missed</p>',
-                '</div>',
-                '</div>',
-                
-                '<div class="relative overflow-hidden rounded-xl border-2 border-slate-700/40 bg-gradient-to-br from-slate-800/60 to-slate-900/80 p-5 shadow-lg">',
-                '<div class="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-slate-500/10 blur-2xl"></div>',
-                '<div class="relative">',
-                '<div class="mb-2 flex items-center gap-2">',
-                '<i class="fas fa-users text-lg text-slate-400"></i>',
-                '<p class="text-xs font-medium uppercase tracking-wide text-slate-300">Total</p>',
-                '</div>',
-                '<p class="text-4xl font-bold text-white">' + records.length + '</p>',
-                '<p class="mt-1 text-xs text-slate-400">students enrolled</p>',
-                '</div>',
-                '</div>',
-                '</div>',
-                
-                // Filter tabs
-                '<div class="flex flex-wrap gap-2">' + tabs.map(function(tab) {
-                  const activeClass = tab === filter ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-slate-800/60 text-slate-300 border-slate-700 hover:bg-slate-700/60';
-                  const iconMap = { 'All': 'fa-list', 'Present': 'fa-check-circle', 'Late': 'fa-clock', 'Absent': 'fa-times-circle' };
-                  return '<button type="button" data-tab="' + tab + '" class="attendance-filter-btn inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all ' + activeClass + '"><i class="fas ' + iconMap[tab] + '"></i>' + tab + '</button>';
-                }).join('') + '</div>',
-                
-                // Student table
-                '<div class="overflow-hidden rounded-xl border border-slate-700/50 shadow-xl">',
-                '<div class="overflow-x-auto">',
-                '<table class="min-w-full divide-y divide-slate-700/50">',
-                '<thead class="bg-gradient-to-r from-slate-900 to-slate-800">',
-                '<tr>',
-                '<th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-300">Student ID</th>',
-                '<th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-300">Full Name</th>',
-                '<th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-300">Status</th>',
-                '<th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-300">Time In</th>',
-                '</tr>',
-                '</thead>',
-                '<tbody id="attendanceSessionRows" class="divide-y divide-slate-700/30 bg-slate-900/40"></tbody>',
-                '</table>',
-                '</div>',
-                '<div id="attendanceSessionPagination" class="flex flex-wrap items-center justify-center gap-2 border-t border-slate-700/50 bg-slate-900/60 px-4 py-4"></div>',
-                '</div>',
-                '</div>'
-              ];
-              content.innerHTML = metaRows.join('');
-              // Attach click handlers to attendance filter buttons to avoid inline onclick generation
-              try {
-                const filterContainer = content.querySelector('.attendance-filter-container');
-                if (filterContainer) {
-                  const buttons = Array.from(filterContainer.querySelectorAll('button.attendance-filter-btn'));
-                  buttons.forEach((btn) => {
-                    btn.addEventListener('click', function () {
-                      const tab = this.dataset.tab;
-                      buttons.forEach((b) => {
-                        b.classList.remove('bg-emerald-600', 'text-white');
-                        b.classList.add('bg-slate-900/70', 'text-slate-200');
-                      });
-                      this.classList.remove('bg-slate-900/70', 'text-slate-200');
-                      this.classList.add('bg-emerald-600', 'text-white');
-                      try { window.renderAttendanceSessionRows(session.id || session.token || '', tab); } catch (e) { console.error(e); }
-                    });
-                  });
-                }
-              } catch (e) { console.error(e); }
-
-              function renderAttendanceSessionPagination(filteredRows) {
-                const paginationContainer = document.getElementById('attendanceSessionPagination');
-                if (!paginationContainer) return;
-                const totalPages = Math.max(1, Math.ceil(filteredRows.length / attendanceSessionState.rowsPerPage));
-                attendanceSessionState.totalPages = totalPages;
-                if (totalPages <= 1) {
-                  paginationContainer.innerHTML = '';
-                  return;
-                }
-
-                const activePage = Math.min(attendanceSessionState.currentPage, totalPages);
-                attendanceSessionState.currentPage = activePage;
-
-                const createPageButton = (page, label, isActive, isNavButton = false) => {
-                  const button = document.createElement('button');
-                  button.type = 'button';
-                  button.textContent = label;
-                  button.disabled = page === activePage && !isNavButton;
-                  button.className = isNavButton
-                    ? 'rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-3 py-1.5 text-sm text-emerald-300 transition hover:bg-emerald-900/50'
-                    : (isActive
-                      ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500 bg-emerald-600 font-bold text-white shadow-sm transition'
-                      : 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-800/40 bg-emerald-950/40 text-emerald-300 transition hover:bg-emerald-900/60');
-                  if (button.disabled && !isNavButton) {
-                    button.classList.add('cursor-not-allowed', 'opacity-40');
-                  }
-                  button.addEventListener('click', function () {
-                    attendanceSessionState.currentPage = page;
-                    window.renderAttendanceSessionRows(attendanceSessionState.sessionKey, attendanceSessionState.filter);
-                  });
-                  return button;
-                };
-
-                paginationContainer.innerHTML = '';
-                const prevButton = createPageButton(Math.max(1, activePage - 1), 'Previous', false, true);
-                prevButton.disabled = activePage <= 1;
-                if (prevButton.disabled) prevButton.classList.add('cursor-not-allowed', 'opacity-40');
-                paginationContainer.appendChild(prevButton);
-
-                const visiblePages = getTruncatedPaginationItems(totalPages, activePage);
-                visiblePages.forEach((pageItem) => {
-                  if (pageItem === '...') {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.className = 'px-1 font-bold text-emerald-500/60';
-                    ellipsis.textContent = '...';
-                    paginationContainer.appendChild(ellipsis);
-                    return;
-                  }
-
-                  paginationContainer.appendChild(createPageButton(pageItem, String(pageItem), pageItem === activePage));
-                });
-
-                const nextButton = createPageButton(Math.min(totalPages, activePage + 1), 'Next', false, true);
-                nextButton.disabled = activePage >= totalPages;
-                if (nextButton.disabled) nextButton.classList.add('cursor-not-allowed', 'opacity-40');
-                paginationContainer.appendChild(nextButton);
-              }
-
-              window.renderAttendanceSessionRows = function(sessionKey, filterValue) {
-                const rows = document.getElementById('attendanceSessionRows');
-                if (!rows) return;
-                const previousFilter = attendanceSessionState.filter;
-                attendanceSessionState.filter = filterValue || 'All';
-                if (attendanceSessionState.filter !== previousFilter) {
-                  attendanceSessionState.currentPage = 1;
-                }
-                const filteredRows = attendanceSessionState.records.filter(function(row) {
-                  return attendanceSessionState.filter === 'All' || row.attendanceStatus === attendanceSessionState.filter;
-                });
-                const startIndex = (attendanceSessionState.currentPage - 1) * attendanceSessionState.rowsPerPage;
-                const pageItems = filteredRows.slice(startIndex, startIndex + attendanceSessionState.rowsPerPage);
-
-                rows.innerHTML = pageItems.length ? pageItems.map(function(row) {
-                  const status = row.attendanceStatus || row.status || 'Absent';
-                  const statusConfig = {
-                    'Present': { class: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', icon: 'fa-check-circle' },
-                    'Late': { class: 'bg-amber-500/20 text-amber-300 border-amber-500/30', icon: 'fa-clock' },
-                    'Absent': { class: 'bg-red-500/20 text-red-300 border-red-500/30', icon: 'fa-times-circle' }
-                  };
-                  const config = statusConfig[status] || statusConfig['Absent'];
-                  const studentId = row.studentId || row.id || '—';
-                  const name = row.studentName || row.fullName || '—';
-                  const timeIn = row.timeIn || row.time || 'Not recorded';
-                  return '<tr class="hover:bg-slate-800/40 transition-colors">' +
-                    '<td class="px-5 py-4 text-sm font-medium text-slate-300">' + studentId + '</td>' +
-                    '<td class="px-5 py-4 text-sm font-medium text-white">' + name + '</td>' +
-                    '<td class="px-5 py-4"><span class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ' + config.class + '"><i class="fas ' + config.icon + '"></i>' + status + '</span></td>' +
-                    '<td class="px-5 py-4 text-sm text-slate-400">' + timeIn + '</td>' +
-                    '</tr>';
-                }).join('') : '<tr><td colspan="4" class="px-5 py-8 text-center"><div class="flex flex-col items-center gap-2"><i class="fas fa-user-slash text-3xl text-slate-600"></i><p class="text-slate-400">No students in this group.</p></div></td></tr>';
-
-                renderAttendanceSessionPagination(filteredRows);
-              };
-              window.renderAttendanceSessionRows(sessionId, 'All');
-            } catch (err) {
-              console.error(err);
-              content.innerHTML = '<div class="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-200">Unable to load the session details.</div>';
-            }
-          }
-
-          function closeAttendanceSessionModal() {
-            const modal = document.getElementById('attendanceSessionModal');
-            if (modal) {
-              modal.classList.add('hidden');
-              modal.classList.remove('flex');
-            }
-          }
-
-          document.addEventListener('DOMContentLoaded', async function() {
-            console.log('[Add Schedule] DOMContentLoaded - binding Add Schedule button');
-            const addScheduleButton = document.getElementById('openScheduleModalBtn');
-            if (!addScheduleButton) console.warn('[Add Schedule] openScheduleModalBtn not found in DOM');
-            // Also attach to any fallback Create Schedule button rendered inside the schedules grid
-            const addScheduleFallback = document.getElementById('openScheduleModalFallback');
-            if (addScheduleFallback) {
-              addScheduleFallback.addEventListener('click', function (evt) {
-                try {
-                  if (typeof openScheduleModal === 'function') return openScheduleModal();
-                  if (window.openScheduleModal && typeof window.openScheduleModal === 'function') return window.openScheduleModal();
-                } catch (err) { console.error(err); }
-                console.warn('[Add Schedule] openScheduleModal is not defined');
-              });
-            }
-            renderSchedules();
-            attachAttendanceFilters();
-            await fetchAttendanceRecords();
-            await fetchAttendanceStats();
-            await fetchSchedules();
-            startAttendanceRefresh();
-          });
-
-          // ========================
-          // Seating Chart Modal
-          // ========================
-          window.openSeatingChartModal = async function(scheduleId) {
-            const modal = document.getElementById('seatingChartModal');
-            if (!modal) return;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            const loadingDiv = document.getElementById('seatingChartLoading');
-            const contentDiv = document.getElementById('seatingChartContent');
-            const errorDiv = document.getElementById('seatingChartError');
-
-            loadingDiv.classList.remove('hidden');
-            contentDiv.classList.add('hidden');
-            errorDiv.classList.add('hidden');
-
-            try {
-              const response = await fetch(\`/api/laboratory-schedules/\${scheduleId}/seating-chart\`);
-              if (!response.ok) throw new Error('Failed to fetch seating chart');
-
-              const data = await response.json();
-              
-              // Update modal header with schedule info
-              document.getElementById('seatingScheduleSubject').textContent = data.schedule.subject || 'Lab Session';
-              document.getElementById('seatingScheduleTime').textContent = \`\${data.schedule.day} • \${data.schedule.time}\`;
-              document.getElementById('seatingScheduleRoom').textContent = data.schedule.room || 'N/A';
-              
-              // Update statistics
-              document.getElementById('statOccupiedPCs').textContent = data.statistics.occupiedPCs;
-              document.getElementById('statAvailablePCs').textContent = data.statistics.availablePCs;
-              document.getElementById('statAssignedStudents').textContent = data.statistics.assignedStudents;
-              document.getElementById('statUnassignedStudents').textContent = data.statistics.unassignedStudents;
-
-              // Render PC grid
-              const pcGrid = document.getElementById('pcSeatingGrid');
-              pcGrid.innerHTML = data.seatingChart.map(pc => {
-                const isOccupied = pc.status === 'occupied';
-                const bgClass = isOccupied ? 'bg-emerald-500/20 border-emerald-500/40' : 'bg-slate-700/30 border-slate-600/40';
-                const iconClass = isOccupied ? 'text-emerald-400' : 'text-slate-400';
-                
-                return \`
-                  <div class="pc-seat-item \${bgClass} rounded-xl border p-4 transition-all hover:scale-105 hover:shadow-lg">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-xs font-bold text-white">\${pc.setId}</span>
-                      <i class="fas fa-desktop \${iconClass}"></i>
-                    </div>
-                    \${isOccupied ? \`
-                      <div class="mt-2">
-                        <p class="text-sm font-semibold text-white truncate">\${pc.student.fullName}</p>
-                        <p class="text-xs text-slate-300 mt-1">Since \${new Date(pc.student.startTime).toLocaleTimeString()}</p>
-                        <span class="inline-block mt-2 px-2 py-0.5 text-xs font-medium rounded-full \${pc.student.isActive ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'}">
-                          \${pc.student.isActive ? 'Active' : 'Ended'}
-                        </span>
-                      </div>
-                    \` : \`
-                      <p class="text-xs text-slate-400 mt-2">Available</p>
-                    \`}
-                  </div>
-                \`;
-              }).join('');
-
-              // Render unassigned students list
-              const unassignedList = document.getElementById('unassignedStudentsList');
-              if (data.unassignedStudents.length === 0) {
-                unassignedList.innerHTML = '<p class="text-sm text-slate-400 italic">All students are assigned to a PC station.</p>';
-              } else {
-                unassignedList.innerHTML = data.unassignedStudents.map(student => \`
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-800/40 border border-slate-700/40">
-                    <div class="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
-                      <i class="fas fa-user text-red-400 text-xs"></i>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-sm font-medium text-white">\${student.fullName}</p>
-                      <p class="text-xs text-slate-400">\${student.email}</p>
-                    </div>
-                  </div>
-                \`).join('');
-              }
-
-              loadingDiv.classList.add('hidden');
-              contentDiv.classList.remove('hidden');
-
-            } catch (error) {
-              console.error('Error loading seating chart:', error);
-              loadingDiv.classList.add('hidden');
-              errorDiv.classList.remove('hidden');
-              document.getElementById('seatingChartErrorMessage').textContent = error.message || 'Failed to load seating chart';
-            }
-          };
-
-          window.closeSeatingChartModal = function() {
-            const modal = document.getElementById('seatingChartModal');
-            if (modal) {
-              modal.classList.add('hidden');
-              modal.classList.remove('flex');
-            }
-          };
-        </script>
+        <script src="/js/laboratory-schedules-page.js?v=20261104"></script>
 
         <!-- Seating Chart Modal -->
-        <div id="seatingChartModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div class="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-emerald-500/20 m-4">
+        <div id="seatingChartModal" class="seating-chart-modal hidden fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div class="seating-chart-modal__dialog relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-emerald-500/20 m-4">
             <!-- Modal Header -->
             <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-900/90 to-teal-900/90 backdrop-blur-sm border-b border-emerald-500/30 px-6 py-4">
               <div class="flex items-start justify-between">
@@ -3162,7 +2272,7 @@ const pageConfigs = {
                     <i class="fas fa-desktop text-emerald-400"></i>
                     PC Station Assignments
                   </h4>
-                  <div id="pcSeatingGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  <div id="pcSeatingGrid" class="grid max-h-[52vh] grid-cols-2 gap-3 overflow-y-auto overscroll-contain pr-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     <!-- PC seats will be rendered here -->
                   </div>
                 </div>
@@ -3187,7 +2297,7 @@ const pageConfigs = {
   },
   "audit-logs": {
     title: "Audit Logs",
-    description: "View system audit activity with filters, search, and details.",
+    description: "Review login and logout activity across all users and campuses.",
     backRoute: "/admin-dashboard",
     backLabel: "Back to Admin Dashboard",
     content: String.raw`
@@ -3199,6 +2309,16 @@ const pageConfigs = {
           border-radius: 24px;
           padding: 1rem;
           box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+        }
+        body.app-shell.system-layout-page .main-container,
+        body.app-shell.system-layout-page .page-content,
+        body.app-shell.system-layout-page .page-content > .table-card,
+        body.app-shell.system-layout-page #systemAuditPanel,
+        body.app-shell.system-layout-page #equipmentAuditTrailPanel,
+        body.app-shell.system-layout-page #loginLogoutAuditPanel {
+          height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
         .page-hero-card {
           display: flex;
@@ -3215,27 +2335,43 @@ const pageConfigs = {
           backdrop-filter: blur(16px) saturate(1.04);
           margin-bottom: 1.5rem;
         }
+        body.app-shell .main-container.theme-light .audit-page-hero {
+          border-color: #d7e3da !important;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          box-shadow: 0 8px 24px rgba(31, 41, 55, .07) !important;
+        }
+        body.app-shell .main-container.theme-light .audit-page-hero .page-title {
+          color: #1f2937 !important;
+        }
         .page-title { font-size: 2rem; font-weight: 800; color: #f8fafc; margin: 0; }
         .audit-filters-shell {
-          display: flex;
-          flex-direction: column;
-          gap: 0.9rem;
-          padding: 1rem;
-          border-radius: 1.25rem;
+          display: grid;
+          grid-template-columns: minmax(150px, 1.35fr) repeat(3, minmax(125px, 1fr)) max-content max-content;
+          align-items: end;
+          gap: 0.55rem;
+          padding: .7rem;
+          border-radius: .9rem;
           border: 1px solid rgba(74,222,128,.16);
           background: linear-gradient(180deg, rgba(12,28,20,.96), rgba(8,20,14,.95));
           box-shadow: 0 12px 32px rgba(6,64,43,.16);
         }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-filters-shell {
+          border-color: #a7c9ae !important;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          box-shadow: 0 6px 20px rgba(31, 41, 55, .07) !important;
+        }
         .audit-filters-grid {
           display: grid;
-          gap: 0.9rem;
+          gap: 0.6rem;
           grid-template-columns: minmax(0, 2.2fr) minmax(180px, 1fr) minmax(160px, 1fr) minmax(140px, 140px) minmax(140px, 140px);
           align-items: center;
         }
         .audit-filter-group {
           display: flex;
           flex-direction: column;
-          gap: 0.4rem;
+          gap: 0.25rem;
           min-width: 0;
         }
         .audit-filter-label {
@@ -3245,14 +2381,30 @@ const pageConfigs = {
           text-transform: uppercase;
           color: rgba(167,243,208,.8);
         }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-filter-label {
+          color: #1f2937 !important;
+        }
         .audit-filter-field {
           width: 100%;
           border-radius: 0.95rem;
           border: 1px solid rgba(74,222,128,.16);
           background: rgba(8,20,14,.92);
           color: #e2e8f0;
-          padding: 0.8rem 0.95rem;
-          min-height: 2.95rem;
+          padding: 0.55rem 0.75rem;
+          min-height: 2.35rem;
+        }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-filter-field {
+          border-color: #a7c9ae !important;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          box-shadow: inset 0 1px 2px rgba(31, 41, 55, .04) !important;
+        }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-filter-field::placeholder {
+          color: #64748b !important;
+        }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-filter-field:focus {
+          border-color: #4b8b5b !important;
+          box-shadow: 0 0 0 3px rgba(34, 110, 61, .12) !important;
         }
         .audit-filter-field::placeholder { color: rgba(148,163,184,.72); }
         .audit-filter-field:focus {
@@ -3262,11 +2414,11 @@ const pageConfigs = {
         }
         .audit-filter-btn {
           width: 100%;
-          min-height: 2.95rem;
+          min-height: 2.35rem;
           border-radius: 0.95rem;
           border: 1px solid transparent;
           cursor: pointer;
-          padding: 0.78rem 1rem;
+          padding: 0.55rem .8rem;
           font-weight: 700;
           transition: transform .16s ease, background-color .16s ease, border-color .16s ease;
           display: inline-flex;
@@ -3284,30 +2436,589 @@ const pageConfigs = {
           color: #e2e8f0;
           border-color: rgba(148,163,184,.2);
         }
-        .audit-action-buttons {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          align-items: center;
-          gap: 0.75rem;
+        .audit-action-buttons { display: contents; }
+        .table-card { border: 1px solid rgba(74,222,128,.16); border-radius: 1rem; background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96)); padding: .75rem; box-shadow: 0 12px 35px rgba(6,64,43,.18); }
+        .system-audit-table-wrap,
+        .equipment-trail-table-wrap {
+          max-height: none !important;
+          overflow: visible !important;
+          overscroll-behavior: contain;
+          scrollbar-gutter: stable;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(52, 211, 112, .72) rgba(5, 20, 13, .72);
+          border: 1px solid rgba(74,222,128,.12);
+          border-radius: 0.75rem;
         }
-        .audit-action-buttons .audit-filter-btn {
-          width: auto;
-          min-width: 8.8rem;
-          white-space: nowrap;
+        .system-audit-table-wrap::-webkit-scrollbar,
+        .equipment-trail-table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
+        .system-audit-table-wrap::-webkit-scrollbar-track,
+        .equipment-trail-table-wrap::-webkit-scrollbar-track {
+          background: rgba(5, 20, 13, .72);
+          border-radius: 999px;
         }
-        .audit-filters-grid .audit-filter-group:last-child .audit-filter-btn,
-        .audit-filters-grid .audit-filter-group:nth-last-child(2) .audit-filter-btn {
-          min-width: 8.8rem;
-          width: 100%;
-          flex: 0 0 auto;
+        .system-audit-table-wrap::-webkit-scrollbar-thumb,
+        .equipment-trail-table-wrap::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #4ade80, #059669);
+          border: 2px solid rgba(5, 20, 13, .72);
+          border-radius: 999px;
         }
-        .table-card { border: 1px solid rgba(74,222,128,.16); border-radius: 1.25rem; background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96)); padding: 1.15rem; box-shadow: 0 12px 35px rgba(6,64,43,.18); }
+        .system-audit-table-wrap::-webkit-scrollbar-thumb:hover,
+        .equipment-trail-table-wrap::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #86efac, #10b981);
+        }
+        .system-audit-table-wrap thead th,
+        .equipment-trail-table-wrap thead th { position: sticky; top: 0; z-index: 2; background: #071510; }
         .action-pill { display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 999px; padding: 0.55rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
         .pill-module { background: rgba(34,197,94,.12); color: #d9f8e7; }
         .pill-action { background: rgba(16,185,129,.12); color: #a7f3d0; }
+        #loginLogoutAuditPanel { padding: .7rem; }
+        .pc-logs-toolbar {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 1.25rem;
+          margin-bottom: 1rem;
+        }
+        .pc-logs-filter-grid {
+          display: grid;
+          grid-template-columns: minmax(210px, 1.5fr) repeat(2, minmax(140px, .8fr)) auto;
+          align-items: end;
+          gap: .75rem;
+          padding: .85rem;
+          border: 1px solid rgba(74,222,128,.14);
+          border-radius: 1rem;
+          background: linear-gradient(145deg, rgba(7,24,16,.88), rgba(11,34,23,.72));
+        }
+        .pc-logs-filter-label {
+          display: block;
+          margin-bottom: .35rem;
+          color: rgba(167,243,208,.72);
+          font-size: .68rem;
+          font-weight: 800;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+        }
+        .pc-logs-filter-grid .audit-filter-field {
+          min-height: 2.7rem;
+          padding: .62rem .8rem;
+          border-radius: .75rem;
+          border-color: rgba(74,222,128,.2);
+          background-color: rgba(3,15,10,.92);
+          font-size: .84rem;
+        }
+        .pc-logs-clear-btn {
+          display: inline-flex;
+          min-height: 2.7rem;
+          align-items: center;
+          justify-content: center;
+          gap: .45rem;
+          padding: .55rem .8rem;
+          border: 1px solid rgba(148,163,184,.2);
+          border-radius: .75rem;
+          background: rgba(15,23,42,.38);
+          color: #cbd5e1;
+          font-size: .78rem;
+          font-weight: 700;
+          transition: .18s ease;
+        }
+        .pc-logs-clear-btn:hover { border-color: rgba(74,222,128,.35); background: rgba(16,185,129,.1); color: #d1fae5; }
+        .pc-logs-table-wrap { overflow: visible !important; border: 1px solid rgba(74,222,128,.16); border-radius: 1rem; background: rgba(4,16,11,.45); }
+        .pc-logs-table { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; text-align: left; }
+        .pc-logs-table thead th {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          padding: .8rem 1rem;
+          border-bottom: 1px solid rgba(74,222,128,.2);
+          background: #081a12;
+          color: rgba(167,243,208,.72);
+          font-size: .68rem;
+          font-weight: 800;
+          letter-spacing: .12em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .pc-logs-table tbody td { padding: .85rem 1rem; border-bottom: 1px solid rgba(74,222,128,.09); vertical-align: middle; }
+        .pc-logs-table tbody tr:last-child td { border-bottom: 0; }
+        .pc-logs-table tbody tr { transition: background .16s ease; }
+        .pc-logs-table tbody tr:nth-child(even) { background: rgba(9,29,19,.42); }
+        .pc-logs-table tbody tr:hover { background: rgba(16,185,129,.09); }
+        .pc-logs-user { display: flex; min-width: 150px; align-items: center; gap: .7rem; }
+        .pc-logs-user-avatar {
+          display: grid;
+          width: 2.15rem;
+          height: 2.15rem;
+          flex: 0 0 auto;
+          place-items: center;
+          border: 1px solid rgba(52,211,153,.26);
+          border-radius: .75rem;
+          background: rgba(16,185,129,.12);
+          color: #a7f3d0;
+          font-size: .72rem;
+          font-weight: 800;
+        }
+        .pc-logs-user-name { color: #e2f8eb; font-weight: 700; line-height: 1.25; }
+        .pc-logs-role-pill, .pc-logs-station-pill, .pc-logs-action-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: .4rem;
+          border: 1px solid rgba(74,222,128,.16);
+          border-radius: 999px;
+          padding: .35rem .65rem;
+          font-size: .72rem;
+          font-weight: 750;
+          white-space: nowrap;
+        }
+        .pc-logs-role-pill { background: rgba(30,41,59,.52); color: #cbd5e1; border-color: rgba(148,163,184,.15); text-transform: capitalize; }
+        .pc-logs-station-pill { background: rgba(16,185,129,.08); color: #a7f3d0; }
+        .pc-logs-action-pill.is-login { background: rgba(16,185,129,.13); color: #a7f3d0; }
+        .pc-logs-action-pill.is-logout { background: rgba(245,158,11,.1); color: #fcd34d; border-color: rgba(245,158,11,.2); }
+        .pc-logs-details { max-width: 440px; color: #94a3b8; font-size: .76rem; line-height: 1.45; }
+        .pc-logs-detail-trigger {
+          display: inline-flex;
+          min-width: 2.5rem;
+          min-height: 2.2rem;
+          align-items: center;
+          justify-content: center;
+          gap: .4rem;
+          padding: .35rem .65rem;
+          border: 1px solid rgba(74, 222, 128, .35);
+          border-radius: .7rem;
+          background: rgba(4, 106, 56, .22);
+          color: #a7f3d0;
+          cursor: pointer;
+          font-size: .76rem;
+          font-weight: 750;
+        }
+        .pc-logs-detail-trigger:hover,
+        .pc-logs-detail-trigger:focus-visible {
+          border-color: #86efac;
+          background: rgba(4, 106, 56, .5);
+          color: #f0fdf4;
+          outline: none;
+        }
+        .pc-logs-time { color: #d1fae5; font-size: .8rem; font-weight: 650; white-space: nowrap; }
+        .pc-logs-empty { padding: 2.75rem 1rem !important; text-align: center; color: #94a3b8; }
+        .pc-logs-empty-icon { display: grid; width: 2.75rem; height: 2.75rem; margin: 0 auto .75rem; place-items: center; border-radius: 1rem; background: rgba(16,185,129,.1); color: #6ee7b7; }
+        .pc-logs-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel { background: #fff !important; border-color: #d7e3da !important; color: #1f2937 !important; }
+        body.app-shell .main-container.theme-light .pc-logs-filter-grid { background: #f7faf8; border-color: #d7e3da; }
+        body.app-shell .main-container.theme-light .pc-logs-filter-label { color: #476252; }
+        body.app-shell .main-container.theme-light .pc-logs-filter-grid .audit-filter-field { background: #fff; color: #1f2937; border-color: #cbd5ce; }
+        body.app-shell .main-container.theme-light .pc-logs-table-wrap { background: #fff; border-color: #d7e3da; }
+        body.app-shell .main-container.theme-light .pc-logs-table thead th { background: #f0f7f2; color: #476252; border-color: #d7e3da; }
+        body.app-shell .main-container.theme-light .pc-logs-table tbody td { border-color: #edf2ee; }
+        body.app-shell .main-container.theme-light .pc-logs-table tbody tr:nth-child(even) { background: #fafcfb; }
+        body.app-shell .main-container.theme-light .pc-logs-table tbody tr:hover { background: #effaf2; }
+        body.app-shell .main-container.theme-light .pc-logs-user-name { color: #1f2937; }
+        body.app-shell .main-container.theme-light .pc-logs-details { color: #64748b; }
+        body.app-shell .main-container.theme-light .pc-logs-time { color: #166534; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-role-pill.is-faculty { border-color: #60a5fa; background: #173251; color: #bfdbfe; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-role-pill.is-student { border-color: #4ade80; background: #123b28; color: #bbf7d0; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-role-pill.is-admin { border-color: #c4b5fd; background: #30234e; color: #ddd6fe; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-user-avatar.is-faculty { border-color: #60a5fa; background: #173251; color: #bfdbfe; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-user-avatar.is-student { border-color: #4ade80; background: #123b28; color: #bbf7d0; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-user-avatar.is-admin { border-color: #c4b5fd; background: #30234e; color: #ddd6fe; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-action-pill.is-login { border-color: #4ade80; background: #123b28; color: #bbf7d0; }
+        body.app-shell #loginLogoutAuditPanel .pc-logs-action-pill.is-logout { border-color: #fb7185; background: #3d1b22; color: #fecdd3; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-role-pill.is-faculty { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-role-pill.is-student { border-color: #bbf7d0; background: #ecfdf3; color: #166534; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-role-pill.is-admin { border-color: #ddd6fe; background: #f5f3ff; color: #6d28d9; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-user-avatar.is-faculty { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-user-avatar.is-student { border-color: #bbf7d0; background: #ecfdf3; color: #166534; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-user-avatar.is-admin { border-color: #ddd6fe; background: #f5f3ff; color: #6d28d9; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-action-pill.is-login { border-color: #bbf7d0; background: #ecfdf3; color: #166534; }
+        body.app-shell .main-container.theme-light #loginLogoutAuditPanel .pc-logs-action-pill.is-logout { border-color: #fecdd3; background: #fff1f2; color: #be123c; }
+        #systemAuditPanel { padding: .85rem; }
+        #systemAuditPanel .audit-filters-shell {
+          grid-template-columns: minmax(150px, 1.35fr) repeat(3, minmax(125px, 1fr)) max-content max-content;
+          gap: .5rem;
+          padding: .7rem .75rem;
+          margin-bottom: .65rem !important;
+          border-radius: .95rem;
+        }
+        #systemAuditPanel .audit-filters-shell > .audit-filter-group { min-width: 0; }
+        #systemAuditPanel .audit-filters-shell > .audit-action-buttons { gap: .45rem; margin: 0 !important; }
+        #systemAuditPanel .audit-filter-group { gap: .25rem; }
+        #systemAuditPanel .audit-filter-label { font-size: .64rem; letter-spacing: .14em; }
+        #systemAuditPanel .audit-filter-field {
+          min-height: 2.35rem;
+          padding: .48rem .75rem;
+          border-radius: .72rem;
+          font-size: .82rem;
+        }
+        #systemAuditPanel .audit-filters-shell button {
+          height: 2.25rem;
+          min-height: 2.25rem;
+          padding: .4rem .8rem;
+          border-radius: .7rem;
+          font-size: .78rem;
+        }
+        #systemAuditPanel .system-audit-table-wrap { max-height: min(68vh, 48rem); border-radius: .85rem; }
+        #systemAuditPanel .audit-logs-table { width: 100%; min-width: 940px; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+        #systemAuditPanel .audit-logs-table th {
+          padding: .52rem .65rem !important;
+          color: #d1fae5 !important;
+          font-size: .8rem !important;
+          font-weight: 700 !important;
+          letter-spacing: .04em;
+        }
+        #systemAuditPanel .audit-logs-table th:nth-child(1) { width: 15%; }
+        #systemAuditPanel .audit-logs-table th:nth-child(2) { width: 8%; }
+        #systemAuditPanel .audit-logs-table th:nth-child(3) { width: 22%; }
+        #systemAuditPanel .audit-logs-table th:nth-child(4) { width: 14%; }
+        #systemAuditPanel .audit-logs-table th:nth-child(5) { width: 29%; }
+        #systemAuditPanel .audit-logs-table th:nth-child(6) { width: 12%; }
+        #systemAuditPanel .audit-logs-table tbody td {
+          padding: .42rem .65rem !important;
+          border-bottom: 1px solid rgba(74,222,128,.08);
+          color: #d1fae5 !important;
+          font-size: .84rem !important;
+          font-weight: 600 !important;
+          line-height: 1.35 !important;
+          vertical-align: middle;
+        }
+        #systemAuditPanel .audit-logs-table tbody td:first-child > div:first-child { font-size: .84rem !important; font-weight: 700 !important; }
+        #systemAuditPanel .audit-logs-table tbody td:nth-child(2) { font-size: .8rem !important; font-weight: 600 !important; }
+        #systemAuditPanel .audit-logs-table tbody tr:nth-child(even) { background: rgba(9,29,19,.35); }
+        #systemAuditPanel .audit-logs-table tbody tr:hover { background: rgba(16,185,129,.08); }
+        #systemAuditPanel #auditLogsSummary { color: #a7f3d0 !important; font-size: .875rem; }
+        #systemAuditPanel .system-audit-table-wrap .action-pill {
+          max-width: 100%;
+          padding: .28rem .5rem !important;
+          font-size: .76rem !important;
+          font-weight: 700 !important;
+          line-height: 1.4 !important;
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+        #systemAuditPanel .pill-action { color: #a7f3d0 !important; }
+        #systemAuditPanel .pill-module { color: #d9f8e7 !important; }
+        #systemAuditPanel .audit-log-actor-meta {
+          color: #a7f3d0 !important;
+          font-size: .78rem !important;
+          font-weight: 700 !important;
+          line-height: 1.4 !important;
+        }
+        #systemAuditPanel .audit-log-description {
+          display: inline-block;
+          max-width: min(24rem, 100%);
+          overflow: hidden;
+          color: #a7f3d0;
+          font-size: .76rem !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-decoration: underline dotted;
+          text-underline-offset: .2em;
+          cursor: help;
+        }
+        #systemAuditPanel .audit-log-description:hover,
+        #systemAuditPanel .audit-log-description:focus-visible { color: #f0fdf4; }
+        .audit-description-tooltip {
+          position: fixed;
+          z-index: 10000;
+          width: max-content;
+          max-width: min(32rem, calc(100vw - 1rem));
+          padding: .85rem 1rem;
+          border: 1px solid rgba(74, 222, 128, .48);
+          border-radius: .8rem;
+          background: #046a38;
+          box-shadow: 0 14px 36px rgba(0, 0, 0, .42);
+          color: #f0fdf4;
+          font-size: .9375rem;
+          font-weight: 500;
+          line-height: 1.55;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          pointer-events: none;
+        }
+        .audit-description-tooltip[hidden] { display: none; }
+        #systemAuditPanel .audit-log-timestamp {
+          display: grid;
+          gap: .16rem;
+          color: #d1fae5;
+          font-size: .78rem !important;
+          font-weight: 600 !important;
+          line-height: 1.4 !important;
+          white-space: nowrap;
+        }
+        #systemAuditPanel .audit-log-timestamp span:last-child { color: #a7f3d0; font-size: .78rem !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody td { border-color: #edf2ee; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody tr:nth-child(even) { background: #fafcfb; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody tr:hover { background: #effaf2; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody td { color: #14532d !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table thead th,
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table thead th * { color: #000000 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .pill-action { color: #166534 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .pill-module { color: #14532d !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-actor-meta { color: #15803d !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-description { color: #166534; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp { color: #166534; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp span:last-child { color: #15803d; }
+        body.app-shell .main-container.theme-light #systemAuditPanel #auditLogsSummary { color: #166534 !important; }
+        #equipmentAuditTrailPanel { padding: .85rem; }
+        #equipmentAuditTrailPanel > div:first-child { gap: .6rem; margin-bottom: .65rem !important; }
+        #equipmentAuditTrailPanel > div:first-child h3 { font-size: 1.5rem; line-height: 1.3; font-weight: 800; }
+        #equipmentAuditTrailPanel > div:first-child p { margin-top: .25rem; color: #a7f3d0; font-size: 1rem; line-height: 1.5; }
+        #equipmentAuditTrailPanel #refreshEquipmentTrailBtn { min-height: 2.6rem; padding: .55rem .9rem; border-radius: .7rem; color: #d1fae5; font-size: .9375rem; font-weight: 700; }
+        #equipmentAuditTrailPanel .equipment-trail-filters {
+          grid-template-columns: minmax(0, 1.5fr) minmax(190px, 1fr) minmax(150px, .8fr);
+          align-items: center;
+          gap: .55rem;
+          margin-bottom: .65rem !important;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-filter { min-height: 2.25rem; padding: .45rem .7rem; border-radius: .7rem; font-size: .78rem; }
+        #equipmentAuditTrailPanel .equipment-trail-search-wrap { position: relative; display: block; min-width: 0; }
+        #equipmentAuditTrailPanel .equipment-trail-search-wrap > i { position: absolute; top: 50%; left: .72rem; z-index: 1; color: #16834a; transform: translateY(-50%); pointer-events: none; }
+        #equipmentAuditTrailPanel .equipment-trail-search-wrap input { width: 100%; padding-left: 2.15rem; }
+        #equipmentAuditTrailPanel .equipment-trail-date-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+        #equipmentAuditTrailPanel .equipment-trail-date-fields[hidden] { display: none; }
+        #equipmentAuditTrailPanel .equipment-trail-date-fields label { display: grid; min-width: 0; gap: .2rem; color: #a7f3d0; font-size: .68rem; font-weight: 750; }
+        #equipmentAuditTrailPanel .equipment-trail-date-fields input { width: 100%; color-scheme: dark; }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap { max-height: min(68vh, 48rem); border-radius: .8rem; }
+        #equipmentAuditTrailPanel:not(.hidden) {
+          display: block;
+          min-height: 0;
+          max-height: none;
+          overflow: visible;
+        }
+        #equipmentAuditTrailPanel:not(.hidden) > div:first-child,
+        #equipmentAuditTrailPanel:not(.hidden) .equipment-trail-filters,
+        #equipmentAuditTrailPanel:not(.hidden) .equipment-trail-footer { flex: none; }
+        #equipmentAuditTrailPanel:not(.hidden) .equipment-trail-table-wrap {
+          min-height: 0;
+          max-height: none !important;
+          flex: none;
+          overflow: visible !important;
+          border-radius: .8rem;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap thead th {
+          padding: .42rem .58rem !important;
+          background: #0a2e1d !important;
+          color: #d1fae5 !important;
+          font-size: .82rem !important;
+          font-weight: 700 !important;
+          letter-spacing: .035em;
+          line-height: 1.4 !important;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr { background-color: #07150f; }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr:nth-child(even) { background-color: #0a2116; }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr:hover { background-color: #0d3020; }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td {
+          padding: .34rem .52rem !important;
+          color: #d1fae5 !important;
+          font-size: .82rem !important;
+          font-weight: 500 !important;
+          line-height: 1.3 !important;
+          vertical-align: middle;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td * {
+          font-size: .82rem !important;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td:nth-child(3) > div {
+          margin-bottom: .15rem !important;
+          line-height: 1.22 !important;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td [class*="text-\\["] {
+          color: #a7f3d0 !important;
+          font-size: .82rem !important;
+          line-height: 1.4 !important;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-action { padding: .24rem .42rem !important; font-size: .75rem !important; line-height: 1.25 !important; }
+        #equipmentAuditTrailPanel .equipment-trail-view { padding: .25rem .42rem !important; font-size: .75rem !important; }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td .equipment-trail-performer {
+          color: inherit;
+          font-size: .82rem;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: help;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td .equipment-trail-equipment {
+          display: grid;
+          min-width: 0;
+          color: inherit;
+          font-size: .82rem;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: help;
+        }
+        #equipmentAuditTrailPanel .equipment-trail-id { color: #6b8a76; font-size: .68rem !important; font-weight: 600; }
+        #equipmentAuditTrailPanel .equipment-trail-reason { display: -webkit-box; overflow: hidden; color: inherit; font-size: .78rem; line-height: 1.35; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        .equipment-trail-performer-tooltip {
+          position: fixed;
+          z-index: 10001;
+          width: max-content;
+          max-width: min(30rem, calc(100vw - 1rem));
+          padding: .75rem .9rem;
+          border: 1px solid #046a38;
+          border-radius: .75rem;
+          background: #046a38;
+          box-shadow: 0 14px 36px rgba(0, 0, 0, .42);
+          color: #ffffff !important;
+          font-size: .9375rem;
+          font-weight: 500;
+          line-height: 1.5;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          pointer-events: none;
+        }
+        .equipment-trail-performer-tooltip[hidden] { display: none; }
+        #equipmentAuditTrailPanel .equipment-trail-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .6rem; }
+        #equipmentAuditTrailPanel .equipment-trail-pagination { display: flex; flex: 0 0 auto; align-items: center; gap: .45rem; }
+        #equipmentAuditTrailPanel #equipmentTrailPageLabel {
+          min-width: 5.5rem;
+          color: #f0fdf4 !important;
+          font-size: .9375rem !important;
+          font-weight: 800 !important;
+          text-align: center;
+          white-space: nowrap;
+        }
+        #equipmentAuditTrailPanel #equipmentTrailPageButtons {
+          display: inline-flex;
+          min-height: 2.7rem;
+          align-items: center;
+          gap: .4rem;
+          padding: .3rem .4rem;
+          border-color: rgba(74, 222, 128, .32);
+          background: #061b11;
+        }
+        #equipmentAuditTrailPanel #equipmentTrailPageButtons .pagination-btn {
+          display: inline-flex !important;
+          width: 2.5rem !important;
+          min-width: 2.5rem !important;
+          height: 2.5rem !important;
+          flex: 0 0 2.5rem !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          border: 1px solid rgba(74, 222, 128, .48) !important;
+          background: #0b2b1b !important;
+          color: #d1fae5 !important;
+          font-size: 1rem !important;
+          font-weight: 800 !important;
+          line-height: 1 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+        #equipmentAuditTrailPanel #equipmentTrailPageButtons .pagination-btn.active,
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel #equipmentTrailPageButtons .pagination-btn.active {
+          border-color: #86efac !important;
+          background: #16a34a !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 0 2px rgba(134, 239, 172, .24) !important;
+        }
+        #equipmentAuditTrailPanel #equipmentTrailPageButtons .pagination-btn:hover:not(:disabled) {
+          border-color: #86efac !important;
+          background: #15803d !important;
+          color: #ffffff !important;
+        }
+        #equipmentAuditTrailPanel #equipmentAuditTrailSummary { margin: 0; color: #a7f3d0 !important; font-size: .875rem; font-weight: 600; }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap thead,
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap thead tr,
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap thead th {
+          background: #046a38 !important;
+          color: #ffffff !important;
+          font-weight: 700 !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr {
+          background: #ffffff !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr:nth-child(even) {
+          background: #f3f4f6 !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody tr:hover {
+          background: #e8f5ec !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td {
+          background: transparent !important;
+          color: #111827 !important;
+          border-color: #d1d5db !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap tbody td * {
+          color: #111827 !important;
+        }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-date-fields label { color: #496657 !important; }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-date-fields input { color-scheme: light; }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel #equipmentAuditTrailSummary { color: #a7f3d0 !important; }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap { border-color: #d7e3da; }
+        body.app-shell .main-container.theme-light #equipmentAuditTrailPanel .equipment-trail-table-wrap thead th { border-color: #047857 !important; }
+        @media (max-width: 920px) {
+          #equipmentAuditTrailPanel .equipment-trail-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          #equipmentAuditTrailPanel .equipment-trail-search-wrap,
+          #equipmentAuditTrailPanel .equipment-trail-date-fields { grid-column: 1 / -1; }
+        }
+        @media (max-width: 720px) {
+          #equipmentAuditTrailPanel .equipment-trail-filters { grid-template-columns: minmax(0, 1fr); }
+          #equipmentAuditTrailPanel .equipment-trail-search-wrap,
+          #equipmentAuditTrailPanel .equipment-trail-date-fields { grid-column: 1; }
+          #equipmentAuditTrailPanel .equipment-trail-footer { align-items: stretch; flex-direction: column; }
+          #equipmentAuditTrailPanel .equipment-trail-pagination { flex-wrap: wrap; justify-content: flex-end; }
+        }
+        #loginLogoutAuditPanel { padding: .85rem; }
+        .pc-logs-toolbar { gap: .8rem; margin-bottom: .65rem; }
+        .pc-logs-filter-grid { gap: .55rem; padding: .6rem; border-radius: .85rem; }
+        .pc-logs-filter-grid .audit-filter-field { min-height: 2.3rem; padding: .45rem .65rem; font-size: .78rem; }
+        .pc-logs-filter-label { margin-bottom: .22rem; font-size: .62rem; }
+        .pc-logs-clear-btn { min-height: 2.3rem; padding: .42rem .65rem; font-size: .73rem; }
+        .pc-logs-table-wrap { border-radius: .8rem; }
+        .pc-logs-table { min-width: 860px; }
+        .pc-logs-table thead th { padding: .48rem .6rem !important; font-size: .64rem !important; letter-spacing: .08em; }
+        .pc-logs-table tbody td { padding: .4rem .6rem !important; font-size: .8rem !important; line-height: 1.3 !important; }
+        .pc-logs-user { min-width: 130px; gap: .5rem; }
+        .pc-logs-user-avatar { width: 1.8rem; height: 1.8rem; border-radius: .6rem; font-size: .65rem; }
+        .pc-logs-role-pill, .pc-logs-station-pill, .pc-logs-action-pill { padding: .25rem .5rem; font-size: .66rem; }
+        .pc-logs-details { max-width: 380px; font-size: .7rem; line-height: 1.35; }
+        .pc-logs-time { font-size: .72rem; }
+        .pc-logs-footer { margin-top: .65rem; }
+        .system-audit-table-wrap,
+        .equipment-trail-table-wrap,
+        .pc-logs-table-wrap {
+          overflow: visible !important;
+          max-height: none !important;
+          scrollbar-gutter: auto !important;
+          scrollbar-width: none !important;
+        }
+        .system-audit-table-wrap::-webkit-scrollbar,
+        .equipment-trail-table-wrap::-webkit-scrollbar,
+        .pc-logs-table-wrap::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        @media (max-width: 850px) {
+          .pc-logs-toolbar { align-items: stretch; flex-direction: column; }
+          .pc-logs-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .pc-logs-clear-btn { width: 100%; }
+        }
+        @media (max-width: 520px) {
+          .pc-logs-filter-grid { grid-template-columns: minmax(0, 1fr); }
+          .pc-logs-footer { align-items: flex-start; flex-direction: column; }
+        }
         .detail-button { border: 1px solid rgba(74,222,128,.16); background: rgba(8,20,14,.92); color: #d8f5e0; border-radius: 0.9rem; padding: 0.65rem 0.95rem; cursor: pointer; }
         .detail-button:hover { background: rgba(16,31,24,.95); }
+        #equipmentAuditTrailPanel { padding: 0.85rem; }
+        .equipment-trail-filter { min-height: 2.5rem; padding: 0.6rem 0.75rem; border-radius: 0.75rem; }
+        .equipment-trail-action { padding: 0.3rem 0.55rem; font-size: 0.7rem; line-height: 1rem; }
+        .equipment-trail-view { border: 1px solid rgba(74,222,128,.2); border-radius: 0.55rem; background: rgba(16,185,129,.1); color: #a7f3d0; padding: 0.3rem 0.6rem; font-size: 0.72rem; font-weight: 700; }
+        .equipment-trail-view:hover { background: rgba(16,185,129,.2); }
+        .equipment-trail-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(2,9,6,.72); }
+        .equipment-trail-modal[hidden] { display: none; }
+        .equipment-trail-modal-card { width: min(100%, 30rem); border: 1px solid rgba(74,222,128,.2); border-radius: 1rem; background: #071510; padding: 1rem; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+        body.app-shell .main-container #equipmentTrailDetailsModal .equipment-trail-modal-card { color: #e8f5ec !important; }
+        body.app-shell .main-container #equipmentTrailDetailsTitle { color: #f0fdf4 !important; }
+        body.app-shell .main-container #equipmentTrailDetailsContext { color: #a7d9b6 !important; opacity: 1 !important; }
+        body.app-shell .main-container #equipmentTrailDetailsReason { margin: 0 !important; color: #e2eee5 !important; font-size: .92rem !important; line-height: 1.65 !important; }
+        body.app-shell .main-container #closeEquipmentTrailDetails { border: 1px solid #42694f !important; background: #173321 !important; color: #e8f5ec !important; }
+        body.app-shell .main-container #closeEquipmentTrailDetails:hover { background: #244b32 !important; }
+        body.app-shell .main-container.theme-light #equipmentTrailDetailsModal { background: rgba(15, 23, 42, .38) !important; }
+        body.app-shell .main-container.theme-light #equipmentTrailDetailsModal .equipment-trail-modal-card { border-color: #cbdccf !important; background: #ffffff !important; color: #24372b !important; box-shadow: 0 20px 55px rgba(24, 59, 38, .2) !important; }
+        body.app-shell .main-container.theme-light #equipmentTrailDetailsTitle { color: #17271e !important; }
+        body.app-shell .main-container.theme-light #equipmentTrailDetailsContext { color: #52705d !important; }
+        body.app-shell .main-container.theme-light #equipmentTrailDetailsReason { color: #26382e !important; }
+        body.app-shell .main-container.theme-light #closeEquipmentTrailDetails { border-color: #c9dbcf !important; background: #edf5ef !important; color: #315d40 !important; }
+        body.app-shell .main-container.theme-light #closeEquipmentTrailDetails:hover { background: #dcebe0 !important; }
         .pagination-btn {
           display: inline-flex;
           align-items: center;
@@ -3369,6 +3080,52 @@ const pageConfigs = {
           cursor: not-allowed;
           box-shadow: none;
         }
+        body.app-shell .main-container.theme-light :is(
+          #exportAuditLogsBtn,
+          .audit-filter-btn-primary,
+          .equipment-trail-view,
+          .pagination-btn.active
+        ) {
+          border: 1px solid #10b981 !important;
+          background: #10b981 !important;
+          background-image: none !important;
+          color: #052e16 !important;
+          box-shadow: 0 2px 6px rgba(16, 185, 129, .18) !important;
+        }
+        body.app-shell .main-container.theme-light :is(#systemAuditTab, #loginLogoutTab, #equipmentTrailTab)[aria-selected="true"],
+        body.app-shell .main-container.theme-light .pagination-btn.active {
+          border: 1px solid #c8decf !important;
+          border-bottom: 3px solid #16834a !important;
+          background: #f4faf6 !important;
+          color: #14532d !important;
+          box-shadow: none !important;
+        }
+        body.app-shell .main-container.theme-light :is(#systemAuditTab, #loginLogoutTab, #equipmentTrailTab)[aria-selected="false"] {
+          border: 1px solid #cbd5d1 !important;
+          background: #f3f4f6 !important;
+          color: #334155 !important;
+        }
+        body.app-shell .main-container.theme-light :is(
+          #systemAuditTab,
+          #loginLogoutTab,
+          #equipmentTrailTab,
+          #exportAuditLogsBtn,
+          .audit-filter-btn-primary,
+          .equipment-trail-view,
+          .pagination-btn.active
+        ):hover:not(:disabled) {
+          border-color: #059669 !important;
+          background: #059669 !important;
+          color: #ffffff !important;
+        }
+        body.app-shell .main-container.theme-light :is(
+          #exportAuditLogsBtn,
+          .audit-filter-btn-primary,
+          .equipment-trail-view,
+          .pagination-btn.active
+        ):disabled {
+          opacity: .55;
+        }
         .modal-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(2,9,6,.75); display: none; align-items: center; justify-content: center; padding: 1.5rem; }
         .modal-overlay.active { display: flex; }
         .modal-card { width: min(100%, 46rem); border-radius: 24px; background: rgba(7,21,17,.96); border: 1px solid rgba(74,222,128,.18); box-shadow: 0 24px 60px rgba(4,18,12,.48); padding: 1.5rem; }
@@ -3381,53 +3138,65 @@ const pageConfigs = {
         .modal-label { color: rgba(148,163,184,.8); font-size: 0.9rem; }
         .modal-value { color: #f8fafc; font-size: 0.95rem; text-align: right; }
         @media (max-width: 980px) {
-          .audit-filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .audit-action-buttons { justify-content: flex-start; }
+          .audit-filters-shell { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+          #systemAuditPanel .audit-filters-shell > .audit-action-buttons { display: flex; grid-column: span 2; justify-content: flex-start; }
         }
         @media (max-width: 640px) {
-          .audit-filters-grid { grid-template-columns: 1fr; }
-          .audit-action-buttons { flex-direction: column; }
-          .audit-action-buttons .audit-filter-btn { width: 100%; }
+          .audit-filters-shell { grid-template-columns: minmax(0, 1fr); }
+          #systemAuditPanel .audit-filters-shell > .audit-action-buttons { grid-column: auto; }
+          .audit-action-buttons { flex-direction: row; }
+          .audit-action-buttons .audit-filter-btn { width: auto; }
         }
       </style>
 
-      <section class="page-hero-card" style="justify-content:space-between; align-items:center;">
-        <div>
-          <h2 class="page-title">Audits</h2>
-          <p class="mt-2 text-sm text-emerald-100/70">Review system logs or trace the complete history of equipment.</p>
+      <div class="audit-header-spacer" aria-hidden="true"></div>
+      <header class="system-dashboard-heading audit-fixed-header comlab-slim-page-header" data-comlab-fixed-page-header="true">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
         </div>
-        <div class="ml-auto flex items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.12)]">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" id="adminBadgeAvatar">AD</div>
-          <div class="min-w-0">
-            <div class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-200" id="adminBadgeRole">Admin</div>
-            <div class="text-sm font-semibold text-white" id="adminBadgeName">Administrator</div>
+        <div class="system-dashboard-heading-actions">
+          <a id="adminBorrowNotificationsButton" class="comlab-notification-button" href="/borrow-equipment" aria-label="Notifications" title="Open borrow requests" data-comlab-notification-button="true">
+            <i class="fas fa-bell" aria-hidden="true"></i>
+            <span class="comlab-notification-badge hidden" data-comlab-notification-count aria-live="polite"></span>
+          </a>
+          <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+          <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white">
+            <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" id="adminBadgeAvatar">AD</span>
+            <span class="system-profile-badge-copy text-white">
+              <span class="system-profile-badge-name text-white" id="adminBadgeName">Administrator</span>
+              <span class="system-profile-badge-role text-emerald-400" id="adminBadgeRole">Admin</span>
+            </span>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div class="mb-5 flex flex-wrap gap-2 rounded-2xl border border-emerald-800/50 bg-[#081910] p-2" role="tablist" aria-label="Audit views">
-        <button id="systemAuditTab" type="button" class="audit-view-tab rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-black" role="tab" aria-selected="true">
+      <div class="audit-tabs mb-5 flex flex-wrap gap-2 rounded-2xl border border-emerald-800/50 bg-[#081910] p-2" role="tablist" aria-label="Audit views">
+        <button id="systemAuditTab" type="button" class="audit-view-tab rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-black" role="tab" aria-controls="systemAuditPanel" aria-selected="true">
           <i class="fas fa-list-check mr-2"></i>System Logs
         </button>
-        <button id="equipmentTrailTab" type="button" class="audit-view-tab rounded-xl px-4 py-2 text-sm font-bold text-emerald-200 hover:bg-emerald-900/50" role="tab" aria-selected="false">
+        <button id="equipmentTrailTab" type="button" class="audit-view-tab rounded-xl px-4 py-2 text-sm font-bold text-emerald-200 hover:bg-emerald-900/50" role="tab" aria-controls="equipmentAuditTrailPanel" aria-selected="false">
           <i class="fas fa-timeline mr-2"></i>Equipment Audit Trail
+        </button>
+        <button id="loginLogoutTab" type="button" class="audit-view-tab rounded-xl px-4 py-2 text-sm font-bold text-emerald-200 hover:bg-emerald-900/50" role="tab" aria-controls="loginLogoutAuditPanel" aria-selected="false">
+          <i class="fas fa-desktop mr-2"></i>PC Logs
         </button>
       </div>
 
-      <section id="systemAuditPanel" class="table-card mb-6">
+      <section id="systemAuditPanel" class="table-card mb-6" role="tabpanel" aria-labelledby="systemAuditTab" tabindex="0">
         <div class="audit-filters-shell mb-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full mb-4">
-            <div class="audit-filter-group min-w-[200px]">
+          <div class="audit-filter-group">
               <label class="audit-filter-label font-bold text-xs uppercase text-emerald-300/80 mb-1 block" for="auditSearchInput">Search</label>
               <input id="auditSearchInput" type="search" placeholder="Search audit logs..." class="audit-filter-field h-10" />
-            </div>
-            <div class="audit-filter-group min-w-[160px]">
+          </div>
+          <div class="audit-filter-group">
               <label class="audit-filter-label font-bold text-xs uppercase text-emerald-300/80 mb-1 block" for="auditUserSelect">User</label>
               <select id="auditUserSelect" class="audit-filter-field h-10">
                 <option value="">All Users</option>
               </select>
-            </div>
-            <div class="audit-filter-group min-w-[160px]">
+          </div>
+          <div class="audit-filter-group">
               <label class="audit-filter-label font-bold text-xs uppercase text-emerald-300/80 mb-1 block" for="auditDateRangeSelect">Date Range</label>
               <select id="auditDateRangeSelect" class="audit-filter-field h-10">
                 <option value="all">All Time</option>
@@ -3436,15 +3205,12 @@ const pageConfigs = {
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
               </select>
-            </div>
-            <div class="audit-filter-group min-w-[160px]">
+          </div>
+          <div class="audit-filter-group">
               <label class="audit-filter-label font-bold text-xs uppercase text-emerald-300/80 mb-1 block" for="auditCampusDisplay">Campus</label>
               <div id="auditCampusDisplay" class="audit-filter-field h-10 flex items-center" aria-readonly="true"></div>
-            </div>
           </div>
-
-          <div class="flex items-center justify-end gap-3 w-full mt-2">
-            <button id="applyAuditFiltersBtn" type="button" class="h-10 px-5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg inline-flex items-center justify-center gap-2 transition min-w-[120px]">Filter</button>
+          <div class="audit-action-buttons flex items-center justify-end gap-3">
             <button id="exportAuditLogsBtn" type="button" class="h-10 px-5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-lg inline-flex items-center justify-center gap-2 transition min-w-[130px]" onclick="window.exportAuditLogs && window.exportAuditLogs('pdf')">
               <i class="fas fa-file-pdf"></i> Export PDF
             </button>
@@ -3453,8 +3219,8 @@ const pageConfigs = {
             </button>
           </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left divide-y divide-slate-700">
+        <div class="system-audit-table-wrap">
+          <table class="audit-logs-table min-w-full text-left divide-y divide-slate-700">
             <thead class="bg-slate-950 border-b border-slate-800">
               <tr>
                 <th class="px-4 py-3 text-sm font-semibold text-slate-300">Actor</th>
@@ -3480,1046 +3246,205 @@ const pageConfigs = {
         </div>
       </section>
 
-      <section id="equipmentAuditTrailPanel" class="table-card mb-6 hidden">
+      <section id="loginLogoutAuditPanel" class="table-card mb-6 hidden" role="tabpanel" aria-labelledby="loginLogoutTab" tabindex="0">
+        <div class="pc-logs-toolbar">
+          <div>
+            <div class="mb-1 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-emerald-300/75">
+              <i class="fas fa-desktop" aria-hidden="true"></i> Station activity
+            </div>
+            <h3 class="text-xl font-bold text-white">PC Logs</h3>
+          </div>
+          <div class="pc-logs-filter-grid" aria-label="Filter PC logs">
+            <label for="loginLogoutStationFilter">
+              <span class="pc-logs-filter-label">PC Station</span>
+              <select id="loginLogoutStationFilter" class="audit-filter-field">
+                <option value="">All PC stations</option>
+              </select>
+            </label>
+            <label for="loginLogoutRoleFilter">
+              <span class="pc-logs-filter-label">Role</span>
+              <select id="loginLogoutRoleFilter" class="audit-filter-field">
+                <option value="">All roles</option>
+                <option value="admin">Admin</option>
+                <option value="faculty">Faculty</option>
+                <option value="student">Student</option>
+              </select>
+            </label>
+            <label for="loginLogoutActionFilter">
+              <span class="pc-logs-filter-label">Action</span>
+              <select id="loginLogoutActionFilter" class="audit-filter-field">
+                <option value="">All actions</option>
+                <option value="login">Login</option>
+                <option value="logout">Logout</option>
+              </select>
+            </label>
+            <button id="loginLogoutClearFilters" class="pc-logs-clear-btn" type="button">
+              <i class="fas fa-rotate-left" aria-hidden="true"></i>Clear
+            </button>
+          </div>
+        </div>
+        <div class="pc-logs-table-wrap">
+          <table class="pc-logs-table">
+            <thead>
+              <tr>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">User</th>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Role</th>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Event</th>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">PC Station</th>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Action</th>
+                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Date / Time</th>
+              </tr>
+            </thead>
+            <tbody id="loginLogoutTableBody" class="text-sm text-slate-200">
+              <tr><td colspan="6" class="pc-logs-empty">Select PC Logs to load entries.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pc-logs-footer">
+          <div id="loginLogoutSummary" class="text-slate-400 text-sm" aria-live="polite">No PC station logs loaded.</div>
+          <div class="flex items-center gap-2">
+            <button id="loginLogoutPrevPage" class="pagination-nav-btn" type="button" disabled>Previous</button>
+            <span id="loginLogoutPageLabel" class="text-sm text-slate-400">Page 1</span>
+            <button id="loginLogoutNextPage" class="pagination-nav-btn" type="button" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="pcLogsDetailsModal" class="pc-logs-modal" hidden>
+        <div class="pc-logs-modal-backdrop" data-pc-logs-modal-close></div>
+        <section class="pc-logs-modal-card" role="dialog" aria-modal="true" aria-labelledby="pcLogsDetailsTitle" aria-describedby="pcLogsDetailsDescription">
+          <header class="pc-logs-modal-header">
+            <div>
+              <p class="pc-logs-modal-eyebrow">Station activity</p>
+              <h3 id="pcLogsDetailsTitle">PC Session Details</h3>
+            </div>
+            <button type="button" class="pc-logs-modal-icon-close" data-pc-logs-modal-close aria-label="Close log details">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </header>
+          <div class="pc-logs-modal-user">
+            <span id="pcLogsDetailsAvatar" class="pc-logs-modal-avatar" aria-hidden="true"></span>
+            <div>
+              <strong id="pcLogsDetailsUser"></strong>
+              <span id="pcLogsDetailsRole" class="pc-logs-role-pill"></span>
+            </div>
+          </div>
+          <dl class="pc-logs-modal-grid">
+            <div><dt>PC station</dt><dd id="pcLogsDetailsStation"></dd></div>
+            <div><dt>Event</dt><dd id="pcLogsDetailsEvent"></dd></div>
+            <div><dt>Date / time</dt><dd id="pcLogsDetailsTime"></dd></div>
+            <div id="pcLogsDetailsMethodRow" hidden><dt>Method</dt><dd id="pcLogsDetailsMethod"></dd></div>
+          </dl>
+          <div class="pc-logs-modal-description">
+            <h4>Log details</h4>
+            <p id="pcLogsDetailsDescription"></p>
+          </div>
+          <footer class="pc-logs-modal-footer">
+            <button type="button" class="pc-logs-modal-close" data-pc-logs-modal-close>Close</button>
+          </footer>
+        </section>
+      </div>
+
+      <section id="equipmentAuditTrailPanel" class="table-card mb-6 hidden" role="tabpanel" aria-labelledby="equipmentTrailTab" tabindex="0">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="text-xl font-bold text-white">Equipment Audit Trail</h3>
-            <p class="mt-1 text-sm text-emerald-100/65">Track registration, borrowing, returns, damage, repairs, status changes, and disposal activity.</p>
           </div>
           <button id="refreshEquipmentTrailBtn" type="button" class="audit-filter-btn audit-filter-btn-secondary !w-auto">
             <i class="fas fa-rotate mr-2"></i>Refresh
           </button>
         </div>
-        <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input id="equipmentTrailSearch" type="search" placeholder="Search equipment, serial, action, or actor..." class="audit-filter-field" />
-          <select id="equipmentTrailAction" class="audit-filter-field">
+        <div class="equipment-trail-filters mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <label class="equipment-trail-search-wrap" for="equipmentTrailSearch">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input id="equipmentTrailSearch" type="search" placeholder="Search equipment, ID, serial, action, or actor..." class="audit-filter-field equipment-trail-filter" aria-label="Search equipment audit trail" />
+          </label>
+          <label class="sr-only" for="equipmentTrailAction">Filter by action</label>
+          <select id="equipmentTrailAction" class="audit-filter-field equipment-trail-filter" aria-label="Filter by equipment action">
             <option value="">All equipment actions</option>
             <option value="created">Registration</option>
+            <option value="equipment_scanned">QR scan</option>
+            <option value="equipment_issue_reported">Issue reported</option>
+            <option value="borrow_requested">Borrow request submitted</option>
+            <option value="return_requested">Return marked by borrower</option>
             <option value="borrowed">Borrowed</option>
             <option value="returned">Returned</option>
+            <option value="accountability_assigned">Assigned</option>
+            <option value="accountability_removed">Unassigned</option>
             <option value="maintenance_started">Repair started</option>
             <option value="maintenance_completed">Repair completed</option>
             <option value="status_changed">Status changed</option>
             <option value="condition_changed">Condition changed</option>
             <option value="location_changed">Location changed</option>
-            <option value="assigned_to_set">Replaced / moved to another set</option>
+            <option value="assigned_to_set">Set changed</option>
             <option value="removed_from_set">Removed from set</option>
-            <option value="deleted">Disposed / deleted</option>
+            <option value="deleted">Disposed</option>
             <option value="updated">Updated</option>
           </select>
-          <button id="applyEquipmentTrailFiltersBtn" type="button" class="audit-filter-btn audit-filter-btn-primary">Filter trail</button>
+          <label class="sr-only" for="equipmentTrailDateRange">Filter by date</label>
+          <select id="equipmentTrailDateRange" class="audit-filter-field equipment-trail-filter" aria-label="Filter by date range">
+            <option value="all">Any date</option>
+            <option value="today">Today</option>
+            <option value="7days">Last 7 days</option>
+            <option value="custom">Custom range</option>
+          </select>
+          <div id="equipmentTrailCustomDates" class="equipment-trail-date-fields" hidden>
+            <label>From <input id="equipmentTrailDateFrom" type="date" class="audit-filter-field equipment-trail-filter" aria-label="Start date" /></label>
+            <label>To <input id="equipmentTrailDateTo" type="date" class="audit-filter-field equipment-trail-filter" aria-label="End date" /></label>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-left divide-y divide-slate-700">
-            <thead class="bg-slate-950 border-b border-slate-800">
+        <div class="equipment-trail-table-wrap">
+          <table class="min-w-[780px] w-full table-fixed text-left text-sm divide-y divide-slate-700">
+            <colgroup>
+              <col style="width:19%" />
+              <col style="width:15%" />
+              <col style="width:25%" />
+              <col style="width:17%" />
+              <col style="width:15%" />
+              <col style="width:9%" />
+            </colgroup>
+            <thead class="sticky top-0 z-10 bg-slate-950 border-b border-slate-800">
               <tr>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Equipment</th>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Serial Number</th>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Action</th>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">What happened</th>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Performed by</th>
-                <th class="px-4 py-3 text-sm font-semibold text-slate-300">Date / Time</th>
+                <th class="px-3 py-2 font-semibold text-slate-300">Equipment</th>
+                <th class="px-3 py-2 font-semibold text-slate-300">Activity</th>
+                <th class="px-3 py-2 font-semibold text-slate-300">Reason</th>
+                <th class="px-3 py-2 font-semibold text-slate-300">Performed by</th>
+                <th class="px-3 py-2 font-semibold text-slate-300 whitespace-nowrap">Date / Time</th>
+                <th class="px-3 py-2 font-semibold text-slate-300">Action</th>
               </tr>
             </thead>
             <tbody id="equipmentAuditTrailBody" class="divide-y divide-slate-800 text-sm text-slate-200">
-              <tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Select Equipment Audit Trail to load entries.</td></tr>
+              <tr><td colspan="6" class="px-3 py-5 text-center text-slate-400">Select Equipment Audit Trail to load entries.</td></tr>
             </tbody>
           </table>
         </div>
-        <div id="equipmentAuditTrailSummary" class="mt-4 text-sm text-slate-400">No trail entries loaded.</div>
+        <div class="equipment-trail-footer">
+          <div id="equipmentAuditTrailSummary" class="text-sm text-slate-400" aria-live="polite">No trail entries loaded.</div>
+          <div class="equipment-trail-pagination">
+            <button id="equipmentTrailPrevPage" class="pagination-nav-btn" type="button" disabled>Previous</button>
+            <span id="equipmentTrailPageLabel" aria-live="polite">Page 1 of 1</span>
+            <div class="pagination-nav" id="equipmentTrailPageButtons" aria-label="Equipment audit trail pages"></div>
+            <button id="equipmentTrailNextPage" class="pagination-nav-btn" type="button" disabled>Next</button>
+          </div>
+        </div>
       </section>
 
-      <script>
-        const hydrateAdminBadge = () => {
-          const sourceName = window.__CURRENT_USER_NAME__ || window.__CURRENT_USER__?.name || 'Administrator';
-          const displayName = String(sourceName || 'Administrator').trim() || 'Administrator';
-          const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'AD';
-
-          const avatarEl = document.getElementById('adminBadgeAvatar');
-          const nameEl = document.getElementById('adminBadgeName');
-          const roleEl = document.getElementById('adminBadgeRole');
-
-          if (avatarEl) avatarEl.textContent = initials;
-          if (nameEl) nameEl.textContent = displayName;
-          if (roleEl) roleEl.textContent = 'Admin';
-        };
-
-        const hydrateAuditCampus = () => {
-          const campus = String(window.__CURRENT_USER_CAMPUS__ || '').trim();
-          const display = campus && /\bcampus$/i.test(campus) ? campus : (campus ? campus + ' Campus' : 'Campus unavailable');
-          const campusDisplay = document.getElementById('auditCampusDisplay');
-          if (campusDisplay) campusDisplay.textContent = display;
-          auditState.campus = campus;
-        };
-
-        const auditState = { page: 1, pageSize: 5, totalPages: 1, query: '', userId: '', campus: window.__CURRENT_USER_CAMPUS__ || '', dateRange: 'all', dateFrom: '', dateTo: '', entries: [], users: [], isLoading: false, loadError: false };
-
-        const equipmentTrailState = { loaded: false, loading: false, query: '', actionType: '' };
-        const escapeTrailHtml = (value) => String(value ?? '—')
-          .replaceAll('&', '&amp;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
-          .replaceAll('"', '&quot;')
-          .replaceAll("'", '&#039;');
-        const equipmentActionLabel = (action) => ({
-          created: 'Registration',
-          borrowed: 'Borrowed',
-          returned: 'Returned',
-          maintenance_started: 'Repair started',
-          maintenance_completed: 'Repair completed',
-          status_changed: 'Status changed',
-          condition_changed: 'Condition changed',
-          location_changed: 'Location changed',
-          assigned_to_set: 'Replaced / moved to another set',
-          removed_from_set: 'Removed from set',
-          deleted: 'Disposed / deleted',
-          updated: 'Updated'
-        })[action] || String(action || 'Equipment activity').replaceAll('_', ' ');
-        const loadEquipmentAuditTrail = async () => {
-          const body = document.getElementById('equipmentAuditTrailBody');
-          const summary = document.getElementById('equipmentAuditTrailSummary');
-          if (!body || equipmentTrailState.loading) return;
-          equipmentTrailState.loading = true;
-          body.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading equipment audit trail...</td></tr>';
-          try {
-            const params = new URLSearchParams({ limit: '100' });
-            if (equipmentTrailState.actionType) params.set('actionType', equipmentTrailState.actionType);
-            const response = await fetch('/api/equipment-audit-trail?' + params.toString(), {
-              cache: 'no-store',
-              headers: { Accept: 'application/json' }
-            });
-            const payload = await response.json();
-            if (!response.ok || payload?.success !== true) throw new Error(payload?.message || 'Failed to load equipment audit trail.');
-            const query = equipmentTrailState.query.toLowerCase();
-            const entries = (Array.isArray(payload.auditTrail) ? payload.auditTrail : []).filter((entry) => {
-              if (!query) return true;
-              return [entry.serialNumber, entry.equipmentId, entry.actionType, entry.actionDescription, entry.performedByName, entry.userRole]
-                .some((value) => String(value ?? '').toLowerCase().includes(query));
-            });
-            body.innerHTML = entries.length ? entries.map((entry) => {
-              const equipment = entry.equipmentName || entry.equipmentCode || (entry.equipmentId ? 'Equipment #' + entry.equipmentId : 'Equipment record');
-              const actor = entry.performedByName || (entry.performedBy ? 'User #' + entry.performedBy : 'Unknown user');
-              return '<tr class="hover:bg-emerald-950/30">'
-                + '<td class="px-4 py-4 font-medium">' + escapeTrailHtml(equipment) + '</td>'
-                + '<td class="px-4 py-4 font-mono text-xs">' + escapeTrailHtml(entry.serialNumber || '—') + '</td>'
-                + '<td class="px-4 py-4"><span class="action-pill pill-action">' + escapeTrailHtml(equipmentActionLabel(entry.actionType)) + '</span></td>'
-                + '<td class="px-4 py-4">' + escapeTrailHtml(entry.actionDescription || 'Equipment activity recorded.') + '</td>'
-                + '<td class="px-4 py-4">' + escapeTrailHtml(actor) + '<div class="text-xs text-slate-400">' + escapeTrailHtml(entry.userRole || '') + '</div></td>'
-                + '<td class="px-4 py-4 whitespace-nowrap">' + escapeTrailHtml(formatDateTime(entry.actionTimestamp)) + '</td>'
-                + '</tr>';
-            }).join('') : '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">No equipment audit trail entries found.</td></tr>';
-            if (summary) summary.textContent = 'Showing ' + entries.length + ' equipment trail entr' + (entries.length === 1 ? 'y.' : 'ies.');
-            equipmentTrailState.loaded = true;
-          } catch (error) {
-            console.error('[Equipment Audit Trail] Load failed:', error);
-            body.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-rose-300">Unable to load equipment audit trail.</td></tr>';
-            if (summary) summary.textContent = 'Equipment audit trail could not be loaded.';
-          } finally {
-            equipmentTrailState.loading = false;
-          }
-        };
-        const setAuditView = (view) => {
-          const isTrail = view === 'trail';
-          document.getElementById('systemAuditPanel')?.classList.toggle('hidden', isTrail);
-          document.getElementById('equipmentAuditTrailPanel')?.classList.toggle('hidden', !isTrail);
-          ['systemAuditTab', 'equipmentTrailTab'].forEach((id) => {
-            const tab = document.getElementById(id);
-            const selected = id === (isTrail ? 'equipmentTrailTab' : 'systemAuditTab');
-            tab?.classList.toggle('bg-emerald-500', selected);
-            tab?.classList.toggle('text-black', selected);
-            tab?.classList.toggle('text-emerald-200', !selected);
-            tab?.setAttribute('aria-selected', String(selected));
-          });
-          if (isTrail && !equipmentTrailState.loaded) loadEquipmentAuditTrail();
-        };
-
-        // Helper function to get elements with null checking
-        const getAuditElements = () => ({
-          auditSearchInput: document.getElementById('auditSearchInput'),
-          auditUserSelect: document.getElementById('auditUserSelect'),
-          auditCampusDisplay: document.getElementById('auditCampusDisplay'),
-          auditDateRangeSelect: document.getElementById('auditDateRangeSelect'),
-          applyAuditFiltersBtn: document.getElementById('applyAuditFiltersBtn'),
-          auditLogsTableBody: document.getElementById('auditLogsTableBody'),
-          auditLogsSummary: document.getElementById('auditLogsSummary'),
-          auditPageButtons: document.getElementById('auditPageButtons'),
-          auditPrevPage: document.getElementById('auditPrevPage'),
-          auditNextPage: document.getElementById('auditNextPage')
-        });
-
-        let auditElements = getAuditElements();
-        
-        // Destructure for convenience, but will re-check if needed
-        let auditSearchInput = auditElements.auditSearchInput;
-        let auditUserSelect = auditElements.auditUserSelect;
-        let auditCampusDisplay = auditElements.auditCampusDisplay;
-        let auditDateRangeSelect = auditElements.auditDateRangeSelect;
-        let applyAuditFiltersBtn = auditElements.applyAuditFiltersBtn;
-        let auditLogsTableBody = auditElements.auditLogsTableBody;
-        let auditLogsSummary = auditElements.auditLogsSummary;
-        let auditPageButtons = auditElements.auditPageButtons;
-        let auditPrevPage = auditElements.auditPrevPage;
-        let auditNextPage = auditElements.auditNextPage;
-        
-        const ensureAuditElements = () => {
-          auditElements = getAuditElements();
-          auditSearchInput = auditElements.auditSearchInput;
-          auditUserSelect = auditElements.auditUserSelect;
-          auditCampusDisplay = auditElements.auditCampusDisplay;
-          auditDateRangeSelect = auditElements.auditDateRangeSelect;
-          applyAuditFiltersBtn = auditElements.applyAuditFiltersBtn;
-          auditLogsTableBody = auditElements.auditLogsTableBody;
-          auditLogsSummary = auditElements.auditLogsSummary;
-          auditPageButtons = auditElements.auditPageButtons;
-          auditPrevPage = auditElements.auditPrevPage;
-          auditNextPage = auditElements.auditNextPage;
-          return auditElements;
-        };
-
-        const formatDateTime = (value) => {
-          if (!value) return '—';
-          try { return new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }); } catch { return value; }
-        };
-
-        const formatAuditDescription = (entry) => {
-          const description = String(entry.description || '').trim();
-          if (!description) return '—';
-
-          const attendanceCreated = /^Created attendance session .* for schedule \d+/i;
-          const attendanceUpdated = /^Updated attendance for .* in session .*$/i;
-          const attendanceRecorded = /^Recorded attendance for .* in session .*$/i;
-          const maintenanceCreated = /^Maintenance request created for equipment .*$/i;
-          const maintenanceStatus = /^Maintenance request .* status changed to (.+)\.?$/i;
-          const maintenanceAssigned = /^Technician .* assigned to maintenance request .*$/i;
-          const maintenanceDeleted = /^Maintenance request .* was deleted\.?$/i;
-          const equipmentAdded = /^Equipment .* \((.+)\) was added\.$/i;
-          const equipmentUpdated = /^Equipment .* \((.+)\) was updated\.$/i;
-          const equipmentDeleted = /^Equipment .* \((.+)\) was deleted\.$/i;
-          const borrowRecorded = /^.+ borrowed \d+x .+ \(.+\)\.$/i;
-          const userProfileUpdated = /^User profile updated for .*\.?$/i;
-          const userLoggedOut = /^User .* logged out\.?$/i;
-          const scheduleCreated = /^Created laboratory schedule (.+?)(?: \(.+\))?\.?$/i;
-          const scheduleUpdated = /^Updated laboratory schedule (.+?)(?: \(.+\))?\.?$/i;
-          const scheduleDeleted = /^Deleted laboratory schedule (.+?)(?: \(.+\))?\.?$/i;
-
-          if (attendanceCreated.test(description)) {
-            return 'Created an attendance session for the selected laboratory schedule.';
-          }
-          if (attendanceUpdated.test(description)) {
-            return 'Updated attendance details for the selected student.';
-          }
-          if (attendanceRecorded.test(description)) {
-            return 'Recorded attendance for the selected student.';
-          }
-          if (maintenanceCreated.test(description)) {
-            return 'Created a maintenance request for the selected equipment.';
-          }
-          if (maintenanceStatus.test(description)) {
-            const match = description.match(maintenanceStatus);
-            return match ? 'Updated maintenance request status to ' + match[1] + '.' : 'Updated maintenance request status.';
-          }
-          if (maintenanceAssigned.test(description)) {
-            return 'Assigned a technician to a maintenance request.';
-          }
-          if (maintenanceDeleted.test(description)) {
-            return 'Deleted a maintenance request.';
-          }
-          if (equipmentAdded.test(description)) {
-            const match = description.match(equipmentAdded);
-            return match ? 'Added equipment item ' + match[1] + '.' : 'Added a new equipment item.';
-          }
-          if (equipmentUpdated.test(description)) {
-            const match = description.match(equipmentUpdated);
-            return match ? 'Updated equipment item ' + match[1] + '.' : 'Updated an equipment item.';
-          }
-          if (equipmentDeleted.test(description)) {
-            const match = description.match(equipmentDeleted);
-            return match ? 'Deleted equipment item ' + match[1] + '.' : 'Deleted an equipment item.';
-          }
-          if (borrowRecorded.test(description)) {
-            return description.replace(/ \([^)]*\)\.?$/, '.');
-          }
-          if (userProfileUpdated.test(description)) {
-            return 'Updated the user profile.';
-          }
-          if (userLoggedOut.test(description)) {
-            return 'User logged out.';
-          }
-          if (scheduleCreated.test(description)) {
-            const match = description.match(scheduleCreated);
-            return match ? 'Created laboratory schedule ' + match[1].trim() + '.' : 'Created a laboratory schedule.';
-          }
-          if (scheduleUpdated.test(description)) {
-            const match = description.match(scheduleUpdated);
-            return match ? 'Updated laboratory schedule ' + match[1].trim() + '.' : 'Updated a laboratory schedule.';
-          }
-          if (scheduleDeleted.test(description)) {
-            const match = description.match(scheduleDeleted);
-            return match ? 'Deleted laboratory schedule ' + match[1].trim() + '.' : 'Deleted a laboratory schedule.';
-          }
-
-          return description;
-        };
-
-        const getSlidingPageWindow = (totalPages, currentPage) => {
-          if (totalPages <= 1) return [];
-          if (totalPages <= 3) return Array.from({ length: totalPages }, (_, index) => index + 1);
-          if (currentPage <= 1) return [1, 2, 3];
-          if (currentPage >= totalPages) return [totalPages - 2, totalPages - 1, totalPages];
-          return [currentPage - 1, currentPage, currentPage + 1];
-        };
-
-        const renderAuditPagination = () => {
-          ensureAuditElements();
-          
-          if (!auditPageButtons) {
-            console.warn('[Audit Logs] auditPageButtons not found');
-            return;
-          }
-          
-          const totalPages = Math.max(1, Number(auditState.totalPages) || 1);
-          const currentPage = Math.min(Math.max(1, Number(auditState.page) || 1), totalPages);
-          auditState.page = currentPage;
-
-          auditPageButtons.innerHTML = '';
-          if (totalPages <= 1) return;
-
-          const visiblePages = getSlidingPageWindow(totalPages, currentPage);
-
-          visiblePages.forEach((pageNum) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            const isActive = pageNum === currentPage;
-            button.className = isActive
-              ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500 bg-emerald-600 font-bold text-white shadow-sm transition'
-              : 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-800/40 bg-emerald-950/40 text-emerald-300 transition hover:bg-emerald-900/60';
-            button.textContent = String(pageNum);
-            button.setAttribute('aria-label', 'Go to page ' + pageNum);
-            button.setAttribute('aria-current', isActive ? 'page' : 'false');
-            button.disabled = false;
-            button.addEventListener('click', () => {
-              console.log('[Audit Logs] Page', pageNum, 'clicked');
-              if (auditState.page === pageNum) return;
-              auditState.page = pageNum;
-              loadAuditLogs();
-            });
-            auditPageButtons.appendChild(button);
-          });
-        };
-
-        const renderAuditTable = () => {
-          ensureAuditElements();
-          
-          if (!auditLogsTableBody) {
-            console.warn('[Audit Logs] auditLogsTableBody not found');
-            return;
-          }
-          
-          const hasEntries = Array.isArray(auditState.entries) && auditState.entries.length > 0;
-
-          if (auditState.isLoading) {
-            console.log('[Audit Logs] Rendering loading state...');
-            auditLogsTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Loading audit logs...</td></tr>';
-            if (auditLogsSummary) auditLogsSummary.textContent = 'Loading audit entries...';
-            if (auditPrevPage) auditPrevPage.disabled = true;
-            if (auditNextPage) auditNextPage.disabled = true;
-            if (auditPageButtons) auditPageButtons.innerHTML = '';
-            return;
-          }
-
-          if (!hasEntries) {
-            console.log('[Audit Logs] Rendering empty state, error:', auditState.loadError);
-            const emptyMessage = auditState.loadError ? 'Unable to load audit logs.' : 'No audit entries found.';
-            auditLogsTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">' + emptyMessage + '</td></tr>';
-            if (auditLogsSummary) auditLogsSummary.textContent = emptyMessage;
-            if (auditPrevPage) auditPrevPage.disabled = true;
-            if (auditNextPage) auditNextPage.disabled = true;
-            if (auditPageButtons) auditPageButtons.innerHTML = '';
-            return;
-          }
-
-          console.log('[Audit Logs] Rendering', auditState.entries.length, 'entries');
-          
-          const rows = auditState.entries.map((entry) => {
-            return ''
-              + '<tr class="hover:bg-slate-900/70">'
-              + '<td class="px-4 py-4">' + (entry.actorName || 'System') + '</td>'
-              + '<td class="px-4 py-4">' + (entry.actorRole || 'N/A') + '</td>'
-              + '<td class="px-4 py-4"><span class="action-pill pill-action">' + entry.action + '</span></td>'
-              + '<td class="px-4 py-4"><span class="action-pill pill-module">' + entry.module + '</span></td>'
-              + '<td class="px-4 py-4">' + formatAuditDescription(entry) + '</td>'
-              + '<td class="px-4 py-4">' + formatDateTime(entry.createdAt) + '</td>'
-              + '</tr>';
-          }).join('');
-          
-          auditLogsTableBody.innerHTML = rows;
-          
-          const summary = 'Showing ' + auditState.entries.length + ' entries on page ' + auditState.page + ' of ' + auditState.totalPages + '.';
-          if (auditLogsSummary) auditLogsSummary.textContent = summary;
-          console.log('[Audit Logs]', summary);
-          
-          if (auditPrevPage) auditPrevPage.disabled = auditState.page <= 1;
-          if (auditNextPage) auditNextPage.disabled = auditState.page >= auditState.totalPages;
-          renderAuditPagination();
-        };
-
-        const getAuditDateRangeBounds = (range = 'all') => {
-          if (!range || range === 'all') return { dateFrom: '', dateTo: '' };
-
-          const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const formatDateValue = (value) => {
-            const year = value.getFullYear();
-            const month = String(value.getMonth() + 1).padStart(2, '0');
-            const day = String(value.getDate()).padStart(2, '0');
-            return year + '-' + month + '-' + day;
-          };
-
-          if (range === 'today') {
-            return { dateFrom: formatDateValue(today), dateTo: formatDateValue(today) };
-          }
-
-          if (range === 'week') {
-            const firstDay = new Date(today);
-            const day = today.getDay();
-            const diff = day === 0 ? -6 : 1 - day;
-            firstDay.setDate(today.getDate() + diff);
-            const lastDay = new Date(firstDay);
-            lastDay.setDate(firstDay.getDate() + 6);
-            return { dateFrom: formatDateValue(firstDay), dateTo: formatDateValue(lastDay) };
-          }
-
-          if (range === 'month') {
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            return { dateFrom: formatDateValue(firstDay), dateTo: formatDateValue(lastDay) };
-          }
-
-          if (range === 'year') {
-            const firstDay = new Date(today.getFullYear(), 0, 1);
-            const lastDay = new Date(today.getFullYear(), 11, 31);
-            return { dateFrom: formatDateValue(firstDay), dateTo: formatDateValue(lastDay) };
-          }
-
-          return { dateFrom: '', dateTo: '' };
-        };
-
-        const getAuditDateRangeLabel = (range = auditState.dateRange) => {
-          switch (range) {
-            case 'today': return 'Today';
-            case 'week': return 'This Week';
-            case 'month': return 'This Month';
-            case 'year': return 'This Year';
-            default: return 'All Time';
-          }
-        };
-
-        const buildAuditQuery = () => {
-          const params = new URLSearchParams();
-          const devBypass = new URLSearchParams(window.location.search).get('devBypass');
-          if (auditState.query) params.set('q', auditState.query);
-          if (auditState.userId) params.set('userId', auditState.userId);
-          if (auditState.campus) params.set('campus', auditState.campus);
-          if (auditState.dateFrom) params.set('dateFrom', auditState.dateFrom);
-          if (auditState.dateTo) params.set('dateTo', auditState.dateTo);
-          if (devBypass === '1' || devBypass === 'true') params.set('devBypass', '1');
-          params.set('page', Number(auditState.page) || 1);
-          params.set('pageSize', Number(auditState.pageSize) || 5);
-          return params.toString();
-        };
-
-        const loadAuditLogs = async () => {
-          ensureAuditElements();
-          
-          auditState.isLoading = true;
-          auditState.loadError = false;
-          renderAuditTable();
-          console.log('[Audit Logs] Started loading, isLoading=true, renderAuditTable called');
-
-          try {
-            const url = '/api/audit-logs?' + buildAuditQuery();
-            console.log('[Audit Logs] Fetching from URL:', url);
-            
-            const response = await fetch(url, {
-              cache: 'no-store',
-              headers: { 'Accept': 'application/json' }
-            });
-            
-            console.log('[Audit Logs] Response received, status:', response.status);
-            
-            const contentType = response.headers.get('content-type') || '';
-            const text = await response.text();
-            let payload = null;
-
-            if (text) {
-              try {
-                payload = contentType.includes('application/json') ? JSON.parse(text) : null;
-              } catch (parseErr) {
-                console.warn('[Audit Logs] JSON parse error:', parseErr);
-                payload = null;
-              }
-            }
-
-            if (!response.ok) {
-              const message = payload && payload.error ? payload.error : 'Failed to load audit logs';
-              console.error('[Audit Logs] API error response:', message);
-              throw new Error(message);
-            }
-
-            if (!payload || typeof payload !== 'object') {
-              console.error('[Audit Logs] Invalid response payload:', payload);
-              throw new Error('Invalid audit logs response');
-            }
-
-            auditState.entries = Array.isArray(payload.data) ? payload.data : [];
-            auditState.totalPages = payload.meta ? payload.meta.totalPages : 1;
-            auditState.total = payload.meta ? payload.meta.total : auditState.entries.length;
-            auditState.loadError = false;
-            
-            console.log('[Audit Logs] Data loaded successfully:', {
-              entriesCount: auditState.entries.length,
-              totalPages: auditState.totalPages,
-              total: auditState.total
-            });
-          } catch (error) {
-            console.error('[Audit Logs] Load failed:', error);
-            auditState.entries = [];
-            auditState.totalPages = 1;
-            auditState.total = 0;
-            auditState.loadError = true;
-          } finally {
-            auditState.isLoading = false;
-            renderAuditTable();
-            console.log('[Audit Logs] Finished loading, isLoading=false, renderAuditTable called');
-          }
-        };
-
-        const loadAuditUsers = async () => {
-          console.log('[Audit Logs] Loading audit users...');
-          try {
-            const response = await fetch('/api/users?auditScope=1', { cache: 'no-store' });
-            if (!response.ok) throw new Error('Failed to load users');
-            const users = await response.json();
-            auditState.users = Array.isArray(users) ? users.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'en', { sensitivity: 'base' })) : [];
-            console.log('[Audit Logs] Users loaded:', auditState.users.length);
-            
-            ensureAuditElements();
-            
-            if (!auditUserSelect) {
-              console.warn('[Audit Logs] auditUserSelect not found');
-              return;
-            }
-            
-            auditUserSelect.innerHTML = '<option value="">All Users</option>' + auditState.users.map((user) => {
-              const name = String(user.name || user.email || 'User ' + user.id).trim();
-              const campus = user.campus ? ' (' + user.campus + ')' : '';
-              const label = name + campus;
-              return '<option value="' + String(user.id) + '">' + label + '</option>';
-            }).join('');
-            console.log('[Audit Logs] User dropdown populated with', auditState.users.length, 'users');
-
-            if (auditState.userId) {
-              auditUserSelect.value = auditState.userId;
-            }
-          } catch (error) {
-            console.error('[Audit Logs] Failed to load audit users:', error);
-          }
-        };
-
-        const applyAuditFilters = () => {
-          updateAuditFilters();
-        };
-
-        window.applyAuditFilters = applyAuditFilters;
-
-        const resetAuditFilters = () => {
-          console.log('[Audit Logs] resetAuditFilters called');
-          ensureAuditElements();
-          
-          if (auditSearchInput) auditSearchInput.value = '';
-          if (auditUserSelect) auditUserSelect.value = '';
-          if (auditDateRangeSelect) auditDateRangeSelect.value = 'all';
-          auditState.page = 1;
-          auditState.dateRange = 'all';
-          auditState.dateFrom = '';
-          auditState.dateTo = '';
-          console.log('[Audit Logs] Filters cleared, calling updateAuditFilters');
-          updateAuditFilters();
-        };
-
-        window.resetAuditFilters = resetAuditFilters;
-
-        const updateAuditFilters = () => {
-          console.log('[Audit Logs] updateAuditFilters called');
-          ensureAuditElements();
-          
-          auditState.query = auditSearchInput?.value?.trim() || '';
-          auditState.userId = auditUserSelect?.value || '';
-          auditState.campus = window.__CURRENT_USER_CAMPUS__ || auditState.campus || '';
-          auditState.dateRange = auditDateRangeSelect?.value || 'all';
-          
-          console.log('[Audit Logs] Current filter state:', {
-            query: auditState.query,
-            userId: auditState.userId,
-            campus: auditState.campus,
-            dateRange: auditState.dateRange
-          });
-          
-          const bounds = getAuditDateRangeBounds(auditState.dateRange);
-          auditState.dateFrom = bounds.dateFrom;
-          auditState.dateTo = bounds.dateTo;
-          auditState.page = 1;
-          loadAuditLogs();
-        };
-
-        // Define event handlers outside so they can be removed/re-attached
-        const auditEventHandlers = {};
-
-        const createAuditEventHandlers = () => {
-          auditEventHandlers.updateFilters = () => updateAuditFilters();
-          auditEventHandlers.userChanged = () => {
-            console.log('[Audit Logs] User select changed');
-            ensureAuditElements();
-            auditState.userId = auditUserSelect?.value || '';
-            auditState.page = 1;
-            loadAuditLogs();
-          };
-          auditEventHandlers.filterClicked = (e) => {
-            if (e) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-            console.log('[Audit Logs] Filter button clicked');
-            applyAuditFilters();
-          };
-        };
-
-        createAuditEventHandlers();
-        hydrateAuditCampus();
-
-        const attachAuditEventListeners = () => {
-          console.log('[Audit Logs] Attaching event listeners...');
-          ensureAuditElements();
-          
-          // Search input - live search
-          if (auditSearchInput) {
-            auditSearchInput.addEventListener('input', auditEventHandlers.updateFilters);
-            console.log('[Audit Logs] Search input listener attached');
-          } else {
-            console.warn('[Audit Logs] auditSearchInput not found');
-          }
-          
-          // User select
-          if (auditUserSelect) {
-            auditUserSelect.addEventListener('change', auditEventHandlers.userChanged);
-            console.log('[Audit Logs] User select listener attached');
-          } else {
-            console.warn('[Audit Logs] auditUserSelect not found');
-          }
-          
-          // Date range select
-          if (auditDateRangeSelect) {
-            auditDateRangeSelect.addEventListener('change', auditEventHandlers.updateFilters);
-            console.log('[Audit Logs] Date range select listener attached');
-          } else {
-            console.warn('[Audit Logs] auditDateRangeSelect not found');
-          }
-          
-          // Filter button - main filter action
-          if (applyAuditFiltersBtn) {
-            applyAuditFiltersBtn.addEventListener('click', auditEventHandlers.filterClicked, false);
-            console.log('[Audit Logs] Filter button listener attached');
-          } else {
-            console.warn('[Audit Logs] applyAuditFiltersBtn not found');
-          }
-
-          const systemAuditTab = document.getElementById('systemAuditTab');
-          const equipmentTrailTab = document.getElementById('equipmentTrailTab');
-          const trailSearch = document.getElementById('equipmentTrailSearch');
-          const trailAction = document.getElementById('equipmentTrailAction');
-          systemAuditTab?.addEventListener('click', () => setAuditView('logs'));
-          equipmentTrailTab?.addEventListener('click', () => setAuditView('trail'));
-          trailSearch?.addEventListener('input', () => {
-            equipmentTrailState.query = trailSearch.value.trim();
-            if (equipmentTrailState.loaded) loadEquipmentAuditTrail();
-          });
-          trailAction?.addEventListener('change', () => {
-            equipmentTrailState.actionType = trailAction.value;
-            loadEquipmentAuditTrail();
-          });
-          document.getElementById('applyEquipmentTrailFiltersBtn')?.addEventListener('click', () => {
-            equipmentTrailState.query = trailSearch?.value.trim() || '';
-            equipmentTrailState.actionType = trailAction?.value || '';
-            loadEquipmentAuditTrail();
-          });
-          document.getElementById('refreshEquipmentTrailBtn')?.addEventListener('click', () => loadEquipmentAuditTrail());
-        };
-        // refreshAuditLogs button removed from UI; keep function available
-        // If you need a programmatic refresh, call loadAuditLogs()
-        const buildAuditHtml = (exportRows = auditState.entries) => {
-          const headers = ['Actor','Role','Action','Module','Description','Date / Time'];
-          const escapeHtml = (value) => {
-            const text = String(value || '');
-            return text
-              .replaceAll('<', '&lt;')
-              .replaceAll('>', '&gt;')
-              .replaceAll('\n', '<br>');
-          };
-          const rows = (Array.isArray(exportRows) ? exportRows : []).map(e => headers.map(h => {
-            switch(h) {
-              case 'Actor': return e.actorName || 'System';
-              case 'Role': return e.actorRole || 'N/A';
-              case 'Action': return e.action || '';
-              case 'Module': return e.module || '';
-              case 'Description': return e.description || '';
-              case 'Date / Time': return formatDateTime(e.createdAt);
-              default: return '';
-            }
-          }));
-          const preparedBy = window.__CURRENT_USER_NAME__ || 'Administrator';
-          const filters = [];
-          if (auditState.userId) {
-            const selectedUser = auditState.users.find((user) => String(user.id) === String(auditState.userId));
-            filters.push('User: ' + (selectedUser ? (selectedUser.name || selectedUser.email || auditState.userId) : auditState.userId));
-          }
-          if (auditState.campus) filters.push('Campus: ' + auditState.campus);
-          if (auditState.dateRange && auditState.dateRange !== 'all') filters.push('Date: ' + getAuditDateRangeLabel(auditState.dateRange));
-          if (auditState.query) filters.push('Search: ' + auditState.query);
-          const appliedFilters = filters.length ? filters.join(' • ') : 'All Time';
-          const html = '<!doctype html><html><head><meta charset="utf-8"><title>Audit Logs</title><style>body{font-family:Inter,Arial,sans-serif;padding:24px;color:#0f172a;background:#f8fafc}h2{margin-bottom:8px;color:#0f381e}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:11px}th,td{border:1px solid #cbd5e1;padding:8px;vertical-align:top;text-align:left}th{background:#0f381e;color:#fff;font-weight:700}tr:nth-child(even){background:#f8fafc}td:nth-child(5){min-width:260px;white-space:normal}@media print{body{padding:12px}}</style></head><body><h2>System Audit Logs Report</h2><div>Prepared By: ' + preparedBy + ' • Generated: ' + (auditState.generatedAt || new Date().toLocaleString()) + '</div><div>Filters: ' + appliedFilters + '</div><table><thead><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map(c => '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></body></html>';
-          return html;
-        };
-
-        const loadScript = (url) => new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = url;
-          s.onload = () => resolve();
-          s.onerror = (e) => reject(e);
-          document.head.appendChild(s);
-        });
-
-        const fetchAuditExportRows = async () => {
-          const params = new URLSearchParams();
-          const devBypass = new URLSearchParams(window.location.search).get('devBypass');
-          if (auditState.query) params.set('q', auditState.query);
-          if (auditState.userId) params.set('userId', auditState.userId);
-          if (auditState.campus) params.set('campus', auditState.campus);
-          if (auditState.dateFrom) params.set('dateFrom', auditState.dateFrom);
-          if (auditState.dateTo) params.set('dateTo', auditState.dateTo);
-          if (devBypass === '1' || devBypass === 'true') params.set('devBypass', '1');
-          params.set('page', '1');
-          params.set('pageSize', '5000');
-          params.set('exportAll', '1');
-
-          const response = await fetch('/api/audit-logs?' + params.toString(), {
-            cache: 'no-store',
-            headers: { 'Accept': 'application/json' }
-          });
-
-          const contentType = response.headers.get('content-type') || '';
-          const text = await response.text();
-          let payload = null;
-
-          if (text) {
-            try {
-              payload = contentType.includes('application/json') ? JSON.parse(text) : null;
-            } catch {
-              payload = null;
-            }
-          }
-
-          if (!response.ok) {
-            const message = payload && payload.error ? payload.error : 'Failed to fetch full audit export dataset';
-            throw new Error(message);
-          }
-
-          const rows = Array.isArray(payload?.data) ? payload.data : [];
-          return rows;
-        };
-
-        const exportAuditLogs = async (format) => {
-          try {
-            const exportRows = await fetchAuditExportRows();
-            if (!exportRows || !exportRows.length) {
-              alert('No audit entries to export.');
-              return;
-            }
-
-            if (format === 'print') {
-              const w = window.open('', '_blank');
-              if (!w) {
-                return alert('Unable to open print preview. Please allow popups for this site.');
-              }
-              w.document.write(buildAuditHtml(exportRows));
-              w.document.close();
-              w.focus();
-              const tryPrint = () => {
-                try {
-                  w.print();
-                } catch (err) {
-                  console.warn('Print failed', err);
-                }
-              };
-              if (w.document.readyState === 'complete') {
-                tryPrint();
-              } else {
-                w.addEventListener('load', tryPrint);
-              }
-              return;
-            }
-
-            let pdfLib = window.jspdf && window.jspdf.jsPDF;
-            if (!pdfLib) {
-              try {
-                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-              } catch (err) {
-                console.warn('Failed to dynamically load jsPDF', err);
-              }
-              pdfLib = window.jspdf && window.jspdf.jsPDF;
-              if (!pdfLib) {
-                return alert('Failed to load PDF library (jsPDF). Please allow external scripts and try again.');
-              }
-            }
-
-            const headers = ['Actor','Role','Action','Module','Description','Date / Time'];
-            const rows = exportRows.map(e => ({
-              Actor: e.actorName || 'System',
-              Role: e.actorRole || 'N/A',
-              Action: e.action || '',
-              Module: e.module || '',
-              Description: e.description || '',
-              'Date / Time': formatDateTime(e.createdAt)
-            }));
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 36;
-            const contentWidth = pageWidth - margin * 2;
-            const headerHeight = 18;
-            const lineHeight = 12;
-            const bodyPadding = 8;
-            const colPercents = [0.12, 0.10, 0.12, 0.10, 0.36, 0.20];
-            const colWidths = colPercents.map(percent => Math.max(70, Math.floor(contentWidth * percent)));
-            const colX = [];
-            let cursorX = margin;
-            colWidths.forEach((width) => {
-              colX.push(cursorX);
-              cursorX += width;
-            });
-            const drawHeader = (startY) => {
-              doc.setFillColor(15, 56, 30);
-              doc.setDrawColor(226, 232, 240);
-              doc.setLineWidth(0.5);
-              doc.rect(margin, startY, contentWidth, headerHeight, 'F');
-              doc.setFont('helvetica', 'bold');
-              doc.setFontSize(8.5);
-              doc.setTextColor(255, 255, 255);
-              headers.forEach((header, index) => {
-                const text = String(header).toUpperCase();
-                const textWidth = doc.getTextWidth(text);
-                const x = colX[index] + 8;
-                const y = startY + 12;
-                doc.text(text, x, y, { maxWidth: colWidths[index] - 12 });
-                if (textWidth > colWidths[index] - 12) {
-                  doc.text(text.slice(0, 18), x, y);
-                }
-              });
-              return startY + headerHeight;
-            };
-
-            const drawWrappedCell = (text, x, y, width, height, options = {}) => {
-              const cleanText = String(text || '').replace(/\s+/g, ' ').trim();
-              const wrapped = doc.splitTextToSize(cleanText, width - bodyPadding * 2);
-              doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
-              doc.setFontSize(options.fontSize || 8.5);
-              doc.setTextColor(options.textColor || 20);
-              const textHeight = wrapped.length * lineHeight;
-              const safeHeight = Math.max(height, textHeight + bodyPadding * 2);
-              const lines = wrapped.slice(0, 16);
-              lines.forEach((line, lineIndex) => {
-                doc.text(line, x + bodyPadding, y + bodyPadding + (lineIndex * lineHeight));
-              });
-              return safeHeight;
-            };
-
-            const preparedBy = window.__CURRENT_USER_NAME__ || 'Administrator';
-            const generated = auditState.generatedAt || new Date().toLocaleString();
-            const totalRecords = auditState.total || auditState.entries.length || 0;
-            const filters = [];
-            if (auditState.userId) {
-              const selectedUser = auditState.users.find((user) => String(user.id) === String(auditState.userId));
-              filters.push('User: ' + (selectedUser ? (selectedUser.name || selectedUser.email || auditState.userId) : auditState.userId));
-            }
-            filters.push('Date: ' + getAuditDateRangeLabel(auditState.dateRange));
-            const filtersText = filters.length ? filters.join(' • ') : 'All Time';
-
-            let y = margin;
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(15);
-            doc.setTextColor(6, 78, 59);
-            doc.text('MINDORO STATE UNIVERSITY', pageWidth / 2, y, { align: 'center' });
-            y += 16;
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(20, 20, 20);
-            doc.text('College of Computer Studies', pageWidth / 2, y, { align: 'center' });
-            y += 14;
-            doc.text('Computer Laboratory Facilities Management System', pageWidth / 2, y, { align: 'center' });
-            y += 20;
-            doc.setDrawColor(16, 185, 129);
-            doc.setLineWidth(1.2);
-            doc.line(margin, y, pageWidth - margin, y);
-            y += 12;
-
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.setTextColor(6, 78, 59);
-            doc.text('SYSTEM AUDIT LOGS REPORT', pageWidth / 2, y, { align: 'center' });
-            y += 18;
-
-            doc.setFillColor(240, 253, 244);
-            doc.setDrawColor(209, 250, 229);
-            doc.setLineWidth(0.8);
-            doc.rect(margin, y, contentWidth, 54, 'FD');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(20, 20, 20);
-            doc.text('Date Generated: ' + generated, margin + 10, y + 16);
-            doc.text('Generated By: ' + preparedBy, margin + 10, y + 32);
-            doc.text('Total Log Records: ' + String(totalRecords), margin + 10, y + 48);
-            doc.text('Applied Filters: ' + filtersText, pageWidth / 2 + 10, y + 16, { maxWidth: contentWidth / 2 - 20 });
-            y += 70;
-
-            const startY = y;
-            let currentY = drawHeader(startY);
-            doc.setDrawColor(226, 232, 240);
-            doc.setLineWidth(0.5);
-
-            rows.forEach((row, rowIndex) => {
-              const renderHeight = 22;
-              const rowCells = headers.map((header) => {
-                const value = row[header] || '';
-                const text = String(value);
-                return text;
-              });
-
-              const cellHeights = rowCells.map((value, index) => {
-                const width = colWidths[index] - bodyPadding * 2;
-                const wrapped = doc.splitTextToSize(String(value || ''), width);
-                return Math.max(renderHeight, wrapped.length * lineHeight + bodyPadding * 2);
-              });
-              const currentRowHeight = Math.max(...cellHeights);
-
-              if (currentY + currentRowHeight > pageHeight - 46) {
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.setTextColor(120, 120, 120);
-                doc.text('Continued...', pageWidth - margin, pageHeight - 24, { align: 'right' });
-                doc.addPage();
-                currentY = margin + 20;
-                currentY = drawHeader(currentY);
-              }
-
-              doc.setFillColor(rowIndex % 2 === 0 ? 248 : 255);
-              doc.rect(margin, currentY, contentWidth, currentRowHeight, 'F');
-              doc.setFont('helvetica', 'normal');
-              doc.setFontSize(8.2);
-              doc.setTextColor(20, 20, 20);
-              rowCells.forEach((value, index) => {
-                const width = colWidths[index] - bodyPadding * 2;
-                const wrapped = doc.splitTextToSize(String(value || ''), width);
-                const textY = currentY + bodyPadding + 2;
-                const x = colX[index] + bodyPadding;
-                if (headers[index] === 'Action' || headers[index] === 'Module') {
-                  doc.setFillColor(220, 252, 231);
-                  doc.setDrawColor(167, 243, 208);
-                  doc.roundedRect(x - 2, textY - 4, Math.min(width + 4, doc.getTextWidth(String(value || '')) + 12), 14, 2, 2, 'FD');
-                  doc.setFont('helvetica', 'bold');
-                  doc.setFontSize(8);
-                  doc.setTextColor(21, 128, 61);
-                  doc.text(String(value || ''), x, textY + 1, { maxWidth: width });
-                } else {
-                  doc.text(wrapped, x, textY);
-                }
-              });
-              currentY += currentRowHeight;
-            });
-
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-              doc.setPage(i);
-              const footerY = pageHeight - 24;
-              doc.setFont('helvetica', 'normal');
-              doc.setFontSize(9);
-              doc.setTextColor(120, 120, 120);
-              doc.text('Generated by Computer Laboratory Facilities Management System', margin, footerY);
-              doc.text('Page ' + i + ' of ' + pageCount, pageWidth - margin, footerY, { align: 'right' });
-            }
-
-            doc.save('system-audit-logs.pdf');
-          } catch (error) {
-            console.error('[Audit Logs] Export failed:', error);
-            alert('Failed to export audit logs. Please try again.');
-          }
-        };
-
-        const printBtn = document.getElementById('printAuditLogs');
-        const exportBtn = document.getElementById('exportAuditLogsBtn');
-        if (printBtn) printBtn.addEventListener('click', () => exportAuditLogs('print'));
-        if (exportBtn) exportBtn.addEventListener('click', async () => { await exportAuditLogs('pdf'); });
-        window.exportAuditLogs = exportAuditLogs;
-        
-        // Pagination listeners
-        if (auditPrevPage) {
-          auditPrevPage.addEventListener('click', () => {
-            console.log('[Audit Logs] Previous page clicked, current page:', auditState.page);
-            if (auditState.page > 1) {
-              auditState.page -= 1;
-              console.log('[Audit Logs] Moving to page:', auditState.page);
-              loadAuditLogs();
-            }
-          });
-        }
-        
-        if (auditNextPage) {
-          auditNextPage.addEventListener('click', () => {
-            console.log('[Audit Logs] Next page clicked, current page:', auditState.page, 'total pages:', auditState.totalPages);
-            if (auditState.page < auditState.totalPages) {
-              auditState.page += 1;
-              console.log('[Audit Logs] Moving to page:', auditState.page);
-              loadAuditLogs();
-            }
-          });
-        }
-
-        const initializeAuditPage = () => {
-          console.log('[Audit Logs] Initializing audit page...');
-          ensureAuditElements();
-          
-          hydrateAdminBadge();
-          console.log('[Audit Logs] Admin badge hydrated');
-          
-          attachAuditEventListeners();
-          console.log('[Audit Logs] Event listeners attached');
-          
-          loadAuditUsers();
-          console.log('[Audit Logs] Loading audit users...');
-          
-          loadAuditLogs();
-          console.log('[Audit Logs] Loading audit logs...');
-
-          const initialView = new URLSearchParams(window.location.search).get('view');
-          setAuditView(initialView === 'trail' ? 'trail' : 'logs');
-        };
-
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initializeAuditPage, { once: true });
-        } else {
-          initializeAuditPage();
-        }
-      </script>
+      <div id="equipmentTrailDetailsModal" class="equipment-trail-modal" role="dialog" aria-modal="true" aria-labelledby="equipmentTrailDetailsTitle" hidden>
+        <div class="equipment-trail-modal-card">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h3 id="equipmentTrailDetailsTitle" class="text-base font-bold">Audit details</h3>
+              <p id="equipmentTrailDetailsContext" class="mt-1 text-xs"></p>
+            </div>
+            <button id="closeEquipmentTrailDetails" type="button" class="rounded-lg px-2.5 py-1.5" aria-label="Close details">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <p id="equipmentTrailDetailsReason" class="whitespace-pre-wrap break-words text-sm leading-relaxed"></p>
+        </div>
+      </div>
+
+      <script src="/js/audit-logs-page.js?v=20261104"></script>
     `
   },
   "reports": {
@@ -4570,6 +3495,10 @@ const pageConfigs = {
         }
 
         .report-select {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          min-height: 2.65rem;
           background: rgba(6, 16, 12, 0.9);
           border: 1px solid rgba(74, 222, 128, 0.35);
           color: #f8fafc;
@@ -4585,6 +3514,154 @@ const pageConfigs = {
           background: rgba(6,16,11,.98);
           color: #f8fafc;
         }
+        .report-filter-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: end;
+          gap: .75rem .9rem;
+        }
+        .report-filter-grid > div > label {
+          display: block;
+          margin: 0 0 .35rem;
+          color: #426451;
+          font-size: .75rem;
+          font-weight: 750;
+        }
+        .report-filter-field[hidden],
+        .report-custom-date-fields[hidden] { display: none !important; }
+        .report-custom-date-fields {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: .75rem .9rem;
+        }
+        .report-search-control { position: relative; flex: 1 1 auto; min-width: 0; }
+        .report-search-actions { display: flex; align-items: center; gap: .5rem; }
+        .report-search-control > i {
+          position: absolute;
+          top: 50%;
+          left: .8rem;
+          transform: translateY(-50%);
+          color: #22c55e;
+          pointer-events: none;
+        }
+        .report-search-control input { padding-right: 2.6rem !important; padding-left: 2.35rem !important; }
+        .report-search-clear {
+          position: absolute;
+          top: 50%;
+          right: .45rem;
+          display: inline-grid;
+          width: 1.75rem;
+          height: 1.75rem;
+          place-items: center;
+          transform: translateY(-50%);
+          border: 0;
+          border-radius: 999px;
+          background: rgba(34,197,94,.12);
+          color: #426451;
+          cursor: pointer;
+        }
+        .report-search-clear[hidden] { display: none !important; }
+        .report-builder-card {
+          position: relative;
+          z-index: 30;
+          overflow: visible !important;
+        }
+        #reportPdfPreviewModal {
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 99999 !important;
+        }
+        .report-actions-menu-wrap { position: relative; flex: 0 0 auto; }
+        .report-actions-toggle {
+          display: inline-grid;
+          width: 2.65rem;
+          height: 2.65rem;
+          place-items: center;
+          border: 1px solid #9bbda3;
+          border-radius: .85rem;
+          background: #fff;
+          color: #14532d;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: background .16s ease, border-color .16s ease, transform .16s ease;
+        }
+        .report-actions-toggle:hover { background: #f0fdf4; border-color: #4b8b5b; }
+        .report-actions-menu {
+          position: absolute;
+          z-index: 50;
+          top: calc(100% + .45rem);
+          right: 0;
+          display: grid;
+          width: min(15rem, calc(100vw - 3rem));
+          gap: .2rem;
+          padding: .4rem;
+          border: 1px solid #cbd5e1;
+          border-radius: .9rem;
+          background: #fff;
+          color: #172a20;
+          box-shadow: 0 16px 36px rgba(15, 23, 42, .2);
+        }
+        .report-actions-menu[hidden] { display: none !important; }
+        .report-actions-menu-item {
+          display: flex;
+          width: 100%;
+          align-items: center;
+          gap: .65rem;
+          padding: .65rem .7rem;
+          border: 0;
+          border-radius: .6rem;
+          background: transparent;
+          color: inherit;
+          font: inherit;
+          font-size: .84rem;
+          font-weight: 650;
+          text-align: left;
+          cursor: pointer;
+        }
+        .report-actions-menu-item:hover:not(:disabled) { background: #f0fdf4; }
+        .report-actions-menu-item:disabled { cursor: not-allowed; opacity: .45; }
+        .report-actions-menu-item i { width: 1rem; color: #16834c; text-align: center; }
+        .report-actions-menu-divider { height: 1px; margin: .2rem .35rem; background: #dbe7df; }
+        body.app-shell .main-container.theme-dark .report-filter-grid > div > label {
+          color: #b6d7c8;
+        }
+        body.app-shell .main-container.theme-dark .report-actions-toggle {
+          border-color: rgba(74, 222, 128, .38);
+          background: #0a2117;
+          color: #d1fae5;
+        }
+        body.app-shell .main-container.theme-dark .report-actions-toggle:hover { background: #123c2a; }
+        body.app-shell .main-container.theme-dark .report-actions-menu {
+          border-color: rgba(74, 222, 128, .28);
+          background: #092016;
+          color: #e5f5eb;
+          box-shadow: 0 18px 40px rgba(0,0,0,.42);
+        }
+        body.app-shell .main-container.theme-dark .report-actions-menu-item:hover:not(:disabled) { background: #123c2a; }
+        body.app-shell .main-container.theme-dark .report-actions-menu-divider { background: rgba(167, 243, 208, .16); }
+        @media (max-width: 820px) {
+          .report-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 540px) {
+          .report-filter-grid { grid-template-columns: minmax(0, 1fr); gap: .65rem; }
+          .report-custom-date-fields { grid-template-columns: minmax(0, 1fr); gap: .65rem; }
+        }
+        body.app-shell .main-container.theme-light .report-select {
+          border-color: #9bbda3 !important;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          box-shadow: inset 0 1px 2px rgba(31, 41, 55, .04) !important;
+        }
+        body.app-shell .main-container.theme-light .report-select:focus {
+          border-color: #4b8b5b !important;
+          background: #ffffff !important;
+          box-shadow: 0 0 0 3px rgba(34, 110, 61, .12) !important;
+        }
+        body.app-shell .main-container.theme-light .report-select option {
+          background: #ffffff !important;
+          color: #1f2937 !important;
+        }
         .page-hero-card {
           display: flex;
           justify-content: space-between;
@@ -4598,38 +3675,262 @@ const pageConfigs = {
           backdrop-filter: blur(16px) saturate(1.04);
           margin-bottom: 1.5rem;
         }
+        body.app-shell .main-container.theme-light .reports-page-hero {
+          border-color: #d7e3da !important;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          box-shadow: 0 8px 24px rgba(31, 41, 55, .07) !important;
+        }
+        body.app-shell .main-container.theme-light .reports-page-hero .page-title {
+          color: #1f2937 !important;
+        }
+        body.app-shell .main-container.theme-light .reports-page-hero .page-hero-student-badge {
+          border-color: rgba(74, 222, 128, .32) !important;
+          background: #04281b !important;
+          color: #ffffff !important;
+          box-shadow: 0 4px 14px rgba(4, 40, 27, .18) !important;
+        }
+        body.app-shell .main-container.theme-light .reports-page-hero .page-hero-student-badge #adminBadgeRole {
+          color: #6ee7b7 !important;
+        }
+        body.app-shell .main-container.theme-light .reports-page-hero .page-hero-student-badge #adminBadgeName {
+          color: #ffffff !important;
+        }
+        body.app-shell .main-container.theme-light .reports-page-hero .page-hero-student-badge #adminBadgeAvatar {
+          border-color: rgba(74, 222, 128, .4) !important;
+          background: #06402b !important;
+          color: #a7f3d0 !important;
+        }
+        body.app-shell .main-container.theme-light .reports-export-notice,
+        body.app-shell .main-container.theme-light .report-empty-state {
+          border-color: #a7d9b8 !important;
+          background: #ecfdf3 !important;
+          color: #17452a !important;
+          box-shadow: 0 4px 14px rgba(21, 128, 61, .08) !important;
+        }
         .report-card-surface {
           background: var(--panel);
           border: 1px solid var(--border);
           box-shadow: var(--shadow);
         }
+        body.app-shell .main-container.theme-dark .report-card-surface {
+          background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+          border-color: rgba(74,222,128,.18) !important;
+          color: #f8fafc !important;
+        }
+        body.app-shell .main-container.theme-light .report-card-surface {
+          background: #ffffff !important;
+          border-color: #d7e3da !important;
+          color: #1f2937 !important;
+          box-shadow: 0 8px 24px rgba(31,41,55,.07) !important;
+        }
         .report-table-shell {
-          background: linear-gradient(180deg, rgba(11,26,19,.98), rgba(8,20,14,.96));
-          border: 1px solid var(--border);
+          max-height: min(56vh, 42rem);
+          overflow: auto !important;
+          background: #07150f !important;
+          border: 1px solid rgba(74,222,128,.18) !important;
+          border-radius: .9rem !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          scrollbar-gutter: stable;
         }
+        #reportPreviewTable {
+          border-collapse: collapse !important;
+          border-spacing: 0 !important;
+        }
+        #reportPreviewTable thead,
         .report-preview-table thead tr {
-          background: #06100b;
+          background: #04120c !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
         }
-        .report-preview-table thead th {
+        #reportPreviewTable thead th,
+        #reportPreviewTable thead th.theme-locked-table-header {
+          position: sticky !important;
+          top: 0;
+          z-index: 5;
+          color: #d1fae5 !important;
+          font-size: .95rem !important;
+          padding: .9rem 1rem !important;
+          background: #04120c !important;
+          border: 0 !important;
+          border-bottom: 1px solid rgba(6, 78, 59, .5) !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          text-align: left !important;
+          vertical-align: bottom;
+          white-space: nowrap;
+        }
+        body.app-shell .main-container.theme-dark .report-preview-table thead,
+        body.app-shell .main-container.theme-dark .report-preview-table thead tr,
+        body.app-shell .main-container.theme-dark .report-preview-table thead th {
+          background: #04120c !important;
+          color: #f9fafb !important;
+          border-bottom: 1px solid rgba(148,163,184,.22) !important;
+        }
+        body.app-shell .main-container.theme-light .report-preview-table thead,
+        body.app-shell .main-container.theme-light .report-preview-table thead tr,
+        body.app-shell .main-container.theme-light .report-preview-table thead th {
+          background: #0a2e1d !important;
+          color: #d1fae5 !important;
+          border-bottom: 1px solid #174b34 !important;
+        }
+        #reportPreviewTable tbody {
+          background: #07150f !important;
+        }
+        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr {
+          background: #07150f !important;
+          background-image: none !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          color: #f9fafb !important;
+        }
+        body.app-shell .main-container.theme-dark .report-table-shell {
+          background: #07150f !important;
+          border-color: rgba(148,163,184,.2) !important;
+        }
+        body.app-shell .main-container.theme-dark #reportPreviewTable tbody tr:nth-child(even) {
+          background: #0a1d15 !important;
+        }
+        body.app-shell .main-container.theme-dark #reportPreviewTable tbody td {
+          border-bottom-color: rgba(148,163,184,.18) !important;
+        }
+        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr:hover {
+          background: #0a2e1d !important;
+        }
+        body.app-shell .main-container.theme-light .report-table-shell {
+          background: #ffffff !important;
+          border-color: #cbd8cf !important;
+        }
+        body.app-shell .main-container.theme-light #reportPreviewTable tbody {
+          background: #ffffff !important;
+        }
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr,
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:nth-child(odd) {
+          background: #ffffff !important;
+          color: #1f2937 !important;
+        }
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:nth-child(even) {
+          background: #f5f8f6 !important;
+          color: #1f2937 !important;
+        }
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:hover {
+          background: #eaf5ed !important;
+        }
+        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody td,
+        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr > td {
+          background: transparent !important;
+          color: #d1fae5 !important;
+          font-size: 1rem !important;
+          line-height: 1.5 !important;
+          padding: .9rem 1rem !important;
+          border: 0 !important;
+          border-bottom: 1px solid rgba(74, 222, 128, .2) !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody td,
+        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr > td {
+          color: #1f2937 !important;
+          border-bottom-color: #dfe7e1 !important;
+        }
+        body.app-shell .main-container.theme-light #previewReportTitle,
+        body.app-shell .main-container.theme-light #reportCountText,
+        body.app-shell .main-container.theme-light #previewGeneratedAt {
+          color: #1f2937 !important;
+        }
+        .reports-export-notice {
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          color: #b6d7c8 !important;
+          padding: 0 !important;
+        }
+        .report-access-notice {
+          max-width: 42rem;
+          margin: 0 auto;
+          padding: 1.25rem;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          color: #b6d7c8;
+          text-align: center;
+        }
+        .report-access-notice-title {
           color: #6ee7b7;
-          background: #06100b;
-          border-bottom: 1px solid rgba(74,222,128,.16);
+          font-weight: 800;
+          letter-spacing: .12em;
+          text-transform: uppercase;
         }
-        .report-preview-table tbody tr {
-          background: rgba(8,20,14,.5);
+        .report-access-notice-total {
+          margin-top: .5rem;
+          color: #f0fdf4;
+          font-size: 1.5rem;
+          font-weight: 800;
         }
-        .report-preview-table tbody tr:hover {
-          background: rgba(34,197,94,.08);
+        .report-access-notice p {
+          margin-top: .5rem;
+          color: #b6d7c8;
+          line-height: 1.5;
         }
         .report-empty-state {
           background: linear-gradient(180deg, rgba(11,26,19,.98), rgba(8,20,14,.96));
           border: 1px solid var(--border);
           color: #d1fae5;
         }
+        .report-empty-state i { color: #22c55e; font-size: 1.3rem; }
+        .report-empty-state strong { display: block; margin-top: .45rem; font-size: .95rem; }
+        .report-empty-state p { margin: .25rem 0 0; color: inherit; opacity: .78; }
         #summaryCards > div {
           background: var(--panel);
           border: 1px solid var(--border);
           box-shadow: var(--shadow);
+        }
+        body.app-shell .main-container.theme-light #summaryCards > div {
+          border-color: #d1d5db !important;
+          background: #ffffff !important;
+          box-shadow: 0 4px 12px rgba(17, 24, 39, .08) !important;
+        }
+        body.app-shell .main-container.theme-light #summaryCards > div > p {
+          color: #000 !important;
+        }
+        #summaryCards > div {
+          display: flex;
+          min-height: 5.25rem;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: .55rem;
+          padding: 1rem !important;
+        }
+        #summaryCards .report-summary-value {
+          margin: 0;
+          font-size: 2rem !important;
+          font-weight: 800 !important;
+          line-height: 1;
+          letter-spacing: -.035em;
+        }
+        #summaryCards .report-summary-label {
+          margin: 0;
+          font-weight: 700;
+          letter-spacing: .18em;
+        }
+        body.app-shell .main-container.theme-dark #summaryCards > div.report-summary-warning {
+          border-color: rgba(251,146,60,.55) !important;
+          background: linear-gradient(140deg, rgba(124,45,18,.35), rgba(11,26,19,.96)) !important;
+        }
+        body.app-shell .main-container.theme-dark #summaryCards > div.report-summary-warning > p {
+          color: #fed7aa !important;
+        }
+        body.app-shell .main-container.theme-light #summaryCards > div.report-summary-warning {
+          border-color: #fdba74 !important;
+          background: #fff7ed !important;
+        }
+        body.app-shell .main-container.theme-light #summaryCards > div.report-summary-warning > p {
+          color: #9a3412 !important;
         }
         #reportPagination button {
           border: 1px solid rgba(74,222,128,.18);
@@ -4657,15 +3958,33 @@ const pageConfigs = {
           background: linear-gradient(135deg, #22C55E, #4ADE80);
         }
         button[onclick*="exportReport"] {
-          background: rgba(15, 23, 42, 0.8);
-          border: 1px solid rgba(148, 163, 184, 0.25);
-          color: #e2e8f0;
+          background: transparent;
+          border: 1px solid rgba(74, 222, 128, .42);
+          color: #064e3b;
           border-radius: 999px;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+          box-shadow: none;
         }
         button[onclick*="exportReport"]:hover {
-          background: rgba(30, 41, 59, 0.9);
-          border-color: rgba(148, 163, 184, 0.35);
+          background: rgba(34,197,94,.08);
+          border-color: rgba(74, 222, 128, .42);
+        }
+        body.app-shell .main-container.theme-dark button[onclick*="exportReport"],
+        body.app-shell .main-container.theme-dark #resetReportFilters {
+          color: #d1fae5 !important;
+        }
+        body.app-shell .main-container.theme-dark button[onclick*="exportReport"]:hover,
+        body.app-shell .main-container.theme-dark #resetReportFilters:hover {
+          background: rgba(34,197,94,.12) !important;
+        }
+        body.app-shell .main-container.theme-light button[onclick*="exportReport"],
+        body.app-shell .main-container.theme-light #resetReportFilters {
+          background: #ffffff !important;
+          color: #065f46 !important;
+          border-color: #9bbda3 !important;
+        }
+        body.app-shell .main-container.theme-light button[onclick*="exportReport"]:hover,
+        body.app-shell .main-container.theme-light #resetReportFilters:hover {
+          background: #ecfdf3 !important;
         }
         .page-hero-meta {
           display: flex;
@@ -4731,79 +4050,118 @@ const pageConfigs = {
           }
         }
       </style>
-      <section class="page-hero-card panel-card" style="justify-content:space-between; align-items:center; padding:1.1rem 1.2rem;">
-        <button id="mobileMenuToggle" type="button" onclick="toggleSidebar()" class="menu-toggle block lg:hidden" aria-label="Open navigation">
-          <i class="fas fa-bars"></i>
-        </button>
-        <div class="page-hero-meta min-w-0 flex-1">
-          <h2 class="page-title">Reports</h2>
+      <header class="system-dashboard-heading reports-page-header" data-comlab-hide-auto-title="true">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
         </div>
-        <div class="page-hero-student-badge ml-auto flex shrink-0 items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.12)]">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" id="adminBadgeAvatar">AD</div>
-          <div class="min-w-0">
-            <div class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-200" id="adminBadgeRole">Admin</div>
-            <div class="text-sm font-semibold text-white" id="adminBadgeName">Administrator</div>
+        <div class="system-dashboard-heading-actions">
+          <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+          <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white">
+            <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" id="adminBadgeAvatar">AD</span>
+            <span class="system-profile-badge-copy text-white">
+              <span class="system-profile-badge-name text-white" id="adminBadgeName">Administrator</span>
+              <span class="system-profile-badge-role text-emerald-400" id="adminBadgeRole">Admin</span>
+            </span>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section class="card mb-6 report-card-surface panel-card" style="padding: 1rem;">
-        <form id="reportFiltersForm" class="grid gap-4" onsubmit="handleGenerateReport(event)">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+      <section class="card mb-6 report-card-surface panel-card report-builder-card" style="padding: 1rem;">
+        <div class="report-builder-intro">
+          <span class="report-builder-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
+          <div>
+            <h2>Build a report</h2>
+            <p>Choose a report type. The preview updates automatically as you adjust filters.</p>
+          </div>
+        </div>
+        <div id="reportFiltersForm" class="grid gap-4">
+          <div class="report-filter-grid">
             <div>
               <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5">Report Type</label>
-              <select id="reportTypeSelect" class="form-control report-select" onchange="handleReportTypeChange()">
+              <select id="reportTypeSelect" class="form-control report-select">
                 <option>Equipment Inventory</option>
                 <option>Borrow Equipment</option>
+                <option>Maintenance</option>
                 <option>Attendance</option>
+                <option>User Activity</option>
               </select>
             </div>
-            <div>
+            <div id="campusFilterField" class="report-filter-field">
               <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5">Campus</label>
-              <select id="campusFilter" class="form-control report-select" onchange="handleFilterChange('campus')">
+              <select id="campusFilter" class="form-control report-select">
                 <option value="">All Campuses</option>
               </select>
             </div>
-            <div>
+            <div id="reportPeriodField" class="report-filter-field">
               <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5">Report Period</label>
-              <select id="reportPeriodFilter" class="form-control report-select" onchange="handleFilterChange()">
+              <select id="reportPeriodFilter" class="form-control report-select">
                 <option value="all">All Records</option>
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="semester">This Semester</option>
                 <option value="school-year">This School Year</option>
+                <option value="custom">Custom Date Range</option>
               </select>
             </div>
-            <div>
+            <div id="laboratoryFilterField" class="report-filter-field">
               <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5">Laboratory</label>
-              <select id="laboratoryFilter" class="form-control report-select" onchange="handleFilterChange()">
+              <select id="laboratoryFilter" class="form-control report-select">
                 <option value="">All Laboratories</option>
               </select>
             </div>
-            <div>
+            <div id="statusFilterField" class="report-filter-field">
               <label id="statusFilterLabel" class="block text-sm font-semibold text-emerald-100/80 mb-1.5">Status</label>
-              <select id="statusFilter" class="form-control report-select" onchange="handleFilterChange()">
+              <select id="statusFilter" class="form-control report-select">
                 <option value="">All Statuses</option>
               </select>
             </div>
-            <div class="flex flex-col gap-3 lg:row-span-2 lg:justify-end">
-              <button id="generateReportButton" type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-black shadow-[0_8px_18px_rgba(6,64,43,.16)] transition hover:bg-emerald-400">
-                <svg id="generateReportSpinner" class="hidden h-4 w-4 animate-spin text-black" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-                <span id="generateReportButtonText">Generate Report</span>
-              </button>
-              <button type="button" onclick="exportReport('pdf')" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-700/60 bg-[#06100b] px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-900/40">
-                <i class="fas fa-file-pdf text-emerald-400"></i> Export PDF
-              </button>
-              <button type="button" onclick="exportReport('print')" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-700/60 bg-[#06100b] px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-900/40">
-                <i class="fas fa-print text-emerald-400"></i> Print Report
-              </button>
+            <div id="technicianFilterField" class="report-filter-field" hidden>
+              <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5" for="technicianFilter">Technician</label>
+              <select id="technicianFilter" class="form-control report-select"><option value="">All Technicians</option></select>
             </div>
+            <div id="issueTypeFilterField" class="report-filter-field" hidden>
+              <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5" for="issueTypeFilter">Issue Type</label>
+              <select id="issueTypeFilter" class="form-control report-select"><option value="">All Issue Types</option></select>
+            </div>
+            <div id="reportSearchField" class="report-filter-field">
+              <label id="reportSearchLabel" class="block text-sm font-semibold text-emerald-100/80 mb-1.5" for="reportSearchInput">Search</label>
+              <div class="report-search-actions">
+                <div class="report-search-control">
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                  <input id="reportSearchInput" type="search" class="form-control report-select" placeholder="Search matching records" autocomplete="off">
+                  <button id="reportSearchClear" type="button" class="report-search-clear" aria-label="Clear search" title="Clear search" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
+                </div>
+                <div id="reportActionsMenuWrap" class="report-actions-menu-wrap">
+                  <button id="reportActionsToggle" type="button" class="report-actions-toggle" aria-label="Report actions" title="Report actions" aria-haspopup="menu" aria-expanded="false" aria-controls="reportActionsMenu">
+                    <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                  </button>
+                  <div id="reportActionsMenu" class="report-actions-menu" role="menu" aria-label="Report actions" hidden>
+                    <button type="button" role="menuitem" data-report-export onclick="exportReport('pdf-preview')" class="report-actions-menu-item"><i class="fas fa-eye" aria-hidden="true"></i> Preview PDF</button>
+                    <button type="button" role="menuitem" data-report-export onclick="exportReport('pdf')" class="report-actions-menu-item"><i class="fas fa-file-pdf" aria-hidden="true"></i> Export PDF</button>
+                    <button type="button" role="menuitem" data-report-export onclick="exportReport('print')" class="report-actions-menu-item"><i class="fas fa-print" aria-hidden="true"></i> Print Report</button>
+                    <button type="button" role="menuitem" data-report-export onclick="exportReport('csv')" class="report-actions-menu-item"><i class="fas fa-file-csv" aria-hidden="true"></i> Export CSV</button>
+                    <div class="report-actions-menu-divider" role="separator"></div>
+                    <button id="resetReportFilters" type="button" role="menuitem" class="report-actions-menu-item"><i class="fas fa-rotate-left" aria-hidden="true"></i> Reset Filters</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="customDateRangeFields" class="report-custom-date-fields" hidden>
+              <div>
+                <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5" for="reportDateFromFilter">From</label>
+                <input id="reportDateFromFilter" type="date" class="form-control report-select">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-emerald-100/80 mb-1.5" for="reportDateToFilter">To</label>
+                <input id="reportDateToFilter" type="date" class="form-control report-select">
+              </div>
+            </div>
+
           </div>
-        </form>
+        </div>
       </section>
 
       <section class="card mb-6 report-card-surface panel-card" style="">
@@ -4816,1043 +4174,52 @@ const pageConfigs = {
               <span id="previewGeneratedAt"></span>
             </div>
           </div>
-          <div class="rounded-3xl border border-emerald-700/60 bg-[#06100b] px-4 py-3 text-sm text-emerald-100/70">Only the currently generated dataset will export.</div>
+          <div class="reports-export-notice rounded-3xl border border-emerald-700/60 bg-[#06100b] px-4 py-3 text-sm text-emerald-100/70">Preview and exports follow the selected filters.</div>
         </div>
 
         <div id="summaryCards" class="panel-card mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
 
         <div class="report-table-shell panel-card mt-5 overflow-x-auto rounded-3xl p-2">
-          <table id="reportPreviewTable" class="report-preview-table min-w-full border-separate border-spacing-y-2 text-left text-sm text-emerald-50/90">
+          <table id="reportPreviewTable" class="report-preview-table min-w-full border-collapse text-left text-sm text-emerald-50/90">
             <thead class="bg-[#06100b]">
               <tr id="reportTableHeader"></tr>
             </thead>
-            <tbody id="reportTableBody" class="divide-y divide-slate-800"></tbody>
+            <tbody id="reportTableBody"></tbody>
           </table>
         </div>
         <div id="reportPagination" class="mt-3 flex flex-wrap items-center justify-end gap-2"></div>
 
         <div id="reportEmptyState" class="report-empty-state mt-6 rounded-3xl px-5 py-8 text-center text-sm text-emerald-100/70">
-          No records found for the selected filters.
+          <i id="reportEmptyIcon" class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          <strong id="reportEmptyTitle">Loading report preview</strong>
+          <p id="reportEmptyMessage">Your preview will update automatically when data is ready.</p>
         </div>
       </section>
 
+      <div id="reportPdfPreviewModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="reportPdfPreviewTitle">
+        <div class="flex h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-emerald-800/30 bg-white text-slate-900 shadow-2xl">
+          <header class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3 sm:px-6">
+            <div class="min-w-0">
+              <h2 id="reportPdfPreviewTitle" class="font-semibold">PDF preview</h2>
+              <p id="reportPdfPreviewFilename" class="truncate text-xs text-slate-500"></p>
+            </div>
+            <button type="button" onclick="closeReportPdfPreview()" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold hover:bg-slate-100" aria-label="Close PDF preview">
+              <i class="fas fa-xmark" aria-hidden="true"></i> Close
+            </button>
+          </header>
+          <iframe id="reportPdfPreviewFrame" title="Generated report PDF preview" class="min-h-0 w-full flex-1 bg-slate-200"></iframe>
+          <footer class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 px-4 py-3 sm:px-6">
+            <button type="button" onclick="closeReportPdfPreview()" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100">Cancel</button>
+            <button type="button" onclick="downloadReportPdfPreview()" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+              <i class="fas fa-download" aria-hidden="true"></i> Download PDF
+            </button>
+          </footer>
+        </div>
+      </div>
+
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.0/jspdf.plugin.autotable.min.js"></script>
-      <script>
-        const hydrateAdminBadge = () => {
-          const sourceName = window.__CURRENT_USER_NAME__ || window.__CURRENT_USER__?.name || 'Administrator';
-          const displayName = String(sourceName || 'Administrator').trim() || 'Administrator';
-          const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'AD';
-
-          const avatarEl = document.getElementById('adminBadgeAvatar');
-          const nameEl = document.getElementById('adminBadgeName');
-          const roleEl = document.getElementById('adminBadgeRole');
-
-          if (avatarEl) avatarEl.textContent = initials;
-          if (nameEl) nameEl.textContent = displayName;
-          if (roleEl) roleEl.textContent = 'Admin';
-        };
-
-        const reportState = {
-          reportType: 'Equipment Inventory',
-          filters: {
-            campus: '',
-            laboratory: '',
-            status: '',
-            reportPeriod: 'all'
-          },
-          campusFilterExplicitlySet: false,
-          data: [],
-          filteredData: [],
-          isLoading: false,
-          generatedAt: '',
-          previewShown: false,
-          page: 1,
-          rowsPerPage: 6
-        };
-
-        const reportTypeOptions = [
-          'Equipment Inventory',
-          'Borrow Equipment',
-          'Attendance'
-        ];
-
-        const campusOptions = ['Bongabong Campus', 'Victoria Campus', 'Calapan Campus'];
-        const laboratoryOptions = ['Laboratory 1', 'Laboratory 2'];
-
-        const statusOptionsByReport = {
-          'Equipment Inventory': ['All Statuses', 'Serviceable', 'Unserviceable'],
-          'Borrow Equipment': ['All Statuses', 'Borrowed', 'Returned', 'Overdue'],
-          'Maintenance': ['All Statuses', 'Pending', 'In Progress', 'Resolved'],
-          'Attendance': ['All Statuses', 'Present', 'Late', 'Absent'],
-          'User Activity': ['All Activities', 'Login', 'Logout', 'Account Created', 'Account Updated']
-        };
-
-        const reportDefinitions = {
-          'Equipment Inventory': {
-            endpoint: '/api/reports',
-            title: 'Equipment Inventory Report',
-            columns: ['Equipment ID', 'Equipment Name', 'Laboratory', 'Campus', 'Status', 'Condition']
-          },
-          'Borrow Equipment': {
-            endpoint: '/api/reports',
-            title: 'Borrow Equipment Report',
-            columns: ['Borrower', 'Borrower Type', 'Equipment', 'Quantity', 'Borrow Date', 'Return Date', 'Status']
-          },
-          'Maintenance': {
-            endpoint: '/api/reports',
-            title: 'Maintenance Report',
-            columns: ['Equipment', 'Damage Description', 'Priority', 'Technician', 'Date Reported', 'Status']
-          },
-          'Attendance': {
-            endpoint: '/api/reports',
-            title: 'Attendance Report',
-            columns: ['Student', 'Laboratory', 'Date', 'Time In', 'Time Out', 'Status']
-          },
-          'User Activity': {
-            endpoint: '/api/reports',
-            title: 'User Activity Report',
-            columns: ['User', 'Role', 'Activity', 'Date', 'Time']
-          }
-        };
-
-        const getReportPeriodLabel = (value) => {
-          const labels = {
-            all: 'All Records',
-            today: 'Today',
-            week: 'This Week',
-            month: 'This Month',
-            semester: 'This Semester',
-            'school-year': 'This School Year'
-          };
-          return labels[value] || 'All Records';
-        };
-
-        const getCellValue = (record, key) => {
-          switch (key) {
-            case 'Equipment ID': return record.equipmentId || record.id || '—';
-            case 'Equipment Name': return record.name || record.equipmentName || record.equipment && record.equipment.name || '—';
-            case 'Laboratory': return record.laboratoryRoom || record.lab || record.laboratory_room || record.laboratory || '—';
-            case 'Campus': return record.campus || '—';
-            case 'Condition': return record.condition || record.status || '—';
-            case 'Status': return record.status || record.role || '—';
-            case 'Borrower': return record.borrowerName || record.name || record.fullName || '—';
-            case 'Borrower Type': return record.borrowerType || '—';
-            case 'Quantity': return record.quantity != null ? record.quantity : '—';
-            case 'Borrow Date': return record.borrowDate || '—';
-            case 'Return Date': return record.returnDate || record.expectedReturnDate || '—';
-            case 'Equipment': return record.equipmentName || record.name || record.equipment && record.equipment.name || '—';
-            case 'Damage Description': return record.damageDescription || record.issueTitle || record.description || '—';
-            case 'Priority': return record.priority || 'Normal';
-            case 'Technician': return record.technicianName || record.technician && record.technician.name || 'Unassigned';
-            case 'Date Reported': return record.dateReported || record.date || record.createdAt || '—';
-            case 'Student': return record.fullName || record.borrowerName || record.name || '—';
-            case 'Time In': return record.timeIn || record.time || '—';
-            case 'Time Out': return record.timeOut || '—';
-            case 'Activity': return record.activity || '—';
-            case 'User': return record.user || record.name || '—';
-            case 'Role': return record.role || '—';
-            case 'Date': return record.date || record.createdAt || '—';
-            case 'Time': return record.time || record.timeIn || '—';
-            default: return '—';
-          }
-        };
-
-        const formatCell = (value) => {
-          if (typeof value !== 'string') return value ?? '—';
-          return value || '—';
-        };
-
-        const getReportSummary = (rows) => {
-          if (!rows.length) return [];
-
-          if (reportState.reportType === 'Equipment Inventory') {
-            const serviceable = rows.filter((row) => String(row.status || row.condition || '').toLowerCase() === 'serviceable').length;
-            const unserviceable = rows.filter((row) => String(row.status || row.condition || '').toLowerCase() === 'unserviceable').length;
-            const lost = rows.filter((row) => String(row.status || '').toLowerCase() === 'lost').length;
-            return [
-              { label: 'Total Records', value: rows.length },
-              { label: 'Serviceable', value: serviceable },
-              { label: 'Unserviceable', value: unserviceable },
-              { label: 'Lost', value: lost }
-            ];
-          }
-
-          if (reportState.reportType === 'Borrow Equipment') {
-            const borrowed = rows.filter((row) => String(row.status || '').toLowerCase().includes('borrowed')).length;
-            const returned = rows.filter((row) => String(row.status || '').toLowerCase().includes('returned')).length;
-            return [
-              { label: 'Total Records', value: rows.length },
-              { label: 'Borrowed', value: borrowed },
-              { label: 'Returned', value: returned }
-            ];
-          }
-
-          if (reportState.reportType === 'Maintenance') {
-            const pending = rows.filter((row) => String(row.status || '').toLowerCase().includes('pending')).length;
-            const inProgress = rows.filter((row) => String(row.status || '').toLowerCase().includes('progress')).length;
-            const resolved = rows.filter((row) => String(row.status || '').toLowerCase().includes('resolved')).length;
-            return [
-              { label: 'Total Records', value: rows.length },
-              { label: 'Pending', value: pending },
-              { label: 'Resolved', value: resolved },
-              { label: 'In Progress', value: inProgress }
-            ];
-          }
-
-          if (reportState.reportType === 'Attendance') {
-            const present = rows.filter((row) => String(row.status || '').toLowerCase().includes('present')).length;
-            const absent = rows.filter((row) => String(row.status || '').toLowerCase().includes('absent')).length;
-            const late = rows.filter((row) => String(row.status || '').toLowerCase().includes('late')).length;
-            return [
-              { label: 'Total Records', value: rows.length },
-              { label: 'Present', value: present },
-              { label: 'Absent', value: absent },
-              { label: 'Late', value: late }
-            ];
-          }
-
-          const created = rows.filter((row) => String(row.activity || '').toLowerCase().includes('created')).length;
-          const updated = rows.filter((row) => String(row.activity || '').toLowerCase().includes('updated')).length;
-          return [
-            { label: 'Total Records', value: rows.length },
-            { label: 'Created', value: created },
-            { label: 'Updated', value: updated }
-          ];
-        };
-
-        const renderReportStatus = () => {
-          const statusText = document.getElementById('reportCountText');
-          const generatedMeta = document.getElementById('previewGeneratedAt');
-          if (!statusText) return;
-
-          if (reportState.isLoading) {
-            statusText.textContent = 'Generating report from the database...';
-            if (generatedMeta) generatedMeta.textContent = '';
-            return;
-          }
-
-          if (!reportState.previewShown) {
-            statusText.textContent = '';
-            if (generatedMeta) generatedMeta.textContent = '';
-            return;
-          }
-
-          if (reportState.campusRestricted) {
-            statusText.textContent = 'Campus access restricted for ' + (reportState.restrictedCampus || 'this campus') + '. Viewing total count only.';
-            if (generatedMeta) generatedMeta.textContent = reportState.generatedAt ? 'Generated ' + reportState.generatedAt : '';
-            return;
-          }
-
-          if (!reportState.filteredData.length) {
-            statusText.textContent = 'No records found for the selected filters.';
-            if (generatedMeta) generatedMeta.textContent = reportState.generatedAt ? 'Generated ' + reportState.generatedAt : '';
-            return;
-          }
-
-          if (reportState.reportType === 'Equipment Inventory') {
-            statusText.textContent = '';
-          } else {
-            const count = reportState.filteredData.length;
-            statusText.textContent = count + ' record' + (count === 1 ? '' : 's') + ' found for ' + reportState.reportType + '.';
-          }
-          if (generatedMeta) generatedMeta.textContent = reportState.generatedAt ? 'Generated ' + reportState.generatedAt : '';
-        };
-
-        const setGenerateButtonState = (disabled) => {
-          const button = document.getElementById('generateReportButton');
-          const spinner = document.getElementById('generateReportSpinner');
-          const buttonText = document.getElementById('generateReportButtonText');
-          if (!button || !spinner || !buttonText) return;
-          button.disabled = disabled;
-          spinner.classList.toggle('hidden', !disabled);
-          buttonText.textContent = disabled ? 'Generating...' : 'Generate Report';
-          button.classList.toggle('opacity-60', disabled);
-          button.classList.toggle('cursor-not-allowed', disabled);
-        };
-
-        const updateFilterOptions = () => {
-          const reportTypeSelect = document.getElementById('reportTypeSelect');
-          const campusSelect = document.getElementById('campusFilter');
-          const labSelect = document.getElementById('laboratoryFilter');
-          const statusSelect = document.getElementById('statusFilter');
-
-          reportTypeSelect.innerHTML = reportTypeOptions.map(function(value) {
-            return '<option value="' + value + '">' + value + '</option>';
-          }).join('');
-          reportTypeSelect.value = reportState.reportType;
-
-          const currentUserCampus = getCurrentUserCampus();
-          const currentUserRole = String(window.__CURRENT_USER__?.role || '').trim().toLowerCase().replace(/[_-]+/g, '');
-          const canViewAllCampuses = ['superadmin', 'centraladmin', 'systemadmin'].includes(currentUserRole);
-          const availableCampuses = ['All Campuses'].concat(campusOptions);
-          campusSelect.innerHTML = availableCampuses.map(function(value) {
-            return '<option value="' + value + '">' + value + '</option>';
-          }).join('');
-          campusSelect.disabled = false;
-
-          labSelect.innerHTML = '<option value="">All Laboratories</option>' + laboratoryOptions.map(function(value) {
-            return '<option value="' + value + '">' + value + '</option>';
-          }).join('');
-
-          const statusOptions = statusOptionsByReport[reportState.reportType] || ['All Statuses'];
-          statusSelect.innerHTML = statusOptions.map(function(value, index) {
-            return '<option value="' + (index === 0 ? '' : value) + '">' + value + '</option>';
-          }).join('');
-
-          campusSelect.value = reportState.filters.campus || (currentUserCampus && !canViewAllCampuses ? currentUserCampus + ' Campus' : 'All Campuses');
-          labSelect.value = reportState.filters.laboratory;
-          statusSelect.value = reportState.filters.status;
-          reportTypeSelect.value = reportState.reportType;
-        };
-
-        const renderReportHeader = () => {
-          const titleEl = document.getElementById('previewReportTitle');
-          const definition = reportDefinitions[reportState.reportType];
-          if (titleEl) titleEl.textContent = definition.title;
-        };
-
-        const setExportButtonsRestricted = (isRestricted) => {
-          const exportButtons = Array.from(document.querySelectorAll('button')).filter((button) => {
-            const label = (button.textContent || '').replace(/\s+/g, ' ').trim();
-            return label === 'Export PDF' || label === 'Print Report';
-          });
-
-          exportButtons.forEach((button) => {
-            button.disabled = isRestricted;
-            button.setAttribute('aria-disabled', String(isRestricted));
-            button.classList.toggle('opacity-50', isRestricted);
-            button.classList.toggle('cursor-not-allowed', isRestricted);
-            button.style.pointerEvents = isRestricted ? 'none' : '';
-          });
-        };
-
-        const renderSummaryCards = () => {
-          const container = document.getElementById('summaryCards');
-          if (!container) return;
-
-          const summarySource = reportState.campusRestricted ? reportState.data : reportState.filteredData;
-          const summary = reportState.campusRestricted
-            ? [{ label: 'Total Records', value: Number(reportState.campusTotal || 0) }]
-            : getReportSummary(summarySource || []);
-          if (!summary.length) {
-            container.innerHTML = '';
-            return;
-          }
-          container.innerHTML = summary.map(function(item) {
-            return '<div class="rounded-3xl border border-emerald-800/60 bg-[#0b1a13]/90 p-3 shadow-[0_8px_18px_rgba(6,64,43,.14)]"><p class="text-xs uppercase tracking-[0.3em] text-emerald-100/70">' + item.label + '</p><p class="mt-1.5 text-2xl font-semibold text-white">' + item.value + '</p></div>';
-          }).join('');
-        };
-
-        const renderReportTable = () => {
-          const definition = reportDefinitions[reportState.reportType];
-          const headerRow = document.getElementById('reportTableHeader');
-          const body = document.getElementById('reportTableBody');
-          const emptyState = document.getElementById('reportEmptyState');
-          if (!headerRow || !body || !emptyState) return;
-          headerRow.innerHTML = '';
-          body.innerHTML = '';
-
-          definition.columns.forEach((column) => {
-            const th = document.createElement('th');
-            th.className = 'px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/70';
-            th.textContent = column;
-            headerRow.appendChild(th);
-          });
-
-          if (!reportState.previewShown) {
-            emptyState.style.display = 'block';
-            return;
-          }
-
-          if (reportState.campusRestricted) {
-            emptyState.style.display = 'none';
-            const campusName = reportState.restrictedCampus || 'Selected Campus';
-            const campusLabel = String(campusName).toUpperCase() + ' CAMPUS TOTAL';
-            const totalRecords = Number(reportState.campusTotal || reportState.data.length || 0);
-            const safeCampusName = String(campusName).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            body.innerHTML = '<tr><td colspan="' + definition.columns.length + '" class="px-5 py-6 text-center"><div class="bg-red-950/20 border border-red-500/30 rounded-xl p-6 text-center max-w-lg mx-auto shadow-lg shadow-red-950/30 backdrop-blur-md"><div class="text-red-200 font-black text-lg uppercase tracking-[0.18em]">' + campusLabel + '</div><div class="mt-3 text-3xl font-black text-white">Total Records: ' + totalRecords + '</div><p class="mt-4 text-sm leading-6 text-red-100/85">Access Restricted: Detailed report records and individual item information are unavailable for ' + safeCampusName + '.</p></div></td></tr>';
-            return;
-          }
-
-          if (!reportState.filteredData.length) {
-            emptyState.style.display = 'block';
-            return;
-          }
-
-          emptyState.style.display = 'none';
-          const totalPages = Math.max(1, Math.ceil(reportState.filteredData.length / reportState.rowsPerPage));
-          reportState.page = Math.min(Math.max(1, reportState.page || 1), totalPages);
-          const startIndex = (reportState.page - 1) * reportState.rowsPerPage;
-          const pageRows = reportState.filteredData.slice(startIndex, startIndex + reportState.rowsPerPage);
-
-          pageRows.forEach((record) => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-emerald-500/10';
-            definition.columns.forEach((column) => {
-              const td = document.createElement('td');
-              td.className = 'px-4 py-4 align-top text-sm text-emerald-50/90';
-              td.textContent = formatCell(getCellValue(record, column));
-              row.appendChild(td);
-            });
-            body.appendChild(row);
-          });
-        };
-
-        const renderReportPagination = () => {
-          const paginationContainer = document.getElementById('reportPagination');
-          if (!paginationContainer) return;
-
-          const totalPages = Math.max(1, Math.ceil((reportState.filteredData?.length || 0) / reportState.rowsPerPage));
-          reportState.page = Math.min(Math.max(1, reportState.page || 1), totalPages);
-
-          paginationContainer.innerHTML = '';
-          if (!reportState.previewShown || !reportState.filteredData.length || totalPages <= 1) {
-            return;
-          }
-
-          const createButton = (label, page, isActive, isDisabled) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = label;
-            button.className = isActive
-              ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500 bg-emerald-600 font-bold text-white shadow-sm transition'
-              : 'rounded-lg border border-emerald-800/40 bg-emerald-950/40 px-3 py-1.5 text-sm text-emerald-300 transition hover:bg-emerald-900/60';
-            if (isDisabled) {
-              button.disabled = true;
-              button.classList.add('cursor-not-allowed', 'opacity-40');
-            } else {
-              button.addEventListener('click', () => {
-                reportState.page = page;
-                renderReportPreview();
-              });
-            }
-            return button;
-          };
-
-          paginationContainer.appendChild(createButton('Previous', reportState.page - 1, false, reportState.page <= 1));
-
-          const maxVisiblePages = 3;
-          const startPage = Math.max(1, Math.min(reportState.page - 1, totalPages - maxVisiblePages + 1));
-          const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-          for (let page = startPage; page <= endPage; page += 1) {
-            paginationContainer.appendChild(createButton(String(page), page, page === reportState.page, false));
-          }
-
-          paginationContainer.appendChild(createButton('Next', reportState.page + 1, false, reportState.page >= totalPages));
-        };
-
-        const renderReportPreview = () => {
-          renderReportHeader();
-          renderSummaryCards();
-          renderReportTable();
-          renderReportPagination();
-          renderReportStatus();
-          setExportButtonsRestricted(Boolean(reportState.campusRestricted));
-        };
-
-        const normalizeCampusKey = (value) => {
-          const trimmed = String(value || '').trim();
-          if (!trimmed || /^all\s+campuses?$/i.test(trimmed)) {
-            return '';
-          }
-          return trimmed.replace(/\s*campus\s*$/i, '').trim().toLowerCase();
-        };
-
-        const getCurrentUserCampus = () => normalizeCampusKey(window.__CURRENT_USER__?.campus || '');
-
-        const getRecordCampusValue = (record) => {
-          if (!record) return '';
-          const candidates = [
-            record.campus,
-            record.equipment?.campus,
-            record?.laboratoryCampus,
-            record?.labCampus,
-            record?.campusName,
-            record?.schoolCampus,
-            record?.campus_name,
-            record?.laboratory_room
-          ];
-
-          for (const value of candidates) {
-            if (value !== null && value !== undefined && String(value).trim()) {
-              return String(value).trim();
-            }
-          }
-
-          return '';
-        };
-
-        const applyCampusAccessRules = (records, meta = {}) => {
-          const data = Array.isArray(records) ? records : [];
-          const selectedCampus = reportState.filters.campus || 'All Campuses';
-          const userCampus = getCurrentUserCampus();
-
-          if (meta && meta.restricted) {
-            return {
-              visibleRows: [],
-              campusTotal: Number(meta.campusTotal || 0),
-              isRestricted: true,
-              restrictedCampus: meta.restrictedCampus || selectedCampus
-            };
-          }
-
-          const normalizedSelectedCampus = normalizeCampusKey(selectedCampus);
-          const hasExplicitCampusSelection = Boolean(reportState.campusFilterExplicitlySet && normalizedSelectedCampus);
-
-          if (!userCampus) {
-            return { visibleRows: data, campusTotal: Number(meta.campusTotal || data.length || 0), isRestricted: false, restrictedCampus: '' };
-          }
-
-          if (!normalizedSelectedCampus) {
-            return {
-              visibleRows: data,
-              campusTotal: Number(meta.campusTotal || data.length || 0),
-              isRestricted: false,
-              restrictedCampus: ''
-            };
-          }
-
-          if (normalizedSelectedCampus !== userCampus) {
-            return {
-              visibleRows: [],
-              campusTotal: Number(meta.campusTotal || data.length || 0),
-              isRestricted: true,
-              restrictedCampus: selectedCampus
-            };
-          }
-
-          const visibleRows = data.filter((row) => {
-            const recordCampus = normalizeCampusKey(getRecordCampusValue(row));
-            return !recordCampus || recordCampus === userCampus;
-          });
-
-          return {
-            visibleRows: hasExplicitCampusSelection ? visibleRows : visibleRows,
-            campusTotal: Number(meta.campusTotal || data.length || 0),
-            isRestricted: false,
-            restrictedCampus: ''
-          };
-        };
-
-        const renderFilterStatus = () => {
-          const statusLabel = document.getElementById('statusFilterLabel');
-          if (!statusLabel) return;
-          if (reportState.reportType === 'User Activity') {
-            statusLabel.textContent = 'Activity';
-          } else {
-            statusLabel.textContent = 'Status';
-          }
-        };
-
-        const loadReportData = async () => {
-          const definition = reportDefinitions[reportState.reportType];
-          const params = new URLSearchParams();
-          params.set('reportType', reportState.reportType);
-          params.set('campus', reportState.filters.campus || 'All Campuses');
-          if (reportState.filters.laboratory) params.set('laboratory', reportState.filters.laboratory);
-          if (reportState.filters.status) params.set('status', reportState.filters.status);
-          params.set('reportPeriod', reportState.filters.reportPeriod || 'all');
-
-          reportState.isLoading = true;
-          reportState.data = [];
-          reportState.filteredData = [];
-          reportState.previewShown = false;
-          reportState.generatedAt = '';
-          reportState.campusRestricted = false;
-          reportState.campusTotal = 0;
-          reportState.restrictedCampus = '';
-          reportState.page = 1;
-          setGenerateButtonState(true);
-          renderReportPreview();
-
-          try {
-            const url = definition.endpoint + '?' + params.toString();
-            console.log('[Report] Loading data from:', url);
-            
-            const response = await fetch(url);
-            if (!response.ok) {
-              console.error('[Report] API error:', response.status, response.statusText);
-              throw new Error('Failed to load report data: ' + response.status);
-            }
-            
-            const payload = await response.json();
-            const rawRecords = Array.isArray(payload)
-              ? payload
-              : Array.isArray(payload?.records)
-                ? payload.records
-                : [];
-            const payloadMeta = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload.meta || {} : {};
-            console.log('[Report] Received', rawRecords.length || 0, 'records');
-            console.log('[Report] Report Type:', reportState.reportType);
-            console.log('[Report] First record sample:', rawRecords[0]);
-            console.log('[Report] Payload meta:', payloadMeta);
-
-            const accessState = applyCampusAccessRules(rawRecords, payloadMeta);
-
-            console.log('[Report] After campus access rules:', {
-              rawCount: rawRecords.length,
-              visibleCount: accessState.visibleRows.length,
-              isRestricted: accessState.isRestricted,
-              campusTotal: accessState.campusTotal
-            });
-
-            reportState.data = rawRecords;
-            reportState.filteredData = accessState.visibleRows;
-            reportState.campusRestricted = accessState.isRestricted || Boolean(payloadMeta.restricted);
-            reportState.campusTotal = Number(accessState.campusTotal || payloadMeta.campusTotal || rawRecords.length || 0);
-            reportState.restrictedCampus = accessState.restrictedCampus || payloadMeta.restrictedCampus || '';
-            reportState.generatedAt = new Date().toLocaleString();
-            reportState.previewShown = true;
-            reportState.isLoading = false;
-            renderReportPreview();
-            renderFilterStatus();
-          } catch (error) {
-            console.error('[Report] Error loading report:', error);
-            reportState.isLoading = false;
-            reportState.data = [];
-            reportState.filteredData = [];
-            reportState.campusRestricted = false;
-            reportState.campusTotal = 0;
-            reportState.restrictedCampus = '';
-            reportState.previewShown = true;
-            reportState.generatedAt = new Date().toLocaleString();
-            renderReportPreview();
-          } finally {
-            setGenerateButtonState(false);
-          }
-        };
-
-        const handleReportTypeChange = () => {
-          reportState.reportType = document.getElementById('reportTypeSelect').value;
-          reportState.rowsPerPage = reportState.reportType === 'Attendance' ? 4 : 6;
-          reportState.filters.status = '';
-          reportState.filters.campus = '';
-          reportState.filters.laboratory = '';
-          reportState.filters.reportPeriod = 'all';
-          reportState.campusFilterExplicitlySet = false;
-          reportState.page = 1;
-          document.getElementById('campusFilter').value = 'All Campuses';
-          document.getElementById('laboratoryFilter').value = '';
-          document.getElementById('statusFilter').value = '';
-          document.getElementById('reportPeriodFilter').value = 'all';
-          updateFilterOptions();
-          renderFilterStatus();
-          renderReportPreview();
-        };
-
-        const handleFilterChange = (changedFilter) => {
-          reportState.filters.campus = document.getElementById('campusFilter').value;
-          reportState.filters.laboratory = document.getElementById('laboratoryFilter').value;
-          reportState.filters.status = document.getElementById('statusFilter').value;
-          reportState.filters.reportPeriod = document.getElementById('reportPeriodFilter').value || 'all';
-          if (changedFilter === 'campus') {
-            reportState.campusFilterExplicitlySet = true;
-            loadReportData();
-          }
-          reportState.page = 1;
-        };
-
-        const normalizePdfValue = (value, column) => {
-          let text = value === null || value === undefined ? '' : String(value).replace(/\s+/g, ' ').trim();
-          if ((column === 'Status' || column === 'Condition') && /un\s*serviceable/i.test(text)) {
-            text = 'Unserviceable';
-          }
-          return text;
-        };
-
-        const handleGenerateReport = (event) => {
-          event.preventDefault();
-          loadReportData();
-        };
-
-        hydrateAdminBadge();
-
-        const buildPdfHtml = () => {
-          const definition = reportDefinitions[reportState.reportType];
-          const headers = definition.columns;
-          const rows = reportState.filteredData.map((record) => headers.map((column) => normalizePdfValue(getCellValue(record, column), column)));
-          const selectedFilters = [
-            reportState.filters.campus ? 'Campus: ' + reportState.filters.campus : null,
-            reportState.filters.laboratory ? 'Laboratory: ' + reportState.filters.laboratory : null,
-            reportState.filters.status ? 'Status: ' + reportState.filters.status : null,
-            reportState.filters.reportPeriod ? 'Report Period: ' + getReportPeriodLabel(reportState.filters.reportPeriod) : null
-          ].filter(Boolean);
-          const headerCells = headers.map(function(col) { return '<th>' + String(col).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</th>'; }).join('');
-          const rowCells = rows.map(function(row) {
-            return '<tr>' + row.map(function(cell) { return '<td>' + String(cell).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</td>'; }).join('') + '</tr>';
-          }).join('');
-          const preparedBy = window.__CURRENT_USER_NAME__ || 'Administrator';
-          return '<!DOCTYPE html><html><head><meta charset="utf-8" /><title>' + definition.title + '</title><style>body{font-family:Inter, Arial, sans-serif; background:#f8fafc; color:#0f172a; padding:24px;} .header{border-bottom:2px solid #16a34a; padding-bottom:12px; margin-bottom:16px;} .muted{color:#64748b;} table{width:100%; border-collapse:collapse; margin-top:16px;} th,td{border:1px solid #dbe3eb; padding:10px; text-align:left; font-size:12px;} th{background:#0f172a; color:#fff;} th:nth-child(4), td:nth-child(4){min-width:90px;} th:nth-child(4), th:nth-child(5), th:nth-child(6), td:nth-child(5), td:nth-child(6){white-space:nowrap;} .pill{display:inline-block; border-radius:999px; background:#dcfce7; color:#166534; padding:4px 10px; font-size:12px; margin-right:8px; margin-top:8px;} .section{margin-bottom:12px;}</style></head><body><div class="header"><h1 style="margin:0 0 6px 0; color:#0f172a;">Mindoro State University</h1><div class="muted">College of Computer Studies</div><div class="muted">Computer Laboratory Facilities Management System</div></div><div class="section"><h2 style="margin:0 0 6px 0;">' + definition.title + '</h2><div class="muted">Date Generated: ' + (reportState.generatedAt || new Date().toLocaleString()) + '</div></div><div class="section"><div><strong>Applied Filters</strong></div><div>' + (selectedFilters.length ? selectedFilters.map(function(filter) { return '<span class="pill">' + filter + '</span>'; }).join('') : '<span class="pill">None</span>') + '</div></div><div class="section"><strong>Total Records:</strong> ' + rows.length + '</div><div class="section"><strong>Prepared By:</strong> ' + preparedBy + '</div><table><thead><tr>' + headerCells + '</tr></thead><tbody>' + rowCells + '</tbody></table></body></html>';
-        };
-
-        const buildPdfData = () => {
-          const definition = reportDefinitions[reportState.reportType];
-          const headers = definition.columns;
-          const rows = reportState.filteredData.map((record) => headers.map((column) => normalizePdfValue(getCellValue(record, column), column)));
-          const selectedFilters = [
-            reportState.filters.campus ? 'Campus: ' + reportState.filters.campus : null,
-            reportState.filters.laboratory ? 'Laboratory: ' + reportState.filters.laboratory : null,
-            reportState.filters.status ? 'Status: ' + reportState.filters.status : null,
-            reportState.filters.reportPeriod ? 'Report Period: ' + getReportPeriodLabel(reportState.filters.reportPeriod) : null
-          ].filter(Boolean);
-
-          return { definition, headers, rows, selectedFilters };
-        };
-
-        function exportReport(format) {
-          if (reportState.campusRestricted) {
-            alert('You can view the total record count for this campus, but you are not allowed to view the detailed records.');
-            return;
-          }
-
-          if (!reportState.previewShown || !reportState.filteredData.length) {
-            alert('No records found for the selected filters.');
-            return;
-          }
-
-          if (format === 'print') {
-            const printWindow = window.open('', '_blank', 'width=900,height=700');
-            if (!printWindow) {
-              alert('Please allow popups to print the report.');
-              return;
-            }
-
-            printWindow.document.write(buildPdfHtml());
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-            return;
-          }
-
-          if (format === 'pdf') {
-            const pdfLib = window.jspdf && window.jspdf.jsPDF;
-            if (!pdfLib) {
-              const printWindow = window.open('', '_blank', 'width=900,height=700');
-              if (!printWindow) {
-                alert('Please allow popups so the report can be printed as PDF.');
-                return;
-              }
-
-              printWindow.document.write(buildPdfHtml());
-              printWindow.document.close();
-              printWindow.focus();
-              printWindow.print();
-              return;
-            }
-
-            const { definition, headers, rows, selectedFilters } = buildPdfData();
-            const preparedBy = window.__CURRENT_USER_NAME__ || 'Administrator';
-            const normalizePdfValue = (value, column) => {
-              let text = value === null || value === undefined ? '' : String(value).replace(/\s+/g, ' ').trim();
-              if ((column === 'Status' || column === 'Condition') && /un\s*serviceable/i.test(text)) {
-                text = 'Unserviceable';
-              }
-              return text;
-            };
-            const safeText = (value) => {
-              if (value === null || value === undefined) return '';
-              return String(value).replace(/\s+/g, ' ').trim();
-            };
-
-            const doc = new pdfLib({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 40;
-            const cellPadding = 4;
-            const footerHeight = 28;
-            const tableFontSize = 8.7;
-
-            const preparedByText = preparedBy;
-
-            const safeTextMeasure = (v) => {
-              if (v === null || v === undefined) return '';
-              return String(v).replace(/\s+/g, ' ').trim();
-            };
-
-            // Colors (emerald accents)
-            const emeraldDeep = [15,56,30]; // #0f381e
-            const emeraldText = [6,78,59]; // #064e3b
-            const emeraldDivider = [16,185,129]; // #10b981
-
-            // Institutional header (centered)
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(18);
-            doc.setTextColor(...emeraldText);
-            doc.text('MINDORO STATE UNIVERSITY', pageWidth / 2, 56, { align: 'center' });
-
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            doc.setTextColor(100);
-            doc.text('College of Computer Studies', pageWidth / 2, 76, { align: 'center' });
-            doc.text('Computer Laboratory Facilities Management System', pageWidth / 2, 92, { align: 'center' });
-
-            // divider (emerald)
-            const dividerY = 106; // header -> divider spacing
-            doc.setDrawColor(...emeraldDivider);
-            doc.setLineWidth(2);
-            doc.line(margin, dividerY, pageWidth - margin, dividerY);
-
-            // Report title (positioned with spacing)
-            const titleY = dividerY + 16; // margin-top:16
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(14);
-            doc.setTextColor(...emeraldText);
-            doc.text((definition.title || '').toUpperCase(), pageWidth / 2, titleY, { align: 'center' });
-
-            // Metadata box (two-column) with light emerald tint
-            const metaTop = titleY + 12; // title margin-bottom:12
-            const metaBoxHeight = 66;
-            doc.setFillColor(240,253,244); // #f0fdf4
-            doc.setDrawColor(209,250,229); // #d1fae5
-            doc.setLineWidth(1);
-            doc.rect(margin, metaTop, pageWidth - margin * 2, metaBoxHeight, 'FD');
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(60);
-            const midX = margin + (pageWidth - margin * 2) / 2;
-
-            const isAttendance = ((reportState.reportType || '').toLowerCase().includes('attendance')) || ((definition.title || '').toLowerCase().includes('attendance'));
-            if (isAttendance) {
-              // Attempt to extract class/session info from data
-              const sample = (reportState.filteredData && reportState.filteredData.length) ? reportState.filteredData[0] : {};
-              const subject = sample.subject || sample.course || sample.title || sample.equipmentName || '';
-              const instructor = sample.instructor || sample.instructorName || sample.teacher || sample.preparedBy || '';
-              const dateLabel = sample.date || sample.sessionDate || reportState.generatedAt || new Date().toLocaleDateString();
-              const timeLabel = (sample.time || (sample.startTime && sample.endTime ? (sample.startTime + ' - ' + sample.endTime) : '')) || '';
-
-              // Left column: Subject / Instructor / Date & Time
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...emeraldDeep);
-              doc.text('Subject:', margin + 8, metaTop + 16);
-              doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(40);
-              doc.text(String(subject || '—'), margin + 70, metaTop + 16, { maxWidth: (pageWidth - margin * 2) / 2 - 90 });
-
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...emeraldDeep);
-              doc.text('Instructor:', margin + 8, metaTop + 34);
-              doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(40);
-              doc.text(String(instructor || '—'), margin + 70, metaTop + 34, { maxWidth: (pageWidth - margin * 2) / 2 - 90 });
-
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...emeraldDeep);
-              doc.text('Date & Time:', margin + 8, metaTop + 52);
-              doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(40);
-              doc.text(String((dateLabel || '') + (timeLabel ? ' • ' + timeLabel : '')), margin + 110, metaTop + 52, { maxWidth: (pageWidth - margin * 2) / 2 - 120 });
-
-              // Right column: Present / Absent / Late counts
-              const summary = getReportSummary(reportState.filteredData || []);
-              const presentItem = summary.find(s=>/present/i.test(s.label));
-              const absentItem = summary.find(s=>/absent/i.test(s.label));
-              const lateItem = summary.find(s=>/late/i.test(s.label));
-              const presentCount = presentItem ? presentItem.value : 0;
-              const absentCount = absentItem ? absentItem.value : 0;
-              const lateCount = lateItem ? lateItem.value : 0;
-
-              const badgeX = midX + 12;
-              const badgeY = metaTop + 18;
-              const badgeW = 120;
-              const badgeH = 18;
-
-              // Present badge
-              doc.setFillColor(220,252,231); // #dcfce7
-              doc.setDrawColor(220,252,231);
-              doc.rect(badgeX, badgeY - 12, badgeW, badgeH, 'F');
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(21,128,61); // #15803d
-              doc.text('Present: ' + presentCount, badgeX + 8, badgeY + 2);
-
-              // Absent badge
-              doc.setFillColor(255,228,230); // #ffe4e6
-              doc.setDrawColor(255,228,230);
-              doc.rect(badgeX, badgeY + 8, badgeW, badgeH, 'F');
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(185,28,28); // #b91c1c
-              doc.text('Absent: ' + absentCount, badgeX + 8, badgeY + 22);
-
-              // Late badge
-              doc.setFillColor(254,243,199); // #fef3c7
-              doc.setDrawColor(254,243,199);
-              doc.rect(badgeX + badgeW + 8, badgeY - 12, badgeW, badgeH, 'F');
-              doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(180,83,9); // #b45309
-              doc.text('Late: ' + lateCount, badgeX + badgeW + 8 + 8, badgeY + 2);
-
-            } else {
-              doc.text('Date Generated:', margin + 8, metaTop + 14);
-              doc.text(reportState.generatedAt || new Date().toLocaleString(), margin + 110, metaTop + 14);
-              doc.text('Prepared By:', midX + 8, metaTop + 14);
-              doc.text(preparedByText, midX + 110, metaTop + 14);
-              const filtersText = (selectedFilters && selectedFilters.length) ? selectedFilters.join(' • ') : 'None';
-              doc.text('Applied Filters:', margin + 8, metaTop + 34);
-              doc.text(filtersText, margin + 110, metaTop + 34, { maxWidth: (pageWidth - margin * 2) / 2 - 120 });
-              doc.text('Total Records:', midX + 8, metaTop + 34);
-              doc.text(String(rows.length), midX + 110, metaTop + 34);
-            }
-
-            // Prepare table metrics
-            const startYBase = metaTop + metaBoxHeight + 20; // metadata margin-bottom:20
-
-            const availWidth = pageWidth - margin * 2;
-
-            // If this is the equipment inventory report, use explicit percentages
-            let columnWidths = [];
-            if ((reportState.reportType || '').toLowerCase().includes('attendance') || (definition.title || '').toLowerCase().includes('attendance')) {
-              // Attendance columns: Student, Laboratory, Date, Time In, Time Out, Status
-              const percents = [0.28, 0.20, 0.16, 0.12, 0.12, 0.12];
-              columnWidths = headers.map((h, i) => Math.floor(availWidth * (percents[i] || (1 / headers.length))));
-              const assigned = columnWidths.reduce((a,b)=>a+b,0);
-              if (assigned < availWidth) columnWidths[columnWidths.length-1] += (availWidth - assigned);
-            } else if ((reportState.reportType || '').toLowerCase().includes('equipment') || (definition.title || '').toLowerCase().includes('equipment')) {
-              // Equipment columns: Equipment ID, Equipment Name, Laboratory, Campus, Status, Condition
-              const percents = [0.12, 0.22, 0.10, 0.24, 0.16, 0.16];
-              columnWidths = headers.map((h, i) => Math.floor(availWidth * (percents[i] || (1 / headers.length))));
-              const minHeaderWidths = headers.map((h, i) => Math.ceil(doc.getTextWidth(String(h || '').toUpperCase()) + cellPadding * 4));
-              columnWidths = columnWidths.map((width, i) => Math.max(width, minHeaderWidths[i]));
-              let assigned = columnWidths.reduce((a, b) => a + b, 0);
-              if (assigned < availWidth) columnWidths[columnWidths.length - 1] += (availWidth - assigned);
-              if (assigned > availWidth) columnWidths[columnWidths.length - 1] -= (assigned - availWidth);
-            } else {
-              // fallback: proportional widths based on content
-              const colWeights = headers.map((h, ci) => {
-                const headerLen = String(h || '').length;
-                const maxCellLen = rows.reduce((m, r) => Math.max(m, String(r[ci] || '').length), 0);
-                return Math.max(headerLen, maxCellLen, 4);
-              });
-              const totalWeight = colWeights.reduce((a, b) => a + b, 0) || 1;
-              columnWidths = colWeights.map(w => Math.max(60, Math.min(400, Math.floor(availWidth * (w / totalWeight)))));
-              const assigned = columnWidths.reduce((a, b) => a + b, 0);
-              if (assigned < availWidth) columnWidths[columnWidths.length - 1] += (availWidth - assigned);
-              if (assigned > availWidth) columnWidths[columnWidths.length - 1] -= (assigned - availWidth);
-            }
-
-            const rowHeight = 24;
-            let currentY = startYBase;
-
-            const statusColIndex = headers.findIndex(h => /status/i.test(String(h || '')));
-
-            const wrapCellText = (text, maxWidth) => {
-              if (text === null || text === undefined || text === '') return [''];
-              const normalized = String(text).replace(/\s+/g, ' ').trim();
-              if (!normalized) return [''];
-              return doc.splitTextToSize(normalized, Math.max(18, maxWidth));
-            };
-
-            const drawHeaderRow = () => {
-              const headerY = currentY;
-              doc.setFillColor(...emeraldDeep);
-              doc.rect(margin, headerY - 8, availWidth, rowHeight + 6, 'F');
-              doc.setFont('helvetica', 'bold');
-              doc.setFontSize(10);
-              doc.setTextColor(255);
-              let x = margin + cellPadding;
-              headers.forEach((h, i) => {
-                const w = columnWidths[i] || Math.floor(availWidth / headers.length);
-                doc.text(String(h || '').toUpperCase(), x, headerY + 8, { maxWidth: w - cellPadding * 2 });
-                x += w;
-              });
-              doc.setTextColor(0);
-              currentY += rowHeight + 8;
-            };
-
-            const drawRow = (cells, rowIndex) => {
-              doc.setFont('helvetica', 'normal');
-              doc.setFontSize(tableFontSize);
-              const wrappedCells = cells.map((c, i) => {
-                const w = columnWidths[i] || Math.floor(availWidth / headers.length);
-                const text = safeTextMeasure(c);
-                const maxWidth = Math.max(18, w - cellPadding * 2);
-                const lines = wrapCellText(text, maxWidth);
-                return { lines, width: w, textHeight: Math.max(14, lines.length * 8) };
-              });
-              const rowBlockHeight = Math.max(rowHeight, ...wrappedCells.map(item => item.textHeight)) + 6;
-
-              if (currentY + rowBlockHeight > pageHeight - margin - footerHeight) {
-                doc.addPage();
-                currentY = margin;
-                drawHeaderRow();
-              }
-
-              const y = currentY;
-              if (rowIndex % 2 === 0) {
-                doc.setFillColor(248, 250, 252);
-                doc.rect(margin, y - 2, availWidth, rowBlockHeight, 'F');
-              }
-              doc.setDrawColor(226, 232, 240);
-              doc.setLineWidth(0.5);
-              let x = margin;
-              wrappedCells.forEach((cell, i) => {
-                const w = cell.width;
-                const textY = y + 8;
-                const lines = cell.lines;
-                const maxTextWidth = Math.max(18, w - cellPadding * 2);
-                const lineHeight = 8;
-
-                if (i === statusColIndex && lines[0]) {
-                  const lower = String(lines.join(' ')).toLowerCase();
-                  let bg = null;
-                  let fg = [6,78,59];
-                  if (/(serviceable|available|working)/i.test(lower)) bg = [220,255,235];
-                  else if (/(unserviceable|broken|unavailable)/i.test(lower)) bg = [255,235,238];
-                  else if (/(pending|in progress)/i.test(lower)) bg = [255,249,230];
-
-                  if (bg) {
-                    const pillX = x + cellPadding;
-                    const pillY = y + 4;
-                    const pillWidth = Math.min(Math.max(40, Math.max(...lines.map((line) => doc.getTextWidth(line))) + 8), maxTextWidth);
-                    const pillHeight = Math.max(14, lines.length * lineHeight + 6);
-                    doc.setFillColor(...bg);
-                    doc.rect(pillX, pillY, pillWidth, pillHeight, 'F');
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8.2);
-                    doc.setTextColor(...fg);
-                    lines.forEach((line, index) => {
-                      doc.text(line, pillX + 4, pillY + 4 + index * lineHeight);
-                    });
-                  } else {
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8.2);
-                    doc.setTextColor(20);
-                    lines.forEach((line, index) => {
-                      doc.text(line, x + cellPadding, textY + index * lineHeight);
-                    });
-                  }
-                } else {
-                  doc.setFont('helvetica', 'normal');
-                  doc.setFontSize(tableFontSize - 0.4);
-                  doc.setTextColor(20);
-                  lines.forEach((line, index) => {
-                    doc.text(line, x + cellPadding, textY + index * lineHeight);
-                  });
-                }
-
-                doc.rect(x, y - 2, w, rowBlockHeight, 'S');
-                x += w;
-              });
-              currentY += rowBlockHeight;
-            };
-
-            // Draw table
-            drawHeaderRow();
-            rows.forEach((r, idx) => drawRow(r, idx));
-
-            // Footer with verification text and page numbers
-            const totalPages = doc.getNumberOfPages();
-            for (let p = 1; p <= totalPages; p++) {
-              doc.setPage(p);
-              doc.setFont('helvetica', 'normal');
-              doc.setFontSize(9);
-              doc.setTextColor(100);
-              doc.text('Generated by Computer Laboratory Facilities Management System', margin, pageHeight - 22);
-              doc.text('Page ' + p + ' of ' + totalPages, pageWidth - margin, pageHeight - 22, { align: 'right' });
-            }
-
-            const fileName = (definition.title || 'report').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.pdf';
-            doc.save(fileName);
-          }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-          updateFilterOptions();
-          renderFilterStatus();
-          renderReportPreview();
-        });
-      </script>
+      <script src="/js/reports-page.js?v=20261104"></script>
     `
   },
   "maintenance-queue": {
@@ -6183,8 +4550,10 @@ const serveHtmlPage = (req, res) => {
 
   // Determine subfolder based on page type
   let subfolder = "";
-  if (page.startsWith("admin-") || page === "attendance" || page === "borrow-equipment" || page === "equipment-inventory" || page === "maintenance-reports") {
+  if (page.startsWith("admin-") || page === "attendance" || page === "borrow-equipment" || page === "equipment-inventory" || page === "equipment-assignment" || page === "maintenance-reports") {
     subfolder = "admin/";
+  } else if (page.startsWith("faculty-")) {
+    subfolder = "faculty/";
   } else if (page.startsWith("student-") || page === "my-pc-station") {
     subfolder = "student/";
   } else if (page.startsWith("technician-")) {
@@ -6202,11 +4571,33 @@ const serveHtmlPage = (req, res) => {
     let currentUser = null;
 
     const user = await User.findByPk(currentUserId, {
-      attributes: ["name", "email", "role", "student_number", "program", "year", "section", "campus", "photo"]
+      attributes: ["name", "email", "role", "student_number", "college", "program", "year", "section", "campus", "photo"]
     });
 
     if (user) {
-      const userName = user.name || (page === "student-dashboard" ? "Student" : "Technician");
+      const normalizedRole = normalizeRoleName(user.role);
+      const adminPages = new Set(["admin-dashboard", "admin-profile", "admin-computer-labs", "admin-faculty-management", "admin-technician-accomplishments", "attendance", "maintenance-reports", "equipment-assignment"]);
+      if (page === "student-dashboard" && ["faculty", "instructor"].includes(normalizedRole)) {
+        return res.redirect("/faculty-dashboard");
+      }
+      if (page === "student-dashboard" && normalizedRole !== "student") {
+        return res.status(403).send("Forbidden: Student access required.");
+      }
+      if (page.startsWith("faculty-") && !["faculty", "instructor"].includes(normalizedRole)) {
+        return res.status(403).send("Forbidden: Faculty access required.");
+      }
+      if (page.startsWith("technician-") && normalizedRole !== "technician") {
+        return res.status(403).send("Forbidden: Technician access required.");
+      }
+      if (adminPages.has(page) && !isAdminRole(normalizedRole)) {
+        return res.status(403).send("Forbidden: admin access required.");
+      }
+      if (["borrow-equipment", "equipment-inventory"].includes(page) &&
+          !isAdminRole(normalizedRole) && normalizedRole !== "technician") {
+        return res.status(403).send("Forbidden: staff access required.");
+      }
+
+      const userName = user.name || (page.startsWith("student-") || page === "my-pc-station" ? "Student" : "Technician");
       const initials = userName
         .split(/\s+/)
         .filter(Boolean)
@@ -6221,6 +4612,7 @@ const serveHtmlPage = (req, res) => {
         role: user.role || (page === "student-dashboard" ? "student" : "technician"),
         studentId: user.student_number || "",
         student_number: user.student_number || "",
+        college: user.college || "",
         program: user.program || "",
         year: user.year || "",
         section: user.section || "",
@@ -6250,10 +4642,50 @@ const serveHtmlPage = (req, res) => {
   });
 };
 
-const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "") => {
-  const hideTopHeaderPages = ["attendance-monitoring", "laboratory-schedules", "user-management", "reports", "audit-logs"];
+const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "", currentUserRole = "") => {
+  const hideTopHeaderPages = ["user-management", "reports", "audit-logs"];
   const showTopHeader = !hideTopHeaderPages.includes(pageName);
   const pageContentStyle = hideTopHeaderPages.includes(pageName) ? ' style="padding-top: 0.35rem !important;"' : "";
+  const isFaculty = ["faculty", "instructor"].includes(normalizeRoleName(currentUserRole));
+  const portalClass = isFaculty ? " faculty-portal student-portal" : "";
+  const laboratorySchedulesPageClass = pageName === "laboratory-schedules" ? " laboratory-schedules-page" : "";
+  const dashboardHeaderPageClass = ["audit-logs", "reports"].includes(pageName) ? " system-layout-page" : "";
+  const reportsPageClass = pageName === "reports" ? " reports-page" : "";
+  const auditLogsPageClass = pageName === "audit-logs" ? " audit-logs-page" : "";
+  const dashboardHeaderStylesheet = dashboardHeaderPageClass
+    ? '<link rel="stylesheet" href="/css/system-layout.css?v=8">'
+    : "";
+  const scheduleStylesheet = pageName === "laboratory-schedules"
+    ? '<link rel="stylesheet" href="/css/laboratory-schedules.css?v=7">'
+    : "";
+  const reportsStylesheet = pageName === "reports"
+    ? '<link rel="stylesheet" href="/css/reports.css?v=2">'
+    : "";
+  const auditLogsStylesheet = pageName === "audit-logs"
+    ? '<link rel="stylesheet" href="/css/audit-logs.css?v=11">'
+    : "";
+  const inlineJson = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
+  const currentUserJson = inlineJson({
+    name: currentUserName,
+    role: currentUserRole,
+    campus: currentUserCampus
+  });
+  const facultySidebarScripts = isFaculty
+    ? '<script>window.__CURRENT_USER__ = {name: ' + inlineJson(currentUserName) + ', role: "faculty", campus: ' + inlineJson(currentUserCampus || "") + '};</script><script src="/js/student-sidebar-config.js?v=29" defer></script>'
+    : "";
+  const scheduleCreationStyles = pageName === "laboratory-schedules"
+    ? "<style>#scheduleModal{display:none!important}</style>"
+    : "";
+  const topHeaderSearch = pageName === "laboratory-schedules" ? "" : `
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search..." />
+        </div>`;
+  const topHeaderTitle = pageName === "laboratory-schedules" ? "" : `
+        <div class="header-meta ml-3">
+          <h2 class="header-title">${config.title}</h2>
+          <p class="text-sm text-gray-400 mt-1">${config.description}</p>
+        </div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -6261,12 +4693,20 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${config.title} | ComLab</title>
+  ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  ${dashboardHeaderStylesheet}
+  ${scheduleStylesheet}
+  ${reportsStylesheet}
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  ${auditLogsStylesheet}
 </head>
-<body class="app-shell">
-  <script>window.__CURRENT_USER_NAME__ = ${JSON.stringify(currentUserName)}; window.__CURRENT_USER_CAMPUS__ = ${JSON.stringify(currentUserCampus || "")};</script>
+<body class="app-shell${portalClass}${laboratorySchedulesPageClass}${dashboardHeaderPageClass}${reportsPageClass}${auditLogsPageClass}">
+  <script>window.__CURRENT_USER__ = ${currentUserJson};</script>
+  <script>window.__CURRENT_USER_NAME__ = ${inlineJson(currentUserName)}; window.__CURRENT_USER_CAMPUS__ = ${inlineJson(currentUserCampus || "")}; window.__CURRENT_USER_ROLE__ = ${inlineJson(normalizeRoleName(currentUserRole))};</script>
+  ${portalClass ? '<style>.faculty-portal #scheduleModal,.faculty-portal button[onclick^="openEditScheduleModal"],.faculty-portal button[onclick^="confirmScheduleArchive"]{display:none!important}</style>' : ""}
   <div id="shared-sidebar"></div>
   <div class="main-container">
     ${showTopHeader ? `<div class="top-header">
@@ -6274,16 +4714,10 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
         <button id="mobileMenuToggle" class="menu-toggle fixed left-4 top-4 z-50 block lg:hidden" onclick="toggleSidebar()" aria-label="Open navigation">
           <i class="fas fa-bars"></i>
         </button>
-        <div class="header-meta ml-3">
-          <h2 class="header-title">${config.title}</h2>
-          <p class="text-sm text-gray-400 mt-1">${config.description}</p>
-        </div>
+        ${topHeaderTitle}
       </div>
       <div class="header-right">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search..." />
-        </div>
+        ${topHeaderSearch}
         <div class="header-icons"></div>
         <div class="user-profile">
           <div class="user-avatar">AD</div>
@@ -6300,28 +4734,52 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
       ${config.content}
     </main>
   </div>
-  <script src="/js/sidebar-component.js?v=3" defer></script>
+  ${facultySidebarScripts}
+  <script src="/js/sidebar-component.js?v=66" defer></script>
 </body>
 </html>`;
 };
 
 const serveFeaturePage = async (req, res) => {
   const page = req.params.page;
+  if (page === "attendance-monitoring") return res.status(404).send("Page not found");
   const config = pageConfigs[page];
   if (!config) return res.status(404).send("Page not found");
+  if (page === "laboratory-schedules" || page === "audit-logs" || page === "reports") {
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate, private",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "Surrogate-Control": "no-store"
+    });
+  }
+
+  if (page === "user-management") {
+    const authContext = await getUserAuthContext(req);
+    if (!authContext.userId) return res.redirect("/login");
+    if (!isAdminRole(authContext.role)) return res.status(403).send("Forbidden: admin access required.");
+  }
 
   if (page === "reports") {
     const authContext = await getUserAuthContext(req);
-    if (!authContext.userId) {
+    if (!authContext.userId) return res.redirect("/login");
+    if (["faculty", "instructor"].includes(normalizeRoleName(authContext.role))) {
+      return res.redirect("/faculty-my-requests");
+    }
+    if (!isAdminRole(authContext.role) && normalizeRoleName(authContext.role) !== "technician") {
       return res.status(403).send("Forbidden: admin or technician access required.");
     }
+  }
 
+  if (page === "laboratory-schedules") {
+    const authContext = await getUserAuthContext(req);
+    if (!authContext.userId) return res.redirect("/login");
     const normalizedRole = normalizeRoleName(authContext.role);
-    const canViewReportsPage = isCampusAdminRole(normalizedRole) ||
-      normalizedRole === "instructor" ||
-      normalizedRole === "technician";
-    if (!canViewReportsPage) {
-      return res.status(403).send("Forbidden: admin or technician access required.");
+    if (!isAdminRole(normalizedRole) && !["faculty", "instructor", "technician"].includes(normalizedRole)) {
+      return res.status(403).send("Forbidden: administrator, faculty, or technician access required.");
+    }
+    if (["faculty", "instructor"].includes(normalizedRole) && req.path !== "/faculty-laboratory-schedules") {
+      return res.redirect("/faculty-laboratory-schedules");
     }
   }
 
@@ -6349,20 +4807,22 @@ const serveFeaturePage = async (req, res) => {
 
   let currentUserName = "Administrator";
   let currentUserCampus = "";
+  let currentUserRole = "";
   const currentUserId = req.session?.userId;
   if (currentUserId) {
     try {
-      const currentUser = await User.findByPk(currentUserId, { attributes: ["name", "campus"] });
+      const currentUser = await User.findByPk(currentUserId, { attributes: ["name", "campus", "role"] });
       if (currentUser?.name) {
         currentUserName = currentUser.name;
       }
       currentUserCampus = currentUser?.campus || "";
+      currentUserRole = currentUser?.role || "";
     } catch (error) {
       console.error("Failed to load current user for feature page:", error);
     }
   }
 
-  res.send(renderFeaturePage(config, currentUserName, page, currentUserCampus));
+  res.send(renderFeaturePage(config, currentUserName, page, currentUserCampus, currentUserRole));
 };
 
 // ==================== Laboratory Schedule Helper Functions ====================
@@ -6413,11 +4873,15 @@ const normalizeCampus = (value) => {
 
 // Allowed days for scheduling
 const ALLOWED_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const ALLOWED_SCHEDULE_YEAR_LEVELS = new Set(["1st Year", "2nd Year", "3rd Year", "4th Year"]);
+const ALLOWED_SCHEDULE_SECTIONS = new Set(["F1", "F2", "F3"]);
+
+const ALLOWED_SCHEDULE_MINUTES = Array.from({ length: 21 }, (_, index) => 7 * 60 + 30 + index * 30);
 
 // Parse supported schedule times into minutes after midnight.
 const parseScheduleClockTime = (value) => {
-  const text = String(value || '').trim();
-  const match = text.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i) || text.match(/^(\d{1,2}):(\d{2})$/);
+  const text = String(value || '').replace(/\u00a0/g, ' ').trim();
+  const match = text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
   if (!match) return null;
 
   let hours = Number(match[1]);
@@ -6436,6 +4900,11 @@ const parseScheduleClockTime = (value) => {
   return hours * 60 + minutes;
 };
 
+const isAllowedScheduleClockTime = (value) => {
+  const minutes = parseScheduleClockTime(value);
+  return minutes !== null && ALLOWED_SCHEDULE_MINUTES.includes(minutes);
+};
+
 // Check if two time ranges overlap
 const timeRangesOverlap = (start1, end1, start2, end2) => {
   return start1 < end2 && start2 < end1;
@@ -6443,39 +4912,67 @@ const timeRangesOverlap = (start1, end1, start2, end2) => {
 
 const normalizeStoredCampus = (value) => normalizeCampus(String(value || '').replace(/\s*Campus\s*$/i, '').trim());
 const normalizeStoredRoom = (value) => normalizeRoom(value) || String(value || '').trim().toLowerCase();
+const DEFAULT_SCHEDULE_COLOR = "#16a34a";
+const normalizeScheduleColor = (value) => {
+  const color = String(value || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : null;
+};
+const normalizeScheduleClassSection = (yearLevel, section) => {
+  const rawYearLevel = String(yearLevel || "").trim().toLocaleLowerCase();
+  const normalizedYearLevel = [...ALLOWED_SCHEDULE_YEAR_LEVELS]
+    .find((year) => year.toLocaleLowerCase() === rawYearLevel);
+  const normalizedSection = String(section || "").trim().replace(/\s+/g, " ").toLocaleUpperCase();
+  if (!normalizedYearLevel) {
+    return { error: "Choose a valid year level from 1st Year to 4th Year." };
+  }
+  if (!ALLOWED_SCHEDULE_SECTIONS.has(normalizedSection)) {
+    return { error: "Choose a valid section: F1, F2, or F3." };
+  }
+  return { yearLevel: normalizedYearLevel, section: normalizedSection };
+};
+const getScheduleCourseSection = (yearLevel, section) =>
+  [yearLevel, section ? `Section ${section}` : ""].filter(Boolean).join(" • ");
 
 // Find conflicting schedules
-const findConflictingSchedule = async ({ laboratoryRoom, dayOfWeek, campus, startTime, endTime, excludeId = null } = {}) => {
+const findConflictingSchedule = async ({ laboratoryRoom, instructor, instructorUserId = null, dayOfWeek, campus, startTime, endTime, excludeId = null } = {}) => {
   if (!laboratoryRoom || !dayOfWeek || !campus || !startTime || !endTime) return null;
 
-  try {
-    const checkStart = parseScheduleClockTime(startTime);
-    const checkEnd = parseScheduleClockTime(endTime);
-    if (checkStart === null || checkEnd === null || checkStart >= checkEnd) return null;
+  const checkStart = parseScheduleClockTime(startTime);
+  const checkEnd = parseScheduleClockTime(endTime);
+  if (checkStart === null || checkEnd === null || checkStart >= checkEnd) return null;
 
-    const schedules = await LaboratorySchedule.findAll({ where: { dayOfWeek } });
-    const requestedCampus = normalizeStoredCampus(campus);
-    const requestedRoom = normalizeStoredRoom(laboratoryRoom);
+  const requestedDay = String(dayOfWeek).trim().toLocaleLowerCase();
+  const schedules = await LaboratorySchedule.findAll({
+    where: sequelize.where(
+      sequelize.fn("LOWER", sequelize.fn("TRIM", sequelize.col("dayOfWeek"))),
+      requestedDay
+    )
+  });
+  const requestedCampus = normalizeStoredCampus(campus);
+  const requestedRoom = normalizeStoredRoom(laboratoryRoom);
+  const requestedInstructor = String(instructor || "").trim().toLocaleLowerCase();
 
-    for (const schedule of schedules) {
-      // Skip the current schedule if editing
-      if (excludeId && schedule.id == excludeId) continue;
-      if (normalizeStoredCampus(schedule.campus) !== requestedCampus) continue;
-      if (normalizeStoredRoom(schedule.laboratoryRoom) !== requestedRoom) continue;
+  for (const schedule of schedules) {
+    if (excludeId !== null && String(schedule.id) === String(excludeId)) continue;
+    if (String(schedule.dayOfWeek || "").trim().toLocaleLowerCase() !== requestedDay) continue;
 
-      const scheduleStart = parseScheduleClockTime(schedule.startTime);
-      const scheduleEnd = parseScheduleClockTime(schedule.endTime);
-      if (scheduleStart === null || scheduleEnd === null || scheduleStart >= scheduleEnd) continue;
+    const sameCampus = normalizeStoredCampus(schedule.campus) === requestedCampus;
+    const roomConflict = sameCampus && normalizeStoredRoom(schedule.laboratoryRoom) === requestedRoom;
+    const instructorConflict = requestedInstructor && (
+      (instructorUserId && String(schedule.instructorUserId || "") === String(instructorUserId)) ||
+      (!schedule.instructorUserId && String(schedule.instructor || "").trim().toLocaleLowerCase() === requestedInstructor)
+    );
+    if (!roomConflict && !instructorConflict) continue;
 
-      if (timeRangesOverlap(checkStart, checkEnd, scheduleStart, scheduleEnd)) {
-        return schedule;
-      }
+    const scheduleStart = parseScheduleClockTime(schedule.startTime);
+    const scheduleEnd = parseScheduleClockTime(schedule.endTime);
+    if (scheduleStart === null || scheduleEnd === null || scheduleStart >= scheduleEnd) continue;
+
+    if (timeRangesOverlap(checkStart, checkEnd, scheduleStart, scheduleEnd)) {
+      return { schedule, type: roomConflict ? "laboratory" : "instructor" };
     }
-    return null;
-  } catch (error) {
-    console.error("Error checking for conflicting schedules:", error);
-    return null;
   }
+  return null;
 };
 
 // Parse class list from file buffer (supports XLSX, XLS, CSV)
@@ -6490,17 +4987,18 @@ const parseClassListRows = async (buffer, originalname = "") => {
 
     return rows
       .map((row) => ({
+        studentId: row['Student ID'] || row['Student Number'] || row['Student No.'] || row['studentId'] || row['student_id'] || row['student_number'] || row['ID'] || row['id'] || '',
         lastName: row['Last Name'] || row['lastName'] || row['last_name'] || '',
         firstName: row['First Name'] || row['firstName'] || row['first_name'] || '',
         middleInitial: row['Middle Initial'] || row['middleInitial'] || row['middle_initial'] || '',
-        fullName: row['Full Name'] || row['fullName'] || row['Name'] || row['name'] || '',
+        fullName: row['Student Name'] || row['studentName'] || row['student_name'] || row['Full Name'] || row['fullName'] || row['Name'] || row['name'] || '',
         courseSection: row['Course Section'] || row['courseSection'] || row['Section'] || row['section'] || '',
         program: row['Program'] || row['program'] || '',
         year: row['Year'] || row['year'] || '',
         section: row['Section'] || row['section'] || '',
         email: row['Email'] || row['email'] || ''
       }))
-      .filter((row) => row.fullName || (row.lastName && row.firstName));
+      .filter((row) => row.studentId || row.fullName || (row.lastName && row.firstName));
   } catch (error) {
     console.error("Error parsing class list:", error);
     return [];
@@ -6540,8 +5038,14 @@ const getRegisteredStudentsForCampus = async (campus) => User.findAll({
 });
 
 const matchClassListEntryToStudent = (entry, registeredStudents) => {
+  const suppliedStudentId = String(entry.studentId || entry.studentNumber || entry.student_number || "").trim();
+  let candidates = suppliedStudentId
+    ? registeredStudents.filter((student) => String(student.student_number || "").trim() === suppliedStudentId)
+    : [];
   const normalizedName = normalizeStudentName(buildClassListName(entry));
-  let candidates = registeredStudents.filter((student) => normalizeStudentName(student.name) === normalizedName);
+  if (!candidates.length && normalizedName) {
+    candidates = registeredStudents.filter((student) => normalizeStudentName(student.name) === normalizedName);
+  }
 
   if (!candidates.length) {
     const classListFullName = String(entry.fullName || "").trim();
@@ -6610,8 +5114,8 @@ const resolveClassListEntries = async (entries = [], laboratoryScheduleId, campu
 
   return entries
     .map((entry) => {
-      const fullName = buildClassListName(entry);
       const { student: matchedStudent, status: matchStatus } = matchClassListEntryToStudent(entry, registeredStudents);
+      const fullName = buildClassListName(entry) || String(matchedStudent?.name || "").trim();
       const identityStatus = matchStatus === "matched" && !String(matchedStudent?.student_number || "").trim()
         ? "incomplete_id"
         : matchStatus;
@@ -6633,12 +5137,74 @@ const resolveClassListEntries = async (entries = [], laboratoryScheduleId, campu
 
 // ==================== End Laboratory Schedule Helper Functions ====================
 
+const facultyPortalPage = async (req, res, page) => {
+  const authContext = await getUserAuthContext(req);
+  if (!authContext.userId) return res.redirect("/login");
+  if (!["faculty", "instructor"].includes(normalizeRoleName(authContext.role))) {
+    return res.status(403).send("Forbidden: Faculty access required.");
+  }
+  req.params.page = page;
+  return serveHtmlPage(req, res);
+};
+
+const studentPortalPage = async (req, res, page, facultyPath) => {
+  const authContext = await getUserAuthContext(req);
+  if (!authContext.userId) return res.redirect("/login");
+  const role = normalizeRoleName(authContext.role);
+  if (["faculty", "instructor"].includes(role)) return res.redirect(facultyPath);
+  if (role !== "student") return res.status(403).send("Forbidden: Student access required.");
+  req.params.page = page;
+  return serveHtmlPage(req, res);
+};
+
 router.get("/", homePage);
 router.get("/landing", (req, res) => res.redirect("/"));
 router.get("/equipment-inventory", inventoryPage);
-router.get("/borrow-equipment", serveHtmlPage);
-router.get("/equipment/view/:equipmentId", viewEquipmentPage);
+router.get("/equipment-assignment", serveHtmlPage);
+router.get("/borrow-equipment", async (req, res) => {
+  if (req.session?.userId) {
+    const user = await User.findByPk(req.session.userId, { attributes: ["role"] });
+    if (["faculty", "instructor"].includes(normalizeRoleName(user?.role))) {
+      return res.redirect("/faculty-borrow-equipment");
+    }
+  }
+  return serveHtmlPage(req, res);
+});
+router.get("/equipment/uid/:token", scanEquipmentQr);
+router.get("/equipment/s/:token", scanEquipmentQr);
+router.get("/equipment/view/:equipmentId", redirectLegacyEquipmentQr);
 router.get("/admin-dashboard", serveHtmlPage);
+router.get("/admin-profile", async (req, res) => {
+  if (!req.session?.userId) return res.redirect("/login");
+  try {
+    const user = await User.findByPk(req.session.userId, { attributes: ["role"] });
+    if (!user || !isAdminRole(user.role)) return res.status(403).send("Forbidden: admin access required.");
+    return serveHtmlPage(req, res);
+  } catch (error) {
+    console.error("Failed to authorize administrator profile page:", error);
+    return res.status(500).send("Unable to load the administrator profile page.");
+  }
+});
+router.get("/computer-labs", (req, res) => {
+  req.params.page = "admin-computer-labs";
+  return serveHtmlPage(req, res);
+});
+router.get("/faculty-management", (req, res) => {
+  req.params.page = "admin-faculty-management";
+  return serveHtmlPage(req, res);
+});
+router.get("/technician-accomplishments", (req, res) => {
+  req.params.page = "admin-technician-accomplishments";
+  return serveHtmlPage(req, res);
+});
+router.get("/page/faculty-management", (req, res) => {
+  req.params.page = "admin-faculty-management";
+  return serveHtmlPage(req, res);
+});
+router.get("/page/computer-labs", (req, res) => {
+  req.params.page = "admin-computer-labs";
+  return serveHtmlPage(req, res);
+});
 router.get("/maintenance-monitoring", (req, res) => {
   req.params.page = "admin-dashboard";
   return serveHtmlPage(req, res);
@@ -6646,10 +5212,34 @@ router.get("/maintenance-monitoring", (req, res) => {
 router.get("/attendance", serveHtmlPage);
 router.get("/maintenance-reports", serveHtmlPage);
 router.get("/student-dashboard", serveHtmlPage);
-router.get("/student-borrow-equipment", serveHtmlPage);
-router.get("/student-profile", serveHtmlPage);
+router.get("/student-audit-history", (req, res) =>
+  studentPortalPage(req, res, "student-audit-history", "/faculty-audit-history"));
+router.get("/faculty-dashboard", serveHtmlPage);
+router.get("/student-borrow-equipment", (req, res) =>
+  studentPortalPage(req, res, "student-borrow-equipment", "/faculty-borrow-equipment"));
+router.get("/faculty-borrow-equipment", (req, res) =>
+  facultyPortalPage(req, res, req.query.view === "availability"
+    ? "faculty-equipment-availability"
+    : "faculty-borrow-equipment"));
+router.get("/faculty-mir-items", (req, res) =>
+  facultyPortalPage(req, res, "faculty-mir-items"));
+router.get("/faculty-equipment-availability", (req, res) =>
+  facultyPortalPage(req, res, "faculty-equipment-availability"));
+router.get("/faculty-my-requests", (req, res) =>
+  facultyPortalPage(req, res, "faculty-my-requests"));
+router.get("/faculty-audit-history", (req, res) =>
+  facultyPortalPage(req, res, "faculty-audit-history"));
+router.get("/faculty-report-equipment", (req, res) =>
+  facultyPortalPage(req, res, "faculty-report-equipment"));
+router.get("/faculty-profile", (req, res) =>
+  facultyPortalPage(req, res, "faculty-profile"));
+router.get("/faculty-laboratory-schedules", (req, res) =>
+  facultyPortalPage(req, res, "faculty-laboratory-schedules"));
+router.get("/student-profile", (req, res) =>
+  studentPortalPage(req, res, "student-profile", "/faculty-profile"));
 router.get("/my-pc-station", serveHtmlPage);
-router.get("/student/scan-attendance", (req, res) => res.sendFile(path.join(__dirname, "../views/student/student-scan-attendance.html")));
+router.get("/student/scan-attendance", (req, res) =>
+  studentPortalPage(req, res, "student-scan-attendance", "/faculty-dashboard"));
 router.get("/student/report-issue", (req, res) => res.redirect("/student-report-equipment"));
 router.get("/student/report-damage", (req, res) => res.redirect("/student-report-equipment"));
 router.get("/report-equipment-issue", (req, res) => res.redirect("/student-report-equipment"));
@@ -6664,6 +5254,13 @@ router.get("/student/borrow-equipment", async (req, res) => {
     const user = await User.findByPk(currentUserId, {
       attributes: ["name", "email", "role", "student_number", "program", "year", "section", "campus", "photo"]
     });
+    const role = normalizeRoleName(user?.role);
+    if (["faculty", "instructor"].includes(role)) {
+      return res.redirect("/faculty-borrow-equipment");
+    }
+    if (role !== "student") {
+      return res.status(403).send("Forbidden: Student access required.");
+    }
 
     const currentUser = user ? {
       id: currentUserId,
@@ -6690,17 +5287,99 @@ router.get("/student/borrow-equipment", async (req, res) => {
     res.status(500).send("Failed to load Borrow Equipment page.");
   }
 });
-router.get("/student-report-issue", serveHtmlPage);
-router.get("/student-report-equipment", serveHtmlPage);
-router.get("/student-my-requests", serveHtmlPage);
+router.get("/student-report-issue", (req, res) => res.redirect("/student-report-equipment"));
+router.get("/student-report-equipment", (req, res) =>
+  studentPortalPage(req, res, "student-report-equipment", "/faculty-report-equipment"));
+router.get("/student-my-requests", (req, res) =>
+  studentPortalPage(req, res, "student-my-requests", "/faculty-my-requests"));
 router.get("/technician-dashboard", serveHtmlPage);
+router.get("/technician-profile", serveHtmlPage);
 router.get("/page/:page", serveFeaturePage);
 
 router.get("/login", loginPage);
 router.post("/login", loginUser);
+router.post("/pc-station/uid/:token/action", submitPCStationAction);
+router.get("/pc-station/s/:token/status", showPCStationScanResult);
+router.get("/pc-station/s/:token", scanPCStationQr);
+router.get("/pc-station/uid/:token/status", showPCStationScanResult);
+router.get("/pc-station/uid/:token", scanPCStationQr);
+router.get("/pc-station/:setId/status", redirectLegacyPCStationQr);
+router.get("/pc-station/:setId", redirectLegacyPCStationQr);
 router.get("/register", registerPage);
 router.post("/register", registerUser);
 router.post("/api/profile", updateProfile);
+router.patch("/api/admin/profile", async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ success: false, error: "Please log in to update your profile." });
+
+  try {
+    const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role"] });
+    if (!user || !isAdminRole(user.role)) {
+      return res.status(403).json({ success: false, error: "Admin access is required to update this profile." });
+    }
+
+    const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+    const nameParts = name.split(" ").filter(Boolean);
+    if (name.length > 120 || nameParts.length < 2 || ["administrator", "admin", "n/a"].includes(name.toLocaleLowerCase())) {
+      return res.status(400).json({ success: false, error: "Enter your first and last name." });
+    }
+
+    if (name !== user.name) {
+      await user.update({ name });
+      await logAuditEntry(req, {
+        action: "User Updated",
+        module: "User Management",
+        resourceId: user.id,
+        description: `Administrator updated their profile name for account ${user.id}.`
+      });
+    }
+
+    return res.json({ success: true, profile: { name: user.name } });
+  } catch (error) {
+    console.error("Failed to update administrator profile:", error);
+    return res.status(500).json({ success: false, error: "Unable to update your profile right now." });
+  }
+});
+router.patch("/api/admin/profile/password", async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ success: false, error: "Please log in to change your password." });
+
+  try {
+    const user = await User.findByPk(req.session.userId, { attributes: ["id", "role", "password"] });
+    if (!user || !isAdminRole(user.role)) {
+      return res.status(403).json({ success: false, error: "Admin access is required to change this password." });
+    }
+
+    const currentPassword = String(req.body?.currentPassword || "");
+    const newPassword = String(req.body?.newPassword || "");
+    const confirmPassword = String(req.body?.confirmPassword || "");
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, error: "Complete all password fields." });
+    }
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      return res.status(400).json({ success: false, error: "Use a new password between 8 and 128 characters." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, error: "The new passwords do not match." });
+    }
+    if (!await bcryptjs.compare(currentPassword, user.password)) {
+      return res.status(400).json({ success: false, error: "Your current password is incorrect." });
+    }
+    if (await bcryptjs.compare(newPassword, user.password)) {
+      return res.status(400).json({ success: false, error: "Choose a password different from your current one." });
+    }
+
+    await user.update({ password: await bcryptjs.hash(newPassword, 10) });
+    await logAuditEntry(req, {
+      action: "Password Changed",
+      module: "Authentication",
+      resourceId: user.id,
+      description: `Administrator changed the password for their own account ${user.id}.`
+    });
+    return res.json({ success: true, message: "Your password has been changed." });
+  } catch (error) {
+    console.error("Failed to change administrator password:", error);
+    return res.status(500).json({ success: false, error: "Unable to change your password right now." });
+  }
+});
 router.post("/api/student/photo", uploadStudentPhoto);
 router.get("/forgot-password", forgotPasswordPage);
 router.post("/forgot-password", forgotPassword);
@@ -6715,6 +5394,11 @@ router.get("/dashboard", dashboardPage);
 router.get("/logout", logoutUser);
 
 router.get("/api/equipment", getEquipment);
+router.get("/api/faculty/assigned-equipment", listMyEquipmentAssignments);
+router.get("/api/faculty/assignment-history", getMyEquipmentAssignmentHistory);
+router.get("/api/equipment-assignments", listEquipmentAssignments);
+router.put("/api/equipment-assignments/:id", updateEquipmentAssignment);
+router.get("/api/equipment-assignments/:id/history", getEquipmentAssignmentHistory);
 router.get("/api/student/equipment", getStudentEquipment);
 router.get("/api/equipment/campus-totals", getEquipmentCampusTotals);
 
@@ -6722,6 +5406,7 @@ router.get("/api/equipment/campus-totals", getEquipmentCampusTotals);
 router.get("/api/equipment/missing", getMissingEquipment);
 
 router.get("/api/equipment/:id/qr", getEquipmentQr);
+router.get("/api/equipment/qr/:token/resolve", resolveEquipmentQrToken);
 router.post("/api/equipment", createEquipment);
 router.put("/api/equipment/:id", updateEquipment);
 router.put("/api/equipment/:id/status", updateEquipmentStatus);
@@ -6732,6 +5417,9 @@ router.post("/api/equipment/:id/report-missing", reportEquipmentMissing);
 router.post("/api/equipment/:id/mark-found", markEquipmentFound);
 router.post("/api/equipment/:id/transfer-set", transferEquipmentSet);
 router.get("/api/equipment/:id/history", getEquipmentHistory);
+router.get("/api/equipment/:id/borrow-cycle", getEquipmentBorrowCycle);
+router.post("/api/equipment/:id/scan", logEquipmentScan);
+router.get("/api/equipment-scan-history", getEquipmentScanHistory);
 
 router.get("/api/equipment-categories", getEquipmentCategories);
 router.post("/api/equipment-categories", createEquipmentCategory);
@@ -6771,7 +5459,9 @@ router.get("/api/equipment/usage-history/:userId", async (req, res) => {
               eul.usageStartTime, eul.usageEndTime, eul.durationMinutes,
               COALESCE(eul.pcSetId, e.setId) as pcSetId,
               e.name as equipmentName, e.assetNumber, e.laboratoryRoom,
-              a.subject, a.courseSection, a.instructor, a.sessionToken,
+              a.id as attendanceId, a.date as attendanceDate, a.timeIn as attendanceTime,
+              a.status as attendanceStatus, a.subject, a.lab as attendanceLab,
+              a.courseSection, a.instructor, a.sessionToken,
               CASE WHEN a.id IS NULL THEN 'Class not linked' ELSE 'Linked to attendance' END as traceStatus
        FROM equipment_usage_logs eul
        LEFT JOIN equipment e ON e.id = eul.equipmentId
@@ -6937,10 +5627,10 @@ router.get("/attendance/select-pc", async (req, res) => {
 
         const grid = document.getElementById('pcGrid');
         grid.innerHTML = setsData.sets
-          .filter(set => set.status === 'active') // Only show active sets
+          .filter(set => set.status === 'active' && availMap.has(set.setId)) // Only show active sets in this session's laboratory
           .map(set => {
             const avail = availMap.get(set.setId);
-            const isAvailable = avail ? avail.status === 'available' : false;
+            const isAvailable = avail.status === 'available';
             const components = set.components ? set.components.split(', ') : [];
             
             return \`
@@ -7054,17 +5744,25 @@ router.get("/api/laboratory-schedules/:scheduleId/seating-chart", getScheduleSea
 
 router.get("/api/borrow-records", listBorrowRecords);
 router.post("/api/borrow-records", createBorrowRecord);
+router.post("/api/borrow-records/qr-student", createStudentQrBorrowRecord);
+router.get("/api/borrow-records/qr-student/:equipmentId/status", getStudentQrBorrowStatus);
+router.post("/api/borrow-records/qr", createFacultyQrBorrowRecord);
+router.get("/api/borrow-records/qr/:equipmentId/status", getFacultyQrBorrowStatus);
 router.put("/api/borrow-records/:id/approve", approveBorrowRecord);
 router.put("/api/borrow-records/:id/reject", rejectBorrowRecord);
+router.put("/api/borrow-records/:id/cancel", cancelBorrowRecord);
+router.put("/api/borrow-records/:id/release", releaseBorrowRecord);
+router.put("/api/borrow-records/:id/request-return", requestBorrowReturn);
 router.put("/api/borrow-records/:id/return", returnBorrowRecord);
 router.put("/api/borrow-records/:id/mark-lost", markBorrowRecordLost);
 router.get("/api/borrow-records/:id/history", getBorrowHistory);
+router.get("/api/borrow-audit", listBorrowAudit);
 router.get("/api/equipment-availability", listEquipmentAvailability);
 router.get("/api/equipment-availability/:equipmentId/history", getEquipmentBorrowingHistory);
 router.get("/api/admin/notifications", listBorrowNotifications);
 router.get("/api/borrow-notifications", listBorrowNotifications);
 router.put("/api/borrow-notifications/:id/read", markBorrowNotificationRead);
-router.get("/api/audit-logs", requireAdminForAudit, getAuditLogs);
+router.get("/api/audit-logs", getAuditLogs);
 router.get("/api/equipment-audit-trail", requireAdminForAudit, getAuditTrail);
 router.get("/api/announcements", (req, res) => {
   res.json([]);
@@ -7101,31 +5799,415 @@ router.get("/api/attendance/current", async (req, res) => {
 });
 router.get("/api/instructor/attendance-dashboard", getInstructorAttendanceDashboard);
 router.get("/api/instructor/attendance-dashboard/:sessionId", getInstructorAttendanceSessionDetails);
+router.get("/api/faculty/attendance-history", getFacultyScheduleAttendanceHistory);
+router.get("/api/faculty/schedules/:scheduleId/attendance", getFacultyScheduleAttendanceHistory);
+router.get("/api/faculty/schedules/:scheduleId/attendance/export", exportFacultyScheduleAttendanceHistory);
 router.get("/api/attendance/scan", scanAttendance);
 router.post("/api/attendance/scan", scanAttendance);
 router.get("/attendance/scan/:token", scanAttendance);
 router.post("/attendance/scan/:token", scanAttendance);
 router.post("/api/attendance/session", createAttendanceSession);
+router.get("/api/faculty/schedules/:scheduleId/attendance-qr-students", getStudentAttendanceQrRoster);
+router.post("/api/faculty/schedules/:scheduleId/attendance-qr-codes", createStudentAttendanceQrs);
+router.get("/api/laboratory-schedule-instructors", async (req, res) => {
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Please log in to view laboratory schedule instructors." });
+    }
+    const currentUser = await User.findByPk(req.session.userId, {
+      attributes: ["id", "name", "role", "campus", "college"]
+    });
+    const currentRole = normalizeRoleName(currentUser?.role);
+    if (!currentUser) return res.status(401).json({ error: "Your account could not be verified." });
+    if (["faculty", "instructor"].includes(currentRole)) {
+      return res.json([{
+        id: `user:${currentUser.id}`,
+        accountId: String(currentUser.id),
+        name: String(currentUser.name || "").trim(),
+        campus: currentUser.campus || "",
+        college: currentUser.college || ""
+      }]);
+    }
+    if (!isAdminRole(currentRole)) {
+      return res.status(403).json({ error: "Only faculty instructors can view or select schedule instructors." });
+    }
+
+    const accounts = await User.findAll({
+      where: { role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] } },
+      attributes: ["id", "name", "role", "campus", "college"],
+      order: [["name", "ASC"]]
+    });
+    const instructors = accounts.flatMap((account) => {
+      const item = account.toJSON();
+      const name = String(item.name || "").trim();
+      if (!name || String(item.college || "").trim().toUpperCase() !== "CCS") return [];
+      return [{
+        id: `user:${item.id}`,
+        accountId: String(item.id),
+        name,
+        campus: item.campus || "",
+        college: "CCS"
+      }];
+    });
+    res.json(instructors);
+  } catch (error) {
+    console.error("Failed to load laboratory schedule instructors.", error);
+    res.status(500).json({ error: "Failed to load Faculty accounts." });
+  }
+});
+const getComputerLabAdminContext = async (req, res) => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "Please log in to manage computer labs." });
+    return null;
+  }
+  const user = await User.findByPk(req.session.userId, { attributes: ["id", "role", "campus"] });
+  if (!user || !isAdminRole(user.role)) {
+    res.status(403).json({ error: "Only administrators can manage computer labs." });
+    return null;
+  }
+  const campus = normalizeCampus(user.campus) || normalizeCampus(String(user.campus || "").replace(/\s*Campus\s*$/i, ""));
+  if (!campus) {
+    res.status(403).json({ error: "Your administrator account must have an assigned campus." });
+    return null;
+  }
+  return { user, campus };
+};
+
+const getComputerLabReadContext = async (req, res) => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "Please log in to view computer labs." });
+    return null;
+  }
+  const user = await User.findByPk(req.session.userId, { attributes: ["id", "role", "campus"] });
+  const campus = normalizeCampus(user?.campus) || normalizeCampus(String(user?.campus || "").replace(/\s*Campus\s*$/i, ""));
+  if (!user || !campus) {
+    res.status(403).json({ error: "Your account must have an assigned campus to view computer labs." });
+    return null;
+  }
+  return { user, campus };
+};
+
+router.get("/api/computer-labs/revision", async (req, res) => {
+  try {
+    const context = await getComputerLabReadContext(req, res);
+    if (!context) return;
+    await ensureArchiveRecordsTable();
+    const [rows] = await sequelize.query(
+      `SELECT
+         (SELECT COUNT(*) FROM computer_labs WHERE campus = ?) AS labCount,
+         COALESCE((SELECT DATE_FORMAT(MAX(GREATEST(createdAt, updatedAt)), '%Y-%m-%d %H:%i:%s')
+                   FROM computer_labs WHERE campus = ?), '') AS latestLabChange,
+         (SELECT COUNT(*)
+          FROM archived_records ar
+          INNER JOIN computer_labs lab
+            ON ar.entityType = 'computer-lab' AND BINARY ar.entityId = BINARY CAST(lab.id AS CHAR)
+          WHERE lab.campus = ?) AS archivedCount,
+         COALESCE((SELECT DATE_FORMAT(MAX(ar.archivedAt), '%Y-%m-%d %H:%i:%s')
+                   FROM archived_records ar
+                   INNER JOIN computer_labs lab
+                     ON ar.entityType = 'computer-lab' AND BINARY ar.entityId = BINARY CAST(lab.id AS CHAR)
+                   WHERE lab.campus = ?), '') AS latestArchiveChange`,
+      { replacements: [context.campus, context.campus, context.campus, context.campus] }
+    );
+    const row = rows[0] || {};
+    // Bump the feed revision when its room aggregation rules change so already
+    // open directory pages fetch the corrected room list on their next poll.
+    const revision = ["registered-room-priority-v1", row.labCount || 0, row.latestLabChange || "", row.archivedCount || 0, row.latestArchiveChange || ""].join(":");
+    res.set("Cache-Control", "no-store");
+    return res.json({ success: true, revision });
+  } catch (error) {
+    console.error("Failed to read computer lab revision:", error);
+    return res.status(500).json({ error: "Failed to check computer labs for updates." });
+  }
+});
+
+router.get("/api/computer-labs", async (req, res) => {
+  try {
+    const context = await getComputerLabReadContext(req, res);
+    if (!context) return;
+    const campusNames = [context.campus, `${context.campus} Campus`];
+    const [[savedLabs], [equipmentLabs], [scheduledLabs]] = await Promise.all([
+      sequelize.query(
+        `SELECT id, name, roomNumber, campus, sourceKey, createdAt
+         FROM computer_labs WHERE campus = ? ORDER BY name ASC, id ASC`,
+        { replacements: [context.campus] }
+      ),
+      sequelize.query(
+        `SELECT laboratoryRoom AS label, COUNT(*) AS equipmentCount
+         FROM equipment
+         WHERE campus IN (:campusNames) AND laboratoryRoom IS NOT NULL AND TRIM(laboratoryRoom) <> ''
+         GROUP BY laboratoryRoom`,
+        { replacements: { campusNames } }
+      ),
+      sequelize.query(
+        `SELECT laboratoryRoom AS label
+         FROM laboratory_schedules
+         WHERE campus IN (:campusNames) AND laboratoryRoom IS NOT NULL AND TRIM(laboratoryRoom) <> ''
+         GROUP BY laboratoryRoom`,
+        { replacements: { campusNames } }
+      )
+    ]);
+
+    const labsByName = new Map();
+    const savedBySourceKey = new Map(savedLabs.filter((lab) => lab.sourceKey).map((lab) => [lab.sourceKey, lab]));
+    const savedByLabel = new Map();
+    savedLabs.forEach((lab) => {
+      [lab.name, formatComputerLabLocation(lab), `${lab.name} - ${lab.roomNumber || ""}`]
+        .filter(Boolean)
+        .forEach((label) => savedByLabel.set(normalizeLabLabel(label), lab));
+    });
+    const getLabDetails = (label) => {
+      const sourceLabel = String(label || '').trim();
+      const labNumber = sourceLabel.match(/(?:computer\s*lab|com\s*lab|comlab|laboratory|lab)\s*[-#:]?\s*(\d+)\b/i)?.[1];
+      const roomLabel = sourceLabel.match(/\b(?:room|rm\.?)\s*[-#:]?\s*([a-z0-9-]+)\b/i)?.[1];
+      const knownRoom = { "1": "202", "2": "204" }[labNumber] || null;
+      return {
+        name: labNumber ? `COMLAB ${labNumber}` : sourceLabel,
+        roomNumber: roomLabel ? `Room ${roomLabel}` : knownRoom ? `Room ${knownRoom}` : null,
+        sourceKey: labNumber ? `legacy:computer lab ${labNumber}` : `legacy:${normalizeLabLabel(sourceLabel)}`
+      };
+    };
+    const addLab = ({ label, roomNumber = null, id = null, createdAt = null, equipmentCount = 0 }) => {
+      const details = getLabDetails(label);
+      const existingSaved = savedByLabel.get(normalizeLabLabel(label)) ||
+        savedByLabel.get(normalizeLabLabel(details.name)) ||
+        savedBySourceKey.get(details.sourceKey);
+      const key = existingSaved ? `id:${existingSaved.id}` : details.name.toLocaleLowerCase();
+      let lab = labsByName.get(key);
+      if (!lab) {
+        const saved = existingSaved || (id ? savedLabs.find((record) => String(record.id) === String(id)) : null);
+        lab = {
+          id: saved?.id || id,
+          name: saved?.name || details.name,
+          roomNumbers: saved?.roomNumber ? [saved.roomNumber] : [],
+          campus: saved?.campus || context.campus,
+          equipmentCount: 0,
+          createdAt: saved?.createdAt || createdAt,
+          sourceKey: saved?.sourceKey || (saved ? null : details.sourceKey)
+        };
+        labsByName.set(key, lab);
+      } else if (id && !lab.id) {
+        lab.id = id;
+        lab.createdAt = createdAt;
+      }
+      // A registered lab's roomNumber is its canonical location. Equipment and
+      // schedule labels can retain older room text, so only infer a room from
+      // those labels when the saved lab has no room of its own.
+      const room = existingSaved?.roomNumber
+        ? ''
+        : String(roomNumber || details.roomNumber || '').trim();
+      if (room && !lab.roomNumbers.some((existingRoom) => existingRoom.toLowerCase() === room.toLowerCase())) {
+        lab.roomNumbers.push(room);
+      }
+      lab.equipmentCount += Number(equipmentCount || 0);
+    };
+
+    equipmentLabs.forEach((lab) => addLab(lab));
+    scheduledLabs.forEach((lab) => addLab(lab));
+
+    savedLabs.forEach((lab) => addLab({ ...lab, label: lab.name }));
+    const archivedIds = new Set(await getArchivedEntityIds("computer-lab"));
+
+    return res.json([...labsByName.values()]
+      .filter((lab) => lab.id && !archivedIds.has(String(lab.id)))
+      .sort((a, b) => a.name.localeCompare(b.name)));
+  } catch (error) {
+    console.error("Failed to load computer labs.", error);
+    return res.status(500).json({ error: "Failed to load computer labs." });
+  }
+});
+
+router.post("/api/computer-labs", async (req, res) => {
+  try {
+    const context = await getComputerLabAdminContext(req, res);
+    if (!context) return;
+    const name = String(req.body?.name ?? req.body?.lab_name ?? "").trim().replace(/\s+/g, " ");
+    const roomNumber = String(
+      req.body?.roomNumber ?? req.body?.room_number ?? req.body?.room_location ?? ""
+    ).trim().replace(/\s+/g, " ");
+    if (!name || name.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a lab name up to 100 characters.",
+        error: "Enter a lab name up to 100 characters."
+      });
+    }
+    if (roomNumber.length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Room number must be 50 characters or fewer.",
+        error: "Room number must be 50 characters or fewer."
+      });
+    }
+    await ensureArchiveRecordsTable();
+    const [existing] = await sequelize.query(
+      `SELECT lab.id, ar.id AS archiveId
+       FROM computer_labs lab
+       LEFT JOIN archived_records ar
+         ON ar.entityType = 'computer-lab' AND BINARY ar.entityId = BINARY CAST(lab.id AS CHAR)
+       WHERE lab.campus = ? AND LOWER(lab.name) = LOWER(?)
+         AND LOWER(COALESCE(lab.roomNumber, '')) = LOWER(?)
+       LIMIT 1`,
+      { replacements: [context.campus, name, roomNumber] }
+    );
+    if (existing.length) {
+      if (existing[0].archiveId) {
+        const message = "This computer lab is archived. Restore it from Archived Records before adding it again.";
+        return res.status(409).json({
+          success: false,
+          code: "COMPUTER_LAB_ARCHIVED",
+          archived: true,
+          archiveId: existing[0].archiveId,
+          message,
+          error: message
+        });
+      }
+      const message = "A computer lab with this name and room already exists at your campus.";
+      return res.status(409).json({ success: false, message, error: message });
+    }
+    const [result] = await sequelize.query(
+      `INSERT INTO computer_labs (name, roomNumber, campus, createdBy, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, NOW(), NOW())`,
+      { replacements: [name, roomNumber, context.campus, context.user.id] }
+    );
+    return res.status(201).json({
+      success: true,
+      message: `${name} was created successfully.`,
+      id: result.insertId,
+      name,
+      roomNumber: roomNumber || null,
+      campus: context.campus
+    });
+  } catch (error) {
+    console.error("Failed to create computer lab.", error);
+    const databaseErrorCode = error?.original?.code || error?.parent?.code || error?.code;
+    if (databaseErrorCode === "ER_DUP_ENTRY") {
+      const message = "A computer lab with this name and room already exists at your campus.";
+      return res.status(409).json({ success: false, message, error: message });
+    }
+    const message = ["ER_BAD_FIELD_ERROR", "ER_NO_SUCH_TABLE", "ER_BAD_NULL_ERROR", "ER_NO_DEFAULT_FOR_FIELD"].includes(databaseErrorCode)
+      ? "Computer lab database setup is incomplete. Verify migrations 035 and 036 are applied."
+      : ["ER_ACCESS_DENIED_ERROR", "ER_TABLEACCESS_DENIED_ERROR", "ER_DBACCESS_DENIED_ERROR"].includes(databaseErrorCode)
+        ? "The database account does not have permission to add computer labs. Contact the system administrator."
+        : databaseErrorCode
+          ? `Unable to create the computer lab (database error ${databaseErrorCode}). Please contact the system administrator.`
+          : error?.name
+            ? `Unable to create the computer lab (${error.name}). Please contact the system administrator.`
+            : "Unable to create the computer lab. Please try again.";
+    return res.status(500).json({ success: false, message, error: message });
+  }
+});
+
+router.put("/api/computer-labs/:id", async (req, res) => {
+  try {
+    const context = await getComputerLabAdminContext(req, res);
+    if (!context) return;
+    const id = String(req.params.id || "").trim();
+    if (!/^\d+$/.test(id)) return res.status(400).json({ error: "Invalid computer lab." });
+    const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+    const roomNumber = String(req.body?.roomNumber || "").trim().replace(/\s+/g, " ");
+    if (!name || name.length > 100) return res.status(400).json({ error: "Enter a lab name up to 100 characters." });
+    if (roomNumber.length > 50) return res.status(400).json({ error: "Room or location must be 50 characters or fewer." });
+
+    const [labs] = await sequelize.query(
+      `SELECT id, name, roomNumber FROM computer_labs WHERE id = ? AND campus = ? LIMIT 1`,
+      { replacements: [id, context.campus] }
+    );
+    if (!labs.length) return res.status(404).json({ error: "Computer lab not found at your campus." });
+    const [duplicates] = await sequelize.query(
+      `SELECT id FROM computer_labs
+       WHERE campus = ? AND LOWER(name) = LOWER(?) AND LOWER(COALESCE(roomNumber, '')) = LOWER(?) AND id <> ?
+       LIMIT 1`,
+      { replacements: [context.campus, name, roomNumber, id] }
+    );
+    if (duplicates.length) return res.status(409).json({ error: "A computer lab with this name and room already exists at your campus." });
+
+    const locationLabel = formatComputerLabLocation({ name, roomNumber });
+    await sequelize.transaction(async (transaction) => {
+      await sequelize.query(
+        `UPDATE computer_labs SET name = ?, roomNumber = ?, updatedAt = NOW() WHERE id = ? AND campus = ?`,
+        { replacements: [name, roomNumber || null, id, context.campus], transaction }
+      );
+      await sequelize.query(
+        `UPDATE equipment SET laboratoryRoom = ? WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE laboratory_schedules SET laboratoryRoom = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE attendance_sessions SET room = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE attendance SET lab = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE maintenance_requests SET laboratory_room = ?, updated_at = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE missing_equipment_history SET laboratoryRoom = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE equipment_usage_logs SET laboratoryId = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE equipment_inventory_checks SET computerLabId = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [id, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE equipment_inventory_check_items checkItem
+         INNER JOIN equipment e ON e.id = checkItem.equipmentId
+         SET checkItem.expectedLocation = ?, checkItem.actualLocation = ?
+         WHERE e.computerLabId = ?`,
+        { replacements: [locationLabel, locationLabel, id], transaction }
+      );
+      await sequelize.query(
+        `UPDATE equipment_technician_reports SET computerLabId = ?, updatedAt = NOW() WHERE computerLabId = ?`,
+        { replacements: [id, id], transaction }
+      );
+    });
+    await logAuditEntry(req, {
+      action: "Computer Lab Updated",
+      module: "Computer Labs",
+      resourceId: id,
+      description: `Updated computer lab ${labs[0].name}.`,
+      details: { oldName: labs[0].name, oldRoomNumber: labs[0].roomNumber, name, roomNumber: roomNumber || null, campus: context.campus }
+    });
+    const [updated] = await sequelize.query(
+      `SELECT id, name, roomNumber, campus, createdAt FROM computer_labs WHERE id = ?`,
+      { replacements: [id] }
+    );
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error("Failed to update computer lab.", error);
+    return res.status(500).json({ error: "Failed to update computer lab." });
+  }
+});
+
 router.get("/api/laboratory-schedules", async (req, res) => {
   try {
     const userId = req.session?.userId || null;
-    const userRole = String(req.session?.userRole || "").toLowerCase();
     if (!userId) return res.status(401).json({ error: "Please log in to view schedules." });
+    const viewer = await User.findByPk(userId, { attributes: ["id", "role", "campus"] });
+    if (!viewer) return res.status(401).json({ error: "Your account could not be verified." });
+    const userRole = normalizeRoleName(viewer.role);
 
     // Get user's campus for filtering
-    const userCampus = await getUserCampusFromSession(req);
+    const userCampus = normalizeCampus(viewer.campus) || await getUserCampusFromSession(req);
     
-    // Safe default: do not expose schedules to unauthenticated users.
-    // Ownership semantics:
-    // - Admins: see schedules they created (createdBy === userId) and unowned schedules (createdBy IS NULL) so existing records remain visible until claimed.
-    // - Instructors/technicians: see only schedules they created (createdBy === userId).
-    const where = {};
-    if (userRole === 'admin') {
-      where[Op.or] = [
-        { createdBy: userId },
-        { createdBy: null }
-      ];
-    } else if (userRole === 'instructor' || userRole === 'technician') {
+    let where = {};
+    const isFaculty = ["faculty", "instructor"].includes(userRole);
+    if (isAdminRole(userRole)) {
+      if (!userCampus) return res.status(403).json({ error: "User campus is not assigned." });
+    } else if (isFaculty) {
+      if (!userCampus) return res.status(403).json({ error: "Your campus must be assigned before viewing schedules." });
+    } else if (userRole === 'technician') {
       where.createdBy = userId;
     } else {
       // Students and others: no schedules returned
@@ -7133,11 +6215,28 @@ router.get("/api/laboratory-schedules", async (req, res) => {
     }
 
     // Add campus filter - users can only see schedules from their campus
+    const campusFilter = {};
     if (userCampus) {
       const campusName = String(userCampus).trim().replace(/\s*Campus\s*$/i, "");
-      where.campus = { [Op.in]: [campusName, `${campusName} Campus`] };
+      campusFilter.campus = { [Op.in]: [campusName, `${campusName} Campus`] };
+      where = { ...where, ...campusFilter };
     }
 
+    if (req.query.scope === "laboratory") {
+      if (!isFaculty) {
+        return res.status(403).json({ error: "Only Faculty can view schedules in their laboratory." });
+      }
+      if (!userCampus) {
+        return res.status(403).json({ error: "Your campus must be assigned before viewing laboratory schedules." });
+      }
+      const laboratoryRoom = String(req.query.laboratoryRoom || "").trim();
+      if (!laboratoryRoom) {
+        return res.status(400).json({ error: "Choose a laboratory to view its schedule." });
+      }
+      where = { ...where, ...campusFilter, laboratoryRoom };
+    }
+
+    where.id = { [Op.notIn]: await getArchivedEntityIds("laboratory-schedule") };
     const schedules = await LaboratorySchedule.findAll({
       where,
       order: [['dayOfWeek', 'ASC'], ['startTime', 'ASC']]
@@ -7145,30 +6244,46 @@ router.get("/api/laboratory-schedules", async (req, res) => {
 
     const scheduleIds = schedules.map((schedule) => schedule.id).filter(Boolean);
     
-    // Get ACTUAL attendance count (students who actually showed up) instead of class list enrollment
-    // This shows real attendance, not theoretical enrollment
-    const attendanceCounts = scheduleIds.length
-      ? await sequelize.query(
-          `SELECT 
-            laboratoryScheduleId,
-            COUNT(DISTINCT studentId) as count
-          FROM attendance
-          WHERE laboratoryScheduleId IN (?)
-          GROUP BY laboratoryScheduleId`,
-          {
-            replacements: [scheduleIds],
-            type: QueryTypes.SELECT
-          }
-        )
+    const enrolledCounts = scheduleIds.length
+      ? await ClassListEntry.findAll({
+          where: { laboratoryScheduleId: { [Op.in]: scheduleIds } },
+          attributes: [
+            "laboratoryScheduleId",
+            [sequelize.fn("COUNT", sequelize.col("id")), "enrolledCount"]
+          ],
+          group: ["laboratoryScheduleId"],
+          raw: true
+        })
       : [];
-
-    const countMap = new Map(attendanceCounts.map((entry) => [String(entry.laboratoryScheduleId), Number(entry.count || 0)]));
+    const countMap = new Map(enrolledCounts.map((entry) => [
+      String(entry.laboratoryScheduleId),
+      Number(entry.enrolledCount || 0)
+    ]));
+    const classListSections = scheduleIds.length
+      ? await ClassListEntry.findAll({
+          where: { laboratoryScheduleId: { [Op.in]: scheduleIds } },
+          attributes: ["laboratoryScheduleId", "courseSection", "program", "year", "section"],
+          group: ["laboratoryScheduleId", "courseSection", "program", "year", "section"]
+        })
+      : [];
+    const sectionsBySchedule = new Map();
+    classListSections.forEach((entry) => {
+      const sectionName = entry.courseSection ||
+        [entry.program, entry.year, entry.section].filter(Boolean).join(" ");
+      if (!sectionName) return;
+      const key = String(entry.laboratoryScheduleId);
+      const sections = sectionsBySchedule.get(key) || new Set();
+      sections.add(sectionName);
+      sectionsBySchedule.set(key, sections);
+    });
 
     res.json(schedules.map((schedule) => {
       const item = schedule.toJSON();
       return {
         ...item,
-        classListCount: countMap.get(String(item.id)) || 0
+        classListCount: countMap.get(String(item.id)) || 0,
+        classSections: Array.from(sectionsBySchedule.get(String(item.id)) || []),
+        isOwnSchedule: isFaculty && String(item.instructorUserId || "") === String(viewer.id)
       };
     }));
   } catch (error) {
@@ -7176,45 +6291,221 @@ router.get("/api/laboratory-schedules", async (req, res) => {
     res.status(500).json({ error: "Failed to load laboratory schedules" });
   }
 });
-router.post("/api/laboratory-schedules", upload.single("classListFile"), async (req, res) => {
+
+const resolveScheduleInstructor = async (instructorRef, requestCampus) => {
+  const reference = String(instructorRef || "").trim();
+  if (reference.startsWith("user:") || /^\d+$/.test(reference)) {
+    const userId = reference.startsWith("user:") ? reference.slice(5) : reference;
+    const user = await User.findByPk(userId, { attributes: ["id", "name", "role", "campus", "college"] });
+    if (!user || !["faculty", "instructor"].includes(normalizeRoleName(user.role)) ||
+        String(user.college || "").trim().toUpperCase() !== "CCS") {
+      return { error: "Select a registered Faculty account from the schedule instructor list." };
+    }
+    const name = String(user.name || "").trim();
+    const campus = normalizeCampus(user.campus) || normalizeCampus(requestCampus);
+    if (!name || !campus) return { error: "The instructor and Supply Office accounts must have a valid campus." };
+    return { id: user.id, name, campus };
+  }
+
+  return { error: "Select a registered Faculty account from the schedule instructor list." };
+};
+
+router.get("/api/faculty/schedule-students", async (req, res) => {
   try {
-    const { subject, instructor, laboratoryRoom, campus, dayOfWeek, startTime, endTime, status, qrEnabled, classList } = req.body;
+    if (!req.session?.userId) return res.status(401).json({ error: "Please log in to search students." });
+    const faculty = await User.findByPk(req.session.userId, {
+      attributes: ["id", "role", "campus"]
+    });
+    if (!faculty || !["faculty", "instructor"].includes(normalizeRoleName(faculty.role))) {
+      return res.status(403).json({ error: "Only Faculty can search students for a schedule roster." });
+    }
+    const campus = normalizeCampus(faculty.campus);
+    if (!campus) return res.status(403).json({ error: "Your Faculty account must have a valid campus." });
+
+    const query = String(req.query.q || "").trim();
+    if (query.length < 2) return res.json([]);
+    const campusName = String(campus).replace(/\s*Campus\s*$/i, "").trim();
+    const students = await User.findAll({
+      where: {
+        role: "student",
+        campus: { [Op.in]: [campusName, `${campusName} Campus`] },
+        [Op.or]: [
+          { name: { [Op.like]: `%${query}%` } },
+          { student_number: { [Op.like]: `%${query}%` } }
+        ]
+      },
+      attributes: ["id", "name", "student_number", "program", "year", "section"],
+      order: [["name", "ASC"]],
+      limit: 20
+    });
+    return res.json(students.map((student) => ({
+      id: student.id,
+      studentId: student.student_number || "",
+      name: student.name,
+      program: student.program || "",
+      year: student.year || "",
+      section: student.section || ""
+    })));
+  } catch (error) {
+    console.error("Failed to search students for Faculty schedule roster.", error);
+    return res.status(500).json({ error: "Failed to search registered students." });
+  }
+});
+
+const getFacultyOwnedSchedule = async (req, res) => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "Please log in to manage a schedule roster." });
+    return null;
+  }
+  const faculty = await User.findByPk(req.session.userId, {
+    attributes: ["id", "role", "campus"]
+  });
+  if (!faculty || !["faculty", "instructor"].includes(normalizeRoleName(faculty.role))) {
+    res.status(403).json({ error: "Only the assigned instructor can manage this class roster." });
+    return null;
+  }
+  const schedule = await LaboratorySchedule.findByPk(req.params.id);
+  if (!schedule) {
+    res.status(404).json({ error: "Laboratory schedule not found." });
+    return null;
+  }
+  const isOwner = String(schedule.instructorUserId || "") === String(faculty.id);
+  const facultyCampus = normalizeCampus(faculty.campus);
+  if (!isOwner || !facultyCampus || !canManageRecord(facultyCampus, schedule.campus)) {
+    res.status(403).json({ error: "You can manage rosters only for your own schedules at your campus." });
+    return null;
+  }
+  return { faculty, schedule };
+};
+
+router.get("/api/laboratory-schedules/:id/roster", async (req, res) => {
+  try {
+    const access = await getFacultyOwnedSchedule(req, res);
+    if (!access) return;
+    const entries = await ClassListEntry.findAll({
+      where: { laboratoryScheduleId: access.schedule.id },
+      attributes: ["id", "studentId", "fullName", "section", "year", "program", "matchStatus"],
+      order: [["fullName", "ASC"]]
+    });
+    return res.json(entries);
+  } catch (error) {
+    console.error("Failed to load Faculty schedule roster.", error);
+    return res.status(500).json({ error: "Failed to load the class roster." });
+  }
+});
+
+router.put("/api/laboratory-schedules/:id/roster", async (req, res) => {
+  try {
+    const access = await getFacultyOwnedSchedule(req, res);
+    if (!access) return;
+    const requestedStudents = req.body?.students;
+    if (!Array.isArray(requestedStudents) || requestedStudents.length > 500) {
+      return res.status(400).json({ error: "Provide a roster with no more than 500 students." });
+    }
+    const normalizedStudents = requestedStudents.map((student) => ({
+      studentId: String(student?.studentId || student?.studentNumber || "").trim(),
+      fullName: String(student?.fullName || student?.name || "").trim(),
+      section: String(student?.section || "").trim(),
+      year: String(student?.year || "").trim(),
+      program: String(student?.program || "").trim(),
+      email: String(student?.email || "").trim()
+    }));
+    if (normalizedStudents.some((student) => !student.studentId && !student.fullName)) {
+      return res.status(400).json({ error: "Each roster entry needs a Student ID or student name." });
+    }
+    const normalizedIds = normalizedStudents.map((student) => student.studentId.toLocaleLowerCase()).filter(Boolean);
+    const normalizedNames = normalizedStudents.map((student) => normalizeStudentName(student.fullName)).filter(Boolean);
+    if (new Set(normalizedIds).size !== normalizedIds.length || new Set(normalizedNames).size !== normalizedNames.length) {
+      return res.status(400).json({ error: "Remove duplicate Student IDs or names before saving." });
+    }
+
+    const validEntries = await resolveClassListEntries(normalizedStudents, access.schedule.id, access.schedule.campus);
+    if (validEntries.length !== normalizedStudents.length) {
+      return res.status(400).json({ error: "Some roster entries are incomplete. Add a student name or a registered Student ID." });
+    }
+    const transaction = await sequelize.transaction();
+    try {
+      await ClassListEntry.destroy({
+        where: { laboratoryScheduleId: access.schedule.id },
+        transaction
+      });
+      if (validEntries.length) {
+        await ClassListEntry.bulkCreate(validEntries, { transaction });
+      }
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+    await logAuditEntry(req, {
+      action: "Laboratory Schedule Roster Updated",
+      module: "Laboratory Scheduling",
+      resourceId: access.schedule.id,
+      description: `Updated the student roster for ${access.schedule.subject}.`,
+      details: { scheduleId: access.schedule.id, studentCount: validEntries.length }
+    });
+    return res.json({ success: true, studentCount: validEntries.length });
+  } catch (error) {
+    console.error("Failed to update Faculty schedule roster.", error);
+    return res.status(500).json({ error: "Failed to save the class roster." });
+  }
+});
+
+router.post("/api/laboratory-schedules", requireScheduleCreatorRole, handleScheduleClassListUpload, async (req, res) => {
+  try {
+    const { subject, instructorId, laboratoryRoom, dayOfWeek, startTime, endTime, status, qrEnabled, classList } = req.body;
+    const resolvedClassSection = normalizeScheduleClassSection(req.body.yearLevel, req.body.section);
+    if (resolvedClassSection.error) return res.status(400).json({ error: resolvedClassSection.error });
+    const { yearLevel, section } = resolvedClassSection;
+    const requestedScheduleColor = req.body.scheduleColor || DEFAULT_SCHEDULE_COLOR;
+    const scheduleColor = normalizeScheduleColor(requestedScheduleColor);
+    if (!scheduleColor) return res.status(400).json({ error: "Choose a valid schedule color." });
     const uploadedFile = req.file;
     const sessionUserId = req.session?.userId || null;
+    const scheduleCreator = req.scheduleCreator;
 
     console.log("[schedule-upload] content-type:", req.headers["content-type"]);
-    console.log("[schedule-upload] req.body:", req.body);
+    const loggedRequestBody = { ...req.body };
+    if (loggedRequestBody.classList) loggedRequestBody.classList = "[redacted]";
+    console.log("[schedule-upload] req.body:", loggedRequestBody);
     console.log("[schedule-upload] request.file:", uploadedFile ? { fieldname: uploadedFile.fieldname, originalname: uploadedFile.originalname, mimetype: uploadedFile.mimetype, size: uploadedFile.size } : null);
     console.log("[schedule-upload] session userId:", sessionUserId);
     console.log("[schedule-upload] session userRole:", req.session?.userRole);
 
     const uploadedClassListBuffer = getUploadedFileBuffer(uploadedFile);
     const hasClassListInput = Boolean(uploadedClassListBuffer || (typeof classList === "string" && classList.length) || (Array.isArray(classList) && classList.length));
+    let classListWarning = null;
 
-    if (!subject || !laboratoryRoom || !campus || !dayOfWeek || !startTime || !endTime) {
-      return res.status(400).json({ error: "All schedule fields are required" });
+    const creatorRole = normalizeRoleName(scheduleCreator?.role);
+    if (!subject || (!["faculty", "instructor"].includes(creatorRole) && !instructorId) ||
+        !laboratoryRoom || !dayOfWeek || !startTime || !endTime) {
+      return res.status(400).json({ error: "Subject, instructor, laboratory, day, and time are required." });
     }
+    const userCampus = normalizeCampus(scheduleCreator?.campus) || await getUserCampusFromSession(req);
+    if (!userCampus) return res.status(403).json({ error: "Unauthorized: User campus not found." });
+    const resolvedInstructor = ["faculty", "instructor"].includes(creatorRole)
+      ? {
+          id: scheduleCreator.id,
+          name: String(scheduleCreator.name || "").trim(),
+          campus: normalizeCampus(scheduleCreator.campus) || userCampus
+        }
+      : await resolveScheduleInstructor(instructorId, userCampus);
+    if (resolvedInstructor.error) return res.status(400).json({ error: resolvedInstructor.error });
+    const { id: instructorUserId, name: instructor, campus: canonicalCampus } = resolvedInstructor;
     // Class list is now optional - removed validation
 
     // Campus-based authorization check
-    const userCampus = await getUserCampusFromSession(req);
-    if (!userCampus) {
-      return res.status(403).json({ error: "Unauthorized: User campus not found." });
-    }
-    if (!canManageRecord(userCampus, campus)) {
+    if (!canManageRecord(userCampus, canonicalCampus)) {
       return res.status(403).json({ error: "You do not have permission to create schedules for another campus." });
     }
 
     // Normalize and validate laboratory room and campus and day
-    const canonicalRoom = normalizeRoom(laboratoryRoom);
-    if (!canonicalRoom) {
-      return res.status(400).json({ error: "Invalid laboratory room. Allowed: Laboratory 1 — Room 202, Laboratory 2 — Room 204" });
+    const scheduleLab = await findComputerLabByLabel(laboratoryRoom, canonicalCampus);
+    const archivedLabIds = new Set(await getArchivedEntityIds("computer-lab"));
+    if (!scheduleLab || archivedLabIds.has(String(scheduleLab.id))) {
+      return res.status(400).json({ error: "Choose an active computer lab registered at your campus." });
     }
-
-    const canonicalCampus = normalizeCampus(campus);
-    if (!canonicalCampus) {
-      return res.status(400).json({ error: "Invalid campus. Allowed: Bongabong, Calapan, Victoria" });
-    }
+    const canonicalRoom = formatComputerLabLocation(scheduleLab);
 
     if (!ALLOWED_DAYS.includes(dayOfWeek)) {
       return res.status(400).json({ error: "Invalid day. Allowed: Monday–Sunday" });
@@ -7222,16 +6513,21 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
 
     const parsedStartTime = parseScheduleClockTime(startTime);
     const parsedEndTime = parseScheduleClockTime(endTime);
-    if (parsedStartTime === null || parsedEndTime === null || parsedStartTime >= parsedEndTime) {
-      return res.status(400).json({ error: "Invalid schedule time. Use a valid start and end time where the end is after the start." });
+    if (!isAllowedScheduleClockTime(startTime) || !isAllowedScheduleClockTime(endTime) ||
+        parsedStartTime === null || parsedEndTime === null || parsedEndTime <= parsedStartTime) {
+      return res.status(400).json({ error: "Choose a time between 7:30 AM and 5:30 PM in 30-minute intervals, and make sure End Time is later than Start Time." });
     }
 
     // Check for schedule conflicts before creating (authoritative server-side check)
-    const conflict = await findConflictingSchedule({ laboratoryRoom: canonicalRoom, dayOfWeek, campus: canonicalCampus, startTime, endTime });
-    if (conflict) {
+    const conflictResult = await findConflictingSchedule({ laboratoryRoom: canonicalRoom, instructor, instructorUserId, dayOfWeek, campus: canonicalCampus, startTime, endTime });
+    if (conflictResult) {
+      const conflict = conflictResult.schedule;
+      const conflictMessage = conflictResult.type === "laboratory"
+        ? `Schedule conflict: ${canonicalRoom.startsWith("Laboratory 2") ? "COMLAB 2" : "COMLAB 1"} is already occupied during this time.`
+        : "Schedule conflict: This instructor already has a schedule during this time.";
       return res.status(409).json({
         error: "Schedule Conflict",
-        message: `Room ${canonicalRoom} is already scheduled for ${conflict.subject} on ${conflict.dayOfWeek} from ${conflict.startTime} to ${conflict.endTime}`,
+        message: conflictMessage,
         conflict: {
           id: conflict.id,
           subject: conflict.subject,
@@ -7250,14 +6546,19 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
       const schedule = await LaboratorySchedule.create({
         subject,
         instructor: instructor || null,
+        instructorUserId,
+        yearLevel,
+        section,
         laboratoryRoom: canonicalRoom,
+        computerLabId: scheduleLab.id,
         campus: canonicalCampus,
         createdBy: sessionUserId || null,
         dayOfWeek,
         startTime,
         endTime,
         status: status || "Confirmed",
-        qrEnabled: Boolean(qrEnabled)
+        qrEnabled: Boolean(qrEnabled),
+        scheduleColor
       }, { transaction });
 
       const existingSession = await AttendanceSession.findOne({
@@ -7273,7 +6574,7 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
           day: dayOfWeek,
           time: [startTime, endTime].filter(Boolean).join(" - "),
           room: canonicalRoom,
-          courseSection: null,
+          courseSection: getScheduleCourseSection(yearLevel, section),
           status: status || "Confirmed",
           laboratoryScheduleId: schedule.id,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -7295,13 +6596,6 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
       if (!parsedStudents.length && uploadedClassListBuffer) {
         parsedStudents = await parseClassListRows(uploadedClassListBuffer, uploadedFile.originalname);
         console.log("[schedule-upload] parsed rows count:", parsedStudents.length);
-        if (parsedStudents[0]) {
-          console.log(parsedStudents[0]);
-          console.log("typeof studentId:", typeof parsedStudents[0].studentId);
-          console.log("studentId:", parsedStudents[0].studentId);
-          console.log("[schedule-upload] first parsed student:", parsedStudents[0]);
-          console.dir(parsedStudents[0], { depth: null });
-        }
       }
 
       const validEntries = await resolveClassListEntries(parsedStudents, schedule.id, canonicalCampus);
@@ -7310,28 +6604,17 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
         scheduleId: schedule.id,
         campus: canonicalCampus,
         parsedRows: parsedStudents.length,
-        resolvedRows: validEntries.length,
-        sampleNames: validEntries.slice(0, 3).map((entry) => normalizeStudentName(entry.fullName))
+        resolvedRows: validEntries.length
       });
 
       const students = validEntries;
-      console.dir(students, { depth: null });
-      students.forEach((s, i) => {
-        console.log("Student", i);
-        console.log("studentId =", s.studentId);
-        console.log("typeof =", typeof s.studentId);
-        console.log("length =", String(s.studentId).length);
-      });
-      if (students[0]) {
-        console.dir(students[0], { depth: null });
-      }
 
       if (students.some((entry) => entry.matchStatus === "matched" && entry.studentId)) {
         const session = await AttendanceSession.findOne({ where: { laboratoryScheduleId: schedule.id }, transaction });
         const placeholderRecords = students.filter((entry) => entry.matchStatus === "matched" && entry.studentId).map((entry) => ({
           studentId: entry.studentId,
           fullName: entry.fullName,
-          courseSection: entry.courseSection || "",
+          courseSection: entry.courseSection || getScheduleCourseSection(yearLevel, section),
           subject: subject,
           lab: laboratoryRoom,
           instructor: instructor || "Instructor",
@@ -7348,26 +6631,14 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
       }
 
       console.log("[schedule-upload] students prepared for insertion:", validEntries.length);
-      if (validEntries[0]) {
-        console.log("[schedule-upload] first prepared student:", validEntries[0]);
-      }
       console.log("[schedule-upload] bulkCreate payload size:", validEntries.length);
-      console.log("[schedule-upload] bulkCreate payload (sample up to 20):", validEntries.slice(0, 20));
 
       if (hasClassListInput && !validEntries.length) {
-        await transaction.rollback();
-        console.log("[schedule-upload] no valid students to insert; execution stopped before bulkCreate.");
-        return res.status(400).json({ error: "No students could be parsed from the uploaded class list." });
+        classListWarning = "The schedule was created, but the optional class list could not be imported. You can add the roster later.";
+        console.warn("[schedule-upload] optional class list could not be imported; continuing without roster entries.");
       }
 
       if (validEntries.length) {
-        console.dir(validEntries, { depth: null });
-        validEntries.forEach((s, i) => {
-          console.log("Student", i);
-          console.log("studentId =", s.studentId);
-          console.log("typeof =", typeof s.studentId);
-          console.log("length =", String(s.studentId).length);
-        });
         try {
           const [schemaResult] = await sequelize.query("SHOW CREATE TABLE class_list_entries");
           console.log("[schedule-upload] class_list_entries schema:", JSON.stringify(schemaResult, null, 2));
@@ -7375,7 +6646,6 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
           console.error("[schedule-upload] failed to query table schema:", schemaError);
         }
         const bulkCreateResult = await ClassListEntry.bulkCreate(validEntries, { transaction });
-        console.log("[schedule-upload] bulkCreate result:", bulkCreateResult);
         console.log("[schedule-upload] total inserted records:", bulkCreateResult?.length || 0);
       }
 
@@ -7392,17 +6662,24 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
           scheduleId: schedule.id,
           subject: schedule.subject,
           instructor: schedule.instructor,
+          instructorUserId: schedule.instructorUserId,
+          yearLevel: schedule.yearLevel,
+          section: schedule.section,
           laboratoryRoom: schedule.laboratoryRoom,
           campus: schedule.campus,
           dayOfWeek: schedule.dayOfWeek,
           startTime: schedule.startTime,
           endTime: schedule.endTime,
+          scheduleColor: schedule.scheduleColor,
           status: schedule.status,
           createdBy: schedule.createdBy
         }
       });
 
-      res.status(201).json({ schedule: schedule.toJSON() });
+      res.status(201).json({
+        schedule: schedule.toJSON(),
+        ...(classListWarning ? { warning: classListWarning } : {})
+      });
     } catch (error) {
       await transaction.rollback();
       console.error("[schedule-upload] transaction rolled back due to error", error);
@@ -7437,20 +6714,11 @@ router.post("/api/laboratory-schedules", upload.single("classListFile"), async (
     res.status(500).json({ error: error?.message || "Failed to create laboratory schedule" });
   }
 });
-router.put("/api/laboratory-schedules/:id", upload.single("classListFile"), async (req, res) => {
+router.put("/api/laboratory-schedules/:id", requireScheduleUpdateAccess, upload.single("classListFile"), async (req, res) => {
   try {
     const schedule = await LaboratorySchedule.findByPk(req.params.id);
     if (!schedule) {
       return res.status(404).json({ error: "Schedule not found" });
-    }
-
-    const sessionUserId = req.session?.userId || null;
-    const sessionUserRole = String(req.session?.userRole || "").toLowerCase();
-
-    // Ownership enforcement: only allow updates if the schedule is owned by the user,
-    // or if it is unowned (createdBy === null) and the user is an admin (allows claiming existing schedules).
-    if (!(String(schedule.createdBy || '') === String(sessionUserId)) && !(schedule.createdBy === null && sessionUserRole === 'admin')) {
-      return res.status(403).json({ error: 'Not authorized to update this schedule.' });
     }
 
     // Campus-based authorization check
@@ -7462,25 +6730,43 @@ router.put("/api/laboratory-schedules/:id", upload.single("classListFile"), asyn
       return res.status(403).json({ error: "You do not have permission to update schedules from another campus." });
     }
 
-    const { subject, instructor, laboratoryRoom, campus, dayOfWeek, startTime, endTime, status, qrEnabled, classList } = req.body;
+    const { subject, instructorId, laboratoryRoom, dayOfWeek, startTime, endTime, status, qrEnabled, classList } = req.body;
+    const resolvedClassSection = normalizeScheduleClassSection(req.body.yearLevel, req.body.section);
+    if (resolvedClassSection.error) return res.status(400).json({ error: resolvedClassSection.error });
+    const { yearLevel, section } = resolvedClassSection;
+    const requestedScheduleColor = req.body.scheduleColor || schedule.scheduleColor || DEFAULT_SCHEDULE_COLOR;
+    const scheduleColor = normalizeScheduleColor(requestedScheduleColor);
+    if (!scheduleColor) return res.status(400).json({ error: "Choose a valid schedule color." });
     const uploadedFile = req.file;
     const uploadedClassListBuffer = getUploadedFileBuffer(uploadedFile);
     console.log("[schedule-upload-edit] content-type:", req.headers["content-type"]);
     console.log("[schedule-upload-edit] req.body:", req.body);
     console.log("[schedule-upload-edit] request.file:", uploadedFile ? { fieldname: uploadedFile.fieldname, originalname: uploadedFile.originalname, mimetype: uploadedFile.mimetype, size: uploadedFile.size } : null);
-    if (!subject || !laboratoryRoom || !campus || !dayOfWeek || !startTime || !endTime) {
-      return res.status(400).json({ error: "All schedule fields are required" });
+    const editorRole = normalizeRoleName(req.scheduleManager?.role);
+    const isFacultyEditor = ["faculty", "instructor"].includes(editorRole);
+    if (!subject || (!isFacultyEditor && !instructorId) || !laboratoryRoom || !dayOfWeek || !startTime || !endTime) {
+      return res.status(400).json({ error: "Subject, instructor, laboratory, day, and time are required." });
     }
+    const resolvedInstructor = isFacultyEditor
+      ? {
+          id: req.scheduleManager.id,
+          name: String(req.scheduleManager.name || "").trim(),
+          campus: normalizeCampus(req.scheduleManager.campus) || userCampus
+        }
+      : await resolveScheduleInstructor(instructorId, userCampus);
+    if (resolvedInstructor.error) return res.status(400).json({ error: resolvedInstructor.error });
+    const { id: instructorUserId, name: instructor, campus: canonicalCampus } = resolvedInstructor;
 
     // Normalize and validate laboratory room, campus, and day for edits
-    const canonicalRoom = normalizeRoom(laboratoryRoom);
-    if (!canonicalRoom) {
-      return res.status(400).json({ error: "Invalid laboratory room. Allowed: Laboratory 1 — Room 202, Laboratory 2 — Room 204" });
+    const scheduleLab = await findComputerLabByLabel(laboratoryRoom, canonicalCampus);
+    const archivedLabIds = new Set(await getArchivedEntityIds("computer-lab"));
+    if (!scheduleLab || archivedLabIds.has(String(scheduleLab.id))) {
+      return res.status(400).json({ error: "Choose an active computer lab registered at your campus." });
     }
+    const canonicalRoom = formatComputerLabLocation(scheduleLab);
 
-    const canonicalCampus = normalizeCampus(campus);
-    if (!canonicalCampus) {
-      return res.status(400).json({ error: "Invalid campus. Allowed: Bongabong, Calapan, Victoria" });
+    if (!canManageRecord(userCampus, canonicalCampus)) {
+      return res.status(403).json({ error: "You do not have permission to update schedules for another campus." });
     }
 
     if (!ALLOWED_DAYS.includes(dayOfWeek)) {
@@ -7489,8 +6775,9 @@ router.put("/api/laboratory-schedules/:id", upload.single("classListFile"), asyn
 
     const parsedStartTime = parseScheduleClockTime(startTime);
     const parsedEndTime = parseScheduleClockTime(endTime);
-    if (parsedStartTime === null || parsedEndTime === null || parsedStartTime >= parsedEndTime) {
-      return res.status(400).json({ error: "Invalid schedule time. Use a valid start and end time where the end is after the start." });
+    if (!isAllowedScheduleClockTime(startTime) || !isAllowedScheduleClockTime(endTime) ||
+        parsedStartTime === null || parsedEndTime === null || parsedEndTime <= parsedStartTime) {
+      return res.status(400).json({ error: "Choose a time between 7:30 AM and 5:30 PM in 30-minute intervals, and make sure End Time is later than Start Time." });
     }
 
     const transaction = await sequelize.transaction();
@@ -7498,22 +6785,37 @@ router.put("/api/laboratory-schedules/:id", upload.single("classListFile"), asyn
       await schedule.update({
         subject,
         instructor: instructor || null,
+        instructorUserId,
+        yearLevel,
+        section,
         laboratoryRoom: canonicalRoom,
+        computerLabId: scheduleLab.id,
         campus: canonicalCampus,
         dayOfWeek,
         startTime,
         endTime,
         status: status || "Confirmed",
-        qrEnabled: Boolean(qrEnabled)
+        qrEnabled: Boolean(qrEnabled),
+        scheduleColor
       }, { transaction });
+      await AttendanceSession.update({
+        courseSection: getScheduleCourseSection(yearLevel, section)
+      }, {
+        where: { laboratoryScheduleId: schedule.id },
+        transaction
+      });
 
       // Run conflict detection for edits (exclude current schedule id)
-      const editConflict = await findConflictingSchedule({ laboratoryRoom: canonicalRoom, dayOfWeek, campus: canonicalCampus, startTime, endTime, excludeId: schedule.id });
-      if (editConflict) {
+      const editConflictResult = await findConflictingSchedule({ laboratoryRoom: canonicalRoom, instructor, instructorUserId, dayOfWeek, campus: canonicalCampus, startTime, endTime, excludeId: schedule.id });
+      if (editConflictResult) {
         await transaction.rollback();
+        const editConflict = editConflictResult.schedule;
+        const conflictMessage = editConflictResult.type === "laboratory"
+          ? `Schedule conflict: ${canonicalRoom.startsWith("Laboratory 2") ? "COMLAB 2" : "COMLAB 1"} is already occupied during this time.`
+          : "Schedule conflict: This instructor already has a schedule during this time.";
         return res.status(409).json({
           error: "Schedule Conflict",
-          message: `Room ${laboratoryRoom} is already scheduled for ${editConflict.subject} on ${editConflict.dayOfWeek} from ${editConflict.startTime} to ${editConflict.endTime}`,
+          message: conflictMessage,
           conflict: {
             id: editConflict.id,
             subject: editConflict.subject,
@@ -7607,11 +6909,15 @@ router.put("/api/laboratory-schedules/:id", upload.single("classListFile"), asyn
           scheduleId: schedule.id,
           subject: schedule.subject,
           instructor: schedule.instructor,
+          instructorUserId: schedule.instructorUserId,
+          yearLevel: schedule.yearLevel,
+          section: schedule.section,
           laboratoryRoom: schedule.laboratoryRoom,
           campus: schedule.campus,
           dayOfWeek: schedule.dayOfWeek,
           startTime: schedule.startTime,
           endTime: schedule.endTime,
+          scheduleColor: schedule.scheduleColor,
           status: schedule.status,
           qrEnabled: schedule.qrEnabled
         }
@@ -7760,11 +7066,14 @@ router.get('/api/attendance-sessions/:id', async (req, res) => {
       where: { id, ...getAttendanceCampusWhere(context.campus) }
     });
     if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
-    if (!(String(schedule.createdBy || '') === String(context.userId)) && !(schedule.createdBy === null && isAdminRole(context.role))) {
+    if (!isAdminRole(context.role) && String(schedule.createdBy || '') !== String(context.userId)) {
       return res.status(403).json({ error: 'Not authorized to view this attendance session.' });
     }
     // Ensure session exists
-    const session = await AttendanceSession.findOne({ where: { laboratoryScheduleId: id }, order: [['createdAt', 'DESC']] });
+    const session = req.query.sessionId
+      ? await AttendanceSession.findOne({ where: { id: req.query.sessionId, laboratoryScheduleId: id } })
+      : await AttendanceSession.findOne({ where: { laboratoryScheduleId: id }, order: [['createdAt', 'DESC']] });
+    if (req.query.sessionId && !session) return res.status(404).json({ error: 'Attendance session not found' });
 
     // Auto-mark absent if session exists and has expired
     if (session && session.expiresAt && new Date() > new Date(session.expiresAt)) {
@@ -7796,15 +7105,14 @@ router.get('/api/attendance-sessions/:id', async (req, res) => {
 
     const students = await ClassListEntry.findAll({ where: { laboratoryScheduleId: id }, order: [['fullName', 'ASC']] });
     await reconcileClassListIdentities(students, schedule.campus);
-    // Collect ALL session tokens for this schedule to avoid token-mismatch bug
-    const allTokensForSchedule = (await AttendanceSession.findAll({
-      where: { laboratoryScheduleId: id },
-      attributes: ['token']
-    })).map(s => s.token).filter(Boolean);
+    const attendanceWhere = session?.token
+      ? { [Op.or]: [
+        { sessionToken: session.token },
+        { laboratoryScheduleId: id, sessionToken: null }
+      ] }
+      : { laboratoryScheduleId: id };
     const attendance = await Attendance.findAll({
-      where: allTokensForSchedule.length
-        ? { [Op.or]: [{ laboratoryScheduleId: id }, { sessionToken: { [Op.in]: allTokensForSchedule } }] }
-        : { laboratoryScheduleId: id },
+      where: attendanceWhere,
       order: [['createdAt', 'ASC']]
     });
 
@@ -7820,6 +7128,7 @@ router.get('/api/attendance-sessions/:id', async (req, res) => {
         fullName: c.fullName,
         status: c.matchStatus === 'review' ? 'Requires Review' : c.matchStatus === 'incomplete_id' ? 'ID Required' : a?.status || (sessionCompleted ? 'Absent' : 'Not Yet Recorded'),
         timeIn: a?.timeIn || null,
+        pcStationSetId: a?.pcStationSetId || null,
         remarks: c.matchStatus === 'review' ? 'Multiple registered students match this name.' : c.matchStatus === 'incomplete_id' ? 'Registered student matched, but the official Student ID is not provided.' : c.studentId ? (a?.remarks || (a ? '' : 'Automatically marked absent')) : 'No registered student matched this name.'
       };
     });
@@ -7834,6 +7143,7 @@ router.get('/api/attendance-sessions/:id', async (req, res) => {
         fullName: a.fullName || 'Unknown',
         status: a.status || 'Present',
         timeIn: a.timeIn || null,
+        pcStationSetId: a.pcStationSetId || null,
         remarks: 'Scanned attendance (not in class list)'
       }));
 
@@ -7847,9 +7157,9 @@ router.get('/api/attendance-sessions/:id', async (req, res) => {
         ['Laboratory', schedule.laboratoryRoom || ''],
         ['Campus', schedule.campus || ''],
         [],
-        ['Student ID', 'Full Name', 'Status', 'Time In']
+        ['Student ID', 'Full Name', 'Status', 'Time In', 'PC Set']
       ];
-      for (const r of rows) wsData.push([r.studentId || 'Not provided', r.fullName, r.status, r.timeIn || '']);
+      for (const r of rows) wsData.push([r.studentId || 'Not provided', r.fullName, r.status, r.timeIn || '', r.pcStationSetId || '']);
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
@@ -7901,20 +7211,23 @@ router.get('/api/attendance-sessions/:id/export', async (req, res) => {
       where: { id, ...getAttendanceCampusWhere(context.campus) }
     });
     if (!schedule) return res.status(404).send('Schedule not found');
-    if (!(String(schedule.createdBy || '') === String(context.userId)) && !(schedule.createdBy === null && isAdminRole(context.role))) {
+    if (!isAdminRole(context.role) && String(schedule.createdBy || '') !== String(context.userId)) {
       return res.status(403).send('Not authorized to export attendance for this schedule.');
     }
-    const session = await AttendanceSession.findOne({ where: { laboratoryScheduleId: id }, order: [['createdAt', 'DESC']] });
+    const session = req.query.sessionId
+      ? await AttendanceSession.findOne({ where: { id: req.query.sessionId, laboratoryScheduleId: id } })
+      : await AttendanceSession.findOne({ where: { laboratoryScheduleId: id }, order: [['createdAt', 'DESC']] });
+    if (req.query.sessionId && !session) return res.status(404).send('Attendance session not found');
     const students = await ClassListEntry.findAll({ where: { laboratoryScheduleId: id }, order: [['fullName', 'ASC']] });
     await reconcileClassListIdentities(students, schedule.campus);
-    const allExportTokens = (await AttendanceSession.findAll({
-      where: { laboratoryScheduleId: id },
-      attributes: ['token']
-    })).map(s => s.token).filter(Boolean);
+    const attendanceWhere = session?.token
+      ? { [Op.or]: [
+        { sessionToken: session.token },
+        { laboratoryScheduleId: id, sessionToken: null }
+      ] }
+      : { laboratoryScheduleId: id };
     const attendance = await Attendance.findAll({
-      where: allExportTokens.length
-        ? { [Op.or]: [{ laboratoryScheduleId: id }, { sessionToken: { [Op.in]: allExportTokens } }] }
-        : { laboratoryScheduleId: id },
+      where: attendanceWhere,
       order: [['createdAt', 'ASC']]
     });
     const attendanceMap = new Map(attendance.map(a => [String(a.studentId), a]));
@@ -7927,6 +7240,7 @@ router.get('/api/attendance-sessions/:id/export', async (req, res) => {
         fullName: c.fullName,
         status: c.matchStatus === 'review' ? 'Requires Review' : c.matchStatus === 'incomplete_id' ? 'ID Required' : a?.status || (sessionCompleted ? 'Absent' : 'Not Yet Recorded'),
         timeIn: a?.timeIn || '',
+        pcStationSetId: a?.pcStationSetId || '',
         remarks: c.matchStatus === 'review' ? 'Multiple registered students match this name.' : c.matchStatus === 'incomplete_id' ? 'Registered student matched, but the official Student ID is not provided.' : c.studentId ? (a?.remarks || (a ? '' : 'Automatically marked absent')) : 'No registered student matched this name.'
       };
     });
@@ -7938,9 +7252,9 @@ router.get('/api/attendance-sessions/:id/export', async (req, res) => {
         ['Laboratory', schedule.laboratoryRoom || ''],
         ['Campus', schedule.campus || ''],
         [],
-        ['Student ID', 'Full Name', 'Status', 'Time In']
+        ['Student ID', 'Full Name', 'Status', 'Time In', 'PC Set']
       ];
-      for (const r of rows) wsData.push([r.studentId || 'Not provided', r.fullName, r.status, r.timeIn || '']);
+      for (const r of rows) wsData.push([r.studentId || 'Not provided', r.fullName, r.status, r.timeIn || '', r.pcStationSetId || '']);
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
@@ -7951,8 +7265,8 @@ router.get('/api/attendance-sessions/:id/export', async (req, res) => {
     }
 
     let html = `<!doctype html><html><head><meta charset='utf8'><title>Attendance ${schedule.subject}</title></head><body>`;
-    html += `<h1>${schedule.subject}</h1><p>Instructor: ${schedule.instructor || ''}</p><table border='1' cellpadding='6' cellspacing='0'><thead><tr><th>Student ID</th><th>Full Name</th><th>Status</th><th>Time In</th></tr></thead><tbody>`;
-    for (const r of rows) html += `<tr><td>${r.studentId || 'Not provided'}</td><td>${r.fullName}</td><td>${r.status}</td><td>${r.timeIn || ''}</td></tr>`;
+    html += `<h1>${schedule.subject}</h1><p>Instructor: ${schedule.instructor || ''}</p><table border='1' cellpadding='6' cellspacing='0'><thead><tr><th>Student ID</th><th>Full Name</th><th>Status</th><th>Time In</th><th>PC Set</th></tr></thead><tbody>`;
+    for (const r of rows) html += `<tr><td>${r.studentId || 'Not provided'}</td><td>${r.fullName}</td><td>${r.status}</td><td>${r.timeIn || ''}</td><td>${r.pcStationSetId || ''}</td></tr>`;
     html += `</tbody></table></body></html>`;
     res.setHeader('Content-Disposition', `inline; filename=attendance-${id}.html`);
     res.setHeader('Content-Type', 'text/html');
@@ -7962,50 +7276,87 @@ router.get('/api/attendance-sessions/:id/export', async (req, res) => {
     res.status(500).send('Failed to export attendance');
   }
 });
-router.delete("/api/laboratory-schedules/:id", async (req, res) => {
+router.delete("/api/laboratory-schedules/:id", requireScheduleUpdateAccess, async (req, res) => {
+  return res.status(410).json({ error: "Permanent deletion is disabled. Use Archive instead." });
+});
+
+const FACULTY_COLLEGES = new Set(["IABE", "CBM", "CCS", "CAS", "CTE", "CCJE", "CAAF", "IF", "GS"]);
+const getAdminFacultyContext = async (req, res) => {
+  if (!req.session?.userId) {
+    res.status(401).json({ error: "Please log in to manage Faculty accounts." });
+    return null;
+  }
+  const admin = await User.findByPk(req.session.userId, { attributes: ["id", "role", "campus"] });
+  if (!admin || !isAdminRole(admin.role)) {
+    res.status(403).json({ error: "Only administrators can manage Faculty accounts." });
+    return null;
+  }
+  const campus = normalizeCampus(admin.campus) || normalizeCampus(String(admin.campus || "").replace(/\s*Campus\s*$/i, ""));
+  if (!campus) {
+    res.status(403).json({ error: "Your administrator account must have an assigned campus." });
+    return null;
+  }
+  return { admin, campus };
+};
+
+router.get("/api/faculty", async (req, res) => {
   try {
-    const schedule = await LaboratorySchedule.findByPk(req.params.id);
-    if (!schedule) {
-      return res.status(404).json({ error: "Schedule not found" });
-    }
-
-    const sessionUserId = req.session?.userId || null;
-    const sessionUserRole = String(req.session?.userRole || "").toLowerCase();
-
-    if (!(String(schedule.createdBy || '') === String(sessionUserId)) && !(schedule.createdBy === null && sessionUserRole === 'admin')) {
-      return res.status(403).json({ error: 'Not authorized to delete this schedule.' });
-    }
-
-    // Campus-based authorization check
-    const userCampus = await getUserCampusFromSession(req);
-    if (!userCampus) {
-      return res.status(403).json({ error: "Unauthorized: User campus not found." });
-    }
-    if (!canManageRecord(userCampus, schedule.campus)) {
-      return res.status(403).json({ error: "You do not have permission to delete schedules from another campus." });
-    }
-
-    await schedule.destroy();
-    await logAuditEntry(req, {
-      action: "Laboratory Schedule Deleted",
-      module: "Laboratory Scheduling",
-      resourceId: schedule.id,
-      description: `Deleted laboratory schedule ${schedule.subject || schedule.id}.`,
-      details: {
-        scheduleId: schedule.id,
-        subject: schedule.subject,
-        laboratoryRoom: schedule.laboratoryRoom,
-        campus: schedule.campus,
-        dayOfWeek: schedule.dayOfWeek,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
-        deletedBy: req.session?.userId || null
-      }
+    const context = await getAdminFacultyContext(req, res);
+    if (!context) return;
+    const faculty = await User.findAll({
+      where: {
+        campus: { [Op.in]: [context.campus, `${context.campus} Campus`] },
+        role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] }
+      },
+      attributes: ["id", "name", "email", "college", "campus", "email_verified", "createdAt"],
+      order: [["name", "ASC"]]
     });
-    res.json({ success: true, message: "Schedule deleted successfully." });
+    return res.json({ success: true, faculty });
   } catch (error) {
-    console.error("Failed to delete laboratory schedule", error);
-    res.status(500).json({ error: "Failed to delete laboratory schedule" });
+    console.error("Failed to list campus faculty.", error);
+    return res.status(500).json({ error: "Failed to load Faculty accounts." });
+  }
+});
+
+router.post("/api/faculty", async (req, res) => {
+  try {
+    const context = await getAdminFacultyContext(req, res);
+    if (!context) return;
+    const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const college = String(req.body?.college || "").trim().toUpperCase();
+    const password = String(req.body?.password || "");
+    if (!name || name.length > 120) return res.status(400).json({ error: "Enter the Faculty member’s full name (up to 120 characters)." });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 190) return res.status(400).json({ error: "Enter a valid email address." });
+    if (!FACULTY_COLLEGES.has(college)) return res.status(400).json({ error: "Select a valid college or institute." });
+    if (password.length < 8 || password.length > 128) return res.status(400).json({ error: "Set a temporary password with 8 to 128 characters." });
+    const duplicate = await User.findOne({ where: { email } });
+    if (duplicate) return res.status(409).json({ error: "An account already uses this email address." });
+
+    const faculty = await User.create({
+      name,
+      email,
+      password: await bcryptjs.hash(password, 10),
+      role: "faculty",
+      college,
+      campus: context.campus,
+      email_verified: true,
+      last_login_at: null
+    });
+    await logAuditEntry(req, {
+      action: "Faculty Account Created",
+      module: "User Management",
+      resourceId: faculty.id,
+      description: `Created a Faculty account for ${faculty.name} at ${context.campus}.`
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Faculty account created. Share the temporary password securely.",
+      faculty: { id: faculty.id, name: faculty.name, email: faculty.email, college: faculty.college, campus: faculty.campus, email_verified: faculty.email_verified, createdAt: faculty.createdAt }
+    });
+  } catch (error) {
+    console.error("Failed to create campus Faculty account.", error);
+    return res.status(500).json({ error: "Failed to create the Faculty account." });
   }
 });
 
@@ -8016,21 +7367,13 @@ router.get("/api/users", async (req, res) => {
       return res.status(401).json({ error: "Please log in to view users." });
     }
 
+    const authContext = await getUserAuthContext(req);
+    if (!isAdminRole(authContext.role)) {
+      return res.status(403).json({ error: "Only administrators can view user accounts." });
+    }
+
     const { role } = req.query;
     const where = {};
-    if (String(req.query.auditScope || '') === '1') {
-      const authContext = await getUserAuthContext(req);
-      const normalizedRole = normalizeRoleName(authContext.role || '');
-      const normalizedCampus = String(authContext.campus || '').trim().replace(/\s*Campus\s*$/i, '').trim();
-      const isCentralAdmin = ['superadmin', 'centraladmin', 'systemadmin'].includes(normalizedRole.replace(/[_-]+/g, ''));
-      if (!isCentralAdmin) {
-        if (!normalizedCampus) return res.status(403).json({ error: 'Unauthorized: User campus not found.' });
-        where[Op.or] = [
-          { campus: normalizedCampus },
-          { campus: `${normalizedCampus} Campus` }
-        ];
-      }
-    }
     if (role) {
       const normalizedRole = String(role).trim().toLowerCase();
       if (normalizedRole === "admin") {
@@ -8238,6 +7581,9 @@ const getEquipmentInventoryReportRows = async ({ campus = "", laboratory = "", s
     replacements.search = `%${normalizedSearch}%`;
   }
 
+  // Keep chair assets out of the inventory report and all of its exports.
+  whereClauses.push("LOWER(COALESCE(name, '')) NOT LIKE '%chair%' AND LOWER(COALESCE(category, '')) NOT LIKE '%chair%'");
+
   const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
   const query = `
     SELECT id, equipmentId, assetNumber, name, category, campus, laboratoryRoom, status, quantity, dateAdded, qrCode, qrImage, qrGeneratedAt
@@ -8291,6 +7637,12 @@ const getEquipmentInventoryReportRows = async ({ campus = "", laboratory = "", s
         { category: { [Op.like]: `%${normalizedSearch}%` } }
       ] }];
     }
+    where[Op.and] = [...(where[Op.and] || []), {
+      [Op.and]: [
+        { [Op.or]: [{ name: { [Op.is]: null } }, { name: { [Op.notLike]: "%chair%" } }] },
+        { [Op.or]: [{ category: { [Op.is]: null } }, { category: { [Op.notLike]: "%chair%" } }] }
+      ]
+    }];
     const records = await Equipment.findAll({ where, order: [["dateAdded", "DESC"]] });
     return records.map((record) => record.toJSON());
   }
@@ -8319,7 +7671,10 @@ router.get("/api/reports", async (req, res) => {
     const incomingDateTo = req.query.dateTo || "";
     const { dateFrom: derivedDateFrom, dateTo: derivedDateTo } = getDateRangeFromReportPeriod(reportPeriod);
     const dateFrom = incomingDateFrom || derivedDateFrom || "";
-    const dateTo = incomingDateTo || derivedDateTo || "";
+    const rawDateTo = incomingDateTo || derivedDateTo || "";
+    const dateTo = /^\d{4}-\d{2}-\d{2}$/.test(String(rawDateTo))
+      ? `${rawDateTo} 23:59:59.999`
+      : rawDateTo;
     const searchTerm = search.toString().trim();
     const campus = String(accessState.effectiveCampus || "").trim();
 
@@ -8475,6 +7830,7 @@ router.get("/api/reports", async (req, res) => {
         return {
           ...item,
           equipmentName: item.equipment?.name || item.equipment_id || "—",
+          equipmentId: item.equipment?.equipmentId || item.equipment?.equipment_id || item.equipment_id || item.equipmentId || "",
           technicianName: item.technician?.name || "Unassigned",
           dateReported: item.dateReported || item.created_at || item.createdAt || null,
           campus: item.equipment?.campus || item.campus || "",
@@ -8686,6 +8042,7 @@ import * as equipmentSetController from '../controllers/equipmentSetController.j
 
 // Get all PC sets
 router.get('/api/equipment-sets', equipmentSetController.getAllPCSets);
+router.get('/api/pc-stations/:setId/qr', getPCStationQr);
 
 // Get single PC set with details
 router.get('/api/equipment-sets/:setId', equipmentSetController.getPCSetDetails);

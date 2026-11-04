@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit History | ComLab</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <script src="/js/sidebar-component.js?v=65" defer></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #07150f;
+      color: #e7fff1;
+      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .main-container {
+      width: calc(100% - var(--sidebar-width, 250px));
+      min-height: 100vh;
+      margin-left: var(--sidebar-width, 250px);
+      padding: clamp(1.25rem, 3vw, 2.5rem);
+    }
+    .page-heading {
+      margin: 0;
+      color: #f0fdf4;
+      font-size: clamp(1.6rem, 2.5vw, 2rem);
+      font-weight: 750;
+      letter-spacing: -.035em;
+    }
+    .audit-page-heading {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .75rem;
+    }
+    .student-profile-header-actions {
+      display: flex;
+      min-width: 0;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .65rem;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .audit-page-heading-copy { min-width: 0; }
+    body.student-pc-audit-page .audit-page-heading :is(
+      h1,
+      .page-title,
+      .header-title,
+      .student-page-title,
+      .page-header-title,
+      .comlab-page-heading-title
+    ) {
+      display: none !important;
+    }
+    .page-description {
+      margin: .35rem 0 0;
+      color: #91ad9c;
+      font-size: .92rem;
+    }
+    .audit-tabs { margin-top: 1.25rem; }
+    .audit-tab {
+      display: inline-flex;
+      min-height: 2.6rem;
+      align-items: center;
+      gap: .55rem;
+      border: 1px solid rgba(52, 211, 153, .3);
+      border-radius: .8rem;
+      padding: .55rem .95rem;
+      background: linear-gradient(135deg, rgba(16, 91, 58, .9), rgba(10, 62, 41, .9));
+      color: #d1fae5;
+      font-size: .88rem;
+      font-weight: 700;
+    }
+    .audit-tab i { color: #6ee7b7; }
+    .audit-card {
+      margin-top: 1rem;
+      overflow: hidden;
+      border: 1px solid rgba(52, 211, 153, .2);
+      border-radius: 1.1rem;
+      background: linear-gradient(145deg, rgba(9, 31, 21, .98), rgba(7, 25, 18, .98));
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .17);
+    }
+    .audit-card-header {
+      display: flex;
+      min-height: 5.1rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(52, 211, 153, .13);
+    }
+    .audit-title-wrap {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .85rem;
+    }
+    .audit-title-icon {
+      width: 2.65rem;
+      height: 2.65rem;
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid rgba(52, 211, 153, .24);
+      border-radius: .85rem;
+      background: rgba(16, 185, 129, .11);
+      color: #6ee7b7;
+    }
+    .audit-card h2 {
+      margin: 0;
+      color: #effdf4;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -.015em;
+    }
+    .audit-subtitle {
+      margin: .15rem 0 0;
+      color: #83a391;
+      font-size: .8rem;
+    }
+    .audit-filter {
+      display: grid;
+      flex: 1 1 42rem;
+      grid-template-columns: minmax(9rem, 1.5fr) repeat(3, minmax(0, 1fr));
+      gap: .55rem;
+    }
+    .audit-filter input,
+    .audit-filter select {
+      width: 100%;
+      min-width: 0;
+      min-height: 2.55rem;
+      border: 1px solid rgba(74, 222, 128, .25);
+      border-radius: .7rem;
+      padding: .55rem .7rem;
+      background-color: #0a2117;
+      color: #e7fff1;
+      font: inherit;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+    .audit-filter select { cursor: pointer; }
+    .audit-filter input::placeholder { color: #779484; }
+    .audit-filter input:focus-visible,
+    .audit-filter select:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+    .audit-filter-date {
+      display: grid;
+      min-width: 0;
+      grid-template-columns: minmax(0, 1fr);
+      gap: .2rem;
+    }
+    .audit-filter-date input[type="date"] {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      padding-inline: .55rem;
+    }
+    .audit-filter-date span {
+      color: #91ad9c;
+      font-size: .65rem;
+      font-weight: 650;
+    }
+    .audit-table-wrap { overflow-x: auto; }
+    .audit-table {
+      width: 100%;
+      min-width: 34rem;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+    }
+    .audit-table thead th {
+      padding: .7rem 1rem;
+      border-bottom: 1px solid rgba(52, 211, 153, .15);
+      background: rgba(11, 43, 29, .86);
+      color: #8fbda2;
+      font-size: .7rem;
+      font-weight: 750;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .audit-table tbody tr { transition: background-color 140ms ease; }
+    .audit-table tbody tr:hover { background: rgba(52, 211, 153, .055); }
+    .audit-table tbody td {
+      padding: .8rem 1rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .09);
+      color: #dcebe1;
+      font-size: .82rem;
+      vertical-align: middle;
+    }
+    .audit-table tbody tr:last-child td { border-bottom: 0; }
+    .audit-table th:first-child, .audit-table td:first-child { width: 8rem; }
+    .audit-table th:nth-child(2), .audit-table td:nth-child(2) { width: 13rem; }
+    .audit-table th:last-child, .audit-table td:last-child { width: 12rem; }
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: .35rem .7rem;
+      font-size: .75rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .action-badge.login {
+      border-color: rgba(52, 211, 153, .23);
+      background: rgba(16, 185, 129, .12);
+      color: #6ee7b7;
+    }
+    .action-badge.logout {
+      border-color: rgba(251, 191, 36, .22);
+      background: rgba(245, 158, 11, .1);
+      color: #fcd34d;
+    }
+    .audit-time {
+      display: grid;
+      gap: .12rem;
+      color: #e2f3e8;
+      font-size: .82rem;
+      white-space: nowrap;
+    }
+    .audit-time-date { color: #8eab99; font-size: .72rem; }
+    .station-name { color: #e8f7ec; font-weight: 700; }
+    .station-id { display: block; margin-top: .15rem; color: #779484; font-size: .7rem; }
+    .audit-results {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      border-top: 1px solid rgba(74, 222, 128, .1);
+      padding: .75rem 1rem;
+      color: #91ad9c;
+      font-size: .75rem;
+    }
+    .audit-pagination { display: flex; align-items: center; gap: .45rem; }
+    .audit-pagination button {
+      min-height: 2rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .55rem;
+      padding: .35rem .65rem;
+      background: rgba(16, 91, 58, .28);
+      color: #d1fae5;
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .audit-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+    .audit-pagination button:focus-visible { outline: 2px solid #6ee7b7; outline-offset: 2px; }
+    .table-message {
+      padding: 2.5rem 1rem !important;
+      color: #92ad9d !important;
+      text-align: center;
+    }
+    .table-message i {
+      display: block;
+      margin-bottom: .65rem;
+      color: #4ade80;
+      font-size: 1.2rem;
+    }
+    body.student-pc-audit-page .sidebar-nav { padding: .75rem 0; }
+    body.student-pc-audit-page .sidebar .nav-item {
+      min-height: 2.8rem;
+      margin: .2rem .35rem;
+      padding: .68rem .9rem !important;
+      gap: .7rem !important;
+      border-radius: .72rem !important;
+    }
+    body.student-pc-audit-page .sidebar .nav-item i {
+      display: inline-grid;
+      width: 1.5rem !important;
+      height: 1.5rem;
+      place-items: center;
+      font-size: 1.25rem !important;
+    }
+    body.student-pc-audit-page .sidebar .nav-item.active,
+    body.student-pc-audit-page .sidebar .nav-item[aria-current="page"] {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 3px 0 0 #4ade80, 0 5px 14px rgba(34,197,94,.08) !important;
+    }
+    @media (max-width: 720px) {
+      .main-container {
+        width: 100%;
+        margin-left: 0;
+        padding: .8rem .8rem calc(2rem + env(safe-area-inset-bottom));
+      }
+      html body.student-pc-audit-page .audit-page-heading.comlab-slim-page-header:not(#comlab-header-specificity) {
+        inset: 0 !important;
+        width: 100% !important;
+        min-height: 2.8rem !important;
+        height: 2.8rem !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: .45rem !important;
+        padding: .2rem .55rem !important;
+        border-bottom: 1px solid rgba(74, 222, 128, .2) !important;
+        background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+        z-index: 1100 !important;
+      }
+      html body.student-pc-audit-page .audit-page-heading #mobileMenuToggle {
+        position: static !important;
+        inset: auto !important;
+        display: inline-flex !important;
+        width: 2.1rem !important;
+        height: 2.1rem !important;
+        min-height: 2.1rem !important;
+        flex: 0 0 2.1rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 1px solid rgba(74, 222, 128, .24) !important;
+        border-radius: .65rem !important;
+        background: rgba(7, 38, 24, .8) !important;
+        color: #a7f3d0 !important;
+        font-size: .95rem !important;
+        transform: none !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions {
+        display: flex !important;
+        min-width: max-content !important;
+        height: 2.2rem !important;
+        flex: 0 0 auto !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: .5rem !important;
+        margin: 0 0 0 auto !important;
+        white-space: nowrap !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions > * {
+        align-self: center !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .profile-theme-controls {
+        display: inline-flex !important;
+        height: 2rem !important;
+        flex: 0 0 2rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions [data-theme-toggle-anchor] {
+        display: inline-flex !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        flex: 0 0 2rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .profile-theme-toggle,
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .comlab-notification-button {
+        display: inline-grid !important;
+        width: 2rem !important;
+        min-width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+        flex: 0 0 2rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .system-profile-badge {
+        display: inline-flex !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .system-profile-badge-copy {
+        display: flex !important;
+        min-width: 0 !important;
+        max-width: 24vw !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .system-profile-badge-name {
+        max-width: 24vw !important;
+        overflow: hidden !important;
+        font-size: .62rem !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+      html body.student-pc-audit-page .student-profile-header-actions.header-actions .system-profile-badge-role {
+        display: block !important;
+        font-size: .48rem !important;
+        white-space: nowrap !important;
+      }
+      html body.student-pc-audit-page .audit-page-heading #mobileMenuToggle:focus-visible {
+        outline: 2px solid #6ee7b7;
+        outline-offset: 2px;
+      }
+      html body.student-pc-audit-page .comlab-page-header-spacer {
+        height: 2.8rem !important;
+        min-height: 2.8rem !important;
+        margin-bottom: .45rem !important;
+      }
+      .page-heading { font-size: clamp(1.5rem, 6vw, 1.9rem); line-height: 1.12; }
+      .page-description { margin-top: .4rem; font-size: .84rem; line-height: 1.4; }
+      .audit-tabs { margin-top: .9rem; }
+      .audit-tab { min-height: 2.45rem; padding: .48rem .8rem; }
+      .audit-card-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: .8rem;
+        padding: .9rem;
+      }
+      .audit-filter {
+        width: 100%;
+        flex-basis: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .5rem;
+      }
+      .audit-filter > input,
+      .audit-filter > select { grid-column: 1 / -1; }
+      .audit-filter-date { grid-column: span 1; min-width: 0; }
+      .audit-filter-date input[type="date"] {
+        grid-column: auto;
+        min-height: 2.45rem;
+        padding: .4rem .3rem;
+        font-size: .7rem;
+      }
+      .audit-table-wrap { overflow: visible; }
+      .audit-table { display: block; width: 100%; min-width: 0; }
+      .audit-table thead { display: none; }
+      .audit-table tbody {
+        display: grid;
+        gap: .6rem;
+        padding: .65rem;
+      }
+      .audit-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          "action station"
+          "time time";
+        gap: .45rem;
+        min-width: 0;
+        border: 1px solid rgba(74, 222, 128, .14);
+        border-radius: .85rem;
+        padding: .7rem .75rem;
+        background: linear-gradient(145deg, rgba(13, 43, 29, .8), rgba(7, 25, 18, .92));
+      }
+      .audit-table tbody tr:hover { background: rgba(52, 211, 153, .08); }
+      .audit-table tbody td {
+        display: block;
+        width: auto !important;
+        min-width: 0;
+        border: 0;
+        padding: 0;
+        overflow-wrap: anywhere;
+        font-size: .78rem;
+      }
+      .audit-table tbody td:first-child { grid-area: action; align-self: center; }
+      .audit-table tbody td:nth-child(2) { grid-area: station; text-align: right; }
+      .audit-table tbody td:last-child {
+        grid-area: time;
+        border-top: 1px solid rgba(74, 222, 128, .1);
+        padding-top: .4rem;
+      }
+      .audit-table .audit-time { display: flex; justify-content: space-between; font-size: .72rem; }
+      .audit-table .audit-time-date { font-size: .7rem; }
+      .audit-table .station-name { font-size: .78rem; }
+      .audit-table .station-id { display: inline; margin-left: .35rem; font-size: .68rem; }
+      .audit-table .action-badge { padding: .27rem .55rem; font-size: .7rem; }
+      .audit-table tbody td.table-message {
+        grid-column: 1 / -1;
+        grid-area: auto;
+        border: 0;
+        padding: 1.4rem .8rem;
+        text-align: center;
+      }
+      .audit-results { align-items: flex-start; flex-direction: column; }
+      .audit-pagination { width: 100%; justify-content: space-between; }
+      .audit-card { margin-top: .75rem; border-radius: .9rem; }
+      .audit-title-wrap { gap: .65rem; }
+      .audit-title-icon { width: 2.35rem; height: 2.35rem; border-radius: .7rem; }
+      .audit-card h2 { font-size: .95rem; }
+      .audit-subtitle { font-size: .74rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal system-layout-page student-pc-audit-page">
+  <script>window.__CURRENT_USER__ = { role: 'student' };</script>
+  <div id="shared-sidebar"></div>
+  <main class="main-container">
+    <header class="audit-page-heading" data-comlab-hide-auto-title="true">
+      <button id="mobileMenuToggle" class="student-page-menu" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+      <div class="student-profile-header-actions header-actions" aria-label="Account actions">
+        <div data-theme-toggle-anchor></div>
+      </div>
+    </header>
+    <div class="audit-tabs" role="tablist" aria-label="Student audit history">
+      <button class="audit-tab" type="button" role="tab" aria-selected="true"><i class="fas fa-desktop" aria-hidden="true"></i>PC Logs</button>
+    </div>
+    <section class="audit-card" aria-live="polite">
+      <header class="audit-card-header">
+        <div class="audit-title-wrap">
+          <span class="audit-title-icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+          <div>
+            <h2>PC station log activity</h2>
+            <p class="audit-subtitle">Login and logout records for your PC sessions</p>
+          </div>
+        </div>
+        <div class="audit-filter" aria-label="Search and filter PC logs">
+          <input id="studentPcLogSearch" type="search" placeholder="Search station or activity" aria-label="Search PC station or activity">
+          <select id="studentPcLogActionFilter" aria-label="Filter PC logs by action">
+            <option value="">All actions</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+          </select>
+          <label class="audit-filter-date"><span>From</span><input id="studentPcLogDateFrom" type="date" aria-label="Filter PC logs from date"></label>
+          <label class="audit-filter-date"><span>To</span><input id="studentPcLogDateTo" type="date" aria-label="Filter PC logs to date"></label>
+        </div>
+      </header>
+      <div class="audit-table-wrap">
+        <table class="audit-table">
+          <thead>
+            <tr><th scope="col">Action</th><th scope="col">PC station</th><th scope="col">Date &amp; time</th></tr>
+          </thead>
+          <tbody id="auditHistory" aria-live="polite">
+            <tr><td colspan="3" class="table-message"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Loading PC station logs…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="audit-results">
+        <span id="auditResultsSummary" aria-live="polite">Loading activity…</span>
+        <nav class="audit-pagination" aria-label="PC log pages">
+          <button id="auditPreviousPage" type="button" disabled>Previous</button>
+          <span id="auditPageSummary">Page 1</span>
+          <button id="auditNextPage" type="button" disabled>Next</button>
+        </nav>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const auditHistory = document.getElementById('auditHistory');
+    const actionFilter = document.getElementById('studentPcLogActionFilter');
+    const stationSearch = document.getElementById('studentPcLogSearch');
+    const dateFromFilter = document.getElementById('studentPcLogDateFrom');
+    const dateToFilter = document.getElementById('studentPcLogDateTo');
+    const resultsSummary = document.getElementById('auditResultsSummary');
+    const pageSummary = document.getElementById('auditPageSummary');
+    const previousPageButton = document.getElementById('auditPreviousPage');
+    const nextPageButton = document.getElementById('auditNextPage');
+    const pageSize = 25;
+    let currentPage = 1;
+    let totalPages = 1;
+    let searchTimeout;
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+    const formatDate = (value, options) => {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? 'Date not recorded'
+        : date.toLocaleString(undefined, options);
+    };
+    const getManilaDateBoundary = (date, endOfDay = false) =>
+      `${date}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}+08:00`;
+    const showTableMessage = (message, icon) => {
+      auditHistory.innerHTML = `<tr><td colspan="3" class="table-message"><i class="fas ${icon}" aria-hidden="true"></i>${escapeHtml(message)}</td></tr>`;
+    };
+
+    async function fetchPcLogs(params) {
+      const response = await fetch('/api/audit-logs?' + params.toString(), {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Unable to load audit history.');
+      if (!Array.isArray(payload.data) || !payload.meta) {
+        throw new Error('The PC log service returned an unexpected response.');
+      }
+      return payload;
+    }
+
+    function getStationDetails(entry) {
+      const description = String(entry.description || '');
+      const match = description.match(/PC station (.+?) \(([^)]+)\)/i);
+      return {
+        name: match?.[1] || 'PC station',
+        id: entry.resourceId || match?.[2] || ''
+      };
+    }
+
+    function renderPcLogRows(entries) {
+      if (!entries.length) {
+        showTableMessage('No PC station activity matches these filters.', 'fa-inbox');
+        return;
+      }
+      auditHistory.innerHTML = entries.map((entry) => {
+        const action = String(entry.action || '').trim().toLowerCase();
+        const isLogin = action === 'login';
+        const actionLabel = isLogin ? 'Login' : action === 'logout' ? 'Logout' : (entry.action || 'Activity');
+        const actionClass = isLogin ? 'login' : action === 'logout' ? 'logout' : '';
+        const actionIcon = isLogin ? 'fa-arrow-right-to-bracket' : action === 'logout' ? 'fa-arrow-right-from-bracket' : 'fa-clock';
+        const station = getStationDetails(entry);
+        return `
+          <tr>
+            <td><span class="action-badge ${actionClass}"><i class="fas ${actionIcon}" aria-hidden="true"></i>${escapeHtml(actionLabel)}</span></td>
+            <td><span class="station-name">${escapeHtml(station.name)}</span>${station.id ? `<span class="station-id">${escapeHtml(station.id)}</span>` : ''}</td>
+            <td><time class="audit-time" datetime="${escapeHtml(entry.createdAt || '')}"><span>${escapeHtml(formatDate(entry.createdAt, { dateStyle: 'medium' }))}</span><span class="audit-time-date">${escapeHtml(formatDate(entry.createdAt, { timeStyle: 'short' }))}</span></time></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function loadStudentPcLogs() {
+      showTableMessage('Loading PC station logs…', 'fa-spinner fa-spin');
+      const params = new URLSearchParams({
+        scope: 'pc-station',
+        page: String(currentPage),
+        pageSize: String(pageSize)
+      });
+      if (actionFilter.value) params.set('action', actionFilter.value);
+      if (stationSearch.value.trim()) params.set('q', stationSearch.value.trim());
+      if (dateFromFilter.value) params.set('dateFrom', getManilaDateBoundary(dateFromFilter.value));
+      if (dateToFilter.value) params.set('dateTo', getManilaDateBoundary(dateToFilter.value, true));
+      if (dateFromFilter.value && dateToFilter.value && dateFromFilter.value > dateToFilter.value) {
+        showTableMessage('The start date must be on or before the end date.', 'fa-calendar-xmark');
+        resultsSummary.textContent = 'Check the selected date range.';
+        return;
+      }
+
+      try {
+        const payload = await fetchPcLogs(params);
+        totalPages = Math.max(1, Number(payload.meta.totalPages) || 1);
+        const total = Number(payload.meta.total) || 0;
+        renderPcLogRows(payload.data);
+        const firstResult = total ? (currentPage - 1) * pageSize + 1 : 0;
+        const lastResult = Math.min(currentPage * pageSize, total);
+        resultsSummary.textContent = total
+          ? `Showing ${firstResult}–${lastResult} of ${total} PC station logs`
+          : 'No PC station logs found.';
+        pageSummary.textContent = `Page ${currentPage} of ${totalPages}`;
+        previousPageButton.disabled = currentPage <= 1;
+        nextPageButton.disabled = currentPage >= totalPages;
+      } catch (error) {
+        console.error('Failed to load student audit history:', error);
+        showTableMessage(error.message || 'Unable to load audit history. Please try again.', 'fa-triangle-exclamation');
+        resultsSummary.textContent = 'PC station logs could not be loaded.';
+        pageSummary.textContent = 'Page 1';
+        previousPageButton.disabled = true;
+        nextPageButton.disabled = true;
+      }
+    }
+
+    function resetAndLoadPcLogs() {
+      currentPage = 1;
+      loadStudentPcLogs();
+    }
+
+    function syncDateFilterLimits() {
+      dateToFilter.min = dateFromFilter.value;
+      dateFromFilter.max = dateToFilter.value;
+    }
+
+    actionFilter.addEventListener('change', resetAndLoadPcLogs);
+    dateFromFilter.addEventListener('change', () => {
+      syncDateFilterLimits();
+      resetAndLoadPcLogs();
+    });
+    dateToFilter.addEventListener('change', () => {
+      syncDateFilterLimits();
+      resetAndLoadPcLogs();
+    });
+    stationSearch.addEventListener('input', () => {
+      window.clearTimeout(searchTimeout);
+      searchTimeout = window.setTimeout(resetAndLoadPcLogs, 250);
+    });
+    previousPageButton.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        loadStudentPcLogs();
+      }
+    });
+    nextPageButton.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        loadStudentPcLogs();
+      }
+    });
+    loadStudentPcLogs();
+  </script>
+</body>
+</html>

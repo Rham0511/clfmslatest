@@ -33,11 +33,11 @@ const EquipmentUsageLog = sequelize.define('EquipmentUsageLog', {
         comment: 'Student/user using the equipment'
     },
     campusId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.STRING(255),
+        allowNull: true
     },
     laboratoryId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(255),
         allowNull: true
     },
     pcSetId: {

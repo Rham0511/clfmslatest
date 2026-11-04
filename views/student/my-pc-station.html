@@ -6,7 +6,7 @@
     <title>My PC Station | ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=4">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         :root {
             --accent: #22C55E;
@@ -21,7 +21,7 @@
             background:
                 radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%),
                 radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%),
-                linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+                linear-gradient(180deg, #020617 0%, #07111f 100%);
             color: #f8fafc;
             font-family: Inter, 'Segoe UI', Roboto, sans-serif;
         }
@@ -45,7 +45,7 @@
         }
 
         .glass-card {
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             backdrop-filter: blur(16px) saturate(1.04);
@@ -72,12 +72,33 @@
             padding: 1.25rem 1.5rem;
             border-radius: 2rem;
             border: 1px solid rgba(15, 79, 60, 0.35);
-            background: rgba(13, 23, 18, 0.92);
+            background: rgba(7, 17, 31, 0.92);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
             backdrop-filter: blur(20px) saturate(1.08);
             overflow: hidden;
             position: relative;
             margin-bottom: 1.5rem;
+        }
+
+        .pc-station-header-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.55rem;
+            margin-left: auto;
+        }
+
+        body.pc-station-page .student-page-heading-copy {
+            margin-left: 0.75rem;
+        }
+
+        body.student-portal.pc-station-page .student-page-subtitle {
+            color: #a7f3d0 !important;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
         }
 
         .top-header-card::after {
@@ -237,7 +258,7 @@
             padding: 3rem 2rem;
             border-radius: 1.5rem;
             border: 2px dashed rgba(74,222,128,.2);
-            background: rgba(10,29,21,.95);
+            background: rgba(2, 6, 23,.95);
             text-align: center;
         }
 
@@ -259,11 +280,24 @@
             margin-top: 1rem;
         }
 
+        .usage-history-scroll {
+            max-height: 30rem;
+            overflow: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-color: rgba(52, 211, 153, 0.45) rgba(6, 24, 17, 0.65);
+            scrollbar-width: thin;
+        }
+
         .usage-history-table thead {
             background: linear-gradient(180deg, rgba(18,49,36,.95), rgba(20,59,42,.95));
         }
 
         .usage-history-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
             padding: 0.9rem 1rem;
             font-size: 0.78rem;
             font-weight: 700;
@@ -278,6 +312,10 @@
             font-size: 0.95rem;
             color: #f8fafc;
             border-top: 1px solid rgba(74,222,128,.1);
+        }
+
+        .usage-history-cell-label {
+            display: none;
         }
 
         /* PC Seat Selector Modal Styles */
@@ -319,7 +357,7 @@
             max-height: 90vh;
             overflow-y: auto;
             border-radius: 1.5rem;
-            background: linear-gradient(180deg, rgba(15,36,27,.98), rgba(10,29,21,.98));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.98), rgba(2, 6, 23,.98));
             border: 1px solid rgba(74, 222, 128, 0.3);
             box-shadow: 0 30px 80px rgba(2, 8, 23, 0.6);
             animation: slideUp 0.3s ease;
@@ -349,7 +387,7 @@
             justify-content: center;
             border-radius: 0.75rem;
             border: 1px solid rgba(74, 222, 128, 0.2);
-            background: rgba(10, 29, 21, 0.8);
+            background: rgba(2, 6, 23, 0.8);
             color: #bbf7d0;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -401,7 +439,7 @@
             margin-bottom: 1.5rem;
             padding: 1rem;
             border-radius: 1rem;
-            background: rgba(15, 36, 27, 0.5);
+            background: rgba(7, 17, 31, 0.5);
             border: 1px solid rgba(74, 222, 128, 0.1);
         }
 
@@ -458,7 +496,7 @@
             gap: 0.25rem;
             border-radius: 0.75rem;
             border: 2px solid;
-            background: rgba(15, 36, 27, 0.6);
+            background: rgba(7, 17, 31, 0.6);
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
@@ -627,24 +665,263 @@
                 justify-content: center;
             }
 
-            .usage-history-table {
+            .usage-history-table,
+            .usage-history-table tbody {
                 display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-                -webkit-overflow-scrolling: touch;
+                width: 100%;
+            }
+
+            .usage-history-scroll {
+                max-height: 55vh;
+                border-radius: 0.75rem;
+            }
+
+            .usage-history-table thead {
+                display: none;
+            }
+
+            .usage-history-table tbody {
+                display: grid;
+                gap: 0.5rem;
+            }
+
+            .usage-history-table tr {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-areas:
+                    "pc duration"
+                    "subject subject"
+                    "instructor lab"
+                    "started ended";
+                gap: 0.08rem 0.55rem;
+                padding: 0.5rem 0.6rem;
+                border: 1px solid rgba(74,222,128,.15);
+                border-radius: 0.75rem;
+                background: linear-gradient(135deg, rgba(12,38,27,.72), rgba(8,24,18,.78));
+            }
+
+            .usage-history-table td {
+                display: grid;
+                grid-template-columns: 4.2rem minmax(0, 1fr);
+                align-items: baseline;
+                min-width: 0;
+                gap: 0.25rem;
+                padding: 0.28rem 0.1rem;
+                border: 0;
+                font-size: 0.72rem;
+                overflow-wrap: anywhere;
+            }
+
+            .usage-history-table td:nth-child(1) { grid-area: pc; }
+            .usage-history-table td:nth-child(2) {
+                grid-area: subject;
+                padding-top: 0.32rem;
+                padding-bottom: 0.32rem;
+                border-top: 1px solid rgba(74,222,128,.09);
+                border-bottom: 1px solid rgba(74,222,128,.09);
+            }
+            .usage-history-table td:nth-child(3) { grid-area: instructor; }
+            .usage-history-table td:nth-child(4) { grid-area: lab; }
+            .usage-history-table td:nth-child(5) { grid-area: started; }
+            .usage-history-table td:nth-child(6) { grid-area: ended; }
+            .usage-history-table td:nth-child(7) { grid-area: duration; }
+
+            .usage-history-cell-label {
+                display: block;
+                color: #86a998;
+                font-size: 0.56rem;
+                font-weight: 700;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+            }
+
+            .usage-history-value {
+                min-width: 0;
+                color: #e8f4ed;
+                line-height: 1.35;
+            }
+
+            .usage-history-table td small {
+                color: #9db4a7;
+                font-size: 0.66rem;
+                white-space: normal;
+            }
+
+            .usage-history-table td:nth-child(1) .usage-history-value,
+            .usage-history-table td:nth-child(7) .usage-history-value {
+                color: #d1fae5;
+                font-weight: 700;
             }
         }
+
+        @media (max-width: 1023px) {
+            body.student-portal.pc-station-page .student-page-subtitle {
+                font-size: 0.46rem !important;
+                letter-spacing: 0.08em;
+            }
+
+            body.student-portal.pc-station-page #currentPCSection,
+            body.student-portal.pc-station-page #currentPCSection + section {
+                padding: 0.9rem !important;
+                border-radius: 1.1rem;
+            }
+
+            body.student-portal.pc-station-page #currentPCSection + section h2 {
+                margin-bottom: 0.8rem;
+                font-size: 1.15rem;
+            }
+        }
+
     </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+<style>
+    body.student-portal.pc-station-page #historyContainer {
+        min-width: 0;
+    }
+
+    body.student-portal.pc-station-page .usage-history-scroll {
+        max-height: 28rem;
+        overflow: auto;
+        border: 1px solid rgba(74, 222, 128, 0.12);
+        border-radius: 0.8rem;
+        background: rgba(2, 18, 12, 0.34);
+    }
+
+    body.student-portal.pc-station-page .usage-history-table {
+        width: 100%;
+        min-width: 58rem;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed;
+    }
+
+    body.student-portal.pc-station-page .usage-history-table th {
+        padding: 0.62rem 0.7rem !important;
+        background: #0d281b !important;
+        font-size: 0.62rem !important;
+        letter-spacing: 0.08em !important;
+    }
+
+    body.student-portal.pc-station-page .usage-history-table td {
+        padding: 0.55rem 0.7rem !important;
+        background: transparent !important;
+        font-size: 0.76rem !important;
+        line-height: 1.35;
+        vertical-align: top;
+    }
+
+    body.student-portal.pc-station-page .usage-history-table tbody tr:hover td {
+        background: rgba(34, 197, 94, 0.045) !important;
+    }
+
+    body.student-portal.pc-station-page .usage-history-cell-label {
+        color: #80b59a;
+    }
+
+    body.student-portal.pc-station-page .usage-history-value {
+        overflow-wrap: anywhere;
+    }
+
+    body.student-portal.pc-station-page .usage-history-value small {
+        display: inline-block;
+        margin-top: 0.12rem;
+        color: #91aa9d;
+        font-size: 0.68rem;
+        line-height: 1.25;
+    }
+
+    @media (max-width: 640px) {
+        body.student-portal.pc-station-page #currentPCSection + section {
+            padding: 0.8rem !important;
+        }
+
+        body.student-portal.pc-station-page #currentPCSection + section h2 {
+            margin-bottom: 0.65rem !important;
+            font-size: 1.05rem !important;
+            line-height: 1.25;
+        }
+
+        body.student-portal.pc-station-page .usage-history-scroll {
+            max-height: 52vh;
+            overflow-x: hidden;
+            padding: 0.35rem;
+            border: 0;
+            border-radius: 0.7rem;
+            background: transparent;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table,
+        body.student-portal.pc-station-page .usage-history-table tbody {
+            width: 100%;
+            min-width: 0;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table tbody {
+            gap: 0.38rem;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table tr {
+            gap: 0.02rem 0.45rem;
+            padding: 0.38rem 0.5rem;
+            border: 1px solid rgba(74, 222, 128, 0.12);
+            border-radius: 0.68rem;
+            background: rgba(7, 25, 18, 0.72);
+            box-shadow: none;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table td {
+            grid-template-columns: 3.1rem minmax(0, 1fr);
+            gap: 0.22rem;
+            padding: 0.2rem 0.08rem !important;
+            border: 0 !important;
+            background: transparent !important;
+            font-size: 0.66rem !important;
+            line-height: 1.25;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table td:nth-child(2) {
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+            border-top: 1px solid rgba(74, 222, 128, 0.08) !important;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.08) !important;
+        }
+
+        body.student-portal.pc-station-page .usage-history-cell-label {
+            font-size: 0.49rem !important;
+            letter-spacing: 0.045em;
+            line-height: 1.25;
+        }
+
+        body.student-portal.pc-station-page .usage-history-value {
+            font-size: 0.66rem !important;
+            line-height: 1.28;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table td small {
+            font-size: 0.59rem !important;
+        }
+    }
+</style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page pc-station-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
-        <header class="top-header">
-            <div class="top-header-card">
-                <div class="header-meta">
-                    <h1 class="header-title"><i class="fas fa-desktop mr-2"></i>My PC Station</h1>
-                    <p class="header-subtitle">View and manage your computer workstation assignment</p>
+        <header class="student-page-header">
+            <div class="student-page-heading">
+                <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <div class="student-page-heading-copy">
+                    <h1 class="student-page-title student-university-title">MINDORO STATE UNIVERSITY</h1>
+                </div>
+            </div>
+            <div class="pc-station-header-actions" data-theme-toggle-anchor>
+                <div class="student-page-user">
+                    <span class="student-page-user-initials" data-user-initials>ST</span>
+                    <span class="student-page-user-role" data-user-role>Student</span>
                 </div>
             </div>
         </header>
@@ -730,10 +1007,7 @@
 
         let pcStations = [];
         let selectedPC = null;
-        let currentAttendanceId = null;
-        let currentLaboratoryId = null;
         let currentAssignment = null;
-        let currentAttendance = null;
 
         async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
             const controller = new AbortController();
@@ -746,13 +1020,7 @@
         }
 
         // PC Selector Functions
-        function openPCSelector(attendanceId, laboratoryId) {
-            if (!currentAttendance?.id && !attendanceId) {
-                renderAttendanceRequired();
-                return;
-            }
-            currentAttendanceId = attendanceId || currentAttendance.id;
-            currentLaboratoryId = laboratoryId;
+        function openPCSelector() {
             selectedPC = null;
             
             const modal = document.getElementById('pcSelectorModal');
@@ -765,8 +1033,6 @@
             const modal = document.getElementById('pcSelectorModal');
             modal.classList.remove('open');
             selectedPC = null;
-            currentAttendanceId = null;
-            currentLaboratoryId = null;
         }
 
         async function fetchPCStations() {
@@ -775,8 +1041,10 @@
             try {
                 console.log('Fetching all PC stations...');
                 
-                // Fetch ALL PC stations (no campus/lab filter for now)
-                const response = await fetch(`/api/equipment/pc-availability?attendanceId=${encodeURIComponent(currentAttendanceId || '')}`);
+                const user = window.__CURRENT_USER__ || {};
+                const params = new URLSearchParams();
+                if (user.campus) params.set('campus', user.campus);
+                const response = await fetch(`/api/equipment/pc-availability?${params.toString()}`);
                 
                 console.log('Response status:', response.status);
                 
@@ -833,7 +1101,7 @@
                              data-pc-id="${pc.id}"
                              onclick="selectPC(${pc.id}, ${pc.isOccupied})">
                             <i class="fas fa-desktop pc-seat-icon"></i>
-                            <div class="pc-seat-number">PC ${pc.stationNumber}</div>
+                            <div class="pc-seat-number">${escapeHistoryText(pc.setId || `PC ${pc.stationNumber}`)}</div>
                             <div class="pc-seat-label">${pc.isOccupied ? 'In Use' : 'Free'}</div>
                         </div>
                     `).join('')}
@@ -878,7 +1146,6 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        attendanceId: currentAttendanceId,
                         equipmentId: selectedPC.id,
                         userId: user.id,
                         campus: user.campus || selectedPC.campus,
@@ -907,38 +1174,11 @@
             }
         }
 
-        async function loadCurrentAttendance() {
-            const response = await fetchWithTimeout('/api/attendance/current');
-            if (!response.ok) throw new Error('Unable to verify attendance.');
-            const data = await response.json();
-            currentAttendance = data.hasActiveAttendance ? data.attendance : null;
-        }
-
-        function renderAttendanceRequired() {
-            const container = document.getElementById('currentPCContainer');
-            container.innerHTML = `
-                <div class="no-pc-card">
-                    <div class="no-pc-icon"><i class="fas fa-qrcode"></i></div>
-                    <h3 class="text-xl font-semibold text-white">Attend a class first</h3>
-                    <p class="max-w-lg text-gray-400">PC station arrangements are available only after you scan the current class QR code and your attendance is recorded.</p>
-                    <a class="btn-primary mt-4" href="/student/scan-attendance">
-                        <i class="fas fa-camera"></i>
-                        Scan Class QR
-                    </a>
-                </div>
-            `;
-        }
-
         // Current Assignment Functions
         async function loadCurrentAssignment() {
             const container = document.getElementById('currentPCContainer');
             
             try {
-                if (!currentAttendance?.id) {
-                    renderAttendanceRequired();
-                    return;
-                }
-
                 const user = window.__CURRENT_USER__ || {};
                 if (!user.id) {
                     throw new Error('User not logged in');
@@ -985,8 +1225,8 @@
                     
                     <div class="pc-info-grid">
                         <div class="pc-info-item">
-                            <div class="pc-info-label">PC Name</div>
-                            <div class="pc-info-value">${assignment.equipmentName || 'N/A'}</div>
+                            <div class="pc-info-label">PC Station</div>
+                            <div class="pc-info-value">${assignment.pcSetId || assignment.equipmentName || 'N/A'}</div>
                         </div>
                         <div class="pc-info-item">
                             <div class="pc-info-label">Asset Number</div>
@@ -1002,12 +1242,12 @@
                         </div>
                         <div class="pc-info-item">
                             <div class="pc-info-label">Started At</div>
-                            <div class="pc-info-value">${new Date(assignment.usageStartTime).toLocaleTimeString()}</div>
+                            <div class="pc-info-value">${escapeHistoryText(formatHistoryTime(assignment.usageStartTime))}</div>
                         </div>
                     </div>
                     
                     <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-                        <button class="btn-secondary" onclick="openPCSelector(null, null)">
+                        <button class="btn-secondary" onclick="openPCSelector()">
                             <i class="fas fa-exchange-alt"></i>
                             Change PC
                         </button>
@@ -1030,7 +1270,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-white">No Active Session</h3>
                     <p class="text-gray-400">You don't have an active PC assignment</p>
-                    <button class="btn-primary mt-4" onclick="openPCSelector(null, null)">
+                    <button class="btn-primary mt-4" onclick="openPCSelector()">
                         <i class="fas fa-desktop"></i>
                         Select a PC Station
                     </button>
@@ -1039,7 +1279,7 @@
         }
 
         async function endSession() {
-            if (!confirm('Are you sure you want to end your current PC session?')) {
+            if (!await window.appDialogs.confirm('Are you sure you want to end your current PC session?')) {
                 return;
             }
 
@@ -1071,6 +1311,46 @@
         }
 
         // Usage History Functions
+        function escapeHistoryText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        function formatHistoryCourseSection(value) {
+            return String(value ?? '')
+                .replace(/\s*\?{2,}\s*/g, ' · ')
+                .replace(/(?:\s*·\s*){2,}/g, ' · ')
+                .replace(/\s+/g, ' ')
+                .replace(/^\s*·\s*|\s*·\s*$/g, '')
+                .trim();
+        }
+
+        function formatHistoryDateTime(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '—';
+            const options = {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            };
+            if (date.getFullYear() !== new Date().getFullYear()) options.year = 'numeric';
+            return date.toLocaleString(undefined, options);
+        }
+
+        function formatHistoryTime(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '—';
+            return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+
         async function loadUsageHistory() {
             const container = document.getElementById('historyContainer');
             
@@ -1092,18 +1372,18 @@
                     `;
                 } else {
                     container.innerHTML = `
-                        <div class="overflow-x-auto">
+                        <div class="usage-history-scroll overflow-x-auto" tabindex="0" aria-label="Scrollable PC usage history">
                             <table class="usage-history-table">
                                 <thead><tr><th>PC Set</th><th>Class / Subject</th><th>Instructor</th><th>Laboratory</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead>
                                 <tbody>${history.map(item => `
                                     <tr>
-                                        <td>${item.pcSetId || 'Set not assigned'}</td>
-                                        <td>${item.courseSection || '—'}<br><small>${item.subject || item.traceStatus || 'Class not linked'}</small></td>
-                                        <td>${item.instructor || '—'}</td>
-                                        <td>${item.laboratoryRoom || '—'}</td>
-                                        <td>${item.usageStartTime ? new Date(item.usageStartTime).toLocaleString() : '—'}</td>
-                                        <td>${item.usageEndTime ? new Date(item.usageEndTime).toLocaleString() : 'Active'}</td>
-                                        <td>${item.durationMinutes == null ? 'Active' : `${item.durationMinutes} min`}</td>
+                                        <td><span class="usage-history-cell-label">PC Set</span><span class="usage-history-value">${escapeHistoryText(item.pcSetId || 'Set not assigned')}</span></td>
+                                        <td><span class="usage-history-cell-label">Class / Subject</span><span class="usage-history-value">${escapeHistoryText(formatHistoryCourseSection(item.courseSection) || '—')}<br><small>${escapeHistoryText(item.subject || item.traceStatus || 'Class not linked')}</small></span></td>
+                                        <td><span class="usage-history-cell-label">Instructor</span><span class="usage-history-value">${escapeHistoryText(item.instructor || '—')}</span></td>
+                                        <td><span class="usage-history-cell-label">Laboratory</span><span class="usage-history-value">${escapeHistoryText(item.laboratoryRoom || '—')}</span></td>
+                                        <td><span class="usage-history-cell-label">Started</span><span class="usage-history-value">${escapeHistoryText(formatHistoryDateTime(item.usageStartTime))}</span></td>
+                                        <td><span class="usage-history-cell-label">Ended</span><span class="usage-history-value">${escapeHistoryText(item.usageEndTime ? formatHistoryDateTime(item.usageEndTime) : 'Active')}</span></td>
+                                        <td><span class="usage-history-cell-label">Duration</span><span class="usage-history-value">${escapeHistoryText(item.durationMinutes == null ? 'Active' : `${item.durationMinutes} min`)}</span></td>
                                     </tr>
                                 `).join('')}</tbody>
                             </table>
@@ -1122,10 +1402,6 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingFallback = window.setTimeout(() => {
-                const container = document.getElementById('currentPCContainer');
-                if (container?.querySelector('.fa-spinner')) {
-                    renderAttendanceRequired();
-                }
                 const history = document.getElementById('historyContainer');
                 if (history?.querySelector('.fa-spinner')) {
                     history.innerHTML = `
@@ -1136,11 +1412,6 @@
                     `;
                 }
             }, 9000);
-            await loadCurrentAttendance().catch(error => {
-                console.error('Error loading attendance:', error);
-                currentAttendance = null;
-                renderAttendanceRequired();
-            });
             await loadCurrentAssignment().catch(error => {
                 console.error('Error loading assignment:', error);
             });
@@ -1152,14 +1423,12 @@
             // Auto-refresh every 30 seconds
             setInterval(async () => {
                 if (!document.getElementById('pcSelectorModal').classList.contains('open')) {
-                    await loadCurrentAttendance();
                     await loadCurrentAssignment();
                 }
             }, 30000);
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=5" defer></script>
-    <script src="/js/sidebar-component.js?v=5" defer></script>
-    <script src="/js/qr-scanner-button.js?v=1" defer></script>
+    <script src="/js/student-sidebar-config.js?v=30" defer></script>
+    <script src="/js/sidebar-component.js?v=64" defer></script>
 </body>
 </html>

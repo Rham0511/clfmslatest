@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty Dashboard | ComLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <style>
+    :root {
+      color-scheme: dark;
+      --faculty-bg: #020617;
+      --faculty-panel: rgba(2, 6, 23, .92);
+      --faculty-border: rgba(74, 222, 128, .18);
+      --faculty-green: #34d399;
+      --faculty-green-soft: rgba(34, 197, 94, .14);
+      --faculty-green-strong: rgba(74, 222, 128, .34);
+    }
+
+    body {
+      min-height: 100vh;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 5% 0%, rgba(34, 197, 94, .12), transparent 28rem),
+        linear-gradient(180deg, #020617 0%, #07111f 100%);
+    }
+
+    .main-container {
+      min-height: 100vh;
+      padding: 1.5rem .5rem 2.5rem;
+    }
+
+    body.student-portal .student-page-header {
+      right: .5rem;
+      left: calc(var(--sidebar-width) + .5rem);
+      max-width: none;
+    }
+
+    .faculty-content {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+
+    .faculty-surface {
+      border: 1px solid var(--faculty-border);
+      border-radius: 1.25rem;
+      background: var(--faculty-panel);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .18);
+    }
+
+    .faculty-stat {
+      min-height: 8.15rem;
+      padding: .8rem .8rem .9rem;
+      border: 1px solid rgba(74, 222, 128, .16);
+      background: linear-gradient(180deg, rgba(9, 27, 20, .96), rgba(4, 14, 10, .96));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 10px 20px rgba(2, 6, 23, .18);
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .faculty-stat:hover {
+      transform: translateY(-2px);
+      border-color: rgba(74, 222, 128, .42);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 24px rgba(16, 185, 129, .12);
+    }
+
+    .faculty-stat:focus-visible {
+      outline: 3px solid rgba(52, 211, 153, .9);
+      outline-offset: 3px;
+    }
+
+    .faculty-stat h3 {
+      font-size: .76rem;
+      line-height: 1.3;
+      letter-spacing: .02em;
+      color: rgba(216, 250, 230, .95);
+    }
+
+    .faculty-stat .fa-solid,
+    .faculty-stat .fas,
+    .faculty-stat .far,
+    .faculty-stat .fal,
+    .faculty-stat .fab {
+      font-size: .8rem;
+    }
+
+    .faculty-stat [aria-live="polite"] {
+      font-size: clamp(2rem, 1.7vw, 2.7rem) !important;
+      line-height: 1 !important;
+      letter-spacing: -.06em;
+    }
+
+    .faculty-action {
+      min-height: 8.25rem;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .faculty-action:hover {
+      transform: translateY(-2px);
+      border-color: var(--faculty-green-strong);
+      background: rgba(12, 39, 27, .96);
+    }
+
+    .faculty-list-row + .faculty-list-row {
+      border-top: 1px solid rgba(74, 222, 128, .1);
+    }
+
+    .faculty-dashboard-table-wrap {
+      overflow-x: auto;
+    }
+
+    .faculty-dashboard-table {
+      width: 100%;
+      min-width: 38rem;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .faculty-dashboard-table th {
+      border-bottom: 1px solid rgba(74, 222, 128, .16);
+      background: rgba(16, 40, 29, .55);
+      color: #a7f3d0;
+      padding: .95rem 1.25rem;
+      font-size: 1.0625rem;
+      font-weight: 800;
+      letter-spacing: .055em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .faculty-dashboard-table td {
+      border-bottom: 1px solid rgba(74, 222, 128, .1);
+      padding: 1rem 1.25rem;
+      color: #ecfdf5;
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+      vertical-align: middle;
+    }
+
+    .faculty-dashboard-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .faculty-dashboard-table .table-item-name {
+      color: #f8fafc;
+      font-size: 1.0625rem;
+      font-weight: 700;
+    }
+
+    .faculty-dashboard-table .faculty-status {
+      padding: .4rem .8rem;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .faculty-dashboard-table .table-item-name {
+      display: block;
+      max-width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: #f8fafc;
+      font: inherit;
+      font-size: 1.0625rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: help;
+    }
+
+    .faculty-dashboard-table .table-item-name:focus-visible {
+      border-radius: .2rem;
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .faculty-dashboard-page .section-heading {
+      font-size: 1.25rem;
+    }
+
+    .faculty-dashboard-page .section-link {
+      font-size: 1rem;
+    }
+
+    .faculty-equipment-tooltip {
+      position: fixed;
+      z-index: 10001;
+      display: none;
+      max-width: min(22rem, calc(100vw - 2rem));
+      padding: .65rem .85rem;
+      border: 1px solid rgba(167, 243, 208, .55);
+      border-radius: .75rem;
+      background: #046a38;
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
+      font-size: .9375rem;
+      font-weight: 600;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+      pointer-events: none;
+    }
+
+    .faculty-equipment-tooltip.is-visible {
+      display: block;
+    }
+
+    .faculty-equipment-tooltip-trigger {
+      display: inline-block;
+      max-width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: help;
+    }
+
+    .faculty-equipment-tooltip-trigger:focus-visible {
+      border-radius: .2rem;
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .faculty-dashboard-table .faculty-status {
+      padding: .35rem .75rem;
+      font-size: .85rem;
+    }
+
+    .faculty-status {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(251, 191, 36, .24);
+      border-radius: 999px;
+      background: rgba(120, 53, 15, .22);
+      color: #fde68a;
+      padding: .24rem .58rem;
+      font-size: .7rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1023px) {
+      .main-container {
+        margin-left: 0 !important;
+      }
+
+      body.student-portal .student-page-header {
+        right: .5rem;
+        left: .5rem;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=8">
+  <style>
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-header {
+      height: 4.5rem;
+      min-height: 4.5rem;
+      padding: .6rem 1rem;
+      border-radius: 1.1rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-heading {
+      gap: .85rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-title {
+      font-size: 1.25rem;
+      line-height: 1.25;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-subtitle {
+      margin-top: .25rem;
+      font-size: .68rem;
+      letter-spacing: .1em;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal #mobileMenuToggle {
+      width: 2.6rem;
+      height: 2.6rem;
+      flex-basis: 2.6rem;
+      border-radius: .85rem;
+      font-size: 1rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-user {
+      min-height: 3rem;
+      gap: .7rem;
+      padding: .35rem .9rem .35rem .4rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-initials {
+      width: 2.1rem;
+      height: 2.1rem;
+      flex-basis: 2.1rem;
+      font-size: .72rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-name {
+      font-size: .9rem;
+    }
+
+    body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-role {
+      font-size: .58rem;
+    }
+
+    body.faculty-dashboard-page main.faculty-content {
+      gap: 1.5rem !important;
+      padding: 0 .75rem 1.5rem 1.5rem;
+    }
+
+    body.faculty-dashboard-page .system-dashboard-heading {
+      margin-bottom: 0 !important;
+      padding: 1.25rem 1.5rem;
+    }
+
+    body.faculty-dashboard-page .faculty-metric-grid {
+      gap: .7rem !important;
+      grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    body.faculty-dashboard-page .faculty-metric-grid > .faculty-stat {
+      padding: .7rem .75rem .8rem !important;
+      min-height: 7.4rem !important;
+    }
+
+    body.faculty-dashboard-page main.faculty-content > section.grid {
+      gap: 1.25rem !important;
+    }
+
+    body.faculty-dashboard-page main.faculty-content > section.faculty-surface {
+      padding: 0;
+    }
+
+    @media (min-width: 768px) {
+      body.faculty-dashboard-page .main-container {
+        padding-top: .75rem;
+      }
+
+      body.faculty-dashboard-page main.faculty-content {
+        margin-top: 0 !important;
+        row-gap: 1.5rem !important;
+      }
+
+      body.faculty-dashboard-page .system-dashboard-heading {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 767px) {
+      body.faculty-dashboard-page .main-container {
+        padding-top: .25rem !important;
+      }
+
+      body.faculty-dashboard-page .student-page-header {
+        position: sticky !important;
+        top: .5rem;
+        height: 4.25rem;
+        min-height: 4.25rem;
+        padding: .5rem .75rem;
+      }
+
+      body.faculty-dashboard-page main.faculty-content {
+        margin-top: .25rem !important;
+        row-gap: 1.25rem !important;
+        padding-right: .25rem;
+        padding-left: .75rem;
+      }
+
+      body.faculty-dashboard-page .system-dashboard-heading {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-header {
+        gap: .4rem;
+        padding-right: .5rem;
+        padding-left: .5rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-heading {
+        gap: .5rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-title {
+        font-size: 1rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-subtitle {
+        max-width: 55vw;
+        font-size: .56rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal #mobileMenuToggle {
+        width: 2.25rem;
+        height: 2.25rem;
+        flex-basis: 2.25rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-user {
+        min-height: 2.5rem;
+        gap: .4rem;
+        padding-right: .5rem;
+        padding-left: .3rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-initials {
+        width: 1.75rem;
+        height: 1.75rem;
+        flex-basis: 1.75rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-name {
+        max-width: 30vw;
+        font-size: .72rem;
+      }
+
+      body.faculty-dashboard-page.faculty-page.student-portal .student-page-user-role {
+        font-size: .52rem;
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal faculty-page faculty-dashboard-page faculty-page-heading-page system-layout-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+
+  <div class="main-container">
+    <main class="faculty-content grid gap-3">
+      <div class="system-dashboard-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+          <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white">
+            <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-user-initials>FC</span>
+            <span class="system-profile-badge-copy text-white">
+              <span class="system-profile-badge-name text-white" data-user-name>Faculty</span>
+              <span class="system-profile-badge-role text-emerald-400" data-user-role>Faculty</span>
+            </span>
+          </div>
+          </a>
+        </div>
+      </div>
+      <section aria-label="My Faculty metrics" class="faculty-metric-grid dashboard-kpi-grid grid grid-cols-5 gap-3">
+        <a href="/faculty-my-requests" aria-label="View my active borrowings" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">My active borrowings</h3>
+            <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-box-open" aria-hidden="true"></i></span>
+          </div>
+          <p id="activeBorrowCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
+        </a>
+
+        <a href="/faculty-mir-items" aria-label="View items assigned to me" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Items assigned to me</h3>
+            <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-laptop" aria-hidden="true"></i></span>
+          </div>
+          <p id="assignedEquipmentCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
+        </a>
+        <a href="/faculty-my-requests" aria-label="View my total requests" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">My total requests</h3>
+            <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
+          </div>
+          <p id="facultyRequestCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
+        </a>
+        <a href="/faculty-my-requests" aria-label="View my pending requests" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Pending requests</h3>
+            <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+          </div>
+          <p id="facultyPendingCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
+        </a>
+        <a href="/faculty-my-requests?tab=student-requests" aria-label="View Student requests for equipment assigned to me" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Student requests</h3>
+            <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-400/10 text-amber-300"><i class="fas fa-user-clock" aria-hidden="true"></i></span>
+          </div>
+          <p id="studentApprovalCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
+        </a>
+      </section>
+
+      <section class="grid gap-5">
+        <div class="faculty-surface overflow-hidden">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-400/10 px-5 py-5 sm:px-6">
+            <div class="min-w-0">
+              <h3 class="section-heading text-lg font-bold leading-snug text-white">My recent requests</h3>
+            </div>
+            <a href="/faculty-my-requests" class="section-link shrink-0 whitespace-nowrap text-base font-bold text-emerald-300 hover:text-emerald-200">View all <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i></a>
+          </div>
+          <div id="myRequestList" aria-live="polite" class="min-h-24">
+            <p class="px-5 py-7 text-base text-slate-400 sm:px-6">Loading your requests…</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="assignedEquipmentPanel" class="faculty-surface scroll-mt-24 overflow-hidden" tabindex="-1" aria-labelledby="assignedEquipmentTitle">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-400/10 px-5 py-5 sm:px-6">
+          <div class="min-w-0">
+            <h3 id="assignedEquipmentTitle" class="section-heading text-lg font-bold leading-snug text-white">Equipment assigned to you</h3>
+          </div>
+          <div class="flex flex-wrap gap-4">
+            <a href="/faculty-mir-items" class="section-link shrink-0 whitespace-nowrap text-base font-bold text-emerald-300 hover:text-emerald-200">View all MR items <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i></a>
+            <a href="/faculty-audit-history?view=assignment" class="section-link shrink-0 whitespace-nowrap text-base font-bold text-emerald-300 hover:text-emerald-200">Assignment history</a>
+          </div>
+        </div>
+        <div id="assignedEquipmentList" aria-live="polite" class="min-h-24">
+          <p class="px-5 py-7 text-base text-slate-400 sm:px-6">Loading equipment assigned to you…</p>
+        </div>
+      </section>
+
+      <p id="dashboardError" role="alert" class="hidden rounded-xl border border-rose-400/20 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"></p>
+    </main>
+  </div>
+
+  <script>
+    const currentUser = window.__CURRENT_USER__ || {};
+    const currentUserId = Number(currentUser.id);
+
+    const activeBorrowCount = document.getElementById('activeBorrowCount');
+
+    function formatDate(value) {
+      if (!value) return 'Date not set';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function createDashboardTable(container, captionText, headers) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'faculty-dashboard-table-wrap';
+      const table = document.createElement('table');
+      table.className = 'faculty-dashboard-table';
+      const caption = document.createElement('caption');
+      caption.className = 'sr-only';
+      caption.textContent = captionText;
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach((label) => {
+        const header = document.createElement('th');
+        header.scope = 'col';
+        header.textContent = label;
+        headerRow.append(header);
+      });
+      thead.append(headerRow);
+      const tbody = document.createElement('tbody');
+      table.append(caption, thead, tbody);
+      wrapper.append(table);
+      container.append(wrapper);
+      return tbody;
+    }
+
+    function renderRequestList(container, rows, type) {
+      if (!container) return;
+      container.replaceChildren();
+      if (!rows.length) {
+        const empty = document.createElement('p');
+        empty.className = 'px-5 py-7 text-base text-slate-400 sm:px-6';
+        empty.textContent = type === 'approval'
+          ? 'No requests are waiting for your approval.'
+          : 'You have not submitted any borrow requests yet.';
+        container.append(empty);
+        return;
+      }
+      const body = createDashboardTable(container, 'My recent requests', ['Equipment', 'Status', 'Requested']);
+      rows.slice(0, 4).forEach((record) => {
+        const row = document.createElement('tr');
+        const equipmentCell = document.createElement('td');
+        const name = document.createElement('p');
+        name.className = 'table-item-name';
+        name.textContent = type === 'approval'
+          ? `${record.borrowerName || 'Faculty'} · ${record.equipmentName || record.equipmentId || 'Equipment'}`
+          : record.equipmentName || record.equipmentId || 'Equipment';
+        equipmentCell.append(name);
+
+        const statusCell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = 'faculty-status';
+        badge.textContent = type === 'approval' ? 'Review' : (record.effectiveStatus || record.status || 'Pending');
+        statusCell.append(badge);
+
+        const dateCell = document.createElement('td');
+        dateCell.textContent = formatDate(record.createdAt || record.created_at || record.borrowDate);
+        row.append(equipmentCell, statusCell, dateCell);
+        body.append(row);
+      });
+    }
+
+    function formatDateTime(value) {
+      if (!value) return 'Date not recorded';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function renderAssignedEquipment(assignments) {
+      const container = document.getElementById('assignedEquipmentList');
+      const count = document.getElementById('assignedEquipmentCount');
+      count.textContent = String(assignments.length);
+      container.replaceChildren();
+      if (!assignments.length) {
+        const empty = document.createElement('p');
+        empty.className = 'px-5 py-7 text-base text-slate-400 sm:px-6';
+        empty.textContent = 'No equipment is currently assigned to you.';
+        container.append(empty);
+        return;
+      }
+
+      const body = createDashboardTable(container, 'Equipment assigned to you', ['Equipment', 'Assigned']);
+      assignments.forEach((item) => {
+        const row = document.createElement('tr');
+        const equipmentCell = document.createElement('td');
+        const name = document.createElement('button');
+        const equipmentName = item.name || 'Equipment';
+        const equipmentCode = item.equipmentId || '';
+        const location = item.laboratoryRoom || item.location || item.campus || '';
+        const metadata = [
+          item.serialNumber ? `Serial: ${item.serialNumber}` : '',
+          location
+        ].filter(Boolean).join(' · ') || 'Additional equipment details unavailable.';
+        name.className = 'table-item-name';
+        name.type = 'button';
+        name.textContent = `${equipmentName}${equipmentCode ? ` (${equipmentCode})` : ''}`;
+        name.dataset.facultyEquipmentDetails = metadata;
+        name.setAttribute('aria-describedby', 'facultyEquipmentTooltip');
+        name.setAttribute('aria-label', `${name.textContent}; ${metadata}`);
+        equipmentCell.append(name);
+
+        const assignedCell = document.createElement('td');
+        assignedCell.textContent = formatDateTime(item.assignedAt);
+        row.append(equipmentCell, assignedCell);
+        body.append(row);
+      });
+    }
+
+    function setupFacultyEquipmentTooltip() {
+      const tooltip = document.createElement('div');
+      tooltip.id = 'facultyEquipmentTooltip';
+      tooltip.className = 'faculty-equipment-tooltip';
+      tooltip.setAttribute('role', 'tooltip');
+      document.body.append(tooltip);
+
+      const hideTooltip = () => tooltip.classList.remove('is-visible');
+      const showTooltip = (trigger) => {
+        tooltip.textContent = trigger.dataset.facultyEquipmentDetails || 'Additional equipment details unavailable.';
+        tooltip.classList.add('is-visible');
+        const triggerRect = trigger.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const left = Math.min(Math.max(8, triggerRect.left), window.innerWidth - tooltipRect.width - 8);
+        const top = triggerRect.top - tooltipRect.height - 8 >= 8
+          ? triggerRect.top - tooltipRect.height - 8
+          : Math.min(triggerRect.bottom + 8, window.innerHeight - tooltipRect.height - 8);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${Math.max(8, top)}px`;
+      };
+
+      document.addEventListener('mouseover', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const trigger = event.target.closest('[data-faculty-equipment-details]');
+        if (trigger && !trigger.contains(event.relatedTarget)) showTooltip(trigger);
+      });
+      document.addEventListener('mouseout', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const trigger = event.target.closest('[data-faculty-equipment-details]');
+        if (trigger && !trigger.contains(event.relatedTarget)) hideTooltip();
+      });
+      document.addEventListener('focusin', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const trigger = event.target.closest('[data-faculty-equipment-details]');
+        if (trigger) showTooltip(trigger);
+      });
+      document.addEventListener('focusout', (event) => {
+        if (event.target instanceof Element && event.target.closest('[data-faculty-equipment-details]')) {
+          hideTooltip();
+        }
+      });
+      window.addEventListener('scroll', hideTooltip, true);
+      window.addEventListener('resize', hideTooltip);
+    }
+
+    async function loadAssignedEquipment() {
+      const container = document.getElementById('assignedEquipmentList');
+      const count = document.getElementById('assignedEquipmentCount');
+      try {
+        const response = await fetch('/api/faculty/assigned-equipment', { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error || `Could not load your assigned equipment (HTTP ${response.status}).`);
+        }
+        const assignments = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.assignments)
+            ? payload.assignments
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : null;
+        if (!assignments) {
+          const responseShape = payload && typeof payload === 'object'
+            ? Object.keys(payload).join(', ') || 'empty response'
+            : 'invalid JSON response';
+          throw new Error(`Could not load your assigned equipment (unexpected API response: ${responseShape}).`);
+        }
+        renderAssignedEquipment(assignments);
+      } catch (error) {
+        count.textContent = '—';
+        container.replaceChildren();
+        const message = document.createElement('p');
+        message.className = 'px-5 py-7 text-base text-rose-300 sm:px-6';
+        message.textContent = error.message || 'Unable to load your assigned equipment.';
+        container.append(message);
+        console.error('Failed to load Faculty equipment assignments:', error);
+      }
+    }
+
+    async function loadFacultyDashboard() {
+      const error = document.getElementById('dashboardError');
+      try {
+        const response = await fetch('/api/borrow-records', { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !Array.isArray(payload)) {
+          throw new Error(payload?.error || 'Could not load Faculty borrowing activity.');
+        }
+
+        const ownRequests = payload.filter((record) =>
+          record.isMyRequest === true && Number(record.requesterUserId) === currentUserId
+        );
+        const studentApprovals = payload.filter((record) =>
+          String(record.requesterRole || record.borrowerType || '').toLowerCase() === 'student' &&
+          (record.canApprove === true || record.canReturnStudentBorrow === true) &&
+          ['pending', 'borrowed'].includes(String(record.status || '').toLowerCase())
+        );
+        const active = ownRequests.filter((record) =>
+          ['approved', 'borrowed'].includes(String(record.status || '').toLowerCase())
+        );
+        activeBorrowCount.textContent = String(active.length);
+        document.getElementById('facultyRequestCount').textContent = String(ownRequests.length);
+        document.getElementById('facultyPendingCount').textContent = String(ownRequests.filter((record) =>
+          String(record.effectiveStatus || record.status || '').toLowerCase() === 'pending'
+        ).length);
+        document.getElementById('studentApprovalCount').textContent = String(studentApprovals.length);
+        renderRequestList(document.getElementById('myRequestList'), ownRequests, 'mine');
+      } catch (loadError) {
+        activeBorrowCount.textContent = '—';
+        document.getElementById('facultyRequestCount').textContent = '—';
+        document.getElementById('facultyPendingCount').textContent = '—';
+        document.getElementById('myRequestList').textContent = 'Unable to load your borrow requests.';
+        document.getElementById('studentApprovalCount').textContent = '—';
+        error.textContent = loadError.message || 'Faculty dashboard data could not be loaded. Please refresh to try again.';
+        error.classList.remove('hidden');
+        console.error('Failed to load Faculty dashboard:', loadError);
+      }
+    }
+
+    setupFacultyEquipmentTooltip();
+    loadFacultyDashboard();
+    loadAssignedEquipment();
+  </script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+</body>
+</html>

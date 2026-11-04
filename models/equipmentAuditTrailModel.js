@@ -27,15 +27,21 @@ const EquipmentAuditTrail = sequelize.define('EquipmentAuditTrail', {
             'created',
             'updated',
             'deleted',
+            'borrow_requested',
+            'return_requested',
             'borrowed',
             'returned',
+            'accountability_assigned',
+            'accountability_removed',
             'maintenance_started',
             'maintenance_completed',
             'status_changed',
             'condition_changed',
             'location_changed',
             'assigned_to_set',
-            'removed_from_set'
+            'removed_from_set',
+            'equipment_scanned',
+            'equipment_issue_reported'
         ),
         allowNull: false
     },

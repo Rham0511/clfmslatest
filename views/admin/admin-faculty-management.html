@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty Management | ComLab</title>
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      --page: #06110c;
+      --panel: #0b1b14;
+      --surface: #07170f;
+      --text: #f8fafc;
+      --muted: #a7c8b5;
+      --line: rgba(74, 222, 128, .17);
+      --accent: #4ade80;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .13), transparent 36%), var(--page);
+      font-family: Inter, 'Segoe UI', sans-serif;
+    }
+
+    html.theme-light body {
+      --page: #f2f7f4;
+      --panel: #fff;
+      --surface: #f5faf7;
+      --text: #14231a;
+      --muted: #587163;
+      --line: rgba(22, 101, 52, .16);
+      --accent: #15803d;
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .1), transparent 36%), var(--page);
+    }
+
+    .main-container { box-sizing: border-box; min-height: 100vh; margin-left: 280px; padding: clamp(1.1rem, 3vw, 2.5rem); }
+    .page-wrap { width: min(100%, 1180px); margin: 0 auto; }
+    .hero, .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(150deg, color-mix(in srgb, var(--panel) 96%, var(--accent)), var(--panel));
+      box-shadow: 0 16px 40px #0002;
+    }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; margin-bottom: 1.25rem; padding: 1.5rem 1.6rem; }
+    .eyebrow { margin: 0 0 .3rem; color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0 0 .35rem; font-size: clamp(1.5rem, 2.5vw, 2rem); letter-spacing: -.035em; }
+    .hero p:not(.eyebrow), .muted { margin: 0; color: var(--muted); }
+    .campus-chip { display: flex; align-items: center; gap: .55rem; padding: .7rem .9rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); white-space: nowrap; }
+    .campus-chip i { color: var(--accent); }
+    .faculty-header-actions { display: flex; align-items: center; gap: .45rem; }
+    .faculty-header-actions .campus-chip { order: 1; }
+    .faculty-header-actions .comlab-notification-button { order: 2; }
+    .faculty-header-actions .system-profile-badge { order: 3; }
+
+    @media (max-width: 768px) {
+      html body.app-shell.faculty-management-page.comlab-slim-page-header #mobileMenuToggle {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        display: inline-flex !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-height: 2.25rem !important;
+        flex: 0 0 2.25rem !important;
+        align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+      }
+
+      html body.app-shell.faculty-management-page.comlab-slim-page-header .faculty-header-actions {
+        display: flex !important;
+        width: auto !important;
+        flex: 0 0 auto !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: .3rem !important;
+        margin-left: auto !important;
+      }
+
+      html body.app-shell.faculty-management-page.comlab-slim-page-header .faculty-header-actions .campus-chip {
+        order: 1 !important;
+        margin: 0 !important;
+      }
+
+      html body.app-shell.faculty-management-page.comlab-slim-page-header .faculty-header-actions .comlab-notification-button {
+        order: 2 !important;
+      }
+
+      html body.app-shell.faculty-management-page.comlab-slim-page-header .faculty-header-actions .system-profile-badge {
+        order: 3 !important;
+      }
+
+      html body.app-shell.faculty-management-page.comlab-slim-page-header > h1 {
+        flex: 1 1 auto;
+      }
+    }
+
+    .grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(360px, 1.2fr); align-items: start; gap: 1.2rem; }
+    .panel { position: relative; padding: 1.35rem; overflow: hidden; }
+    .panel::before { position: absolute; top: 0; right: 1.25rem; left: 1.25rem; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 38%, transparent), transparent); content: ''; pointer-events: none; }
+    .faculty-create-panel { align-self: start; }
+    .faculty-list-panel { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
+    .panel-title { display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1.15rem; }
+    .panel-icon { display: grid; width: 2.55rem; height: 2.55rem; flex: none; place-items: center; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--accent) 11%, var(--surface)); color: var(--accent); box-shadow: inset 0 1px 0 #fff2; }
+    h2 { margin: .08rem 0 .25rem; font-size: 1.08rem; letter-spacing: -.015em; }
+    .panel-title p { margin: 0; color: var(--muted); font-size: .84rem; line-height: 1.5; }
+    .faculty-form { margin: 0; }
+    label { display: block; margin: .95rem 0 .42rem; color: var(--text); font-size: .83rem; font-weight: 700; }
+    input, select { box-sizing: border-box; width: 100%; padding: .78rem .85rem; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); color: var(--text); font: inherit; transition: border-color .16s ease, box-shadow .16s ease, background .16s ease; }
+    input::placeholder { color: color-mix(in srgb, var(--muted) 78%, transparent); }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+    button { border: 0; border-radius: 10px; padding: .73rem .95rem; font: inherit; font-weight: 700; cursor: pointer; }
+    .password-wrap { display: flex; gap: .5rem; }
+    .password-wrap input { min-width: 0; }
+    .password-toggle { display: grid; width: 3rem; flex: 0 0 3rem; place-items: center; border: 1px solid var(--line); color: var(--text); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+    .password-toggle:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--accent); }
+    .password-help { display: flex; align-items: flex-start; gap: .45rem; margin: .48rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.45; }
+    .password-help i { margin-top: .12rem; color: var(--accent); }
+    .primary { display: flex; width: 100%; align-items: center; justify-content: center; gap: .55rem; margin-top: 1.1rem; padding: .82rem 1rem; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); color: #052e16; background: linear-gradient(135deg, #6ee7a0, #4ade80); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 18%, transparent); transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+    .primary:hover { transform: translateY(-1px); filter: brightness(1.04); box-shadow: 0 11px 24px color-mix(in srgb, var(--accent) 24%, transparent); }
+    .primary:focus-visible, .password-toggle:focus-visible, .copy-password:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .primary:disabled { opacity: .6; cursor: wait; transform: none; }
+    .notice { margin: .8rem 0 0; padding: .68rem .78rem; border: 1px solid transparent; border-radius: 11px; font-size: .83rem; line-height: 1.45; }
+    .notice:empty { display: none; }
+    .notice.error { border-color: rgba(248, 113, 113, .3); color: #b91c1c; background: rgba(248, 113, 113, .09); }
+    .notice.success { border-color: color-mix(in srgb, var(--accent) 28%, transparent); color: color-mix(in srgb, var(--accent) 80%, var(--text)); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+    .credential-card { margin-top: .85rem; padding: .9rem; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 13px; background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+    .credential-card[hidden] { display: none; }
+    .credential-heading { display: flex; align-items: center; gap: .45rem; color: var(--text); font-size: .83rem; }
+    .credential-heading i { color: var(--accent); }
+    .credential-card > p { margin: .3rem 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+    .credential-value { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin-top: .55rem; }
+    .credential-value code { overflow-wrap: anywhere; color: var(--accent); font-size: .95rem; font-weight: 800; }
+    .copy-password { flex: none; padding: .5rem .65rem; border: 1px solid var(--line); color: var(--text); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-size: .8rem; }
+    .copy-password:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+    .list-tools { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin: 0 0 .8rem; }
+    .count { display: inline-flex; min-height: 2rem; align-items: center; gap: .42rem; padding: .4rem .68rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: color-mix(in srgb, var(--surface) 78%, transparent); font-size: .78rem; font-weight: 700; white-space: nowrap; }
+    .count::before { width: .42rem; height: .42rem; flex: 0 0 .42rem; border-radius: 50%; background: var(--accent); content: ''; box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 55%, transparent); }
+    .faculty-search { position: relative; display: block; width: min(100%, 17rem); margin: 0; }
+    .faculty-search > i { position: absolute; top: 50%; left: .85rem; color: var(--muted); font-size: .82rem; transform: translateY(-50%); pointer-events: none; }
+    .faculty-search input { padding: .66rem .75rem .66rem 2.25rem !important; border-radius: 12px; font-size: .84rem; }
+    .faculty-list { display: grid; min-height: 0; max-height: min(58vh, 35rem); align-content: start; gap: .58rem; overflow-x: hidden; overflow-y: auto; padding: .1rem .42rem .2rem .05rem; overscroll-behavior: contain; scrollbar-color: color-mix(in srgb, var(--accent) 50%, transparent) transparent; scrollbar-width: thin; }
+    .faculty-list:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent); outline-offset: 3px; border-radius: 12px; }
+    .faculty-list::-webkit-scrollbar { width: 7px; }
+    .faculty-list::-webkit-scrollbar-track { border-radius: 999px; background: color-mix(in srgb, var(--surface) 65%, transparent); }
+    .faculty-list::-webkit-scrollbar-thumb { border: 2px solid var(--panel); border-radius: 999px; background: color-mix(in srgb, var(--accent) 48%, transparent); }
+    .faculty-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    .faculty-card { display: flex; min-width: 0; align-items: center; gap: .8rem; padding: .82rem; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 95%, var(--accent)), var(--surface)); transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+    .faculty-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 8%, transparent); }
+    .avatar { display: grid; width: 2.65rem; height: 2.65rem; flex: none; place-items: center; border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent); border-radius: 14px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-size: .82rem; font-weight: 800; }
+    .faculty-info { min-width: 0; flex: 1 1 auto; }
+    .faculty-info strong, .faculty-info span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .faculty-info strong { color: var(--text); font-size: .9rem; font-weight: 750; }
+    .faculty-info .faculty-meta { display: flex; flex-wrap: wrap; gap: .18rem .7rem; margin-top: .28rem; color: var(--muted); font-size: .76rem; }
+    .faculty-info .faculty-meta span { display: inline-flex; min-width: 0; align-items: center; gap: .32rem; }
+    .faculty-info .faculty-meta i { color: var(--accent); font-size: .7rem; }
+    .college-pill { display: inline-flex; flex: none; align-items: center; gap: .35rem; margin-left: auto; padding: .36rem .58rem; border: 1px solid var(--line); border-radius: 999px; color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); font-size: .7rem; font-weight: 800; white-space: nowrap; }
+    .empty { padding: 1rem; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 75%, transparent); text-align: center; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
+    @media (max-width: 900px) {
+      .main-container { margin-left: 0; padding: 1rem; }
+      .grid { grid-template-columns: 1fr; }
+      .faculty-list { max-height: 52vh; }
+    }
+    @media (max-width: 560px) {
+      .hero { align-items: flex-start; flex-direction: column; padding: 1.15rem; }
+      .panel { padding: 1.05rem; }
+      .list-tools { align-items: stretch; flex-direction: column; }
+      .faculty-search { width: 100%; }
+      .faculty-list { max-height: 48vh; }
+      .faculty-card { gap: .6rem; padding: .7rem; }
+      .faculty-info .faculty-meta { flex-direction: column; gap: .15rem; }
+      .college-pill { padding: .3rem .42rem; font-size: .65rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .faculty-card, .primary, input, select { transition: none; }
+    }
+  </style>
+</head>
+<body class="app-shell system-layout-page faculty-management-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+  <main class="main-container">
+    <div class="page-wrap">
+      <header class="hero">
+        <div><p class="eyebrow">Account administration</p><p>Add faculty accounts and view faculty registered at your campus.</p></div>
+        <div class="header-actions faculty-header-actions">
+          <div class="campus-chip"><i class="fa-solid fa-location-dot"></i><span>Campus</span><strong id="campusName">Loading…</strong></div>
+        </div>
+      </header>
+      <div class="grid">
+        <section class="panel faculty-create-panel" aria-labelledby="addFacultyTitle">
+          <div class="panel-title"><span class="panel-icon"><i class="fa-solid fa-user-plus"></i></span><div><h2 id="addFacultyTitle">Add Faculty</h2></div></div>
+          <form id="facultyForm" class="faculty-form" autocomplete="on">
+            <label for="facultyName">Full name</label><input id="facultyName" name="name" autocomplete="name" maxlength="120" required placeholder="e.g. Maria Santos">
+            <label for="facultyEmail">Email address</label><input id="facultyEmail" name="email" type="email" autocomplete="email" maxlength="190" required placeholder="name@school.edu">
+            <label for="facultyCollege">College / institute</label>
+            <select id="facultyCollege" name="college" required><option value="">Select college / institute</option><option>IABE</option><option>CBM</option><option>CCS</option><option>CAS</option><option>CTE</option><option>CCJE</option><option>CAAF</option><option>IF</option><option>GS</option></select>
+            <label for="facultyPassword">Temporary password</label>
+            <div class="password-wrap"><input id="facultyPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="At least 8 characters"><button id="togglePassword" class="password-toggle" type="button" aria-label="Show password" aria-pressed="false"><i class="fa-regular fa-eye"></i></button></div>
+            <p class="password-help"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Use at least 8 characters. The password is shown only after the account is created.</span></p>
+            <button id="createFaculty" class="primary" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create Faculty Account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            <p class="notice" id="formNotice" role="status" aria-live="polite"></p>
+            <div id="createdCredential" class="credential-card" hidden>
+              <strong class="credential-heading"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Temporary password</strong>
+              <p>Share this with the account holder through a secure channel.</p>
+              <div class="credential-value"><code id="temporaryPasswordValue"></code><button type="button" class="copy-password" id="copyTemporaryPassword"><i class="fa-regular fa-copy"></i> Copy</button></div>
+            </div>
+          </form>
+        </section>
+        <section class="panel faculty-list-panel" aria-labelledby="facultyListTitle">
+          <div class="panel-title"><span class="panel-icon"><i class="fa-solid fa-users"></i></span><div><h2 id="facultyListTitle">Faculty at Your Campus</h2></div></div>
+          <div class="list-tools"><span class="count" id="facultyCount" aria-live="polite">Loading accounts…</span><label class="faculty-search"><span class="sr-only">Search faculty by name, email, or college</span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="facultySearch" type="search" aria-label="Search faculty by name, email, or college" placeholder="Search name or email"></label></div>
+          <div id="facultyList" class="faculty-list" role="region" aria-label="Faculty account list" tabindex="0"><div class="empty">Loading faculty accounts…</div></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const user = window.__CURRENT_USER__ || {};
+      const form = document.getElementById('facultyForm');
+      const list = document.getElementById('facultyList');
+      const notice = document.getElementById('formNotice');
+      const search = document.getElementById('facultySearch');
+      let faculty = [];
+      document.getElementById('campusName').textContent = String(user.campus || 'No campus assigned').replace(/\s*Campus\s*$/i, '');
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+      const setNotice = (message, type = '') => { notice.textContent = message; notice.className = `notice ${type}`; };
+      const renderFaculty = () => {
+        const query = search.value.trim().toLowerCase();
+        const filtered = faculty.filter((person) => `${person.name} ${person.email} ${person.college}`.toLowerCase().includes(query));
+        const count = filtered.length === faculty.length || !query
+          ? `${faculty.length} faculty member${faculty.length === 1 ? '' : 's'}`
+          : `${filtered.length} of ${faculty.length} faculty members`;
+        document.getElementById('facultyCount').textContent = count;
+        list.replaceChildren();
+        if (!filtered.length) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = query ? 'No faculty matched your search.' : 'No Faculty accounts are registered at this campus yet.'; list.append(empty); return; }
+        filtered.forEach((person) => {
+          const card = document.createElement('article'); card.className = 'faculty-card';
+          const initials = String(person.name || '').trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'FA';
+          card.innerHTML = `<span class="avatar" aria-hidden="true">${escapeHtml(initials)}</span><div class="faculty-info"><strong>${escapeHtml(person.name)}</strong><div class="faculty-meta"><span><i class="fa-regular fa-envelope" aria-hidden="true"></i>${escapeHtml(person.email)}</span><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${escapeHtml(person.campus)}</span></div></div><span class="college-pill"><i class="fa-solid fa-building-columns" aria-hidden="true"></i>${escapeHtml(person.college || 'Faculty')}</span>`;
+          list.append(card);
+        });
+      };
+      const loadFaculty = async () => {
+        const response = await fetch('/api/faculty', { credentials: 'same-origin', cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Unable to load faculty accounts.');
+        faculty = Array.isArray(payload.faculty) ? payload.faculty : [];
+        renderFaculty();
+      };
+      search.addEventListener('input', renderFaculty);
+      document.getElementById('togglePassword').addEventListener('click', (event) => {
+        const input = document.getElementById('facultyPassword');
+        const visible = input.type === 'password'; input.type = visible ? 'text' : 'password';
+        event.currentTarget.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+        event.currentTarget.setAttribute('aria-pressed', String(visible));
+        event.currentTarget.innerHTML = `<i class="fa-regular ${visible ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+      });
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = document.getElementById('createFaculty'); button.disabled = true; setNotice('Creating Faculty account…');
+        try {
+          const response = await fetch('/api/faculty', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.error || 'Unable to create Faculty account.');
+          const password = form.elements.password.value;
+          document.getElementById('temporaryPasswordValue').textContent = password;
+          document.getElementById('createdCredential').hidden = false;
+          form.reset();
+          setNotice(`${payload.faculty.name} was added. Share the temporary password securely.`, 'success');
+          await loadFaculty();
+        } catch (error) { setNotice(error.message, 'error'); }
+        finally { button.disabled = false; }
+      });
+      document.getElementById('copyTemporaryPassword').addEventListener('click', async () => {
+        const password = document.getElementById('temporaryPasswordValue').textContent;
+        try { await navigator.clipboard.writeText(password); setNotice('Temporary password copied. Share it securely.', 'success'); }
+        catch { setNotice('Copy is unavailable. Select the password and share it securely.', 'error'); }
+      });
+      loadFaculty().catch((error) => { list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; document.getElementById('facultyCount').textContent = 'Unable to load accounts'; });
+    })();
+  </script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+</body>
+</html>

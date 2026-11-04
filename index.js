@@ -33,14 +33,23 @@ import "./models/maintenanceRequestModel.js";
 import "./models/attendanceModel.js";
 import "./models/attendanceSessionModel.js";
 import "./models/laboratoryScheduleModel.js";
+import { ensureInstructorDirectoryTable } from "./models/instructorDirectoryModel.js";
 import { ensureClassListEntryTable } from "./models/classListEntryModel.js";
+import { ensureEquipmentAssignmentTable } from "./models/equipmentAssignmentModel.js";
+import { ensureBorrowRequestAccountabilityTable } from "./models/borrowRequestAccountabilityModel.js";
+import { SequelizeSessionStore } from "./models/sessionStore.js";
 import "./models/borrowRecordModel.js";
 import "./models/equipmentModel.js";
 import "./models/userModel.js";
 import router from "./routes/index.js";
 import maintenanceRouter from "./routes/maintenanceRoutes.js";
 import equipmentEnhancementsRouter from "./routes/equipmentEnhancementsRoutes.js";
+import archiveRouter from "./routes/archiveRoutes.js";
 import { sequelize } from "./models/db.js";
+import { ensureArchiveRecordsTable } from "./models/archiveRecords.js";
+import { ensureAttendancePcStationColumn } from "./models/attendanceModel.js";
+import { ensurePCStationAutoLogoutColumn } from "./models/pcStationSessionModel.js";
+import { expirePCStationSessions } from "./controllers/pcStationController.js";
 import fs from 'fs';
 import hbs from "hbs";
 import { fileURLToPath } from "url";
@@ -53,19 +62,67 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const sessionSecret = String(process.env.SESSION_SECRET || "").trim();
+const sessionStore = new SequelizeSessionStore();
+const configuredSessionSecret = String(process.env.SESSION_SECRET || "").trim();
+const devFallbackSessionSecret = "comlab-development-session-secret-123456";
+const sessionSecret = configuredSessionSecret || devFallbackSessionSecret;
 
-if (!sessionSecret || sessionSecret.length < 32) {
+if (!configuredSessionSecret && process.env.NODE_ENV !== "production") {
+  console.warn("⚠️ SESSION_SECRET is not configured. Using a local development fallback secret until you set SESSION_SECRET in your environment.");
+} else if (!configuredSessionSecret || configuredSessionSecret.length < 32) {
   const environmentLabel = process.env.NODE_ENV === "production" ? "production" : "local development";
-  throw new Error(`SESSION_SECRET must be configured with at least 32 characters before starting ${environmentLabel}.`);
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`SESSION_SECRET must be configured with at least 32 characters before starting ${environmentLabel}.`);
+  }
+  console.warn(`⚠️ SESSION_SECRET is shorter than 32 characters for ${environmentLabel}; using the development fallback secret instead.`);
 }
+
+// Trust proxy - required when behind nginx/cloudflare
+app.set('trust proxy', 1);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.get('/service-worker.js', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.type('application/javascript').sendFile(path.join(__dirname, 'public', 'service-worker.js'));
+});
+app.get('/manifest.webmanifest', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.type('application/manifest+json').sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
+});
 app.use(express.static(path.join(process.cwd(), "public")));
+app.use((req, res, next) => {
+  const send = res.send;
+  res.send = function (body) {
+    if (typeof body === "string" && /<(?:!doctype html|html)\b/i.test(body)) {
+      const dialogScript = '<script src="/js/custom-dialogs.js"></script>';
+      const pwaHead = '<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#062719"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ComLab"><link rel="apple-touch-icon" href="/images/comlab-app-192.png"><link rel="stylesheet" href="/css/pwa-install.css">';
+      const pwaScript = '<script src="/js/pwa-install.js" defer></script>';
+      if (!/href=["']\/manifest\.webmanifest["']/i.test(body) && /<\/head>/i.test(body)) {
+        body = body.replace(/<\/head>/i, `${pwaHead}</head>`);
+      }
+      if (!/src=["'][^"']*\/js\/custom-dialogs\.js(?:\?[^"']*)?["']/i.test(body)) {
+        if (/<\/head>/i.test(body)) {
+          body = body.replace(/<\/head>/i, `${dialogScript}</head>`);
+        } else if (/<\/body>/i.test(body)) {
+          body = body.replace(/<\/body>/i, `${dialogScript}</body>`);
+        } else {
+          body = `${dialogScript}${body}`;
+        }
+      }
+      if (!/src=["'][^"']*\/js\/pwa-install\.js(?:\?[^"']*)?["']/i.test(body)) {
+        if (/<\/body>/i.test(body)) body = body.replace(/<\/body>/i, `${pwaScript}</body>`);
+        else body += pwaScript;
+      }
+    }
+    return send.call(this, body);
+  };
+  next();
+});
 
 app.use(session({
   secret: sessionSecret,
+  store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -128,6 +185,7 @@ fs.readdir(partialsDir, (err, files) => {
 });
 
 app.use("/", maintenanceRouter);
+app.use("/", archiveRouter);
 app.use("/api/equipment-enhancements", equipmentEnhancementsRouter);
 app.use("/", router);
 
@@ -149,11 +207,19 @@ export default app;
       try {
         await sequelize.authenticate();
         console.log("✅ Database connected");
+        await sessionStore.sync({ alter: false, logging: false });
+        console.log("✅ Persistent session store is ready");
 
         // Database tables are managed via SQL migrations
         // Sync is disabled to prevent schema conflicts
         try {
           await ensureClassListEntryTable();
+          await ensureInstructorDirectoryTable();
+          await ensureEquipmentAssignmentTable();
+          await ensureBorrowRequestAccountabilityTable();
+          await ensureArchiveRecordsTable();
+          await ensureAttendancePcStationColumn();
+          await ensurePCStationAutoLogoutColumn();
           // await sequelize.sync({ force: false, alter: false, logging: false });
           console.log("✅ Database tables are ready");
         } catch (syncError) {
@@ -188,6 +254,19 @@ export default app;
       if (HOST === "0.0.0.0") {
         console.log("   Listening on all network interfaces (0.0.0.0). Use your PC LAN IP to access from other devices.");
       }
+      let expirationRunning = false;
+      const expirationTimer = setInterval(async () => {
+        if (expirationRunning) return;
+        expirationRunning = true;
+        try {
+          await expirePCStationSessions();
+        } catch (error) {
+          console.error("[PCStation] Failed to expire class sessions:", error);
+        } finally {
+          expirationRunning = false;
+        }
+      }, 15_000);
+      expirationTimer.unref?.();
     });
 
     server.on("error", (err) => {

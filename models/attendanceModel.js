@@ -51,10 +51,22 @@ export const Attendance = sequelize.define("Attendance", {
   laboratoryScheduleId: {
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  pcStationSetId: {
+    type: DataTypes.STRING(50),
+    allowNull: true
   }
 }, {
   timestamps: true,
   tableName: "attendance"
 });
+
+export const ensureAttendancePcStationColumn = async () => {
+  const [columns] = await sequelize.query("SHOW COLUMNS FROM attendance LIKE 'pcStationSetId'");
+  if (!columns.length) {
+    await sequelize.query("ALTER TABLE attendance ADD COLUMN pcStationSetId VARCHAR(50) NULL");
+  }
+  return true;
+};
 
 export { sequelize };

@@ -57,6 +57,10 @@ export const Equipment = sequelize.define("Equipment", {
     type: DataTypes.STRING,
     allowNull: true
   },
+  computerLabId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   qrCode: {
     type: DataTypes.TEXT,
     allowNull: true

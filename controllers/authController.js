@@ -30,6 +30,7 @@ import fs from "fs";
 import path from "path";
 import { User } from "../models/userModel.js";
 import { logAuditEntry } from "./auditController.js";
+import { endUserStationSessions } from "./pcStationController.js";
 import crypto from 'crypto';
 import { sendMail, sendOtpMail } from '../utils/mailer.js';
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -37,8 +38,23 @@ import { sendMail, sendOtpMail } from '../utils/mailer.js';
 const getSafeRedirectTarget = (redirectTo) => {
   if (typeof redirectTo !== "string") return null;
   const trimmed = redirectTo.trim();
-  if (!trimmed || !trimmed.startsWith("/")) return null;
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) return null;
   return trimmed;
+};
+
+const isEquipmentQrRedirect = (redirectTo) =>
+  typeof redirectTo === "string" &&
+  (/^\/equipment\/(?:uid|s)\/[A-Za-z0-9_-]+$/.test(redirectTo) ||
+    /^\/equipment\/view\/[^/?#]+$/.test(redirectTo));
+
+const REMEMBER_ME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+const regenerateSession = (req) => new Promise((resolve, reject) => {
+  req.session.regenerate((error) => error ? reject(error) : resolve());
+});
+
+const setRememberMeCookie = (req, rememberMe) => {
+  req.session.cookie.maxAge = rememberMe ? REMEMBER_ME_MAX_AGE_MS : null;
 };
 
 /** Generate a cryptographically random 6-digit OTP string */
@@ -46,6 +62,19 @@ const generateOtp = () => String(crypto.randomInt(100000, 999999));
 
 /** OTP valid for 10 minutes */
 const OTP_TTL_MS = 10 * 60 * 1000;
+const ALLOWED_STUDENT_YEARS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+const ALLOWED_STUDENT_SECTIONS = ["F1", "F2", "F3"];
+const ALLOWED_STUDENT_PROGRAMS = new Set(["BSIT", "BSCPE"]);
+
+const normalizeStudentYear = (value) => {
+  const normalized = String(value || "").trim().toLocaleLowerCase();
+  return ALLOWED_STUDENT_YEARS.find((year) => year.toLocaleLowerCase() === normalized) || null;
+};
+
+const normalizeStudentSection = (value) => {
+  const normalized = String(value || "").trim().replace(/\s+/g, " ").toLocaleUpperCase();
+  return ALLOWED_STUDENT_SECTIONS.find((section) => section === normalized) || null;
+};
 
 const getSmtpErrorMessage = (error) => {
   const message = String(error?.message || '').toLowerCase();
@@ -61,20 +90,26 @@ const getSmtpErrorMessage = (error) => {
 // ─── Role helpers ────────────────────────────────────────────────────────────
 
 export const normalizeUserRole = (role) => {
-  const normalized = String(role || "admin").trim().toLowerCase();
-  if (["admin", "administrator", "instructor", "instructors"].includes(normalized)) return "admin";
+  const normalized = String(role || "").trim().toLowerCase();
+  if (["admin", "administrator"].includes(normalized)) return "admin";
+  if (["faculty", "faculties", "instructor", "instructors"].includes(normalized)) return "faculty";
   if (normalized === "technician") return "technician";
   if (normalized === "student") return "student";
-  return "admin";
+  return null;
 };
 
 export const normalizeCampusValue = (campus) => {
   const allowed = ["Bongabong", "Victoria", "Calapan"];
   const normalized = String(campus ?? "").trim();
   if (!normalized) return null;
-  const match = allowed.find((option) => option.toLowerCase() === normalized.toLowerCase());
+
+  const withoutCampusSuffix = normalized.replace(/\s*campus\s*$/i, "").trim();
+  const canonicalValue = withoutCampusSuffix || normalized;
+  const match = allowed.find((option) => option.toLowerCase() === canonicalValue.toLowerCase());
   return match || null;
 };
+
+const ALLOWED_COLLEGES = new Set(["IABE", "CBM", "CCS", "CAS", "CTE", "CCJE", "CAAF", "IF", "GS"]);
 
 const redirectAfterLogin = (req, res, fallback = "/student/dashboard") => {
   const redirectTo = getSafeRedirectTarget(req.session.redirectTo);
@@ -84,23 +119,52 @@ const redirectAfterLogin = (req, res, fallback = "/student/dashboard") => {
 
 // ─── Page renders ────────────────────────────────────────────────────────────
 
-export const loginPage        = (req, res) => res.render("login",          { title: "Login" });
-export const registerPage     = (req, res) => res.render("register",       { title: "Register" });
+export const loginPage = (req, res) => res.render("login", {
+  title: "Login",
+  isEquipmentLogin: isEquipmentQrRedirect(req.session?.redirectTo)
+});
+export const registerPage     = (req, res) => {
+  const isEquipmentRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
+  const isFacultyRegistration = String(req.query.role || "").trim().toLowerCase() === "faculty";
+  return res.render("register", {
+    title: "Register",
+    isFacultyRegistration,
+    isEquipmentRegistration
+  });
+};
 export const forgotPasswordPage = (req, res) => res.render("forgotpassword", { title: "Forgot Password" });
-export const dashboardPage    = (req, res) => {
-  if (!req.session.userId) return res.redirect("/login");
-  return res.redirect("/admin-dashboard");
+export const dashboardPage = async (req, res) => {
+  if (!req.session?.userId) return res.redirect("/login");
+
+  try {
+    const user = await User.findByPk(req.session.userId, { attributes: ["role"] });
+    const role = normalizeUserRole(user?.role);
+
+    if (role === "student") return res.redirect("/student/dashboard");
+    if (role === "faculty") return res.redirect("/faculty-dashboard");
+    if (role === "technician") return res.redirect("/technician-dashboard");
+    if (role === "admin") return res.redirect("/admin-dashboard");
+
+    req.flash("error_msg", "This account has an unsupported role. Please contact an administrator.");
+    return res.redirect("/login");
+  } catch (error) {
+    console.error("[DASHBOARD] Failed to resolve the user's role:", error);
+    return res.status(500).send("Unable to load your dashboard. Please try again.");
+  }
 };
 
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 export const loginUser = async (req, res) => {
+  console.log("[LOGIN] Login attempt started");
   const rawEmail = String(req.body?.email ?? "");
   const rawPassword = String(req.body?.password ?? "");
   const normalizedEmail = rawEmail.trim().toLowerCase();
   const normalizedPassword = rawPassword.trim();
+  console.log("[LOGIN] Email:", normalizedEmail);
 
   const user = await User.findOne({ where: { email: normalizedEmail } });
+  console.log("[LOGIN] User found:", !!user);
   if (!user) {
     await logAuditEntry(req, {
       action: "Failed Login",
@@ -112,6 +176,7 @@ export const loginUser = async (req, res) => {
   }
 
   const match = await bcryptjs.compare(normalizedPassword, user.password);
+  console.log("[LOGIN] Password match:", match);
   if (!match) {
     await logAuditEntry(req, {
       action: "Failed Login",
@@ -123,16 +188,37 @@ export const loginUser = async (req, res) => {
   }
 
   const normalizedRole = normalizeUserRole(user.role);
+  if (!normalizedRole) {
+    req.flash("error_msg", "This account has an unsupported role. Please contact an administrator.");
+    return res.redirect("/login");
+  }
+  console.log("[LOGIN] Normalized role:", normalizedRole);
+  console.log("[LOGIN] Email verified:", user.email_verified);
 
   // Block unverified accounts
   if (!user.email_verified) {
+    console.log("[LOGIN] Email not verified, redirecting to login");
     req.flash('error_msg', 'Please verify your email address before logging in.');
     return res.redirect('/login');
   }
 
+  const redirectTo = getSafeRedirectTarget(req.session.redirectTo);
+  const rememberMe = ["on", "true", "1"].includes(String(req.body?.rememberMe || "").trim().toLowerCase());
+  try {
+    await regenerateSession(req);
+  } catch (error) {
+    console.error("[LOGIN] Failed to rotate session after authentication:", error);
+    req.flash("error_msg", "Login failed. Please try again.");
+    return res.redirect("/login");
+  }
+  if (redirectTo) req.session.redirectTo = redirectTo;
+
+  console.log("[LOGIN] Setting session variables");
   req.session.userId   = user.id;
   req.session.userRole = normalizedRole;
   req.session.userCampus = user.campus || null;
+  setRememberMeCookie(req, rememberMe);
+  console.log("[LOGIN] Session userId:", req.session.userId);
   await user.update({ last_login_at: new Date(), role: normalizedRole });
   await logAuditEntry(req, {
     action: "Login",
@@ -140,15 +226,18 @@ export const loginUser = async (req, res) => {
     description: `User ${user.email} logged in successfully.`
   });
 
+  console.log("[LOGIN] About to save session");
   // Explicitly save session before redirect to ensure userRole persists
   return req.session.save((err) => {
     if (err) {
-      console.error("[auth] Session save error:", err);
+      console.error("[LOGIN] Session save error:", err);
       req.flash("error_msg", "Login failed. Please try again.");
       return res.redirect("/login");
     }
+    console.log("[LOGIN] Session saved successfully, redirecting to dashboard");
     if (normalizedRole === "technician") return redirectAfterLogin(req, res, "/technician-dashboard");
     if (normalizedRole === "student")    return redirectAfterLogin(req, res, "/student/dashboard");
+    if (normalizedRole === "faculty")    return redirectAfterLogin(req, res, "/faculty-dashboard");
     return redirectAfterLogin(req, res, "/admin-dashboard");
   });
 };
@@ -156,12 +245,33 @@ export const loginUser = async (req, res) => {
 // ─── Registration with OTP ───────────────────────────────────────────────────
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role, student_number, program, year, section, campus } = req.body;
-  const normalizedRole = normalizeUserRole(role);
-  const officialStudentId = String(student_number || "").trim();
+  const { name, email, password, confirmPassword, role, student_number, college, program, year, section, campus } = req.body;
+  const equipmentQrRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
+  const normalizedRole = normalizeUserRole(role || "student");
+  const isStudent = normalizedRole === "student";
+  const officialStudentId = isStudent ? String(student_number || "").trim() : "";
+  const normalizedCollege = String(college || "").trim().toUpperCase();
+  const normalizedProgram = String(program || "").trim();
+  const normalizedYear = normalizeStudentYear(year);
+  const normalizedSection = normalizeStudentSection(section);
 
-  if (!name || !email || !password || !confirmPassword || !campus) {
-    req.flash("error_msg", "Please complete all registration fields, including campus.");
+  if (!["student", "faculty"].includes(normalizedRole)) {
+    req.flash("error_msg", "Only Student and Faculty accounts can be registered here.");
+    return res.redirect("/register");
+  }
+
+  if (!String(name || "").trim() || !String(email || "").trim() || !password || !confirmPassword || !campus) {
+    req.flash("error_msg", "Please complete all required registration fields.");
+    return res.redirect("/register");
+  }
+
+  if (!isStudent && !normalizedCollege) {
+    req.flash("error_msg", "Please select a college or institute.");
+    return res.redirect("/register");
+  }
+
+  if (!isStudent && !ALLOWED_COLLEGES.has(normalizedCollege)) {
+    req.flash("error_msg", "Please select a valid college or institute.");
     return res.redirect("/register");
   }
 
@@ -181,7 +291,19 @@ export const registerUser = async (req, res) => {
     return res.redirect("/register");
   }
 
-  const existingUser = await User.findOne({ where: { email } });
+  if (isStudent && !ALLOWED_STUDENT_PROGRAMS.has(normalizedProgram.toUpperCase())) {
+    req.flash("error_msg", "Please select BSIT or BSCPE as your program.");
+    return res.redirect("/register");
+  }
+
+  if (isStudent && (!normalizedYear || !normalizedSection)) {
+    req.flash("error_msg", "Students must provide their program, a valid year level, and a section from F1 to F3.");
+    return res.redirect("/register");
+  }
+  const storedProgram = isStudent ? normalizedProgram.toUpperCase() : null;
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const existingUser = await User.findOne({ where: { email: normalizedEmail } });
   if (existingUser && existingUser.email_verified) {
     req.flash("error_msg", "An account with that email already exists.");
     return res.redirect("/register");
@@ -212,9 +334,10 @@ export const registerUser = async (req, res) => {
       password: hashed,
       role: normalizedRole,
       student_number: officialStudentId || null,
-      program: program?.trim() || null,
-      year: year?.trim() || null,
-      section: section?.trim() || null,
+      college: isStudent ? null : normalizedCollege,
+      program: storedProgram,
+      year: isStudent ? normalizedYear : null,
+      section: isStudent ? normalizedSection : null,
       campus: normalizedCampus,
       otp_code: otp,
       otp_expires_at: otpExpiresAt,
@@ -224,13 +347,14 @@ export const registerUser = async (req, res) => {
   } else {
     user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashed,
       role: normalizedRole,
       student_number: officialStudentId || null,
-      program: program?.trim() || null,
-      year: year?.trim() || null,
-      section: section?.trim() || null,
+      college: isStudent ? null : normalizedCollege,
+      program: storedProgram,
+      year: isStudent ? normalizedYear : null,
+      section: isStudent ? normalizedSection : null,
       campus: normalizedCampus,
       last_login_at: null,
       email_verified: false,
@@ -245,16 +369,16 @@ export const registerUser = async (req, res) => {
     module: "User Management",
     resourceId: user.id,
     description: `New user account created for ${user.email} (${normalizedRole}) — OTP verification required.`,
-    details: { email: user.email, role: normalizedRole, campus: normalizedCampus }
+    details: { email: user.email, role: normalizedRole, campus: normalizedCampus, college: isStudent ? null : normalizedCollege, program: storedProgram }
   });
 
-  console.log(`[auth] OTP generated for registration: ${email}`);
+  console.log(`[auth] OTP generated for registration: ${normalizedEmail}`);
 
   try {
-    await sendOtpMail({ to: email, name, otp, purpose: 'registration' });
+    await sendOtpMail({ to: normalizedEmail, name, otp, purpose: 'registration' });
     console.log('[auth] OTP email sent successfully.');
   } catch (err) {
-    console.error(`[auth] OTP email failed for ${email}:`, err?.message || err);
+    console.error(`[auth] OTP email failed for ${normalizedEmail}:`, err?.message || err);
     // Delete user if we couldn't send the OTP (they can retry registration)
     await user.destroy().catch(() => {});
     req.flash('error_msg', getSmtpErrorMessage(err));
@@ -262,8 +386,10 @@ export const registerUser = async (req, res) => {
   }
 
   // Store email in session so the OTP page knows who to verify
-  req.session.otpEmail   = email;
+  req.session.otpEmail   = normalizedEmail;
   req.session.otpPurpose = 'registration';
+  req.session.rememberAfterRegistration = equipmentQrRegistration &&
+    ["on", "true", "1"].includes(String(req.body?.rememberMe || "").trim().toLowerCase());
   return res.redirect('/verify-otp');
 };
 
@@ -333,8 +459,42 @@ export const verifyOtp = async (req, res) => {
       resourceId: user.id,
       description: `User ${user.email} verified their email via OTP.`
     });
+    const equipmentRedirect = isEquipmentQrRedirect(req.session.redirectTo) &&
+      ["student", "faculty"].includes(normalizeUserRole(user.role));
+    if (equipmentRedirect) {
+      const redirectTo = getSafeRedirectTarget(req.session.redirectTo);
+      const rememberMe = req.session.rememberAfterRegistration === true;
+      try {
+        await regenerateSession(req);
+      } catch (error) {
+        console.error("[auth] Failed to create a session after equipment QR registration:", error);
+        req.flash('error_msg', 'Your email is verified. Please log in to continue to the scanned equipment.');
+        return res.redirect('/login');
+      }
+      if (redirectTo) req.session.redirectTo = redirectTo;
+      req.session.userId = user.id;
+      req.session.userRole = normalizeUserRole(user.role);
+      req.session.userCampus = user.campus || null;
+      setRememberMeCookie(req, rememberMe);
+      await user.update({ last_login_at: new Date() });
+      await logAuditEntry(req, {
+        action: "Login",
+        module: "Authentication",
+        resourceId: user.id,
+        description: `User ${user.email} logged in after equipment QR registration and email verification.`
+      });
+      return req.session.save((error) => {
+        if (error) {
+          console.error("[auth] Failed to save session after equipment QR registration:", error);
+          req.flash('error_msg', 'Your email is verified. Please log in to continue to the scanned equipment.');
+          return res.redirect('/login');
+        }
+        return redirectAfterLogin(req, res, "/faculty-dashboard");
+      });
+    }
     delete req.session.otpEmail;
     delete req.session.otpPurpose;
+    delete req.session.rememberAfterRegistration;
     req.flash('success_msg', 'Email verified! You can now log in.');
     return res.redirect('/login');
   }
@@ -529,16 +689,58 @@ export const updateProfile = async (req, res) => {
     return res.status(401).json({ success: false, error: "Please log in to update your profile." });
   }
 
-  const user = await User.findByPk(req.session.userId, { attributes: ["id", "role", "student_number"] });
+  const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role", "student_number", "college", "year", "section"] });
   if (!user) {
     return res.status(404).json({ success: false, error: "User account was not found." });
   }
 
   const payload = {};
+  if (Object.prototype.hasOwnProperty.call(req.body, "name")) {
+    const name = String(req.body.name || "").trim().replace(/\s+/g, " ");
+    const nameParts = name.split(" ").filter(Boolean);
+    const genericNames = new Set(["technician", "lab technician", "laboratory technician", "n/a"]);
+    if (name.length > 120 || nameParts.length < 3 || genericNames.has(name.toLocaleLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter your full name: first name, middle initial, and last name."
+      });
+    }
+    payload.name = name;
+  }
+
   for (const field of ["program", "year", "section"]) {
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
       payload[field] = String(req.body[field] || "").trim() || null;
     }
+  }
+
+  if (normalizeUserRole(user.role) === "student" &&
+      ["year", "section"].some((field) => Object.prototype.hasOwnProperty.call(req.body, field))) {
+    const normalizedYear = normalizeStudentYear(
+      Object.prototype.hasOwnProperty.call(req.body, "year") ? payload.year : user.year
+    );
+    const normalizedSection = normalizeStudentSection(
+      Object.prototype.hasOwnProperty.call(req.body, "section") ? payload.section : user.section
+    );
+    if (!normalizedYear || !normalizedSection || normalizedSection.length > 30) {
+      return res.status(400).json({
+        success: false,
+        error: "Student year level must be 1st–4th Year and section must be F1, F2, or F3."
+      });
+    }
+    payload.year = normalizedYear;
+    payload.section = normalizedSection;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(req.body, "college")) {
+    if (!["student", "faculty"].includes(normalizeUserRole(user.role))) {
+      return res.status(403).json({ success: false, error: "Only Student and Faculty accounts can update a college or institute." });
+    }
+    const college = String(req.body.college || "").trim().toUpperCase();
+    if (!ALLOWED_COLLEGES.has(college)) {
+      return res.status(400).json({ success: false, error: "Please select a valid college or institute." });
+    }
+    payload.college = college;
   }
 
   if (Object.prototype.hasOwnProperty.call(req.body, "student_number")) {
@@ -585,17 +787,37 @@ export const updateProfile = async (req, res) => {
     req.flash("success_msg", "Profile updated successfully.");
     return res.redirect("/student/profile");
   }
-  return res.json({ success: true, profile: { ...payload, student_number: payload.student_number ?? user.student_number ?? null } });
+  return res.json({
+    success: true,
+    profile: {
+      ...payload,
+      name: payload.name ?? user.name ?? "",
+      student_number: payload.student_number ?? user.student_number ?? null,
+      college: payload.college ?? user.college ?? null
+    }
+  });
 };
 
 export const logoutUser = async (req, res) => {
+  if (req.session?.userId) {
+    try {
+      await endUserStationSessions(req.session.userId);
+    } catch (error) {
+      console.error("[LOGOUT] Failed to close active PC station sessions:", error);
+    }
+  }
   await logAuditEntry(req, {
     action: "Logout",
     module: "Authentication",
     description: `User ${req.session?.userId || 'unknown'} logged out.`
   });
-  req.session.destroy();
-  res.redirect("/login");
+  return req.session.destroy((error) => {
+    if (error) {
+      console.error("[LOGOUT] Failed to destroy the session:", error);
+      return res.status(500).send("Unable to complete logout. Please try again.");
+    }
+    return res.redirect("/login");
+  });
 };
 
 export const uploadStudentPhoto = async (req, res) => {
@@ -613,8 +835,9 @@ export const uploadStudentPhoto = async (req, res) => {
     return res.status(404).json({ success: false, error: "User not found." });
   }
 
-  if ((user.role || "").toLowerCase() !== "student") {
-    return res.status(403).json({ success: false, error: "Only students can upload profile photos." });
+  const role = String(user.role || "").trim().toLowerCase();
+  if (!["student", "faculty", "instructor"].includes(role)) {
+    return res.status(403).json({ success: false, error: "Only student and faculty accounts can upload profile photos." });
   }
 
   const matches = image.match(/^data:(image\/(jpeg|jpg|png|webp));base64,(.*)$/i);
@@ -657,7 +880,7 @@ export const uploadStudentPhoto = async (req, res) => {
     await User.update({ photo: publicUrl }, { where: { id: user.id } });
     return res.json({ success: true, photo: publicUrl });
   } catch (error) {
-    console.error("Failed to save student profile photo:", error);
+    console.error("Failed to save profile photo:", error);
     return res.status(500).json({ success: false, error: "Unable to save the profile photo." });
   }
 };

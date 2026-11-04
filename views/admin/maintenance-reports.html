@@ -6,7 +6,7 @@
     <title>ComLab Reports</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         /* Dark theme local utilities for Maintenance Reports */
         body {
@@ -15,18 +15,18 @@
         }
 
         .main-container {
-            background: linear-gradient(180deg, rgba(8,15,12,0.98), rgba(7,11,9,0.96));
+            background: linear-gradient(180deg, rgba(2, 6, 23,0.98), rgba(2, 6, 23,0.96));
         }
 
         .gradient-green { background: linear-gradient(135deg,#16A34A 0%,#059669 100%); }
         .btn-primary { background: linear-gradient(135deg,#059669 0%,#10b981 100%); color:#fff; transition:all 0.25s ease; border:1px solid rgba(74,222,128,.22); box-shadow:0 12px 24px rgba(5,150,105,.18); }
         .btn-primary:hover { transform: translateY(-1px); box-shadow:0 16px 30px rgba(16,185,129,0.24); background: linear-gradient(135deg,#10b981 0%,#34d399 100%); }
-        .btn-secondary { background: rgba(13,23,18,0.84); border: 1px solid rgba(74,222,128,.18); color: #dcfce7; transition: all 0.2s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
+        .btn-secondary { background: rgba(7, 17, 31,0.84); border: 1px solid rgba(74,222,128,.18); color: #dcfce7; transition: all 0.2s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
         .btn-secondary:hover { background: rgba(16,34,26,0.96); border-color: rgba(74,222,128,.28); color: #f0fdf4; }
-        .form-control { width: 100%; padding: 0.95rem 1rem; border-radius: 1rem; border: 1px solid rgba(74,222,128,.16); background: linear-gradient(180deg, rgba(13,23,18,0.92), rgba(8,15,12,0.94)); color: #f8fafc; outline: none; transition: all 0.2s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+        .form-control { width: 100%; padding: 0.95rem 1rem; border-radius: 1rem; border: 1px solid rgba(74,222,128,.16); background: linear-gradient(180deg, rgba(7, 17, 31,0.92), rgba(2, 6, 23,0.94)); color: #f8fafc; outline: none; transition: all 0.2s ease; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
         .form-control::placeholder { color: rgba(203,213,225,0.72); }
-        .form-control:focus { border-color: rgba(74,222,128,.28); box-shadow: 0 0 0 4px rgba(16,185,129,0.12); background: linear-gradient(180deg, rgba(13,23,18,0.98), rgba(7,11,9,0.98)); }
-        .card-hover { transition: all 0.3s ease; background: radial-gradient(circle at top left, rgba(16,185,129,0.08), transparent 70%), rgba(13,23,18,0.8); border: 1px solid rgba(16,185,129,0.2); box-shadow: 0 20px 45px rgba(2,8,12,0.35); backdrop-filter: blur(16px) saturate(1.04); }
+        .form-control:focus { border-color: rgba(74,222,128,.28); box-shadow: 0 0 0 4px rgba(16,185,129,0.12); background: linear-gradient(180deg, rgba(7, 17, 31,0.98), rgba(2, 6, 23,0.98)); }
+        .card-hover { transition: all 0.3s ease; background: radial-gradient(circle at top left, rgba(16,185,129,0.08), transparent 70%), rgba(7, 17, 31,0.8); border: 1px solid rgba(16,185,129,0.2); box-shadow: 0 20px 45px rgba(2,8,12,0.35); backdrop-filter: blur(16px) saturate(1.04); }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 26px 58px rgba(2,8,12,0.42); }
         .badge-pending { background: rgba(245,158,11,0.12); color: #f9d29a; padding:0.375rem 0.75rem; border-radius:0.75rem; font-weight:600; }
         .badge-under-repair { background: rgba(59,130,246,0.12); color:#9ac9ff; padding:0.375rem 0.75rem; border-radius:0.75rem; font-weight:600; }
@@ -49,46 +49,72 @@
         .action-btn-view:hover { background: rgba(59,130,246,0.18); }
         .action-btn-update { background: rgba(245,158,11,0.12); color:#fff5c2; }
         .action-btn-update:hover { background: rgba(245,158,11,0.18); }
-        .page-content { background: linear-gradient(180deg, rgba(8,15,12,0.98), rgba(7,11,9,0.96)); }
+        .page-content { background: linear-gradient(180deg, rgba(2, 6, 23,0.98), rgba(2, 6, 23,0.96)); }
         .page-content table td { color: #f8fafc; }
-        .page-content table thead { background: linear-gradient(180deg, rgba(13,23,18,0.96), rgba(9,16,13,0.96)); }
-        .page-content table thead th { color: #d1fae5; border-bottom: 1px solid rgba(74,222,128,.16); }
-        .page-content table tbody tr { border-bottom: 1px solid rgba(74,222,128,.08); }
-        .page-content .report-empty-state { border: 1px solid rgba(74,222,128,.16); background: rgba(13,23,18,0.74); color: #cbd5e1; border-radius: 1.1rem; }
-        .page-content .report-action-pill { border-radius: 999px; padding: 0.6rem 0.95rem; border: 1px solid rgba(74,222,128,.18); background: rgba(13,23,18,0.85); color: #dcfce7; }
+        .page-content #reportPreviewCard table { border: 0; border-collapse: collapse; }
+        body.app-shell .main-container .page-content #reportPreviewCard table thead,
+        body.app-shell .main-container .page-content #reportPreviewCard table thead tr {
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: #0a1d15 !important;
+            background-image: none !important;
+            box-shadow: none !important;
+        }
+        body.app-shell .main-container .page-content #reportPreviewCard table thead th,
+        body.app-shell .main-container .page-content #reportPreviewCard table thead th.theme-locked-table-header {
+            border: 0 !important;
+            border-bottom: 1px solid rgba(6, 78, 59, .4) !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            background-image: none !important;
+            box-shadow: none !important;
+            color: #d1fae5 !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+        }
+        .page-content #reportPreviewCard table tbody tr { border: 0; }
+        .page-content #reportPreviewCard table tbody td {
+            border: 0;
+            border-bottom: 1px solid rgba(6, 78, 59, .3);
+        }
+        .page-content .report-empty-state { border: 1px solid rgba(74,222,128,.16); background: rgba(7, 17, 31,0.74); color: #cbd5e1; border-radius: 1.1rem; }
+        .page-content .report-action-pill {
+            border-radius: 999px;
+            padding: 0.6rem 0.95rem;
+            border: 1px solid rgba(74,222,128,.28);
+            background: rgba(4, 40, 27, .88);
+            color: #dcfce7;
+        }
+        .page-content .report-action-pill:hover {
+            border-color: rgba(74,222,128,.42);
+            background: #0a2e1d;
+            color: #f0fdf4;
+        }
         .page-content .report-action-pill i { color: #bbf7d0; }
     </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
 </head>
-<body class="app-shell">
+<body class="app-shell system-layout-page">
     <div id="shared-sidebar"></div>
 
     <!-- Main Content -->
     <div class="main-container">
         <!-- Header -->
-        <header class="top-header">
-            <div class="flex items-center justify-between p-4 md:p-6">
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="md:hidden text-gray-700 hover:text-gray-900">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                    <div>
-                        <h2 class="text-2xl font-bold">Reports</h2>
-                            <p class="text-sm"><a href="#" class="text-green-600 hover:text-green-700">Dashboard</a> / Reports</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    <button class="relative text-gray-600 hover:text-gray-900">
-                        <i class="fas fa-bell text-lg"></i>
-                        <span class="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">5</span>
-                    </button>
-                    <div class="ml-auto flex items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.12)]">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" id="adminAvatar">AD</div>
-                        <div class="min-w-0">
-                            <div class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-200" id="adminUserRole">Admin</div>
-                            <div class="text-sm font-semibold text-white" id="adminUserName">Admin User</div>
-                        </div>
-                    </div>
+        <header class="system-dashboard-heading">
+            <div class="system-dashboard-heading-main">
+                <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="system-dashboard-heading-actions">
+                <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+                <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white" aria-label="User profile">
+                    <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" id="adminAvatar">AD</span>
+                    <span class="system-profile-badge-copy text-white">
+                        <span class="system-profile-badge-name text-white" id="adminUserName">Supply Office</span>
+                        <span class="system-profile-badge-role text-emerald-400" id="adminUserRole">Super Admin</span>
+                    </span>
                 </div>
             </div>
         </header>
@@ -110,7 +136,7 @@
             </section>
 
             <section class="card-hover rounded-[1.5rem] border border-emerald-900/30 bg-[#0d1712]/80 p-4 md:p-5 md:pr-6 xl:pr-8 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 xl:gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 xl:gap-4 system-filter-row">
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">Report Type</label>
                         <select id="reportType" class="form-control rounded-2xl py-3">
@@ -160,7 +186,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-[#0d1712]/90 border-b border-emerald-900/30">
+                        <thead>
                             <tr id="previewHead"></tr>
                         </thead>
                         <tbody id="previewBody"></tbody>
@@ -190,7 +216,9 @@
             const user = window.__CURRENT_USER__ || {};
             const displayName = user.name || 'Administrator';
             const initials = user.initials || getInitials(displayName, user.email || '');
-            const roleText = 'Admin';
+            const roleText = ['admin', 'administrator'].includes(String(user.role || '').trim().toLowerCase())
+                ? 'Super Admin'
+                : 'Technician';
 
             const adminNameElement = document.getElementById('adminUserName');
             const adminRoleElement = document.getElementById('adminUserRole');
@@ -316,7 +344,7 @@
             reportSubtitle.textContent = config.subtitle;
             resultCount.textContent = `${rows.length} record${rows.length === 1 ? '' : 's'}`;
 
-            previewHead.innerHTML = config.columns.map((column) => `<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">${column.label}</th>`).join('');
+            previewHead.innerHTML = config.columns.map((column) => `<th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em]">${column.label}</th>`).join('');
             previewBody.innerHTML = '';
 
             if (!rows.length) {
@@ -327,7 +355,7 @@
             emptyState.style.display = 'none';
             rows.forEach((row) => {
                 const cells = config.columns.map((column) => `<td class="px-6 py-4 text-sm text-slate-300">${row[column.key] || '—'}</td>`).join('');
-                previewBody.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-800/70 hover:bg-emerald-500/5">${cells}</tr>`);
+                previewBody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-emerald-500/5">${cells}</tr>`);
             });
         }
 
@@ -410,6 +438,6 @@
             ]
         };
     </script>
-    <script src="/js/sidebar-component.js" defer></script>
+    <script src="/js/sidebar-component.js?v=66" defer></script>
 </body>
 </html>

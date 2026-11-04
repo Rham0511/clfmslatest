@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technician Profile | ComLab</title>
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body.technician-profile-page { min-height: 100vh; }
+    .technician-profile-content {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      padding: .55rem clamp(.75rem, 1.6vw, 1.4rem) 1.25rem;
+    }
+    .technician-profile-content > .comlab-page-header-spacer {
+      margin-bottom: .65rem !important;
+    }
+    html body.app-shell.technician-profile-page .comlab-slim-page-header .profile-page-title {
+      display: block !important;
+    }
+    html body.app-shell.technician-profile-page .comlab-slim-page-header .system-profile-badge-name {
+      display: block !important;
+      max-width: min(12rem, 24vw) !important;
+      color: #f0fdf4 !important;
+    }
+    html body.app-shell.technician-profile-page .comlab-slim-page-header .system-profile-badge-copy {
+      display: flex !important;
+    }
+    .technician-profile-card {
+      display: grid;
+      width: min(100%, 78rem);
+      grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr);
+      gap: 1rem;
+      margin: 0 auto;
+      padding: clamp(.75rem, 1.5vw, 1.25rem);
+      border: 1px solid #cfe0d4;
+      border-radius: 1.15rem;
+      background: #f7faf8;
+      box-shadow: 0 16px 38px rgba(16, 42, 28, .08);
+    }
+
+    .technician-profile-summary,
+    .technician-profile-details {
+      min-width: 0;
+      padding: clamp(1rem, 2vw, 1.5rem);
+      border: 1px solid #d8e6dc;
+      border-radius: .95rem;
+      background: #fff;
+    }
+
+    .technician-profile-summary {
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: .65rem;
+      min-height: 28rem;
+      text-align: center;
+      background: radial-gradient(circle at 50% 30%, #e4f5e9, #f8fbf9 64%);
+    }
+    .technician-profile-overline {
+      margin: 0;
+      color: #08774f;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .technician-profile-avatar {
+      display: grid;
+      width: 8rem;
+      height: 8rem;
+      place-items: center;
+      margin: .75rem 0;
+      border: 1px solid #a8d9b9;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #31b878, #07583d 75%);
+      color: #f0fdf4;
+      font-size: 2rem;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(5, 96, 63, .18);
+    }
+
+    .technician-profile-name {
+      margin: 0;
+      overflow-wrap: anywhere;
+      color: #17281d;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 800;
+    }
+
+    .technician-profile-role {
+      margin: 0;
+      color: #08774f;
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .technician-profile-details h2 {
+      margin: 0 0 1rem;
+      color: #08774f;
+      font-size: .85rem;
+      letter-spacing: .18em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .technician-profile-detail {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      min-height: 4.1rem;
+      margin-top: .65rem;
+      padding: .8rem;
+      border: 1px solid #deebe1;
+      border-radius: .85rem;
+      background: #f7faf8;
+    }
+
+    .technician-profile-detail i {
+      display: grid;
+      width: 2.3rem;
+      height: 2.3rem;
+      flex: 0 0 2.3rem;
+      place-items: center;
+      border-radius: .7rem;
+      background: #e4f5e9;
+      color: #08774f;
+    }
+
+    .technician-profile-detail p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .technician-profile-label {
+      color: #9cb7a8;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .technician-profile-value {
+      margin-top: .2rem !important;
+      color: #f0fdf4;
+      font-weight: 600;
+    }
+
+    .technician-name-form {
+      display: grid;
+      gap: .65rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid #cfe3d4;
+      border-radius: .9rem;
+      background: #f5f9f6;
+    }
+
+    .technician-name-form label { color: #244333; font-size: .82rem; font-weight: 700; }
+    .technician-name-form input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: .75rem .85rem;
+      border: 1px solid #bed2c4;
+      border-radius: .65rem;
+      background: #fff;
+      color: #14261b;
+      font: inherit;
+    }
+    .technician-name-form input:focus { outline: 2px solid #20aa69; outline-offset: 2px; }
+    .technician-name-form small { color: #5a7163; line-height: 1.5; }
+    .technician-name-form button {
+      justify-self: start;
+      padding: .65rem .9rem;
+      border: 1px solid #118553;
+      border-radius: .65rem;
+      background: #118553;
+      color: #fff;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .technician-name-form button:hover:not(:disabled) { background: #0b7045; }
+    .technician-name-form button:disabled { cursor: wait; opacity: .65; }
+    #technicianNameMessage { min-height: 1.25rem; margin: 0; color: #08774f; font-size: .8rem; }
+    #technicianNameMessage[data-state="error"] { color: #b42332; }
+
+    html.theme-light .main-container.theme-light .technician-profile-card {
+      border-color: #cfe0d4;
+      background: #f7faf8;
+    }
+    html.theme-light .main-container.theme-light .technician-profile-summary,
+    html.theme-light .main-container.theme-light .technician-profile-details {
+      border-color: #d8e6dc;
+      background-color: #fff;
+    }
+    html.theme-light .main-container.theme-light .technician-profile-summary {
+      background: radial-gradient(circle at 50% 30%, #e4f5e9, #f8fbf9 64%);
+    }
+    html.theme-light .main-container.theme-light .technician-profile-value { color: #17281d; }
+    html.theme-light .main-container.theme-light .technician-profile-name { color: #17281d; }
+    html.theme-light .main-container.theme-light .technician-profile-overline { color: #08774f; }
+    html.theme-light .main-container.theme-light .technician-profile-label { color: #607566; }
+    html.theme-light .main-container.theme-light .technician-profile-role,
+    html.theme-light .main-container.theme-light .technician-profile-details h2 { color: #08774f; }
+    html.theme-light .main-container.theme-light .technician-profile-detail {
+      border-color: #deebe1;
+      background: #f7faf8;
+    }
+    html.theme-light .main-container.theme-light .technician-name-form {
+      border-color: #cfe3d4;
+      background: #f5f9f6;
+    }
+    .main-container.theme-dark .technician-profile-card {
+      border-color: rgba(74, 222, 128, .2);
+      background: #071a12;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, .2);
+    }
+    .main-container.theme-dark .technician-profile-summary,
+    .main-container.theme-dark .technician-profile-details {
+      border-color: rgba(74, 222, 128, .15);
+      background: #0b2117;
+    }
+    .main-container.theme-dark .technician-profile-summary {
+      background: radial-gradient(circle at 50% 30%, rgba(16, 128, 78, .28), #0b2117 68%);
+    }
+    .main-container.theme-dark .technician-profile-name,
+    .main-container.theme-dark .technician-profile-value { color: #effcf3; }
+    .main-container.theme-dark .technician-profile-overline { color: #6ee7b7; }
+    .main-container.theme-dark .technician-profile-label { color: #9cb7a8; }
+    .main-container.theme-dark .technician-profile-role,
+    .main-container.theme-dark .technician-profile-details h2 { color: #6ee7b7; }
+    .main-container.theme-dark .technician-profile-detail,
+    .main-container.theme-dark .technician-name-form {
+      border-color: rgba(74, 222, 128, .15);
+      background: #081b12;
+    }
+    .main-container.theme-dark .technician-name-form label { color: #d1fae5; }
+    .main-container.theme-dark .technician-name-form input {
+      border-color: #315d43;
+      background: #0e281b;
+      color: #f0fdf4;
+    }
+    .main-container.theme-dark .technician-name-form small { color: #a8c7b2; }
+    .main-container.theme-dark #technicianNameMessage { color: #a7f3d0; }
+
+    @media (max-width: 1023px) {
+      .technician-profile-content { padding: .65rem .75rem 1rem; }
+      .technician-profile-summary { min-height: 19rem; }
+    }
+    @media (max-width: 720px) {
+      .technician-profile-card {
+        grid-template-columns: minmax(0, 1fr);
+        padding: .75rem;
+      }
+      .technician-profile-summary { min-height: 16rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+</head>
+<body class="app-shell technician-portal system-layout-page technician-profile-page">
+  <script>
+    window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+    window.sidebarConfig = {
+      iconClass: 'fas fa-tools',
+      logoText: 'ComLab',
+      tagline: '',
+      role: 'technician',
+      user: window.__CURRENT_USER__ || null,
+      defaultActive: '/technician-profile',
+      items: [
+        { label: 'Dashboard', href: '/technician-dashboard#dashboard', icon: 'fas fa-gauge-high' },
+        { label: 'My Accomplishments', href: '/technician-dashboard#accomplishments', icon: 'fas fa-list-check' },
+        { label: 'Maintenance & Issue Reports', href: '/technician-dashboard#new-reports', icon: 'fas fa-screwdriver-wrench' },
+        { label: 'Equipment Availability', href: '/technician-dashboard#equipment-availability', icon: 'fas fa-boxes-stacked' },
+        { label: 'Borrow Requests', href: '/technician-dashboard#borrow-requests', icon: 'fas fa-hand-holding' },
+        { label: 'Audits', href: '/technician-dashboard#audits', icon: 'fas fa-clipboard-list' },
+        { label: 'My Profile', href: '/technician-profile', icon: 'fas fa-user-gear' },
+        { label: 'Logout', href: '/logout', icon: 'fas fa-right-from-bracket' }
+      ]
+    };
+  </script>
+  <div id="shared-sidebar"></div>
+  <div class="main-container">
+    <main class="technician-profile-content">
+      <header class="system-dashboard-heading profile-dashboard-heading" data-comlab-hide-auto-title="true">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" type="button" onclick="toggleSidebar()" class="menu-toggle" aria-label="Open navigation">
+          <i class="fas fa-bars"></i>
+          </button>
+          <h1 class="profile-page-title">My Profile</h1>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a href="/technician-profile" class="system-profile-badge profile-theme-static" aria-label="Open your profile">
+            <span class="system-profile-badge-avatar" data-tech-initials data-tech-header-initials>TE</span>
+            <span class="system-profile-badge-copy">
+              <span class="system-profile-badge-name" data-tech-name data-tech-header-name>Technician</span>
+              <span class="system-profile-badge-role" data-tech-role data-tech-header-role>Technician</span>
+            </span>
+          </a>
+        </div>
+      </header>
+
+      <section class="technician-profile-card">
+        <div class="technician-profile-summary">
+          <p class="technician-profile-overline">ComLab Technician</p>
+          <div class="technician-profile-avatar" data-tech-avatar>TE</div>
+          <h2 class="technician-profile-name" data-tech-profile-name>Technician</h2>
+          <p class="technician-profile-role" data-tech-profile-role>Technician</p>
+        </div>
+        <div class="technician-profile-details">
+          <h2>Account Information</h2>
+          <div class="technician-profile-detail">
+            <i class="fas fa-user" aria-hidden="true"></i>
+            <div><p class="technician-profile-label">Name</p><p class="technician-profile-value" data-tech-profile-name>—</p></div>
+          </div>
+          <div class="technician-profile-detail">
+            <i class="fas fa-id-badge" aria-hidden="true"></i>
+            <div><p class="technician-profile-label">Role</p><p class="technician-profile-value" data-tech-profile-role>Technician</p></div>
+          </div>
+          <div class="technician-profile-detail">
+            <i class="fas fa-university" aria-hidden="true"></i>
+            <div><p class="technician-profile-label">Campus</p><p class="technician-profile-value" data-tech-profile-campus>—</p></div>
+          </div>
+          <div class="technician-profile-detail">
+            <i class="fas fa-envelope" aria-hidden="true"></i>
+            <div><p class="technician-profile-label">Email</p><p class="technician-profile-value" data-tech-profile-email>—</p></div>
+          </div>
+          <form id="technicianNameForm" class="technician-name-form" novalidate>
+            <label for="technicianFullName">Full name for maintenance reports</label>
+            <input id="technicianFullName" name="name" type="text" maxlength="120" autocomplete="name" required aria-describedby="technicianNameHelp technicianNameMessage">
+            <small id="technicianNameHelp">Enter your first name, middle initial, and last name. This name will appear in the Technician and Prepared by fields.</small>
+            <button type="submit">Save full name</button>
+            <p id="technicianNameMessage" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const user = window.__CURRENT_USER__ || {};
+    const getTechnicianDisplayName = (profile) => [profile.fullName, profile.displayName, profile.name]
+      .find(value => typeof value === 'string' && value.trim()) || 'Technician';
+    const displayName = getTechnicianDisplayName(user);
+    const role = String(user.role || 'technician').replace(/^./, value => value.toUpperCase());
+    const initials = displayName.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'TE';
+    document.querySelectorAll('[data-tech-name], [data-tech-profile-name]').forEach(element => { element.textContent = displayName; });
+    document.querySelectorAll('[data-tech-role], [data-tech-profile-role]').forEach(element => { element.textContent = role; });
+    document.querySelectorAll('[data-tech-initials], [data-tech-avatar]').forEach(element => { element.textContent = initials; });
+    document.querySelectorAll('[data-tech-profile-campus]').forEach(element => { element.textContent = user.campus || '—'; });
+    document.querySelectorAll('[data-tech-profile-email]').forEach(element => { element.textContent = user.email || '—'; });
+
+    const fullNameForm = document.getElementById('technicianNameForm');
+    const fullNameInput = document.getElementById('technicianFullName');
+    const fullNameMessage = document.getElementById('technicianNameMessage');
+    const fullNameButton = fullNameForm.querySelector('button[type="submit"]');
+    fullNameInput.value = displayName !== 'Technician' ? displayName : '';
+    fullNameForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const name = fullNameInput.value.trim().replace(/\s+/g, ' ');
+      const parts = name.split(' ').filter(Boolean);
+      if (parts.length < 3 || ['technician', 'lab technician', 'laboratory technician', 'n/a'].includes(name.toLowerCase())) {
+        fullNameMessage.dataset.state = 'error';
+        fullNameMessage.textContent = 'Enter your first name, middle initial, and last name.';
+        fullNameInput.focus();
+        return;
+      }
+      fullNameButton.disabled = true;
+      fullNameMessage.removeAttribute('data-state');
+      fullNameMessage.textContent = 'Saving your full name…';
+      try {
+        const response = await fetch('/api/profile', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.success) throw new Error(result.error || 'Unable to update your name.');
+        user.name = result.profile?.name || name;
+        user.fullName = user.name;
+        fullNameInput.value = user.name;
+        document.querySelectorAll('[data-tech-name], [data-tech-header-name], [data-tech-profile-name], [data-user-name]').forEach(element => { element.textContent = user.name; });
+        const updatedInitials = user.name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'TE';
+        document.querySelectorAll('[data-tech-initials], [data-tech-header-initials], [data-tech-avatar], [data-user-initials]').forEach(element => { element.textContent = updatedInitials; });
+        document.querySelectorAll('[data-tech-profile-role], [data-tech-role], [data-tech-header-role]').forEach(element => { element.textContent = role; });
+        document.querySelectorAll('.system-profile-badge, .technician-profile-identity').forEach(element => { element.setAttribute('aria-label', `${user.name}, ${role}`); });
+        if (window.sidebarConfig) window.sidebarConfig.user = { ...user, name: user.name, initials: updatedInitials };
+        fullNameMessage.removeAttribute('data-state');
+        fullNameMessage.textContent = 'Full name saved. You can now download your maintenance reports.';
+      } catch (error) {
+        fullNameMessage.dataset.state = 'error';
+        fullNameMessage.textContent = error.message || 'Unable to update your name.';
+      } finally {
+        fullNameButton.disabled = false;
+      }
+    });
+  </script>
+  <script src="/js/sidebar-component.js?v=65" defer></script>
+</body>
+</html>

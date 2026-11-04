@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Profile | ComLab</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <style>
+    body.admin-profile-page { min-height: 100vh; }
+    .admin-profile-content { box-sizing: border-box; width: 100%; min-width: 0; padding: .75rem clamp(.8rem, 2vw, 1.5rem) 1.5rem; }
+    .admin-profile-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1rem; }
+    .admin-profile-heading h1 { margin: 0; color: #f0fdf4; font-size: clamp(1.35rem, 2.3vw, 1.85rem); font-weight: 800; }
+    .admin-profile-heading p { margin: .3rem 0 0; color: #a7b7ad; font-size: .9rem; }
+    .admin-profile-layout { display: grid; grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr); gap: 1rem; width: min(100%, 76rem); margin: 0 auto; }
+    .admin-profile-summary, .admin-profile-panels { min-width: 0; border: 1px solid #cfe0d4; border-radius: 1rem; background: #f7faf8; box-shadow: 0 14px 32px rgba(16,42,28,.08); }
+    .admin-profile-summary { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 25rem; padding: 1.5rem; text-align: center; background: radial-gradient(circle at 50% 28%, #e4f5e9, #f7faf8 68%); }
+    .admin-profile-avatar { display: grid; width: 6rem; height: 6rem; place-items: center; margin: .5rem 0 1rem; border: 1px solid #a8d9b9; border-radius: 50%; background: linear-gradient(145deg, #31b878, #07583d); color: #f0fdf4; font-size: 1.7rem; font-weight: 800; box-shadow: 0 12px 28px rgba(5,96,63,.18); }
+    .admin-profile-kicker { margin: 0; color: #08774f; font-size: .7rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .admin-profile-name { margin: .1rem 0 .35rem; overflow-wrap: anywhere; color: #17281d; font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 800; }
+    .admin-profile-role { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .7rem; border: 1px solid #b8e4c7; border-radius: 999px; background: #e7f7ec; color: #08774f; font-size: .75rem; font-weight: 750; }
+    .admin-profile-summary-note { max-width: 24rem; margin: 1rem 0 0; color: #607566; font-size: .84rem; line-height: 1.55; }
+    .admin-profile-panels { display: grid; gap: .85rem; padding: clamp(.85rem, 1.7vw, 1.25rem); }
+    .admin-profile-panel { min-width: 0; padding: 1rem; border: 1px solid #d8e6dc; border-radius: .85rem; background: #fff; }
+    .admin-profile-panel h2 { display: flex; align-items: center; gap: .55rem; margin: 0; color: #173b2a; font-size: 1rem; font-weight: 800; }
+    .admin-profile-panel h2 i { color: #07844f; }
+    .admin-profile-panel-intro { margin: .3rem 0 .9rem; color: #607566; font-size: .82rem; }
+    .admin-profile-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+    .admin-profile-field { display: grid; gap: .35rem; min-width: 0; }
+    .admin-profile-field label { color: #335342; font-size: .76rem; font-weight: 750; }
+    .admin-profile-field input { box-sizing: border-box; width: 100%; min-height: 2.7rem; padding: .65rem .75rem; border: 1px solid #c7d8cc; border-radius: .65rem; background: #fff; color: #17281d; font: inherit; font-size: .88rem; }
+    .admin-profile-field input:focus { outline: 2px solid #20aa69; outline-offset: 1px; }
+    .admin-profile-field input[readonly] { background: #f2f7f3; color: #52685a; }
+    .admin-profile-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin-top: .85rem; }
+    .admin-profile-submit { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; padding: .6rem .9rem; border: 1px solid #08774f; border-radius: .65rem; background: #07844f; color: white; font: inherit; font-size: .85rem; font-weight: 750; cursor: pointer; }
+    .admin-profile-submit:hover { background: #066a41; }
+    .admin-profile-submit:disabled { opacity: .65; cursor: wait; }
+    .admin-profile-message { min-height: 1.1rem; margin: .2rem 0 0; color: #08774f; font-size: .8rem; }
+    .admin-profile-message[data-state="error"] { color: #b42332; }
+    .admin-profile-security-note { display: flex; align-items: flex-start; gap: .5rem; margin: .7rem 0 0; color: #607566; font-size: .76rem; line-height: 1.5; }
+    .admin-profile-security-note i { margin-top: .15rem; color: #07844f; }
+    .admin-profile-shortcut { cursor: pointer; }
+    @media (max-width: 850px) { .admin-profile-layout { grid-template-columns: minmax(0, 1fr); } .admin-profile-summary { min-height: 15rem; } }
+    @media (max-width: 560px) { .admin-profile-field-grid { grid-template-columns: minmax(0, 1fr); } .admin-profile-heading { align-items: flex-start; } }
+    html.theme-light body.admin-profile-page .admin-profile-heading h1 { color: #173b2a; }
+    html.theme-light body.admin-profile-page .admin-profile-heading p { color: #607566; }
+    html.theme-light body.admin-profile-page .admin-profile-summary, html.theme-light body.admin-profile-page .admin-profile-panels { border-color: #cfe0d4; background-color: #f7faf8; }
+    html.theme-light body.admin-profile-page .admin-profile-panel { border-color: #d8e6dc; background: #fff; }
+    html.theme-light body.admin-profile-page .admin-profile-panel h2 { color: #173b2a; }
+    html.theme-light body.admin-profile-page .admin-profile-panel-intro, html.theme-light body.admin-profile-page .admin-profile-summary-note, html.theme-light body.admin-profile-page .admin-profile-security-note { color: #607566; }
+    html.theme-light body.admin-profile-page .admin-profile-field label { color: #335342; }
+    html.theme-light body.admin-profile-page .admin-profile-field input { border-color: #c7d8cc; background: #fff; color: #17281d; }
+    html.theme-light body.admin-profile-page .admin-profile-field input[readonly] { background: #f2f7f3; color: #52685a; }
+    html.theme-light body.admin-profile-page .admin-profile-name { color: #17281d; }
+    html.theme-light body.admin-profile-page .admin-profile-kicker, html.theme-light body.admin-profile-page .admin-profile-role { color: #08774f; }
+    html.theme-light body.admin-profile-page .admin-profile-role { border-color: #b8e4c7; background: #e7f7ec; }
+    html.theme-light body.admin-profile-page .admin-profile-message { color: #08774f; }
+    html.theme-light body.admin-profile-page .admin-profile-message[data-state="error"] { color: #b42332; }
+    html.theme-dark body.admin-profile-page .admin-profile-heading h1 { color: #f0fdf4; }
+    html.theme-dark body.admin-profile-page .admin-profile-heading p { color: #a7b7ad; }
+    html.theme-dark body.admin-profile-page .admin-profile-summary, html.theme-dark body.admin-profile-page .admin-profile-panels { border-color: rgba(74,222,128,.18); background: #0b2117; }
+    html.theme-dark body.admin-profile-page .admin-profile-summary { background: radial-gradient(circle at 50% 28%, rgba(16,128,78,.28), #0b2117 68%); }
+    html.theme-dark body.admin-profile-page .admin-profile-panel { border-color: rgba(74,222,128,.15); background: #081b12; }
+    html.theme-dark body.admin-profile-page .admin-profile-panel h2 { color: #d1fae5; }
+    html.theme-dark body.admin-profile-page .admin-profile-panel-intro, html.theme-dark body.admin-profile-page .admin-profile-summary-note, html.theme-dark body.admin-profile-page .admin-profile-security-note { color: #a8c7b2; }
+    html.theme-dark body.admin-profile-page .admin-profile-field label { color: #c2ddca; }
+    html.theme-dark body.admin-profile-page .admin-profile-field input { border-color: #315d43; background: #0e281b; color: #f0fdf4; }
+    html.theme-dark body.admin-profile-page .admin-profile-field input[readonly] { background: #112a1d; color: #bdd1c2; }
+    html.theme-dark body.admin-profile-page .admin-profile-name { color: #effcf3; }
+    html.theme-dark body.admin-profile-page .admin-profile-kicker { color: #6ee7b7; }
+    html.theme-dark body.admin-profile-page .admin-profile-role { border-color: #286647; background: #0d3524; color: #a7f3d0; }
+    html.theme-dark body.admin-profile-page .admin-profile-message { color: #a7f3d0; }
+    html.theme-dark body.admin-profile-page .admin-profile-message[data-state="error"] { color: #fda4af; }
+  </style>
+</head>
+<body class="app-shell admin-shell system-layout-page admin-profile-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+  <div class="main-container" id="mainContainer">
+    <main class="admin-profile-content">
+      <header class="system-dashboard-heading admin-profile-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Open navigation"><i class="fas fa-bars"></i></button>
+          <div>
+            <h1>Profile management</h1>
+            <p>Manage your administrator account details and password.</p>
+          </div>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a href="/admin-profile" class="system-profile-badge profile-theme-static bg-[#04281b] text-white" aria-label="Admin profile management">
+            <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-admin-profile-initials>AD</span>
+            <span class="system-profile-badge-copy text-white">
+              <span class="system-profile-badge-name text-white" data-admin-profile-name>Administrator</span>
+              <span class="system-profile-badge-role text-emerald-400" data-admin-profile-role>Admin</span>
+            </span>
+          </a>
+        </div>
+      </header>
+
+      <section class="admin-profile-layout" aria-label="Administrator profile settings">
+        <aside class="admin-profile-summary">
+          <p class="admin-profile-kicker">Administrator account</p>
+          <div class="admin-profile-avatar" data-admin-profile-initials>AD</div>
+          <h2 class="admin-profile-name" data-admin-profile-name>Administrator</h2>
+          <span class="admin-profile-role"><i class="fas fa-shield-halved" aria-hidden="true"></i><span data-admin-profile-role>Admin</span></span>
+          <p class="admin-profile-summary-note">Your account identity is used throughout ComLab records and administrative activity logs.</p>
+        </aside>
+
+        <div class="admin-profile-panels">
+          <section class="admin-profile-panel">
+            <h2><i class="fas fa-id-card" aria-hidden="true"></i>Account details</h2>
+            <p class="admin-profile-panel-intro">Update the name shown in your account and activity records.</p>
+            <form id="adminProfileForm" novalidate>
+              <div class="admin-profile-field-grid">
+                <div class="admin-profile-field">
+                  <label for="adminProfileName">Full name</label>
+                  <input id="adminProfileName" name="name" type="text" maxlength="120" autocomplete="name" required>
+                </div>
+                <div class="admin-profile-field">
+                  <label for="adminProfileEmail">Email</label>
+                  <input id="adminProfileEmail" type="email" readonly aria-readonly="true">
+                </div>
+                <div class="admin-profile-field">
+                  <label for="adminProfileRole">Role</label>
+                  <input id="adminProfileRole" type="text" readonly aria-readonly="true">
+                </div>
+                <div class="admin-profile-field">
+                  <label for="adminProfileCampus">Campus</label>
+                  <input id="adminProfileCampus" type="text" readonly aria-readonly="true">
+                </div>
+              </div>
+              <div class="admin-profile-actions">
+                <button class="admin-profile-submit" type="submit"><i class="fas fa-check" aria-hidden="true"></i>Save profile</button>
+                <p id="adminProfileMessage" class="admin-profile-message" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+          </section>
+
+          <section class="admin-profile-panel">
+            <h2><i class="fas fa-lock" aria-hidden="true"></i>Change password</h2>
+            <p class="admin-profile-panel-intro">Confirm your current password before choosing a new one.</p>
+            <form id="adminPasswordForm" novalidate>
+              <div class="admin-profile-field-grid">
+                <div class="admin-profile-field">
+                  <label for="adminCurrentPassword">Current password</label>
+                  <input id="adminCurrentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="admin-profile-field">
+                  <label for="adminNewPassword">New password</label>
+                  <input id="adminNewPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+                </div>
+                <div class="admin-profile-field">
+                  <label for="adminConfirmPassword">Confirm new password</label>
+                  <input id="adminConfirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+                </div>
+              </div>
+              <p class="admin-profile-security-note"><i class="fas fa-circle-info" aria-hidden="true"></i><span>Use at least 8 characters. Your current password is checked before the change is saved.</span></p>
+              <div class="admin-profile-actions">
+                <button class="admin-profile-submit" type="submit"><i class="fas fa-key" aria-hidden="true"></i>Update password</button>
+                <p id="adminPasswordMessage" class="admin-profile-message" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const user = window.__CURRENT_USER__ || {};
+      const name = String(user.name || 'Administrator').trim() || 'Administrator';
+      const role = String(user.role || 'Admin').toLowerCase().replace(/[_-]+/g, ' ').replace(/\b\w/g, character => character.toUpperCase());
+      const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'AD';
+      const nameInput = document.getElementById('adminProfileName');
+      nameInput.value = name;
+      document.getElementById('adminProfileEmail').value = user.email || '—';
+      document.getElementById('adminProfileRole').value = role;
+      document.getElementById('adminProfileCampus').value = user.campus || '—';
+      document.querySelectorAll('[data-admin-profile-role]').forEach(element => { element.textContent = role; });
+
+      const syncName = (updatedName) => {
+        const updatedInitials = updatedName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'AD';
+        document.querySelectorAll('[data-admin-profile-name]').forEach(element => { element.textContent = updatedName; });
+        document.querySelectorAll('[data-admin-profile-initials]').forEach(element => { element.textContent = updatedInitials; });
+        document.querySelectorAll('.system-profile-badge-name, .user-name, [data-user-name], #adminUserName, #adminBadgeName').forEach(element => { element.textContent = updatedName; });
+        document.querySelectorAll('.system-profile-badge-avatar, .user-avatar, [data-user-initials], #adminAvatar, #adminBadgeAvatar').forEach(element => { element.textContent = updatedInitials; });
+        document.querySelectorAll('.system-profile-badge').forEach(element => { element.setAttribute('aria-label', `${updatedName}, ${role}. Open profile management.`); });
+        user.name = updatedName;
+      };
+      syncName(name);
+
+      const bindForm = (formId, messageId, endpoint, successText, getPayload, afterSuccess) => {
+        const form = document.getElementById(formId);
+        const message = document.getElementById(messageId);
+        const submit = form.querySelector('button[type="submit"]');
+        form.addEventListener('submit', async event => {
+          event.preventDefault();
+          message.removeAttribute('data-state');
+          message.textContent = 'Saving…';
+          submit.disabled = true;
+          try {
+            const response = await fetch(endpoint, {
+              method: 'PATCH',
+              credentials: 'same-origin',
+              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+              body: JSON.stringify(getPayload())
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.success) throw new Error(result.error || 'Unable to save your changes.');
+            message.textContent = result.message || successText;
+            afterSuccess?.(result);
+          } catch (error) {
+            message.dataset.state = 'error';
+            message.textContent = error.message || 'Unable to save your changes.';
+          } finally {
+            submit.disabled = false;
+          }
+        });
+      };
+
+      bindForm('adminProfileForm', 'adminProfileMessage', '/api/admin/profile', 'Profile updated.', () => ({ name: nameInput.value.trim().replace(/\s+/g, ' ') }), result => {
+        const savedName = result.profile?.name || nameInput.value.trim().replace(/\s+/g, ' ');
+        nameInput.value = savedName;
+        syncName(savedName);
+      });
+
+      bindForm('adminPasswordForm', 'adminPasswordMessage', '/api/admin/profile/password', 'Your password has been changed.', () => ({
+        currentPassword: document.getElementById('adminCurrentPassword').value,
+        newPassword: document.getElementById('adminNewPassword').value,
+        confirmPassword: document.getElementById('adminConfirmPassword').value
+      }), () => {
+        document.getElementById('adminPasswordForm').reset();
+      });
+    })();
+  </script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+</body>
+</html>

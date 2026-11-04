@@ -29,9 +29,15 @@ import fs from "fs";
 import QRCode from "qrcode";
 import { Op, QueryTypes } from "sequelize";
 import { Equipment, EquipmentSequence, EquipmentCategory, sequelize } from "../models/equipmentModel.js";
+import { EquipmentAssignment } from "../models/equipmentAssignmentModel.js";
+import { BorrowHistory, BorrowRecord } from "../models/borrowRecordModel.js";
+import { BorrowRequestAccountability } from "../models/borrowRequestAccountabilityModel.js";
 import { User } from "../models/userModel.js";
 import { logAuditEntry } from "./auditController.js";
 import EquipmentAuditTrail from "../models/equipmentAuditTrailModel.js";
+import { createQrLinkToken, readQrLinkToken } from "../utils/qrLinkToken.js";
+import { getArchivedEntityIds } from "../models/archiveRecords.js";
+import { findComputerLabByLabel, getLegacyComputerLabNumber } from "../models/computerLabService.js";
 import {
   getUserAuthContext,
   getUserCampusFromSession,
@@ -42,17 +48,25 @@ import {
 } from "./campusAuthController.js";
 
 function buildEquipmentQrUrl(equipmentId) {
+  const token = createQrLinkToken("equipment", equipmentId);
+  const path = `/equipment/uid/${encodeURIComponent(token)}`;
   const baseUrl = process.env.BASE_URL?.trim();
   if (!baseUrl) {
-    console.warn("[equipment] BASE_URL is not configured. Set BASE_URL to your server address such as http://192.168.1.8:3000 so QR codes work on mobile devices.");
-    return `/equipment/view/${encodeURIComponent(equipmentId)}`;
+    console.warn("[equipment] BASE_URL is not configured. Set BASE_URL to your server address so QR codes work on mobile devices.");
+    return path;
   }
 
-  return `${baseUrl.replace(/\/+$/, "")}/equipment/view/${encodeURIComponent(equipmentId)}`;
+  return `${baseUrl.replace(/\/+$/, "")}${path}`;
 }
 
-function isEquipmentQrUrl(value) {
-  return typeof value === "string" && /^(https?:\/\/|\/equipment\/view\/)/i.test(value);
+function isEquipmentQrUrl(value, equipmentId) {
+  if (typeof value !== "string") return false;
+  try {
+    const match = new URL(value, "http://localhost").pathname.match(/^\/equipment\/uid\/([A-Za-z0-9_-]+)\/?$/i);
+    return Boolean(match && readQrLinkToken(match[1], "equipment") === equipmentId);
+  } catch {
+    return false;
+  }
 }
 
 async function generateQrImage(payload) {
@@ -70,7 +84,7 @@ async function generateQrImage(payload) {
 
 const defaultCategories = [
   { name: "Computer", prefix: "CMP" },
-  { name: "CPU", prefix: "CPU" },
+  { name: "System Unit", prefix: "CPU" },
   { name: "Monitor", prefix: "MON" },
   { name: "Keyboard", prefix: "KEY" },
   { name: "Mouse", prefix: "MOU" },
@@ -97,6 +111,44 @@ const defaultCategories = [
   { name: "Fire Extinguisher", prefix: "FEX" },
   { name: "Other", prefix: "OTH" }
 ];
+
+function normalizeEquipmentType(value) {
+  const name = String(value || "").trim();
+  return name.toLowerCase() === "cpu" ? "System Unit" : name;
+}
+
+function getLaboratoryNumber(value) {
+  const normalized = String(value || "").toLowerCase();
+  const labMatch = normalized.match(/(?:com\s*lab|laboratory|lab)\s*[-#]?\s*([12])/);
+  if (labMatch) return labMatch[1];
+  const roomMatch = normalized.match(/room\s*(202|204)/);
+  return roomMatch ? (roomMatch[1] === "202" ? "1" : "2") : "";
+}
+
+async function migrateCpuCategoryToSystemUnit() {
+  const [updatedEquipmentCount] = await Equipment.update(
+    { category: "System Unit" },
+    { where: { category: "CPU" } }
+  );
+  await Equipment.update(
+    { name: "System Unit" },
+    { where: { category: "System Unit", name: "CPU" } }
+  );
+
+  const cpuCategory = await EquipmentCategory.findOne({ where: { name: "CPU" } });
+  if (cpuCategory) {
+    const systemUnitCategory = await EquipmentCategory.findOne({ where: { name: "System Unit" } });
+    if (systemUnitCategory) {
+      await cpuCategory.destroy();
+    } else {
+      await cpuCategory.update({ name: "System Unit" });
+    }
+  }
+
+  if (updatedEquipmentCount > 0) {
+    console.info(`[equipment] Renamed ${updatedEquipmentCount} CPU item(s) to System Unit.`);
+  }
+}
 
 async function seedDefaultCategories() {
   for (const category of defaultCategories) {
@@ -210,6 +262,7 @@ function getCampusVariants(campus) {
 await Equipment.sync();
 await EquipmentSequence.sync();
 await EquipmentCategory.sync();
+await migrateCpuCategoryToSystemUnit();
 await seedDefaultCategories();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -234,7 +287,8 @@ async function findEquipmentByIdentifier(identifier, req = null) {
       where: { id: numericId, ...(campusWhere || {}) }
     });
     if (byPk) {
-      return byPk;
+      const archivedIds = await getArchivedEntityIds("equipment");
+      return archivedIds.includes(String(byPk.equipmentId)) ? null : byPk;
     }
   }
 
@@ -242,7 +296,9 @@ async function findEquipmentByIdentifier(identifier, req = null) {
     where: { equipmentId: normalized, ...(campusWhere || {}) },
     limit: 2
   });
-  return matches.length === 1 ? matches[0] : null;
+  if (matches.length !== 1) return null;
+  const archivedIds = await getArchivedEntityIds("equipment");
+  return archivedIds.includes(String(matches[0].equipmentId)) ? null : matches[0];
 }
 
 export const inventoryPage = async (req, res) => {
@@ -254,8 +310,7 @@ export const inventoryPage = async (req, res) => {
 
     const normalizedRole = normalizeRoleName(authContext.role);
     const canViewInventoryPage = isAdminRole(normalizedRole) ||
-      isTechnicianRole(normalizedRole) ||
-      normalizedRole === "instructor";
+      isTechnicianRole(normalizedRole);
     if (!canViewInventoryPage) {
       return res.status(403).send("Forbidden: admin or technician access required.");
     }
@@ -291,10 +346,15 @@ export const inventoryPage = async (req, res) => {
 
     const filePath = path.join(process.cwd(), "views", "admin", "equipment-inventory.html");
     const html = await fs.promises.readFile(filePath, "utf8");
-    const hydratedHtml = html
-      .replaceAll("__CURRENT_USER_JSON__", JSON.stringify(currentUser))
-      .replace("window.__CURRENT_USER__ = __CURRENT_USER_JSON__;", `window.__CURRENT_USER__ = ${JSON.stringify(currentUser)};`);
+    const currentUserJson = JSON.stringify(currentUser).replaceAll("<", "\\u003c");
+    const hydratedHtml = html.replaceAll("__CURRENT_USER_JSON__", currentUserJson);
 
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate, private",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "Surrogate-Control": "no-store"
+    });
     res.type("html").send(hydratedHtml);
   } catch (error) {
     console.error("Failed to serve equipment inventory page:", error);
@@ -309,6 +369,32 @@ export const viewEquipmentPage = async (req, res) => {
 
     if (!equipment) {
       return res.status(404).send(`<!DOCTYPE html><html><body><h1>Equipment not found</h1></body></html>`);
+    }
+
+    if (!req.session?.userId) {
+      req.session.redirectTo = `/equipment/uid/${encodeURIComponent(req.params.qrToken)}`;
+      return req.session.save((error) => {
+        if (error) {
+          console.error("Failed to save QR equipment login redirect.", error);
+          return res.status(500).send("Unable to continue to login. Please try again.");
+        }
+        return res.redirect("/login");
+      });
+    }
+
+    const authContext = await getUserAuthContext(req);
+    const role = normalizeRoleName(authContext.role);
+    if (["faculty", "instructor"].includes(role)) {
+      const query = req.params.qrToken
+        ? `equipmentQr=${encodeURIComponent(req.params.qrToken)}`
+        : `equipmentId=${encodeURIComponent(equipment.equipmentId)}`;
+      return res.redirect(`/faculty-borrow-equipment?${query}`);
+    }
+    if (role === "student") {
+      const query = req.params.qrToken
+        ? `equipmentQr=${encodeURIComponent(req.params.qrToken)}`
+        : `equipmentId=${encodeURIComponent(equipment.equipmentId)}`;
+      return res.redirect(`/student/borrow-equipment?${query}`);
     }
 
     const userCampus = await getUserCampusFromSession(req);
@@ -427,8 +513,58 @@ export const viewEquipmentPage = async (req, res) => {
   }
 };
 
+export const scanEquipmentQr = async (req, res) => {
+  const equipmentId = readQrLinkToken(req.params.token, "equipment");
+  if (!equipmentId) return res.status(400).send("Invalid equipment QR code.");
+  req.params.equipmentId = equipmentId;
+  req.params.qrToken = req.params.token;
+  return viewEquipmentPage(req, res);
+};
+
+export const redirectLegacyEquipmentQr = async (req, res) => {
+  try {
+    const equipment = await findEquipmentByIdentifier(req.params.equipmentId, req);
+    if (!equipment) return res.status(404).send("Equipment not found.");
+    return res.redirect(302, buildEquipmentQrUrl(equipment.equipmentId));
+  } catch (error) {
+    console.error("[equipment] Failed to update legacy QR link:", error);
+    return res.status(500).send("Unable to open this equipment QR code.");
+  }
+};
+
+export const resolveEquipmentQrToken = async (req, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Please log in to scan equipment QR codes." });
+  }
+
+  const equipmentId = readQrLinkToken(req.params.token, "equipment");
+  if (!equipmentId) return res.status(400).json({ error: "Invalid equipment QR code." });
+
+  try {
+    const equipment = await findEquipmentByIdentifier(equipmentId, req);
+    if (!equipment) return res.status(404).json({ error: "Equipment not found in your campus." });
+
+    const userCampus = await getUserCampusFromSession(req);
+    if (userCampus && !canManageRecord(userCampus, equipment.campus)) {
+      return res.status(403).json({ error: "You do not have permission to view this equipment." });
+    }
+
+    return res.json({ equipmentId: equipment.equipmentId });
+  } catch (error) {
+    console.error("[equipment] Failed to resolve equipment QR token:", error);
+    return res.status(500).json({ error: "Failed to resolve equipment QR code." });
+  }
+};
+
 export const getEquipment = async (req, res) => {
-  const { search = "", status, campus } = req.query;
+  const { search = "", status, campus, sortBy, assignment } = req.query;
+  const isPaginatedRequest = req.query.page !== undefined || req.query.pageSize !== undefined;
+  const parsePositiveInteger = (value, fallback) => {
+    const parsed = Number.parseInt(String(value), 10);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+  };
+  const pageSize = Math.min(parsePositiveInteger(req.query.pageSize, 10), 10);
+  const requestedPage = parsePositiveInteger(req.query.page, 1);
   try {
     const authContext = await getUserAuthContext(req);
     if (!authContext.userId) {
@@ -437,8 +573,7 @@ export const getEquipment = async (req, res) => {
 
     const normalizedRole = normalizeRoleName(authContext.role);
     const canViewInventory = isAdminRole(normalizedRole) ||
-      isTechnicianRole(normalizedRole) ||
-      normalizedRole === "instructor";
+      isTechnicianRole(normalizedRole);
     if (!canViewInventory) {
       return res.status(403).json({ error: "Admin or technician access is required." });
     }
@@ -477,8 +612,10 @@ export const getEquipment = async (req, res) => {
       order: [["dateAdded", "DESC"]]
     });
 
+    const archivedEquipmentIds = new Set(await getArchivedEntityIds("equipment"));
     const filtered = records
       .map((item) => item.toJSON())
+      .filter((item) => !archivedEquipmentIds.has(String(item.equipmentId)))
       .filter((item) => {
         const matchesSearch = search
           .toString()
@@ -487,13 +624,65 @@ export const getEquipment = async (req, res) => {
           .every((token) =>
             token === "" ||
             item.equipmentId.toLowerCase().includes(token) ||
-            item.name.toLowerCase().includes(token)
+            item.name.toLowerCase().includes(token) ||
+            String(item.campus || "").toLowerCase().includes(token)
           );
         const matchesStatus = !status || item.status === status;
-        return matchesSearch && matchesStatus;
+        const matchesAssignment = !["assigned", "unassigned"].includes(String(assignment || "").toLowerCase()) ||
+          (String(assignment).toLowerCase() === "assigned"
+            ? Boolean(String(item.setId || "").trim())
+            : !String(item.setId || "").trim());
+        return matchesSearch && matchesStatus && matchesAssignment;
       });
 
-    res.json(filtered);
+    if (String(sortBy || "").trim().toLowerCase() === "name") {
+      filtered.sort((left, right) =>
+        String(left.name || "").localeCompare(String(right.name || ""), undefined, { sensitivity: "base", numeric: true }) ||
+        String(left.equipmentId || "").localeCompare(String(right.equipmentId || ""), undefined, { sensitivity: "base", numeric: true })
+      );
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const page = Math.min(requestedPage, totalPages);
+    const responseItems = isPaginatedRequest
+      ? filtered.slice((page - 1) * pageSize, page * pageSize)
+      : filtered;
+    const equipmentRecordIds = responseItems.map((item) => item.id);
+    const activeBorrowRecords = equipmentRecordIds.length
+      ? await BorrowRecord.findAll({
+          where: {
+            equipmentRecordId: { [Op.in]: equipmentRecordIds },
+            status: "Borrowed"
+          },
+          attributes: ["id", "equipmentRecordId", "borrowerName", "quantity", "borrowDate", "borrowStartTime", "created_at"],
+          order: [["created_at", "DESC"], ["id", "DESC"]]
+        })
+      : [];
+    const currentHoldersByEquipment = new Map();
+    activeBorrowRecords.forEach((record) => {
+      const holders = currentHoldersByEquipment.get(Number(record.equipmentRecordId)) || [];
+      holders.push({ name: record.borrowerName, quantity: Number(record.quantity || 1) });
+      currentHoldersByEquipment.set(Number(record.equipmentRecordId), holders);
+    });
+    const lastBorrowerByEquipment = new Map();
+    activeBorrowRecords.forEach((record) => {
+      const id = Number(record.equipmentRecordId);
+      if (!lastBorrowerByEquipment.has(id)) {
+        lastBorrowerByEquipment.set(id, {
+          name: record.borrowerName,
+          releasedAt: record.created_at || null,
+          isCurrent: true
+        });
+      }
+    });
+    const equipmentResponse = responseItems.map((item) => ({
+      ...item,
+      currentHolders: currentHoldersByEquipment.get(Number(item.id)) || [],
+      lastBorrower: lastBorrowerByEquipment.get(Number(item.id)) || null
+    }));
+    res.json(isPaginatedRequest
+      ? { records: equipmentResponse, pagination: { page, pageSize, total: filtered.length, totalPages } }
+      : equipmentResponse);
   } catch (error) {
     console.error("[equipment] Get equipment error:", error);
     res.status(500).json({ error: "Failed to load equipment." });
@@ -507,26 +696,130 @@ export const getStudentEquipment = async (req, res) => {
       return res.status(401).json({ error: "Please log in to view available equipment." });
     }
 
-    if (normalizeRoleName(authContext.role) !== "student") {
-      return res.status(403).json({ error: "Student access is required." });
+    if (!["student", "faculty", "instructor"].includes(normalizeRoleName(authContext.role))) {
+      return res.status(403).json({ error: "Student or Faculty access is required." });
     }
+    const canViewAccountabilityTrail = ["faculty", "instructor"].includes(normalizeRoleName(authContext.role));
 
     const campusName = String(authContext.campus || "").trim().replace(/\s*Campus\s*$/i, "");
     if (!campusName) {
       return res.status(403).json({ error: "User campus is not assigned." });
     }
 
+    const archivedEquipmentIds = await getArchivedEntityIds("equipment");
     const records = await Equipment.findAll({
       where: {
+        equipmentId: { [Op.notIn]: archivedEquipmentIds },
         campus: {
           [Op.in]: [campusName, `${campusName} Campus`]
         }
       },
-      attributes: ["equipmentId", "name", "category", "laboratoryRoom", "status", "quantity"],
+      attributes: ["id", "equipmentId", "name", "category", "laboratoryRoom", "status", "quantity", "setId", "serialNumber"],
       order: [["name", "ASC"], ["equipmentId", "ASC"]]
     });
 
-    return res.json(records);
+    const activeBorrowRecords = records.length
+      ? await BorrowRecord.findAll({
+          where: {
+            equipmentRecordId: { [Op.in]: records.map((item) => item.id) },
+            status: { [Op.in]: ["Pending", "Approved", "Borrowed"] }
+          },
+          attributes: ["equipmentRecordId", "status"]
+        })
+      : [];
+    const activeBorrowByEquipment = new Set(
+      activeBorrowRecords.map((record) => Number(record.equipmentRecordId))
+    );
+    const activeBorrowStatusByEquipment = new Map();
+    activeBorrowRecords.forEach((record) => {
+      const key = Number(record.equipmentRecordId);
+      const current = activeBorrowStatusByEquipment.get(key);
+      if (!current || String(record.status || "").toLowerCase() === "borrowed") {
+        activeBorrowStatusByEquipment.set(key, record.status);
+      }
+    });
+
+    const assignments = records.length
+      ? await EquipmentAssignment.findAll({
+          where: {
+            equipmentRecordId: { [Op.in]: records.map((item) => item.id) }
+          },
+          order: [["assignedAt", "ASC"], ["id", "ASC"]]
+        })
+      : [];
+    const activeByEquipment = new Map();
+    const assignmentsByEquipment = new Map();
+    assignments.forEach((assignment) => {
+      const key = Number(assignment.equipmentRecordId);
+      const history = assignmentsByEquipment.get(key) || [];
+      history.push(assignment);
+      assignmentsByEquipment.set(key, history);
+      if (!assignment.unassignedAt) {
+        activeByEquipment.set(key, assignment);
+      }
+    });
+    const borrowEvents = records.length
+      ? await BorrowHistory.findAll({
+          where: {
+            equipmentRecordId: { [Op.in]: records.map((item) => item.id) },
+            eventType: "borrowed"
+          },
+          attributes: ["recordId", "equipmentRecordId", "borrowerName", "created_at"],
+          order: [["created_at", "DESC"], ["id", "DESC"]]
+        })
+      : [];
+    const borrowerIdentities = borrowEvents.length
+      ? await BorrowRequestAccountability.findAll({
+          where: { borrowRecordId: { [Op.in]: borrowEvents.map((event) => event.recordId) } },
+          attributes: ["borrowRecordId", "requesterUserId"]
+        })
+      : [];
+    const borrowerIdByRecord = new Map(borrowerIdentities.map((identity) => [
+      String(identity.borrowRecordId),
+      Number(identity.requesterUserId)
+    ]));
+    const lastBorrowerByEquipment = new Map();
+    borrowEvents.forEach((event) => {
+      const equipmentRecordId = Number(event.equipmentRecordId);
+      if (!lastBorrowerByEquipment.has(equipmentRecordId)) {
+        lastBorrowerByEquipment.set(equipmentRecordId, {
+          name: event.borrowerName,
+          userId: borrowerIdByRecord.get(String(event.recordId)) || null,
+          borrowedAt: event.created_at || null
+        });
+      }
+    });
+    const facultyIds = [...new Set(assignments.map((assignment) => Number(assignment.facultyUserId)))];
+    const faculty = facultyIds.length
+      ? await User.findAll({ where: { id: { [Op.in]: facultyIds } }, attributes: ["id", "name"] })
+      : [];
+    const facultyById = new Map(faculty.map((person) => [Number(person.id), person.name]));
+
+    return res.json(records.map((record) => {
+      const equipmentAssignments = assignmentsByEquipment.get(Number(record.id)) || [];
+      const assignment = activeByEquipment.get(Number(record.id));
+      return {
+        ...record.toJSON(),
+        hasActiveBorrowRecord: activeBorrowByEquipment.has(Number(record.id)),
+        activeBorrowStatus: activeBorrowStatusByEquipment.get(Number(record.id)) || null,
+        accountableFacultyUserId: assignment ? Number(assignment.facultyUserId) : null,
+        accountableFacultyName: assignment ? facultyById.get(Number(assignment.facultyUserId)) || null : null,
+        lastBorrower: canViewAccountabilityTrail
+          ? lastBorrowerByEquipment.get(Number(record.id)) || null
+          : null,
+        accountabilityHistory: canViewAccountabilityTrail
+          ? equipmentAssignments.map((entry) => ({
+          assignmentId: entry.id,
+          facultyUserId: Number(entry.facultyUserId),
+          facultyName: facultyById.get(Number(entry.facultyUserId)) || `Faculty account #${entry.facultyUserId}`,
+          assignedAt: entry.assignedAt,
+          unassignedAt: entry.unassignedAt || null,
+          remarks: entry.unassignmentRemarks || entry.remarks || null,
+          isCurrent: !entry.unassignedAt
+          }))
+          : []
+      };
+    }));
   } catch (error) {
     console.error("[equipment] Get student equipment error:", error);
     return res.status(500).json({ error: "Failed to load available equipment." });
@@ -542,8 +835,7 @@ export const getEquipmentCampusTotals = async (req, res) => {
 
     const normalizedRole = normalizeRoleName(authContext.role);
     const canViewTotals = isAdminRole(normalizedRole) ||
-      isTechnicianRole(normalizedRole) ||
-      normalizedRole === "instructor";
+      isTechnicianRole(normalizedRole);
     if (!canViewTotals) {
       return res.status(403).json({ error: "Admin or technician access is required." });
     }
@@ -554,29 +846,35 @@ export const getEquipmentCampusTotals = async (req, res) => {
       return res.status(403).json({ error: "User campus is not assigned." });
     }
 
-    const where = isTechnicianRole(normalizedRole)
-      ? {
+    const where = {
+      equipmentId: { [Op.notIn]: await getArchivedEntityIds("equipment") },
+      ...(isTechnicianRole(normalizedRole)
+        ? {
           campus: {
             [Op.in]: [campusName, `${campusName} Campus`]
           }
         }
-      : {};
+        : {})
+    };
 
     const rows = await Equipment.findAll({
       where,
       attributes: [
         "campus",
         [sequelize.fn("COUNT", sequelize.col("id")), "total"],
+        [sequelize.fn("SUM", sequelize.literal("CASE WHEN setId IS NOT NULL AND TRIM(setId) <> '' THEN 1 ELSE 0 END")), "assigned"],
+        [sequelize.fn("SUM", sequelize.literal("CASE WHEN setId IS NULL OR TRIM(setId) = '' THEN 1 ELSE 0 END")), "unassigned"],
         [sequelize.fn("SUM", sequelize.literal("CASE WHEN status = 'Serviceable' THEN 1 ELSE 0 END")), "serviceable"],
         [sequelize.fn("SUM", sequelize.literal("CASE WHEN status = 'Unserviceable' THEN 1 ELSE 0 END")), "unserviceable"],
-        [sequelize.fn("SUM", sequelize.literal("CASE WHEN status = 'Lost' THEN 1 ELSE 0 END")), "lost"]
+        [sequelize.fn("SUM", sequelize.literal("CASE WHEN status = 'Lost' THEN 1 ELSE 0 END")), "lost"],
+        [sequelize.fn("SUM", sequelize.literal("CASE WHEN status = 'Missing' THEN 1 ELSE 0 END")), "missing"]
       ],
       group: ["campus"],
       raw: true
     });
 
     const campusCounts = {};
-    const allCampuses = { total: 0, Serviceable: 0, Unserviceable: 0, Lost: 0 };
+    const allCampuses = { total: 0, assigned: 0, unassigned: 0, Serviceable: 0, Unserviceable: 0, Lost: 0, Missing: 0 };
 
     for (const row of rows) {
       const campusName = String(row.campus || "").trim();
@@ -584,16 +882,22 @@ export const getEquipmentCampusTotals = async (req, res) => {
 
       const summary = {
         total: Number(row.total || 0),
+        assigned: Number(row.assigned || 0),
+        unassigned: Number(row.unassigned || 0),
         Serviceable: Number(row.serviceable || 0),
         Unserviceable: Number(row.unserviceable || 0),
-        Lost: Number(row.lost || 0)
+        Lost: Number(row.lost || 0),
+        Missing: Number(row.missing || 0)
       };
 
       campusCounts[campusName] = summary;
       allCampuses.total += summary.total;
+      allCampuses.assigned += summary.assigned;
+      allCampuses.unassigned += summary.unassigned;
       allCampuses.Serviceable += summary.Serviceable;
       allCampuses.Unserviceable += summary.Unserviceable;
       allCampuses.Lost += summary.Lost;
+      allCampuses.Missing += summary.Missing;
     }
 
     res.json({
@@ -624,7 +928,7 @@ export const getEquipmentQr = async (req, res) => {
     let qrImage = equipment.qrImage;
     let qrGeneratedAt = equipment.qrGeneratedAt;
 
-    const shouldRefreshQr = !qrCode || !qrImage || !isEquipmentQrUrl(qrCode);
+    const shouldRefreshQr = !qrCode || !qrImage || !isEquipmentQrUrl(qrCode, equipment.equipmentId);
 
     if (shouldRefreshQr) {
       const payload = buildEquipmentQrUrl(equipment.equipmentId);
@@ -650,6 +954,7 @@ export const getEquipmentQr = async (req, res) => {
 
 export const createEquipment = async (req, res) => {
   const { assetNumber = "", name, campus: requestedCampus, laboratoryRoom, status, serialNumber, setId, manufacturer, model, purchaseDate, warrantyExpiry, condition, location, remarks } = req.body;
+  const equipmentType = normalizeEquipmentType(name);
   const sessionRole = String(req.session?.userRole || "").toLowerCase();
   const allowedStatuses = ["Serviceable", "Unserviceable", "Lost", "Missing", "Under Maintenance", "In Use", "For Repair", "For Disposal"];
   const requestedStatus = typeof status === "string" ? status.trim() : "";
@@ -659,7 +964,7 @@ export const createEquipment = async (req, res) => {
   const nextStatus = ["technician", "laboratory technician", "lab technician", "admin", "administrator"].includes(sessionRole)
     ? (requestedStatus || "Serviceable")
     : "Serviceable";
-  if (!name) {
+  if (!equipmentType) {
     return res.status(400).json({ error: "Equipment name is required." });
   }
 
@@ -678,6 +983,11 @@ export const createEquipment = async (req, res) => {
       return res.status(403).json({ error: "You do not have permission to create equipment for this campus." });
     }
 
+    const computerLab = laboratoryRoom ? await findComputerLabByLabel(laboratoryRoom, userCampus) : null;
+    if (laboratoryRoom && !computerLab) {
+      return res.status(400).json({ error: "Select a computer lab registered at your campus." });
+    }
+
     // --- SERIAL NUMBER UNIQUENESS VALIDATION ---
     if (serialNumber && String(serialNumber).trim()) {
       const trimmedSN = String(serialNumber).trim();
@@ -693,19 +1003,53 @@ export const createEquipment = async (req, res) => {
     // --- PC SET VALIDATION ---
     if (setId && String(setId).trim()) {
       const trimmedSetId = String(setId).trim();
-      const [setRows] = await (await import('mysql2/promise')).createPool({
-        host: process.env.DB_HOST || 'localhost', user: process.env.DB_USER || 'comlab',
-        password: process.env.DB_PASSWORD || 'comlab123', database: process.env.DB_NAME || 'comlab'
-      }).query('SELECT id FROM equipment_sets WHERE setId = ? LIMIT 1', [trimmedSetId]);
+      const [setRows] = await sequelize.query(
+        'SELECT id, location, computerLabId, createdBy FROM equipment_sets WHERE setId = ? LIMIT 1',
+        { replacements: [trimmedSetId] }
+      );
       if (!setRows.length) {
         return res.status(404).json({ error: `Target PC Set '${trimmedSetId}' does not exist.` });
+      }
+      if (Number(setRows[0].createdBy) !== Number(userId)) {
+        const componentCount = await Equipment.count({ where: { setId: trimmedSetId } });
+        if (componentCount === 0) {
+          return res.status(403).json({ error: "Only the PC set's creator can add its first component." });
+        }
+      }
+      const setLabId = Number(setRows[0].computerLabId || 0) || null;
+      const setLab = getLaboratoryNumber(setRows[0].location);
+      const componentLab = getLegacyComputerLabNumber(computerLab) || getLaboratoryNumber(laboratoryRoom);
+      if ((setLabId && Number(computerLab?.id) !== setLabId) || (!setLabId && (!setLab || componentLab !== setLab))) {
+        return res.status(400).json({ error: "The selected PC set belongs to a different computer lab. Choose the matching lab for its component." });
+      }
+      const existingComponents = await Equipment.findAll({
+        where: { setId: trimmedSetId },
+        attributes: ["campus", "laboratoryRoom", "computerLabId"],
+        raw: true
+      });
+      const mismatchedComponent = existingComponents.find((component) =>
+        !canManageRecord(userCampus, component.campus) ||
+        (setLabId
+          ? Number(component.computerLabId || 0) !== setLabId
+          : getLaboratoryNumber(component.laboratoryRoom) !== setLab)
+      );
+      if (mismatchedComponent) {
+        return res.status(409).json({ error: `PC Set '${trimmedSetId}' already contains equipment assigned to a different campus or ComLab.` });
+      }
+      const duplicateType = await Equipment.findOne({
+        where: { setId: trimmedSetId, category: equipmentType }
+      });
+      if (duplicateType) {
+        return res.status(409).json({
+          error: `PC Set '${trimmedSetId}' already contains a ${duplicateType.category} component. Duplicate component types are not allowed.`
+        });
       }
     }
 
     const campus = getCanonicalCampusName(userCampus);
-    const equipmentId = await generateEquipmentId(name, campus);
+    const equipmentId = await generateEquipmentId(equipmentType, campus);
     const existing = await Equipment.findOne({
-      where: { campus: { [Op.in]: [campus, campus.replace(/\s*Campus\s*$/i, "")] }, category: name, equipmentId }
+      where: { campus: { [Op.in]: [campus, campus.replace(/\s*Campus\s*$/i, "")] }, category: equipmentType, equipmentId }
     });
     if (existing) {
       return res.status(409).json({ error: "Generated Equipment ID already exists. Please try again." });
@@ -717,7 +1061,7 @@ export const createEquipment = async (req, res) => {
     const qrGeneratedAt = new Date();
 
     const equipment = await Equipment.create({
-      equipmentId, assetNumber, name, category: name, campus, laboratoryRoom,
+      equipmentId, assetNumber, name: equipmentType, category: equipmentType, campus, laboratoryRoom, computerLabId: computerLab?.id || null,
       status: nextStatus, dateAdded, qrCode, qrImage, qrGeneratedAt,
       serialNumber: serialNumber ? String(serialNumber).trim() : null,
       setId: setId ? String(setId).trim() : null,
@@ -751,7 +1095,8 @@ export const createEquipment = async (req, res) => {
 export const updateEquipment = async (req, res) => {
   const { id } = req.params;
   const { assetNumber = "", name, campus, laboratoryRoom, status, serialNumber, setId, manufacturer, model, purchaseDate, warrantyExpiry, condition, location, remarks } = req.body;
-  if (!name || !campus) {
+  const equipmentType = normalizeEquipmentType(name);
+  if (!equipmentType || !campus) {
     return res.status(400).json({ error: "Equipment name and campus are required." });
   }
 
@@ -793,6 +1138,13 @@ export const updateEquipment = async (req, res) => {
       return res.status(403).json({ error: "You do not have permission to assign equipment to another campus." });
     }
 
+    const resolvedComputerLab = laboratoryRoom
+      ? await findComputerLabByLabel(laboratoryRoom, campus)
+      : null;
+    if (laboratoryRoom && !resolvedComputerLab) {
+      return res.status(400).json({ error: "Select a computer lab registered at your campus." });
+    }
+
     // --- SERIAL NUMBER UNIQUENESS VALIDATION ---
     if (serialNumber !== undefined) {
       const trimmedSN = serialNumber ? String(serialNumber).trim() : null;
@@ -818,13 +1170,25 @@ export const updateEquipment = async (req, res) => {
       if (!setRows) {
         return res.status(404).json({ error: `Target PC Set '${nextSetId}' does not exist.` });
       }
+      const duplicateType = await Equipment.findOne({
+        where: {
+          setId: nextSetId,
+          category: equipmentType,
+          id: { [Op.ne]: equipment.id }
+        }
+      });
+      if (duplicateType) {
+        return res.status(409).json({
+          error: `PC Set '${nextSetId}' already contains a ${duplicateType.category} component. Duplicate component types are not allowed.`
+        });
+      }
     }
 
     const oldCampus = equipment.campus;
     const oldSetId = equipment.setId || null;
     const nextStatus = requestedStatus || equipment.status || "Serviceable";
     const updateData = {
-      assetNumber, name, campus, laboratoryRoom, status: nextStatus,
+      assetNumber, name: equipmentType, category: equipmentType, campus, laboratoryRoom, computerLabId: resolvedComputerLab?.id || null, status: nextStatus,
       manufacturer: manufacturer !== undefined ? manufacturer || null : equipment.manufacturer,
       model: model !== undefined ? model || null : equipment.model,
       purchaseDate: purchaseDate !== undefined ? purchaseDate || null : equipment.purchaseDate,
@@ -919,56 +1283,14 @@ export const updateEquipmentStatus = async (req, res) => {
 };
 
 export const deleteEquipment = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const equipment = await findEquipmentByIdentifier(id, req);
-    if (!equipment) {
-      return res.status(404).json({ error: "Equipment not found." });
-    }
-
-    // Get authenticated user's context
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(403).json({ error: "Unauthorized: Not authenticated." });
-    }
-
-    // Get user's campus from session/database
-    const userCampus = await getUserCampusFromSession(req);
-    const equipmentCampus = equipment.campus;
-
-    // Authorization rules:
-    // 1. User with campus must match equipment's campus
-    // 2. User without campus (legacy) can manage any equipment
-    // 3. Both must have appropriate role (checked via middleware elsewhere)
-    if (!userCampus || !canManageRecord(userCampus, equipmentCampus)) {
-      return res.status(403).json({
-        error: "Unauthorized: You can only manage equipment belonging to your campus."
-      });
-    }
-
-    const equipmentData = equipment.toJSON();
-    const removed = await Equipment.destroy({ where: { id: equipment.id } });
-    if (!removed) {
-      return res.status(404).json({ error: "Equipment not found." });
-    }
-    await logAuditEntry(req, {
-      action: "Equipment Deleted",
-      module: "Equipment Inventory",
-      resourceId: equipmentData.equipmentId,
-      description: `Equipment ${equipmentData.equipmentId} (${equipmentData.name}) was deleted.`,
-      details: equipmentData
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error("[equipment] Delete error:", error);
-    res.status(500).json({ error: "Failed to delete equipment." });
-  }
+  return res.status(410).json({ error: "Permanent deletion is disabled. Use Archive instead." });
 };
 
 export const getEquipmentCategories = async (req, res) => {
   try {
+    const archivedIds = await getArchivedEntityIds("equipment-category");
     const categories = await EquipmentCategory.findAll({ order: [["name", "ASC"]] });
-    res.json(categories);
+    res.json(categories.filter((category) => !archivedIds.includes(String(category.id))));
   } catch (error) {
     res.status(500).json({ error: "Failed to load categories." });
   }
@@ -1009,23 +1331,7 @@ export const createEquipmentCategory = async (req, res) => {
 };
 
 export const deleteEquipmentCategory = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const category = await EquipmentCategory.findByPk(id);
-    if (!category) {
-      return res.status(404).json({ error: "Category not found." });
-    }
-
-    const inUseCount = await Equipment.count({ where: { category: category.name } });
-    if (inUseCount > 0) {
-      return res.status(409).json({ error: "Cannot delete category while it is used by equipment." });
-    }
-
-    await category.destroy();
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete category." });
-  }
+  return res.status(410).json({ error: "Permanent deletion is disabled. Use Archive instead." });
 };
 
 // ============================================================
@@ -1040,7 +1346,7 @@ import { MissingEquipmentHistory } from "../models/missingEquipmentHistoryModel.
  *   - Any component is "Missing"        → incomplete
  *   - Any component is "Under Maintenance" → maintenance
  *   - Any component is "Unserviceable"  → incomplete
- *   - All components Serviceable + has CPU+Monitor → active
+ *   - All components Serviceable + has System Unit+Monitor → active
  *   - Has components but missing essentials → incomplete
  *   - No components → incomplete
  */
@@ -1073,9 +1379,9 @@ export async function recalculateSetStatus(setId) {
       newStatus = "incomplete";
     } else {
       // All serviceable — check essentials
-      const hasCpu = categories.some(c => c === "cpu" || c === "computer" || c === "system unit");
+      const hasSystemUnit = categories.some(c => c === "cpu" || c === "computer" || c === "system unit");
       const hasMonitor = categories.some(c => c === "monitor");
-      if (!hasCpu || !hasMonitor) newStatus = "incomplete";
+      if (!hasSystemUnit || !hasMonitor) newStatus = "incomplete";
     }
 
     await sequelize.query(
@@ -1313,6 +1619,19 @@ export const transferEquipmentSet = async (req, res) => {
       if (!targetSetExists) {
         return res.status(404).json({ error: `Target PC Set '${newSetId}' does not exist.` });
       }
+
+      const duplicateType = await Equipment.findOne({
+        where: {
+          setId: newSetId,
+          category: equipment.category,
+          id: { [Op.ne]: equipment.id }
+        }
+      });
+      if (duplicateType) {
+        return res.status(409).json({
+          error: `PC Set '${newSetId}' already contains a ${duplicateType.category} component. Duplicate component types are not allowed.`
+        });
+      }
     }
 
     const userId = req.session?.userId || null;
@@ -1481,9 +1800,25 @@ export const getEquipmentHistory = async (req, res) => {
         reportedByDisplayName: item.performedByName || (item.performedBy ? `User #${item.performedBy}` : null),
         reason: item.actionDescription,
         notes: item.afterState || null,
+        setId: item.afterState?.setId || null,
         serialNumber: item.serialNumber || equipment.serialNumber || null
       };
+
     });
+    const recordedAssignment = [...history, ...auditEvents].some((event) =>
+      ["assigned_to_set", "transferred"].includes(event.eventType) &&
+      event.setId === equipment.setId
+    );
+    const legacyAssignment = equipment.setId && !recordedAssignment
+      ? [{
+          eventType: "legacy_assignment",
+          reportedAt: null,
+          reportedByDisplayName: "Unavailable (legacy assignment)",
+          reason: "This equipment is currently assigned to this set, but the original assignment date and user were not recorded.",
+          setId: equipment.setId,
+          serialNumber: equipment.serialNumber || null
+        }]
+      : [];
 
     return res.json({
       equipment: {
@@ -1500,7 +1835,7 @@ export const getEquipmentHistory = async (req, res) => {
         missingReason: equipment.missingReason || null,
         foundAt: equipment.foundAt || null
       },
-      history: [...history, ...auditEvents].sort((left, right) =>
+      history: [...history, ...auditEvents, ...legacyAssignment].sort((left, right) =>
         new Date(right.reportedAt || 0).getTime() - new Date(left.reportedAt || 0).getTime()
       ),
       usageHistory
@@ -1508,5 +1843,285 @@ export const getEquipmentHistory = async (req, res) => {
   } catch (error) {
     console.error("[equipment] getEquipmentHistory error:", error);
     return res.status(500).json({ error: "Failed to load equipment history." });
+  }
+};
+
+export const getEquipmentBorrowCycle = async (req, res) => {
+  try {
+    const equipment = await findEquipmentByIdentifier(req.params.id, req);
+    if (!equipment) return res.status(404).json({ error: "Equipment not found." });
+
+    const authContext = await getUserAuthContext(req);
+    if (!authContext.userId) return res.status(401).json({ error: "Please log in to view this equipment's borrow cycle." });
+    const userCampus = await getUserCampusFromSession(req);
+    if (userCampus && !canManageRecord(userCampus, equipment.campus)) {
+      return res.status(403).json({ error: "You do not have permission to view this equipment's borrow cycle." });
+    }
+
+    const campusVariants = getCampusVariants(equipment.campus);
+    const [assignments, borrowRecords] = await Promise.all([
+      EquipmentAssignment.findAll({
+        where: { equipmentRecordId: equipment.id },
+        order: [["assignedAt", "ASC"], ["id", "ASC"]]
+      }),
+      BorrowRecord.findAll({
+        where: {
+          [Op.or]: [
+            { equipmentRecordId: equipment.id },
+            {
+              equipmentRecordId: null,
+              equipmentId: equipment.equipmentId,
+              campus: { [Op.in]: campusVariants }
+            }
+          ],
+          status: { [Op.in]: ["Borrowed", "Returned", "Lost", "Pending Replacement", "borrowed", "returned", "lost", "pending replacement"] }
+        },
+        order: [["borrowDate", "ASC"], ["borrowStartTime", "ASC"], ["created_at", "ASC"]]
+      })
+    ]);
+    const identities = borrowRecords.length
+      ? await BorrowRequestAccountability.findAll({
+          where: { borrowRecordId: { [Op.in]: borrowRecords.map((record) => record.id) } },
+          attributes: ["borrowRecordId", "requesterUserId"]
+        })
+      : [];
+    const userIds = [...new Set([
+      ...assignments.flatMap((assignment) => [Number(assignment.facultyUserId), Number(assignment.assignedByAdminId)]),
+      ...identities.map((identity) => Number(identity.requesterUserId))
+    ].filter((id) => Number.isInteger(id) && id > 0))];
+    const users = userIds.length
+      ? await User.findAll({ where: { id: { [Op.in]: userIds } }, attributes: ["id", "name", "role", "college"] })
+      : [];
+    const userById = new Map(users.map((user) => [Number(user.id), user.name]));
+    const roleById = new Map(users.map((user) => [Number(user.id), user.role]));
+    const collegeById = new Map(users.map((user) => [Number(user.id), user.college]));
+    const borrowerIdByRecord = new Map(identities.map((identity) => [
+      String(identity.borrowRecordId),
+      Number(identity.requesterUserId)
+    ]));
+
+    const events = [
+      ...assignments.map((assignment) => ({
+        type: "mir",
+        occurredAt: assignment.assignedAt,
+        facultyName: userById.get(Number(assignment.facultyUserId)) || `Faculty account #${assignment.facultyUserId}`,
+        assignedByName: userById.get(Number(assignment.assignedByAdminId)) || null,
+        isCurrent: !assignment.unassignedAt
+      })),
+      ...borrowRecords.map((record) => {
+        const date = record.borrowDate instanceof Date
+          ? record.borrowDate.toISOString().slice(0, 10)
+          : String(record.borrowDate || "").slice(0, 10);
+        const time = String(record.borrowStartTime || "00:00").slice(0, 5);
+        const occurredAt = date
+          ? new Date(`${date}T${time}:00+08:00`)
+          : record.created_at;
+        const borrowerUserId = borrowerIdByRecord.get(String(record.id)) || null;
+        return {
+          type: "borrowed",
+          occurredAt,
+          borrowDate: date || null,
+          borrowStartTime: time,
+          borrowerName: record.borrowerName || "Unknown borrower",
+          borrowerUserId,
+          borrowerRole: borrowerUserId ? roleById.get(borrowerUserId) || record.borrowerType : record.borrowerType,
+          borrowerCollege: record.departmentInfo || (borrowerUserId && collegeById.get(borrowerUserId)) || null,
+          status: record.status,
+          returnDate: record.returnDate || null,
+          returnTime: record.returnTime || null,
+          condition: record.condition || null,
+          remarks: record.remarks || null,
+          createdAt: record.created_at || null,
+          recordId: record.id
+        };
+      })
+    ].sort((left, right) => {
+      const leftTime = new Date(left.occurredAt || 0).getTime();
+      const rightTime = new Date(right.occurredAt || 0).getTime();
+      const leftMinute = Math.floor(leftTime / 60_000);
+      const rightMinute = Math.floor(rightTime / 60_000);
+      if (leftMinute !== rightMinute) return leftMinute - rightMinute;
+      if (left.type === "borrowed" && right.type === "borrowed") {
+        const leftCreatedAt = new Date(left.createdAt || 0).getTime();
+        const rightCreatedAt = new Date(right.createdAt || 0).getTime();
+        if (leftCreatedAt !== rightCreatedAt) return leftCreatedAt - rightCreatedAt;
+      }
+      if (left.type === right.type && leftTime !== rightTime) return leftTime - rightTime;
+      if (left.type !== right.type) return left.type === "mir" ? -1 : 1;
+      return String(left.recordId || left.facultyName || "").localeCompare(
+        String(right.recordId || right.facultyName || "")
+      );
+    });
+    const lastBorrowEvent = [...events].reverse().find((event) => event.type === "borrowed");
+    if (lastBorrowEvent) lastBorrowEvent.isLastBorrower = true;
+
+    return res.json({
+      equipment: {
+        equipmentId: equipment.equipmentId,
+        name: equipment.name,
+        serialNumber: equipment.serialNumber || null
+      },
+      currentMIR: assignments
+        .filter((assignment) => !assignment.unassignedAt)
+        .map((assignment) => userById.get(Number(assignment.facultyUserId)) || `Faculty account #${assignment.facultyUserId}`),
+      lastBorrower: lastBorrowEvent?.borrowerName || null,
+      lastBorrowerStatus: lastBorrowEvent?.status || null,
+      lastBorrowerReturnDate: lastBorrowEvent?.returnDate || null,
+      lastBorrowerReturnTime: lastBorrowEvent?.returnTime || null,
+      events
+    });
+  } catch (error) {
+    console.error("[equipment] Failed to load equipment borrow cycle:", error);
+    return res.status(500).json({ error: "Failed to load equipment borrow cycle." });
+  }
+};
+
+export const logEquipmentScan = async (req, res) => {
+  try {
+    const authContext = await getUserAuthContext(req);
+    if (!authContext.userId) return res.status(401).json({ error: "Please log in to record an equipment scan." });
+    if (!authContext.campus) return res.status(403).json({ error: "Your account must be assigned to a campus to record equipment scans." });
+
+    const equipment = await findEquipmentByIdentifier(req.params.id, req);
+    if (!equipment) return res.status(404).json({ error: "Equipment not found in your campus." });
+    if (!canManageRecord(authContext.campus, equipment.campus)) {
+      return res.status(403).json({ error: "You do not have permission to record a scan for this equipment." });
+    }
+
+    const user = await User.findByPk(authContext.userId, { attributes: ["name", "role"] });
+    if (!user) return res.status(401).json({ error: "Authenticated user could not be found." });
+    const role = normalizeRoleName(user.role || authContext.role);
+    const userRole = role.includes("admin")
+      ? "admin"
+      : role.includes("technician")
+        ? "technician"
+        : ["faculty", "instructor"].includes(role)
+          ? "faculty"
+          : role === "student" ? "student" : null;
+    if (!userRole) return res.status(403).json({ error: "Your account role cannot record equipment scans." });
+
+    const entry = await EquipmentAuditTrail.create({
+      equipmentId: equipment.id,
+      serialNumber: equipment.serialNumber || null,
+      actionType: "equipment_scanned",
+      actionDescription: `Equipment QR scanned: ${equipment.name} (${equipment.equipmentId})`,
+      performedBy: authContext.userId,
+      performedByName: user.name || null,
+      userRole,
+      ipAddress: req.ip || null,
+      userAgent: req.get("user-agent") || null,
+      actionTimestamp: new Date()
+    });
+    return res.status(201).json({ success: true, scannedAt: entry.actionTimestamp });
+  } catch (error) {
+    console.error("[equipment] Failed to record equipment scan:", error);
+    return res.status(500).json({ error: "Failed to record equipment scan." });
+  }
+};
+
+export const getEquipmentScanHistory = async (req, res) => {
+  try {
+    const authContext = await getUserAuthContext(req);
+    if (!authContext.userId) return res.status(401).json({ error: "Please log in to view equipment scan history." });
+
+    const role = normalizeRoleName(authContext.role);
+    if (!["faculty", "instructor", "student", "admin", "administrator", "technician"].includes(role)) {
+      return res.status(403).json({ error: "You do not have permission to view equipment scan history." });
+    }
+    if (!authContext.campus) {
+      return res.status(403).json({ error: "Your account must be assigned to a campus to view equipment scan history." });
+    }
+
+    const campusVariants = getCampusVariants(authContext.campus);
+    const isFaculty = ["faculty", "instructor"].includes(role);
+    const assignedEquipmentIds = isFaculty
+      ? [...new Set((await EquipmentAssignment.findAll({
+          where: { facultyUserId: authContext.userId, unassignedAt: null },
+          attributes: ["equipmentRecordId"]
+        })).map((assignment) => Number(assignment.equipmentRecordId)).filter(Number.isInteger))]
+      : [];
+    const assignedEquipmentFilter = assignedEquipmentIds.length
+      ? " OR eat.equipmentId IN (?)"
+      : "";
+    const canReviewCampusActivity = ["technician", "admin", "administrator"].includes(role);
+    const actorFilter = canReviewCampusActivity
+      ? "1 = 1"
+      : `(eat.performedBy = ?${assignedEquipmentFilter})`;
+    const data = await sequelize.query(
+      `SELECT eat.id, eat.equipmentId, eat.serialNumber, eat.actionType, eat.actionDescription,
+              eat.performedBy, eat.performedByName, eat.actionTimestamp, e.name AS equipmentName,
+              e.equipmentId AS equipmentAssetId, e.category AS equipmentCategory,
+              e.campus AS campus, e.laboratoryRoom AS laboratoryRoom, e.status AS equipmentStatus,
+              u.name AS scannerName, u.role AS scannerRole, u.program AS scannerProgram,
+              u.college AS scannerCollege,
+              u.year AS scannerYear, u.section AS scannerSection,
+              JSON_UNQUOTE(JSON_EXTRACT(eat.afterState, '$.maintenanceRequestId')) AS maintenanceRequestId,
+              JSON_UNQUOTE(JSON_EXTRACT(eat.afterState, '$.category')) AS reportCategory
+       FROM equipment_audit_trail eat
+       INNER JOIN equipment e ON e.id = eat.equipmentId
+       LEFT JOIN users u ON u.id = eat.performedBy
+       WHERE eat.actionType IN (?, ?)
+         AND ${actorFilter}
+         AND e.campus IN (?)
+       ORDER BY eat.actionTimestamp DESC
+       LIMIT 200`,
+      {
+        replacements: [
+          "equipment_scanned",
+          "equipment_issue_reported",
+          ...(!canReviewCampusActivity
+            ? [authContext.userId, ...(assignedEquipmentIds.length ? [assignedEquipmentIds] : [])]
+            : []),
+          campusVariants
+        ],
+        type: QueryTypes.SELECT
+      }
+    );
+
+    const equipmentRecordIds = [...new Set(data.map((event) => Number(event.equipmentId)).filter(Number.isInteger))];
+    const [activeBorrowers, activeAssignments] = equipmentRecordIds.length
+      ? await Promise.all([
+          BorrowRecord.findAll({
+            where: { equipmentRecordId: { [Op.in]: equipmentRecordIds }, status: "Borrowed" },
+            attributes: ["equipmentRecordId", "borrowerName", "quantity"]
+          }),
+          EquipmentAssignment.findAll({
+            where: { equipmentRecordId: { [Op.in]: equipmentRecordIds }, unassignedAt: null },
+            attributes: ["equipmentRecordId", "facultyUserId"]
+          })
+        ])
+      : [[], []];
+    const assignmentUserIds = [...new Set(activeAssignments.map((assignment) => Number(assignment.facultyUserId)).filter(Number.isInteger))];
+    const assignedUsers = assignmentUserIds.length
+      ? await User.findAll({ where: { id: { [Op.in]: assignmentUserIds } }, attributes: ["id", "name"] })
+      : [];
+    const assignedUserNames = new Map(assignedUsers.map((user) => [Number(user.id), user.name]));
+    const borrowersByEquipment = new Map();
+    activeBorrowers.forEach((record) => {
+      const key = Number(record.equipmentRecordId);
+      const holders = borrowersByEquipment.get(key) || [];
+      holders.push({ name: record.borrowerName, quantity: Number(record.quantity || 1) });
+      borrowersByEquipment.set(key, holders);
+    });
+    const assigneesByEquipment = new Map();
+    activeAssignments.forEach((assignment) => {
+      const key = Number(assignment.equipmentRecordId);
+      const assignees = assigneesByEquipment.get(key) || [];
+      assignees.push(assignedUserNames.get(Number(assignment.facultyUserId)) || "Unknown faculty");
+      assigneesByEquipment.set(key, assignees);
+    });
+    data.forEach((event) => {
+      const key = Number(event.equipmentId);
+      event.currentHolders = borrowersByEquipment.get(key) || [];
+      event.assignedTo = assigneesByEquipment.get(key) || [];
+    });
+
+    return res.json({
+      data,
+      meta: { total: data.length, limit: 200 }
+    });
+  } catch (error) {
+    console.error("[equipment] Failed to load equipment scan history:", error);
+    return res.status(500).json({ error: "Failed to load equipment scan history." });
   }
 };

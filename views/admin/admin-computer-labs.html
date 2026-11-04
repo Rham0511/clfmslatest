@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Computer Labs | ComLab Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <style>
+    :root { color-scheme: light dark; }
+    body.app-shell {
+      --page-bg: #07130d;
+      --panel-bg: linear-gradient(145deg, rgba(17, 43, 29, .98), rgba(9, 27, 18, .98));
+      --surface: #0b1e14;
+      --text: #edf8f1;
+      --muted: #a5c4b1;
+      --label: #d9eee1;
+      --line: rgba(110, 231, 183, .2);
+      --accent: #4ade80;
+      --accent-strong: #16a34a;
+      --soft: rgba(34, 197, 94, .12);
+      --danger: #fca5a5;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .11), transparent 38%), var(--page-bg);
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+    html.theme-light body.app-shell {
+      --page-bg: #eef4f0;
+      --panel-bg: linear-gradient(145deg, #fff, #f8fbf9);
+      --surface: #f6faf7;
+      --text: #16271d;
+      --muted: #5c7566;
+      --label: #294a37;
+      --line: rgba(22, 101, 52, .17);
+      --accent: #168044;
+      --accent-strong: #15803d;
+      --soft: rgba(34, 197, 94, .1);
+      --danger: #a9362d;
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page-bg);
+    }
+    .main-container {
+      box-sizing: border-box;
+      min-height: 100vh;
+      margin-left: var(--sidebar-width, 250px);
+      padding: clamp(.9rem, 2vw, 1.5rem);
+    }
+    .labs-wrap { width: 100%; max-width: 1440px; margin: 0 auto; }
+    .page-heading { overflow: visible; }
+    .labs-header-actions { display: flex; align-items: center; gap: .45rem; }
+    .labs-header-actions .comlab-notification-button { order: 1; }
+    .labs-header-actions .campus-chip { order: 2; }
+    .labs-header-actions .system-profile-badge { order: 3; }
+    @media (max-width: 1023px) {
+      html body.app-shell.computer-labs-admin-page .comlab-slim-page-header #mobileMenuToggle {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        display: inline-flex !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-height: 2.25rem !important;
+        flex: 0 0 2.25rem !important;
+        align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+        vertical-align: middle;
+      }
+
+      html body.app-shell.computer-labs-admin-page .comlab-slim-page-header .header-actions {
+        margin-left: auto !important;
+      }
+    }
+    .campus-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .38rem;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--label);
+      font-size: .72rem;
+    }
+    .campus-chip strong { color: var(--text); }
+    .campus-chip i { color: var(--accent); }
+    .labs-overview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .75rem;
+      margin: 0 0 .9rem;
+    }
+    .overview-stat {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .7rem;
+      padding: .75rem .9rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: .9rem;
+      background: var(--panel-bg);
+      box-shadow: 0 7px 18px rgba(0, 0, 0, .08);
+    }
+    .overview-stat::after {
+      position: absolute;
+      right: -.7rem;
+      bottom: -1.35rem;
+      width: 4.2rem;
+      height: 4.2rem;
+      border-radius: 50%;
+      background: var(--soft);
+      content: "";
+    }
+    .overview-stat-icon {
+      display: grid;
+      width: 2.35rem;
+      height: 2.35rem;
+      flex: 0 0 2.35rem;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: .72rem;
+      background: var(--soft);
+      color: var(--accent);
+    }
+    html.theme-light body.app-shell .overview-stat-icon {
+      border-color: #a8cfb4;
+      background: #e2f3e8;
+      color: #075e37;
+    }
+    .overview-stat-copy { display: grid; min-width: 0; gap: .12rem; }
+    .overview-stat-copy span { color: var(--muted); font-size: .67rem; font-weight: 750; letter-spacing: .075em; text-transform: uppercase; }
+    .overview-stat-copy strong { color: var(--text); font-size: 1.2rem; line-height: 1.1; }
+    .labs-grid { display: grid; grid-template-columns: minmax(290px, .8fr) minmax(0, 1.45fr); align-items: start; gap: .9rem; }
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      padding: clamp(1rem, 1.6vw, 1.35rem);
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: var(--panel-bg);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, .1);
+    }
+    .add-panel { display: flex; flex-direction: column; }
+    .panel-heading { display: flex; min-width: 0; align-items: flex-start; gap: .7rem; margin-bottom: 1rem; }
+    .panel-heading-icon {
+      display: grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      flex: 0 0 2.25rem;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: .72rem;
+      background: var(--soft);
+      color: var(--accent);
+    }
+    .panel h2 { margin: .08rem 0 .22rem; color: var(--text); font-size: 1rem; letter-spacing: -.01em; }
+    .panel-description { margin: 0; color: var(--muted); font-size: .79rem; line-height: 1.45; }
+    .panel-heading-copy { min-width: 0; flex: 1; }
+    .panel-kicker { margin: 0 0 .15rem; color: var(--accent); font-size: .62rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .list-count {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: .3rem .55rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--label);
+      font-size: .68rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .computer-labs-page label { display: block; margin: .9rem 0 .4rem; color: var(--label); font-size: .8rem; font-weight: 700; }
+    .computer-labs-page input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 2.8rem;
+      padding: .68rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: .7rem;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: .87rem;
+      transition: border-color .16s, box-shadow .16s, background .16s;
+    }
+    .computer-labs-page input::placeholder { color: var(--muted); opacity: .78; }
+    .computer-labs-page input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--soft); }
+    dialog.lab-dialog label { display: block; margin: .85rem 0 .38rem; color: var(--label); font-size: .8rem; font-weight: 700; }
+    dialog.lab-dialog input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 2.8rem;
+      padding: .68rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: .7rem;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: .87rem;
+    }
+    dialog.lab-dialog input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--soft); }
+    dialog.lab-dialog button { min-height: 2.5rem; border-radius: .62rem; padding: .6rem .78rem; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+    .field-help { margin: .35rem 0 0; color: var(--muted); font-size: .7rem; line-height: 1.45; }
+    .form-fields { display: grid; gap: .1rem; }
+    .computer-labs-page button {
+      border: 0;
+      border-radius: .65rem;
+      padding: .67rem .85rem;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform .16s, background .16s, box-shadow .16s, border-color .16s;
+    }
+    .computer-labs-page button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 48%, transparent); outline-offset: 2px; }
+    .submit {
+      display: inline-flex;
+      min-height: 2.7rem;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      margin-top: 1rem;
+      color: #f0fff5;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 7px 16px rgba(22, 163, 74, .18);
+    }
+    .submit:hover:not(:disabled) { transform: translateY(-1px); background: linear-gradient(135deg, #22c55e, #16803e); box-shadow: 0 10px 22px rgba(22, 163, 74, .24); }
+    .submit:disabled { opacity: .65; cursor: wait; }
+    .form-footnote { display: flex; align-items: flex-start; gap: .45rem; margin: auto 0 0; padding-top: 1rem; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+    .form-footnote i { margin-top: .1rem; color: var(--accent); }
+    .notice { min-height: 1.15rem; margin: .7rem 0 0; font-size: .79rem; line-height: 1.4; }
+    .notice:empty { min-height: 0; }
+    .notice.error { color: var(--danger); }
+    .notice.error a { color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+    .notice.success { color: var(--accent); }
+    .labs-panel { display: flex; flex-direction: column; }
+    .labs-panel .panel-heading { align-items: center; margin-bottom: .8rem; }
+    .lab-toolbar { display: flex; align-items: center; gap: .55rem; margin-bottom: .75rem; }
+    .lab-toolbar .lab-search-wrap { display: block; margin: 0; }
+    .lab-search-wrap { position: relative; min-width: 0; flex: 1 1 auto; }
+    .lab-search-wrap > i { position: absolute; top: 50%; left: .78rem; z-index: 1; color: var(--accent); transform: translateY(-50%); pointer-events: none; }
+    .lab-search-wrap input { min-height: 2.55rem; padding-left: 2.25rem; font-size: .79rem; }
+    .secondary-button {
+      display: inline-flex;
+      min-height: 2.55rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: .42rem;
+      padding: .55rem .72rem !important;
+      border: 1px solid var(--line) !important;
+      background: var(--soft);
+      color: var(--label);
+      font-size: .75rem !important;
+    }
+    .secondary-button:hover:not(:disabled) { border-color: var(--accent) !important; background: var(--soft); }
+    .secondary-button:disabled { opacity: .62; cursor: wait; }
+    .secondary-button .button-label { display: none; }
+    #refreshLabs.secondary-button { width: 2.55rem; height: 2.55rem; padding: .5rem !important; }
+    .lab-list {
+      display: grid;
+      min-height: 0;
+      align-content: start;
+      gap: .42rem;
+      overflow: visible;
+      padding: .08rem .04rem;
+    }
+    .lab-card {
+      position: relative;
+      z-index: 0;
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .62rem;
+      padding: .52rem .62rem;
+      border: 1px solid var(--line);
+      border-radius: .72rem;
+      background: var(--surface);
+      transition: transform .16s, border-color .16s, box-shadow .16s;
+    }
+    .lab-card[hidden] { display: none; }
+    .lab-card.menu-open { z-index: 4; }
+    .lab-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); box-shadow: 0 8px 20px rgba(0, 0, 0, .09); }
+    .lab-card.has-no-equipment { border-color: rgba(217, 119, 6, .38); }
+    body.app-shell .lab-card.has-no-equipment { background: color-mix(in srgb, var(--surface) 91%, #f59e0b 9%); }
+    html.theme-light body.app-shell .lab-card.has-no-equipment { border-color: #efc78e; background: #fffaf1; }
+    .lab-icon {
+      display: grid;
+      width: 2.2rem;
+      height: 2.2rem;
+      flex: 0 0 2.2rem;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: .65rem;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: .82rem;
+    }
+    .lab-card-copy { display: flex; min-width: 0; flex: 1 1 auto; align-items: center; gap: .8rem; }
+    .lab-card h3 { min-width: 5rem; max-width: 42%; margin: 0; overflow: hidden; color: var(--text); font-size: .84rem; font-weight: 800; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
+    .lab-card-meta { display: flex; min-width: 0; flex: 1 1 auto; align-items: center; gap: .55rem; }
+    .lab-room-meta {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: .68rem;
+      line-height: 1.3;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lab-equipment-count {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      flex: 0 0 auto;
+      padding: .18rem .4rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--label);
+      font-size: .63rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .lab-equipment-count.is-zero { border-color: #edc68d; background: #fff1d9; color: #8a4c0a; }
+    html:not(.theme-light) body.app-shell .lab-equipment-count.is-zero { border-color: rgba(245, 158, 11, .3); background: rgba(245, 158, 11, .13); color: #fbbf24; }
+    .lab-actions { position: relative; flex: 0 0 auto; margin-left: auto; align-self: center; }
+    .lab-menu-trigger {
+      display: grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      place-items: center;
+      padding: 0 !important;
+      border: 1px solid var(--line) !important;
+      border-radius: .62rem !important;
+      background: var(--surface);
+      color: var(--label);
+    }
+    .lab-menu-trigger:hover, .lab-menu-trigger[aria-expanded="true"] { border-color: var(--accent) !important; background: var(--soft); color: var(--accent); }
+    .lab-action-menu {
+      position: absolute;
+      z-index: 5;
+      top: calc(100% + .35rem);
+      right: 0;
+      min-width: 10rem;
+      padding: .3rem;
+      border: 1px solid var(--line);
+      border-radius: .72rem;
+      background: var(--panel-bg);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, .2);
+    }
+    .lab-action-menu[hidden] { display: none; }
+    .lab-action-menu button { display: flex; width: 100%; align-items: center; gap: .55rem; padding: .58rem .65rem; background: transparent; color: var(--text); text-align: left; font-size: .77rem; font-weight: 650; }
+    .lab-action-menu button:hover { background: var(--soft); }
+    .lab-action-menu button[data-lab-action="archive"] { color: var(--danger); }
+    .empty {
+      display: grid;
+      min-height: 7.3rem;
+      place-content: center;
+      justify-items: center;
+      gap: .5rem;
+      padding: 1rem;
+      border: 1px dashed var(--line);
+      border-radius: .8rem;
+      color: var(--muted);
+      font-size: .8rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+    .empty i { color: var(--accent); font-size: 1.2rem; }
+    .empty[hidden] { display: none; }
+    .empty button { margin-top: .1rem; }
+    dialog.lab-dialog {
+      box-sizing: border-box;
+      width: min(440px, calc(100% - 2rem));
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: var(--panel-bg);
+      color: var(--text);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .32);
+    }
+    dialog.lab-dialog::backdrop { background: rgba(0, 0, 0, .64); backdrop-filter: blur(4px); }
+    .dialog-title-row { display: flex; align-items: flex-start; gap: .7rem; margin-bottom: .9rem; }
+    .dialog-title-row .panel-kicker { margin: 0 0 .15rem; color: var(--accent); font-size: .62rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .dialog-title-row h2 { margin: .08rem 0 .2rem; font-size: 1.05rem; }
+    .dialog-title-row p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.4; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1rem; }
+    .dialog-cancel { border: 1px solid var(--line) !important; background: var(--soft); color: var(--label); }
+    dialog.lab-dialog .submit { margin-top: 0; }
+    @media(max-width: 1050px) {
+      .labs-grid { grid-template-columns: minmax(260px, .82fr) minmax(0, 1.18fr); }
+      .panel { min-height: 0; }
+    }
+    @media(max-width: 850px) {
+      .labs-grid { grid-template-columns: 1fr; }
+      .panel { min-height: 0; }
+      .add-panel { min-height: 0; }
+      .form-footnote { margin-top: .5rem; }
+    }
+    @media(max-width: 768px) { .main-container { margin-left: 0; padding: .85rem; } }
+    @media(max-width: 560px) {
+      .labs-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+      .overview-stat { align-items: flex-start; flex-direction: column; gap: .4rem; padding: .6rem; }
+      .overview-stat-icon { width: 1.9rem; height: 1.9rem; flex-basis: 1.9rem; border-radius: .58rem; font-size: .78rem; }
+      .overview-stat-copy span { font-size: .56rem; letter-spacing: .035em; }
+      .overview-stat-copy strong { font-size: 1rem; }
+      .panel { padding: .85rem; border-radius: .85rem; }
+      .labs-panel .panel-heading { align-items: flex-start; }
+      .list-count { padding: .25rem .42rem; font-size: .62rem; }
+      .lab-toolbar { align-items: stretch; }
+      .secondary-button .button-label { display: none; }
+      .secondary-button { width: 2.55rem; padding: .5rem !important; }
+      .lab-card { gap: .55rem; padding: .62rem; }
+      .lab-icon { width: 2.25rem; height: 2.25rem; flex-basis: 2.25rem; border-radius: .65rem; }
+      .lab-card-copy { display: block; }
+      .lab-card h3 { max-width: 100%; margin-bottom: .18rem; font-size: .82rem; }
+      .lab-equipment-count { font-size: .6rem; }
+    }
+    @media(prefers-reduced-motion: reduce) {
+      .computer-labs-page *, .overview-stat, .lab-card, .submit { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body class="app-shell system-layout-page computer-labs-admin-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+  <main class="main-container computer-labs-page">
+    <div class="labs-wrap">
+      <header class="page-heading">
+        <div class="heading-copy">
+          <p class="eyebrow">Facilities management</p>
+          <p>Add and manage the computer laboratories registered at your campus.</p>
+        </div>
+        <div class="header-actions labs-header-actions">
+          <div class="campus-chip"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Campus</span><strong id="campusName">Loading…</strong></div>
+        </div>
+      </header>
+      <section class="labs-overview" aria-label="Computer lab overview">
+        <article class="overview-stat"><span class="overview-stat-icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="overview-stat-copy"><span>Computer labs</span><strong id="totalLabs">—</strong></span></article>
+        <article class="overview-stat"><span class="overview-stat-icon"><i class="fa-solid fa-door-open" aria-hidden="true"></i></span><span class="overview-stat-copy"><span title="Distinct room/location labels, counted once">Rooms listed</span><strong id="totalRooms">—</strong></span></article>
+        <article class="overview-stat"><span class="overview-stat-icon"><i class="fa-solid fa-desktop" aria-hidden="true"></i></span><span class="overview-stat-copy"><span>Linked equipment</span><strong id="totalEquipment">—</strong></span></article>
+      </section>
+      <div class="labs-grid">
+        <section class="panel add-panel" aria-labelledby="add-lab-title">
+          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span><div class="panel-heading-copy"><p class="panel-kicker">Campus setup</p><h2 id="add-lab-title">Add a Computer Lab</h2><p class="panel-description">Register a lab and its room location.</p></div></div>
+          <form id="labForm">
+            <div class="form-fields">
+              <label for="labName">Laboratory name</label>
+              <input id="labName" name="name" maxlength="100" autocomplete="organization-title" placeholder="e.g. Computer Lab 3" required>
+              <label for="roomNumber">Room or location <span class="muted">(optional)</span></label>
+              <input id="roomNumber" name="roomNumber" maxlength="50" placeholder="e.g. Room 206">
+              <p class="field-help">Leave blank if the room has not been assigned yet.</p>
+            </div>
+            <button class="submit" id="submitLab" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Computer Lab</button>
+            <p id="formNotice" class="notice" role="status" aria-live="polite"></p>
+          </form>
+          <p class="form-footnote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Equipment and schedules can be linked to a registered lab.</span></p>
+        </section>
+        <section class="panel labs-panel" aria-labelledby="lab-list-title">
+          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i></span><div class="panel-heading-copy"><p class="panel-kicker">Location directory</p><h2 id="lab-list-title">Labs at Your Campus</h2><p class="panel-description">List updates automatically after changes and checks for updates every 10 seconds.</p></div><span id="labCount" class="list-count">Loading…</span></div>
+          <div class="lab-toolbar">
+            <label class="lab-search-wrap" for="labSearch"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="labSearch" type="search" placeholder="Search by lab name or room" autocomplete="off"></label>
+            <button class="secondary-button" id="refreshLabs" type="button" aria-label="Refresh computer lab list" title="Refresh list"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span class="button-label">Refresh</span></button>
+          </div>
+          <div id="labList" class="lab-list" role="region" aria-label="Computer lab list" aria-live="polite" aria-busy="true"><div class="empty"><i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i><span>Loading computer labs…</span></div></div>
+          <div id="labFilterEmpty" class="empty" hidden><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>No labs match your search.</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <dialog id="editLabDialog" class="lab-dialog" aria-labelledby="editLabTitle">
+    <form id="editLabForm">
+      <div class="dialog-title-row"><span class="panel-heading-icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span><div><p class="panel-kicker">Update location</p><h2 id="editLabTitle">Edit Computer Lab</h2><p>Keep this lab's name and room information current.</p></div></div>
+      <label for="editLabName">Laboratory name</label>
+      <input id="editLabName" name="name" maxlength="100" required>
+      <label for="editLabRoom">Room / location</label>
+      <input id="editLabRoom" name="roomNumber" maxlength="50" placeholder="e.g. Room 206">
+      <p id="editLabNotice" class="notice error" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="dialog-cancel" id="cancelEditLab" type="button">Cancel</button>
+        <button class="submit" id="saveEditLab" type="submit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="/js/comlab-records-sync.js?v=1"></script>
+  <script>
+    const form = document.getElementById('labForm');
+    const notice = document.getElementById('formNotice');
+    const labList = document.getElementById('labList');
+    const labSearch = document.getElementById('labSearch');
+    const labCount = document.getElementById('labCount');
+    const filterEmpty = document.getElementById('labFilterEmpty');
+    const refreshButton = document.getElementById('refreshLabs');
+    const editDialog = document.getElementById('editLabDialog');
+    const editForm = document.getElementById('editLabForm');
+    const editNotice = document.getElementById('editLabNotice');
+    const labsById = new Map();
+    let currentLabs = [];
+    let isCreatingLab = false;
+    let labsLoadPromise = null;
+    let labRevision = null;
+    const assignedCampus = String(window.__CURRENT_USER__?.campus || '').trim();
+    document.getElementById('campusName').textContent = assignedCampus || 'No campus assigned';
+    const directoryHeading = document.getElementById('lab-list-title');
+    if (directoryHeading && assignedCampus) {
+      const campusSuffix = /\bcampus$/i.test(assignedCampus) ? '' : ' Campus';
+      directoryHeading.textContent = `Labs at ${assignedCampus}${campusSuffix}`;
+    }
+    const showNotice = (message, type = '') => { notice.textContent = message; notice.className = `notice ${type}`; };
+    const showArchivedLabNotice = (labName) => {
+      notice.replaceChildren(document.createTextNode('This lab is archived. Restore it from '));
+      const archivedRecordsLink = document.createElement('a');
+      archivedRecordsLink.href = `/archived-records?search=${encodeURIComponent(labName || '')}`;
+      archivedRecordsLink.textContent = 'Archived Records';
+      notice.append(archivedRecordsLink, document.createTextNode(' before adding it again.'));
+      notice.className = 'notice error';
+    };
+    const setEmptyState = (iconClass, message, retry = false) => {
+      const empty = document.createElement('div'); empty.className = 'empty';
+      const icon = document.createElement('i'); icon.className = iconClass; icon.setAttribute('aria-hidden', 'true');
+      const text = document.createElement('span'); text.textContent = message;
+      empty.append(icon, text);
+      if (retry) {
+        const button = document.createElement('button'); button.className = 'secondary-button'; button.type = 'button'; button.dataset.retryLabs = 'true';
+        button.innerHTML = '<i class="fa-solid fa-rotate" aria-hidden="true"></i> Try again';
+        empty.append(button);
+      }
+      labList.replaceChildren(empty);
+    };
+    const refreshOverview = () => {
+      const uniqueRooms = new Set();
+      currentLabs.forEach((lab) => {
+        (Array.isArray(lab.roomNumbers) ? lab.roomNumbers : []).forEach((room) => {
+          const roomKey = String(room || '')
+            .trim()
+            .toLocaleLowerCase()
+            .replace(/^(?:room|rm\.?)\s*/i, '')
+            .replace(/\s+/g, '');
+          if (roomKey) uniqueRooms.add(roomKey);
+        });
+      });
+      const equipmentCount = currentLabs.reduce((total, lab) => total + Math.max(0, Number(lab.equipmentCount) || 0), 0);
+      document.getElementById('totalLabs').textContent = currentLabs.length.toLocaleString();
+      document.getElementById('totalRooms').textContent = uniqueRooms.size.toLocaleString();
+      document.getElementById('totalEquipment').textContent = equipmentCount.toLocaleString();
+    };
+    const applyLabSearch = () => {
+      const query = String(labSearch.value || '').trim().toLocaleLowerCase();
+      const cards = Array.from(labList.querySelectorAll('.lab-card'));
+      const visibleCount = cards.reduce((total, card) => {
+        const matches = !query || card.dataset.searchText.includes(query);
+        card.hidden = !matches;
+        return total + Number(matches);
+      }, 0);
+      const total = currentLabs.length;
+      labCount.textContent = query ? `${visibleCount} of ${total} labs` : `${total} ${total === 1 ? 'lab' : 'labs'}`;
+      filterEmpty.hidden = !query || visibleCount > 0 || total === 0;
+    };
+    const closeLabMenus = () => {
+      labList.querySelectorAll('[data-lab-menu]').forEach((button) => {
+        button.setAttribute('aria-expanded', 'false');
+        button.closest('.lab-card')?.classList.remove('menu-open');
+      });
+      labList.querySelectorAll('[data-lab-menu-panel]').forEach((panel) => { panel.hidden = true; });
+    };
+    const renderLabs = (data) => {
+      if (!Array.isArray(data)) throw new Error('The computer lab list could not be read.');
+      currentLabs = data;
+      labsById.clear();
+      labList.replaceChildren();
+      if (!currentLabs.length) {
+        setEmptyState('fa-solid fa-building-circle-xmark', 'No computer labs have been added at this campus yet. Add one using the form.');
+        refreshOverview(); applyLabSearch(); return;
+      }
+      currentLabs.forEach((lab) => {
+        const card = document.createElement('article'); card.className = 'lab-card';
+        const icon = document.createElement('div'); icon.className = 'lab-icon'; icon.innerHTML = '<i class="fa-solid fa-desktop"></i>';
+        const details = document.createElement('div'); details.className = 'lab-card-copy';
+        const title = document.createElement('h3'); title.textContent = lab.name;
+        const rooms = Array.isArray(lab.roomNumbers) && lab.roomNumbers.length ? lab.roomNumbers.join(', ') : 'Not specified';
+        const equipmentCount = Math.max(0, Number(lab.equipmentCount) || 0);
+        const metadata = document.createElement('div'); metadata.className = 'lab-card-meta';
+        const roomMeta = document.createElement('span'); roomMeta.className = 'lab-room-meta'; roomMeta.textContent = rooms; roomMeta.title = rooms;
+        const equipmentMeta = document.createElement('span'); equipmentMeta.className = 'lab-equipment-count';
+        equipmentMeta.textContent = `${equipmentCount.toLocaleString()} equipment`;
+        if (equipmentCount === 0) {
+          card.classList.add('has-no-equipment');
+          equipmentMeta.classList.add('is-zero');
+          equipmentMeta.title = 'No equipment is linked to this lab';
+        }
+        metadata.append(roomMeta, equipmentMeta);
+        details.append(title, metadata);
+        const searchText = [lab.name, rooms].join(' ').toLocaleLowerCase();
+        card.dataset.searchText = searchText;
+        labsById.set(String(lab.id), lab);
+        const actions = document.createElement('div'); actions.className = 'lab-actions';
+        const trigger = document.createElement('button'); trigger.className = 'lab-menu-trigger'; trigger.type = 'button'; trigger.dataset.labMenu = lab.id; trigger.setAttribute('aria-label', `Actions for ${lab.name}`); trigger.setAttribute('aria-haspopup', 'menu'); trigger.setAttribute('aria-expanded', 'false');
+        trigger.innerHTML = '<i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>';
+        const menu = document.createElement('div'); menu.className = 'lab-action-menu'; menu.dataset.labMenuPanel = lab.id; menu.setAttribute('role', 'menu'); menu.hidden = true;
+        const editButton = document.createElement('button'); editButton.type = 'button'; editButton.dataset.labAction = 'edit'; editButton.dataset.labId = lab.id; editButton.setAttribute('role', 'menuitem'); editButton.innerHTML = '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Edit details</span>';
+        const archiveButton = document.createElement('button'); archiveButton.type = 'button'; archiveButton.dataset.labAction = 'archive'; archiveButton.dataset.labId = lab.id; archiveButton.setAttribute('role', 'menuitem'); archiveButton.innerHTML = '<i class="fa-solid fa-box-archive" aria-hidden="true"></i><span>Archive lab</span>';
+        menu.append(editButton, archiveButton); actions.append(trigger, menu); card.append(icon, details, actions); labList.append(card);
+      });
+      refreshOverview(); applyLabSearch();
+    };
+    const loadLabs = ({ quiet = false } = {}) => {
+      if (labsLoadPromise) return labsLoadPromise;
+      const run = async () => {
+        if (!quiet) {
+          labList.setAttribute('aria-busy', 'true');
+          refreshButton.disabled = true;
+          refreshButton.querySelector('i')?.classList.add('fa-spin');
+        }
+        try {
+          const response = await fetch('/api/computer-labs', { credentials: 'same-origin', cache: 'no-store' });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.message || data.error || 'Unable to load computer labs.');
+          renderLabs(data);
+          return true;
+        } catch (error) {
+          if (currentLabs.length) {
+            if (!quiet) showNotice(`Could not refresh the list: ${error.message}`, 'error');
+          } else {
+            labCount.textContent = 'Unavailable';
+            setEmptyState('fa-solid fa-triangle-exclamation', error.message || 'Unable to load computer labs.', true);
+          }
+          return false;
+        } finally {
+          if (!quiet) {
+            labList.setAttribute('aria-busy', 'false');
+            refreshButton.disabled = false;
+            refreshButton.querySelector('i')?.classList.remove('fa-spin');
+          }
+        }
+      };
+      labsLoadPromise = run().finally(() => { labsLoadPromise = null; });
+      return labsLoadPromise;
+    };
+    const refreshLabRevision = async () => {
+      try {
+        const response = await fetch('/api/computer-labs/revision', { credentials: 'same-origin', cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.success) labRevision = String(data.revision);
+      } catch { /* The next scheduled revision check will retry. */ }
+    };
+    const checkLabRevision = async () => {
+      try {
+        const response = await fetch('/api/computer-labs/revision', { credentials: 'same-origin', cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) return;
+        const nextRevision = String(data.revision);
+        if (labRevision !== null && nextRevision !== labRevision) {
+          labRevision = nextRevision;
+          await loadLabs({ quiet: true });
+        } else {
+          labRevision = nextRevision;
+        }
+      } catch { /* Keep the current list and retry on the next check. */ }
+    };
+    loadLabs().then(refreshLabRevision);
+    window.setInterval(() => { if (!document.hidden) checkLabRevision(); }, 10000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkLabRevision(); });
+    window.comlabRecordsSync?.subscribe(async (change) => {
+      if (!String(change.action || '').startsWith('lab-')) return;
+      await loadLabs({ quiet: true });
+      await refreshLabRevision();
+    });
+    refreshButton.addEventListener('click', loadLabs);
+    labSearch.addEventListener('input', () => { closeLabMenus(); applyLabSearch(); });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (isCreatingLab) return;
+      isCreatingLab = true;
+      const button = document.getElementById('submitLab'); button.disabled = true; showNotice('');
+      try {
+        const response = await fetch('/api/computer-labs', {
+          method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: form.elements.name.value, roomNumber: form.elements.roomNumber.value })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (data.code === 'COMPUTER_LAB_ARCHIVED' || data.archived === true) {
+          showArchivedLabNotice(data.name || form.elements.name.value.trim());
+          return;
+        }
+        if (!response.ok) throw new Error(data.message || data.error || 'Unable to add the computer lab.');
+        form.reset();
+        const refreshed = await loadLabs();
+        if (!refreshed && data.id && !currentLabs.some((lab) => String(lab.id) === String(data.id))) {
+          renderLabs([...currentLabs, {
+            id: data.id,
+            name: data.name,
+            roomNumbers: data.roomNumber ? [data.roomNumber] : [],
+            campus: data.campus,
+            equipmentCount: 0
+          }]);
+        }
+        showNotice(refreshed
+          ? `${data.name} was added successfully.`
+          : `${data.name} was created successfully, but the list could not refresh. Use Refresh to reload it.`,
+        'success');
+        window.comlabRecordsSync?.publish('lab-added');
+      } catch (error) { showNotice(error.message, 'error'); }
+      finally { isCreatingLab = false; button.disabled = false; }
+    });
+    document.getElementById('cancelEditLab').addEventListener('click', () => editDialog.close());
+    editForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = document.getElementById('saveEditLab'); button.disabled = true; editNotice.textContent = '';
+      try {
+        const response = await fetch(`/api/computer-labs/${encodeURIComponent(editDialog.dataset.labId)}`, {
+          method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editForm.elements.name.value, roomNumber: editForm.elements.roomNumber.value })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unable to update the computer lab.');
+        editDialog.close();
+        const refreshed = await loadLabs();
+        showNotice(refreshed ? `${data.name} was updated successfully.` : `${data.name} was updated, but the list could not refresh.`, refreshed ? 'success' : 'error');
+        window.comlabRecordsSync?.publish('lab-updated');
+      } catch (error) { editNotice.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+    labList.addEventListener('click', async (event) => {
+      if (event.target.closest('[data-retry-labs]')) { await loadLabs(); return; }
+      const trigger = event.target.closest('[data-lab-menu]');
+      if (trigger) {
+        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+        labList.querySelectorAll('[data-lab-menu]').forEach((button) => {
+          button.setAttribute('aria-expanded', 'false');
+          const panel = labList.querySelector(`[data-lab-menu-panel="${button.dataset.labMenu}"]`);
+          if (panel) panel.hidden = true;
+          button.closest('.lab-card')?.classList.remove('menu-open');
+        });
+        if (!isOpen) {
+          trigger.setAttribute('aria-expanded', 'true');
+          const panel = labList.querySelector(`[data-lab-menu-panel="${trigger.dataset.labMenu}"]`);
+          if (panel) panel.hidden = false;
+          trigger.closest('.lab-card')?.classList.add('menu-open');
+        }
+        return;
+      }
+      const action = event.target.closest('[data-lab-action]');
+      if (!action) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const lab = labsById.get(String(action.dataset.labId));
+      if (!lab) return;
+      const labId = Number(lab.id);
+      if (!Number.isSafeInteger(labId) || labId < 1 || !/^\d+$/.test(String(lab.id))) {
+        showNotice('This computer lab has an invalid ID. Refresh the list and try again.', 'error');
+        return;
+      }
+      closeLabMenus();
+      if (action.dataset.labAction === 'edit') {
+        editDialog.dataset.labId = String(labId);
+        editForm.elements.name.value = lab.name;
+        editForm.elements.roomNumber.value = (lab.roomNumbers || []).join(', ');
+        editNotice.textContent = '';
+        editDialog.showModal();
+        return;
+      }
+      const confirmArchive = window.appDialogs?.confirm
+        ? await window.appDialogs.confirm(`Archive ${lab.name}? It can be restored from Archived Records.`)
+        : window.confirm(`Archive ${lab.name}? It can be restored from Archived Records.`);
+      if (!confirmArchive) return;
+      try {
+        const response = await fetch(`/api/archive/computer-lab/${labId}`, { method: 'POST', credentials: 'same-origin' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || data.error || 'Unable to archive the computer lab.');
+        const refreshed = await loadLabs();
+        if (!refreshed) {
+          renderLabs(currentLabs.filter((currentLab) => Number(currentLab.id) !== labId));
+        }
+        const successMessage = refreshed
+          ? `${lab.name} was archived.`
+          : `${lab.name} was archived successfully, but the list could not refresh. Use Refresh to reload it.`;
+        showNotice(successMessage, 'success');
+        window.comlabRecordsSync?.publish('lab-archived');
+        if (window.appDialogs?.alert) await window.appDialogs.alert(successMessage);
+        else window.alert(successMessage);
+      } catch (error) { showNotice(error.message, 'error'); }
+    });
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.lab-actions')) return;
+      labList.querySelectorAll('[data-lab-menu]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+      labList.querySelectorAll('[data-lab-menu-panel]').forEach((panel) => { panel.hidden = true; });
+      labList.querySelectorAll('.lab-card.menu-open').forEach((card) => card.classList.remove('menu-open'));
+    });
+  </script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+</body>
+</html>

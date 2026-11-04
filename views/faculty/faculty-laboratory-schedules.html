@@ -1,0 +1,3309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty Laboratory Schedules | ComLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <style>
+    body {
+      min-height: 100vh;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 5% 0%, rgba(34, 197, 94, .12), transparent 28rem),
+        linear-gradient(180deg, #062417 0%, #03180f 100%);
+    }
+
+    .main-container {
+      min-height: 100vh;
+      padding: 1.5rem .5rem 2.5rem;
+    }
+
+    .faculty-content {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+
+    .faculty-surface {
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: 1.25rem;
+      background: rgba(4, 35, 22, .96);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .18);
+    }
+
+    .schedule-view-hidden {
+      display: none !important;
+    }
+
+    .schedule-card {
+      position: relative;
+      border: 1px solid rgba(74, 222, 128, .13);
+      border-radius: 1rem;
+      background: linear-gradient(145deg, #0c3924, #062417);
+      cursor: pointer;
+      outline: none;
+      transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .schedule-card-main {
+      display: grid;
+      grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .schedule-card-date {
+      display: flex;
+      min-height: 5.5rem;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .25rem;
+      border: 1px solid rgba(74, 222, 128, .12);
+      border-radius: .7rem;
+      background: rgba(16, 185, 129, .12);
+      color: #a7f3d0;
+      text-align: center;
+    }
+
+    .schedule-card-date-day {
+      font-size: .8125rem;
+      font-weight: 800;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .schedule-card-date-divider {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .schedule-card-date-time {
+      font-size: .8125rem;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .schedule-card-copy {
+      display: grid;
+      min-width: 0;
+      gap: .35rem;
+    }
+
+    .schedule-card-copy p {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .45rem;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .schedule-card-copy p i {
+      width: .85rem;
+      flex: 0 0 .85rem;
+      text-align: center;
+    }
+
+    .schedule-status {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border: 1px solid rgba(74, 222, 128, .25);
+      border-radius: 999px;
+      background: rgba(4, 106, 56, .2);
+      color: #d1fae5;
+      padding: .35rem .7rem;
+      font-size: .75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .schedule-status.is-live {
+      border-color: rgba(74, 222, 128, .28);
+      background: rgba(34, 197, 94, .14);
+      color: #86efac;
+    }
+
+    .schedule-card-copy .schedule-section {
+      color: #a7f3d0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .schedule-card-copy .schedule-location,
+    .schedule-card-copy .schedule-time {
+      color: #d1fae5;
+      font-size: .875rem;
+      font-weight: 500;
+    }
+
+    .schedule-card-footer-hint {
+      color: #6ee7b7;
+      font-size: .875rem;
+      font-weight: 600;
+    }
+
+    .schedule-card-instructor,
+    .schedule-card-enrollment {
+      color: #a7f3d0;
+      font-size: .875rem;
+      font-weight: 600;
+    }
+
+    .schedule-roster-action {
+      min-height: 2.35rem;
+      flex: 0 0 auto;
+      border: 1px solid rgba(74, 222, 128, .32);
+      border-radius: .65rem;
+      background: #046a38;
+      padding: .45rem .7rem;
+      color: #fff;
+      font-size: .8125rem;
+      font-weight: 800;
+    }
+
+    .schedule-roster-action:hover {
+      background: #058447;
+    }
+
+    .schedule-roster-panel {
+      width: min(100%, 54rem);
+      max-height: min(90vh, 54rem);
+      overflow-y: auto;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: 1.15rem;
+      background: #062417;
+      padding: clamp(1rem, 3vw, 1.5rem);
+      color: #f0fdf4;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+    }
+
+    .schedule-roster-modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .875rem;
+      text-align: left;
+    }
+
+    .schedule-roster-modal-table th,
+    .schedule-roster-modal-table td {
+      border-bottom: 1px solid rgba(74, 222, 128, .14);
+      padding: .6rem;
+    }
+
+    .schedule-roster-modal-table th {
+      position: sticky;
+      top: 0;
+      background: #0a3823;
+      color: #bbf7d0;
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .schedule-roster-sample-row td {
+      color: #d1fae5;
+      background: rgba(16, 185, 129, .06);
+    }
+
+    .schedule-roster-preview-badge {
+      display: inline-flex;
+      border: 1px solid rgba(52, 211, 153, .3);
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .12);
+      padding: .2rem .45rem;
+      color: #6ee7b7;
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .schedule-roster-modal-table input {
+      width: 100%;
+      min-width: 5rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .45rem;
+      background: #03180f;
+      padding: .5rem;
+      color: #f0fdf4;
+      outline: none;
+    }
+
+    .schedule-roster-modal-table input:focus {
+      border-color: #4ade80;
+    }
+
+    .schedule-live-progress {
+      height: .3rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(74, 222, 128, .13);
+    }
+
+    .schedule-live-progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: #34d399;
+      transition: width .4s ease;
+    }
+
+    .schedule-calendar-button {
+      display: inline-grid;
+      width: 2.5rem;
+      height: 2.5rem;
+      flex: 0 0 2.5rem;
+      place-items: center;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: .8rem;
+      background: rgba(7, 38, 24, .75);
+      color: #6ee7b7;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .schedule-calendar-button:hover,
+    .schedule-calendar-button:focus-visible {
+      border-color: rgba(74, 222, 128, .55);
+      background: rgba(16, 87, 55, .55);
+      outline: none;
+    }
+
+    .schedule-calendar-panel {
+      display: grid;
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      min-height: 0;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      gap: .45rem;
+      overflow: hidden;
+      padding: .75rem;
+    }
+
+    .schedule-calendar-map {
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      margin-top: 0;
+    }
+
+    .schedule-lab-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+    }
+
+    .schedule-lab-filter {
+      min-height: 2.25rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 999px;
+      padding: .4rem .8rem;
+      background: rgba(3, 24, 15, .8);
+      color: #bbf7d0;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .schedule-lab-filter.is-active {
+      border-color: rgba(74, 222, 128, .65);
+      background: #046a38;
+      color: #fff;
+    }
+
+    .schedule-calendar-scroll {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      overflow: hidden;
+      border: 1px solid rgba(74, 222, 128, .12);
+      border-radius: .75rem;
+    }
+
+    .schedule-calendar-grid {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .schedule-calendar-header,
+    .schedule-calendar-body {
+      display: grid;
+      grid-template-columns: 4.5rem repeat(7, minmax(0, 1fr));
+    }
+
+    .schedule-calendar-header {
+      top: 0;
+      position: sticky;
+      z-index: 5;
+      background: #071a12;
+    }
+
+    .schedule-calendar-day-heading {
+      border-bottom: 1px solid rgba(74, 222, 128, .16);
+      border-left: 1px solid rgba(74, 222, 128, .1);
+      padding: .45rem .15rem;
+      color: #ecfdf5;
+      text-align: center;
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .schedule-calendar-day-heading:first-child {
+      border-left: 0;
+    }
+
+    .schedule-calendar-body {
+      position: relative;
+    }
+
+    .schedule-calendar-time {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      border-top: 1px solid rgba(74, 222, 128, .08);
+      padding-right: .3rem;
+      color: #d1fae5;
+      font-size: .48rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .schedule-calendar-day-column {
+      position: relative;
+      grid-row: 1 / -1;
+      border-left: 1px solid rgba(74, 222, 128, .1);
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--schedule-row-height, 1.5rem) - 1px),
+        rgba(74, 222, 128, .12) calc(var(--schedule-row-height, 1.5rem) - 1px),
+        rgba(74, 222, 128, .12) var(--schedule-row-height, 1.5rem)
+      );
+    }
+
+    .schedule-calendar-entry {
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      width: calc(100% - .4rem);
+      overflow: hidden;
+      box-sizing: border-box;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: .15rem;
+      border: 1px solid rgba(255, 255, 255, .42);
+      border-radius: .55rem;
+      padding: .2rem .25rem;
+      color: #052e16;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .24);
+      cursor: pointer;
+    }
+
+    .schedule-calendar-entry:hover,
+    .schedule-calendar-entry:focus-visible {
+      z-index: 4;
+      filter: brightness(1.08);
+      outline: 2px solid #f0fdf4;
+      outline-offset: 1px;
+    }
+
+    .schedule-calendar-entry > span {
+      display: block;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      font-size: .72rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .schedule-calendar-time-label {
+      display: flex !important;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: .2rem;
+      font-size: .68rem !important;
+    }
+
+    .schedule-calendar-time-label [data-calendar-status] {
+      flex: 0 0 auto;
+      font-size: .58rem;
+      text-transform: uppercase;
+    }
+
+    .schedule-calendar-entry > strong {
+      display: block;
+      overflow: hidden;
+      color: inherit;
+      font-size: .9rem;
+      font-weight: 900;
+      line-height: 1.18;
+      overflow-wrap: break-word;
+      text-overflow: ellipsis;
+      white-space: normal;
+    }
+
+    .schedule-calendar-entry.is-live {
+      border-color: rgba(74, 222, 128, .85);
+      box-shadow: 0 0 0 1px rgba(74, 222, 128, .2), 0 4px 12px rgba(0, 0, 0, .24);
+    }
+
+    .schedule-calendar-empty {
+      grid-column: 2 / -1;
+      align-self: center;
+      padding: 1rem;
+      color: #86aa96;
+      font-size: .8rem;
+    }
+
+    #scheduleCalendarModal #scheduleCalendarMessage {
+      margin-top: 0;
+      min-height: 1.1rem;
+      font-size: .75rem;
+    }
+
+    @media (max-width: 640px) {
+      .schedule-calendar-panel {
+        gap: .35rem;
+        padding: .5rem;
+      }
+
+      .schedule-calendar-header,
+      .schedule-calendar-body {
+        grid-template-columns: 3rem repeat(7, minmax(0, 1fr));
+      }
+
+      .schedule-calendar-day-heading {
+        padding: .4rem .05rem;
+        font-size: .52rem;
+        letter-spacing: 0;
+      }
+
+      .schedule-calendar-time {
+        padding-right: .1rem;
+        font-size: .39rem;
+      }
+
+      .schedule-calendar-entry {
+        width: calc(100% - .12rem);
+        border-radius: .3rem;
+        padding: .08rem;
+      }
+
+      .schedule-calendar-entry > span {
+        font-size: .5rem;
+      }
+
+      .schedule-calendar-entry > strong {
+        font-size: .58rem;
+      }
+    }
+
+    .schedule-calendar-weekend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .5rem;
+      margin-top: .6rem;
+    }
+
+    .schedule-calendar-weekend-day {
+      display: grid;
+      align-content: start;
+      gap: .35rem;
+      border: 1px solid rgba(74, 222, 128, .12);
+      border-radius: .65rem;
+      background: rgba(3, 24, 15, .7);
+      padding: .55rem;
+    }
+
+    .schedule-calendar-weekend-day h3 {
+      margin: 0;
+      color: #a7f3d0;
+      font-size: .65rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .schedule-calendar-weekend-entry {
+      display: grid;
+      gap: .15rem;
+      border-left: 3px solid #34d399;
+      border-radius: .4rem;
+      background: rgba(16, 185, 129, .1);
+      padding: .4rem .5rem;
+      color: #d1fae5;
+      font-size: .65rem;
+    }
+
+    .schedule-calendar-weekend-entry strong {
+      color: #f8fafc;
+    }
+
+    .schedule-card:hover,
+    .schedule-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(74, 222, 128, .58);
+      background: linear-gradient(145deg, rgba(16, 58, 39, .96), rgba(8, 34, 23, .94));
+      box-shadow: 0 12px 30px rgba(16, 185, 129, .12), inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .schedule-card.is-live {
+      border-color: rgba(74, 222, 128, .32);
+    }
+
+    .schedule-card-chevron {
+      flex: 0 0 auto;
+      color: #6ee7b7;
+      opacity: .9;
+      transform: translateX(-.15rem);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .schedule-card:hover .schedule-card-chevron,
+    .schedule-card:focus-visible .schedule-card-chevron {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .schedule-details-action {
+      display: inline-flex;
+      min-height: 2.65rem;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: .75rem;
+      background: rgba(6, 24, 16, .8);
+      color: #d1fae5;
+      padding: .55rem .65rem;
+      font-size: .75rem;
+      font-weight: 700;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+
+    .schedule-details-action:hover {
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, .5);
+      background: rgba(16, 87, 55, .45);
+    }
+
+    .schedule-details-action--primary {
+      border-color: rgba(74, 222, 128, .42);
+      background: linear-gradient(145deg, rgba(22, 163, 74, .72), rgba(6, 78, 59, .76));
+      color: #fff;
+    }
+
+    .schedule-modal-panel {
+      width: min(100%, 48rem);
+      max-height: min(86vh, 52rem);
+      overflow: auto;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: 1.25rem;
+      background: linear-gradient(145deg, #0b2117, #06110c);
+      padding: 1.25rem;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+    }
+
+    #scheduleDetailsModal .schedule-details-eyebrow {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      color: #34d399;
+    }
+
+    #scheduleDetailsModal .schedule-modal-panel {
+      width: min(56rem, calc(100vw - 2rem));
+      max-height: min(94vh, 58rem);
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+    }
+
+    #scheduleDetailsModal #scheduleDetailsTitle {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #fff;
+    }
+
+    #scheduleDetailsContent {
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+
+    #scheduleDetailsContent > div {
+      border-color: rgba(74, 222, 128, .24);
+      background: rgba(4, 40, 27, .56);
+      padding: .55rem .75rem;
+      border-radius: .65rem;
+    }
+
+    #scheduleDetailsContent dt {
+      color: rgba(167, 243, 208, .9);
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    #scheduleDetailsContent dd {
+      margin-top: .2rem;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    #scheduleDetailsModal .schedule-details-action {
+      min-height: 2.55rem;
+      padding: .55rem .65rem;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      #scheduleDetailsModal .schedule-modal-panel {
+        width: calc(100vw - 1rem);
+        max-height: 96vh;
+        padding: .85rem;
+      }
+
+      #scheduleDetailsModal #scheduleDetailsTitle {
+        font-size: 1.25rem;
+      }
+
+      #scheduleDetailsContent dd {
+        font-size: .9rem;
+      }
+
+      #scheduleDetailsModal [aria-label="Schedule actions"] {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .schedule-modal-status {
+      border-radius: .65rem;
+      padding: .7rem .8rem;
+      font-size: .82rem;
+      color: #bbf7d0;
+      background: rgba(3, 24, 15, .8);
+    }
+
+    .schedule-attendance-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .75rem;
+      align-items: center;
+      border: 1px solid rgba(74, 222, 128, .1);
+      border-radius: .75rem;
+      background: rgba(3, 24, 15, .75);
+      padding: .75rem;
+    }
+
+    .schedule-attendance-history-panel {
+      width: min(100%, 46rem);
+      border-color: rgba(74, 222, 128, .3);
+      border-radius: .85rem;
+      background: #061b14;
+      padding: 1rem;
+    }
+
+    .schedule-add-button {
+    min-height: 2.75rem;
+    flex: 0 0 auto;
+    border: 1px solid rgba(74, 222, 128, .32);
+    border-radius: .75rem;
+    background: #046a38;
+    padding: .65rem .9rem;
+    color: #fff;
+    font-size: .875rem;
+    font-weight: 800;
+    transition: background .18s ease, transform .18s ease;
+    }
+
+    .schedule-create-field input[type="color"] {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    height: 2rem;
+    min-height: 2rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    }
+
+    #scheduleCalendarModal {
+    margin: 0;
+    }
+
+    .schedule-add-button:hover {
+    background: #058447;
+    transform: translateY(-1px);
+    }
+
+    .schedule-create-panel {
+    width: min(100%, 58rem);
+    max-height: min(92vh, 58rem);
+    overflow-y: auto;
+    border: 1px solid rgba(74, 222, 128, .24);
+    border-radius: 1.15rem;
+    background: #062417;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    color: #f0fdf4;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+    }
+
+    .schedule-create-field {
+    display: grid;
+    min-width: 0;
+    gap: .4rem;
+    color: #bbf7d0;
+    font-size: .875rem;
+    font-weight: 650;
+    }
+
+    .schedule-create-field input,
+    .schedule-create-field select,
+    .schedule-create-field textarea,
+    .schedule-roster-search {
+    width: 100%;
+    min-height: 2.8rem;
+    border: 1px solid rgba(74, 222, 128, .24);
+    border-radius: .65rem;
+    background: #03180f;
+    padding: .65rem .75rem;
+    color: #f0fdf4;
+    font-size: .875rem;
+    font-weight: 500;
+    outline: none;
+    }
+
+    .schedule-create-field input::placeholder,
+    .schedule-create-field textarea::placeholder,
+    .schedule-roster-search::placeholder {
+    color: rgba(187, 247, 208, .55);
+    font-weight: 500;
+    }
+
+    .schedule-create-field input[type="file"]::file-selector-button {
+    margin-right: .75rem;
+    border: 1px solid rgba(74, 222, 128, .3);
+    border-radius: .5rem;
+    background: #046a38;
+    padding: .5rem .75rem;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    }
+
+    .schedule-create-field textarea {
+    min-height: 6rem;
+    resize: vertical;
+    }
+
+    .schedule-create-field input:focus,
+    .schedule-create-field select:focus,
+    .schedule-create-field textarea:focus,
+    .schedule-roster-search:focus {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+    }
+
+    .schedule-roster-suggestions {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + .25rem);
+    right: 0;
+    left: 0;
+    max-height: 14rem;
+    overflow-y: auto;
+    border: 1px solid rgba(74, 222, 128, .28);
+    border-radius: .65rem;
+    background: #082c1b;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .3);
+    }
+
+    .schedule-roster-suggestion {
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid rgba(74, 222, 128, .1);
+    padding: .65rem .75rem;
+    text-align: left;
+    color: #f0fdf4;
+    font-size: .875rem;
+    }
+
+    .schedule-roster-suggestion:hover {
+    background: rgba(4, 106, 56, .55);
+    }
+
+    .schedule-roster-table-wrap {
+    max-height: 15rem;
+    overflow: auto;
+    border: 1px solid rgba(74, 222, 128, .17);
+    border-radius: .75rem;
+    }
+
+    .schedule-roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: .8125rem;
+    }
+
+    .schedule-roster-table th,
+    .schedule-roster-table td {
+    border-bottom: 1px solid rgba(74, 222, 128, .12);
+    padding: .6rem .7rem;
+    }
+
+    .schedule-roster-table input {
+    width: 100%;
+    min-width: 5rem;
+    border: 1px solid rgba(74, 222, 128, .18);
+    border-radius: .4rem;
+    background: #03180f;
+    padding: .45rem;
+    color: #f0fdf4;
+    outline: none;
+    }
+
+    .schedule-roster-table input:focus {
+    border-color: #4ade80;
+    }
+
+    .schedule-roster-table th {
+    position: sticky;
+    top: 0;
+    background: #0a3823;
+    color: #bbf7d0;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    }
+
+    .schedule-roster-remove {
+    border-radius: .45rem;
+    padding: .35rem .5rem;
+    color: #fecaca;
+    font-weight: 700;
+    }
+
+    .schedule-roster-remove:hover {
+    background: rgba(127, 29, 29, .35);
+    }
+
+    .schedule-create-message[data-type="error"] {
+    border-color: rgba(248, 113, 113, .4);
+    background: rgba(127, 29, 29, .25);
+    color: #fecaca;
+    }
+
+    @media (max-width: 640px) {
+    .schedule-toolbar-controls {
+      flex-wrap: wrap;
+    }
+
+    .schedule-add-button {
+      min-height: 2.4rem;
+      padding: .5rem .65rem;
+      font-size: .75rem;
+    }
+
+    .schedule-create-panel {
+      max-height: 95vh;
+      padding: 1rem;
+    }
+
+    .schedule-attendance-date-list {
+      display: grid;
+      max-height: min(36vh, 20rem);
+      gap: .25rem;
+      overflow-y: auto;
+      padding-right: .25rem;
+    }
+
+    .schedule-attendance-date-group {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: .5rem;
+      border-radius: .55rem;
+      padding: .3rem .1rem;
+    }
+
+    .schedule-attendance-date-group + .schedule-attendance-date-group {
+      border-top: 1px solid rgba(74, 222, 128, .1);
+    }
+
+    .schedule-attendance-date-icon {
+      color: #34d399;
+    }
+
+    .schedule-attendance-date-recorded {
+      border: 1px solid rgba(74, 222, 128, .18);
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .12);
+      color: #4ade80;
+      padding: .2rem .55rem;
+      font-size: .67rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .schedule-attendance-export {
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: .65rem;
+      background: rgba(5, 35, 24, .74);
+      padding: .5rem;
+    }
+
+    .schedule-attendance-export-button {
+      display: grid;
+      min-height: 3.5rem;
+      place-items: center;
+      gap: .2rem;
+      border: 1px solid rgba(74, 222, 128, .36);
+      border-radius: .45rem;
+      background: rgba(8, 39, 27, .86);
+      color: #f8fafc;
+      font-size: .75rem;
+      font-weight: 700;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    .schedule-attendance-export-button:hover:not(:disabled),
+    .schedule-attendance-export-button:focus-visible {
+      border-color: rgba(74, 222, 128, .75);
+      background: rgba(16, 87, 55, .65);
+      outline: none;
+    }
+
+    .schedule-attendance-export-button:disabled {
+      cursor: not-allowed;
+      opacity: .48;
+    }
+
+    .schedule-attendance-export-button[data-format="xlsx"] i {
+      color: #34d399;
+    }
+
+    .schedule-attendance-export-button[data-format="docx"] i {
+      color: #4ade80;
+    }
+    }
+
+    .schedule-seat-tile {
+      min-width: 0;
+      min-height: 6.25rem;
+      overflow: hidden;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .7rem;
+      background: linear-gradient(145deg, rgba(8, 38, 25, .96), rgba(3, 24, 15, .88));
+      padding: .7rem .75rem;
+      box-shadow: inset 0 1px rgba(255, 255, 255, .025);
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+
+    .schedule-seat-map-grid {
+      display: grid;
+      min-height: 0;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+      grid-auto-rows: max-content;
+      align-content: start;
+      align-items: stretch;
+      gap: .65rem;
+    }
+
+    #scheduleSeatMapModal {
+      inset: 5.25rem .75rem .75rem calc(var(--sidebar-width) + .75rem);
+      align-items: stretch;
+      justify-content: stretch;
+      padding: 0;
+      background: rgba(3, 24, 15, .88);
+      backdrop-filter: blur(5px);
+    }
+
+    #scheduleSeatMapModal .schedule-seat-map-panel {
+      display: grid;
+      width: 100%;
+      max-width: none;
+      max-height: none;
+      min-height: 0;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: .7rem;
+      overflow: hidden;
+      border-radius: 1.1rem;
+      padding: .85rem;
+    }
+
+    #scheduleSeatMapModal #scheduleSeatMapStats {
+      margin-top: 0;
+    }
+
+    #scheduleSeatMapModal #scheduleSeatMapContent {
+      margin-top: 0;
+      overflow: auto;
+      align-content: start;
+      padding: .1rem .2rem .2rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(52, 211, 153, .5) transparent;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-tile > p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-tile > p:first-child {
+      font-size: .86rem;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-tile > p:nth-child(2) {
+      margin-top: .55rem;
+      font-size: .76rem;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-tile > p:last-child {
+      margin-top: .4rem;
+      font-size: .68rem;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-map-notice {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(96, 165, 250, .25);
+      border-radius: .6rem;
+      background: rgba(30, 64, 120, .12);
+      color: #bfdbfe;
+      padding: .5rem .7rem;
+      font-size: .72rem;
+      line-height: 1.35;
+    }
+
+    #scheduleSeatMapModal .schedule-seat-map-close {
+      margin-top: 0;
+      min-height: 2.35rem;
+    }
+
+    body.faculty-page.schedule-modal-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 1023px) {
+      #scheduleSeatMapModal {
+        inset: 4.75rem .5rem .5rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #scheduleSeatMapModal .schedule-seat-map-panel {
+        gap: .4rem;
+        padding: .55rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-map-panel > div:first-child {
+        gap: .35rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapTitle {
+        font-size: 1rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapSubtitle {
+        font-size: .68rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapStats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .35rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapStats > div {
+        padding: .4rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapStats > div > p:first-child {
+        font-size: .55rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapStats > div > p:last-child {
+        margin-top: 0;
+        font-size: .9rem;
+      }
+
+      #scheduleSeatMapModal #scheduleSeatMapContent {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+        gap: .3rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-tile {
+        border-radius: .55rem;
+        min-height: 5.5rem;
+        padding: .3rem .35rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-tile > p:first-child {
+        font-size: .66rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-tile > p:nth-child(2) {
+        margin-top: .35rem;
+        font-size: .62rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-tile > p:last-child {
+        margin-top: .12rem;
+        font-size: .62rem;
+      }
+
+      #scheduleSeatMapModal .schedule-seat-map-close {
+        min-height: 2rem;
+      }
+    }
+
+    .schedule-seat-tile.is-occupied {
+      border-color: rgba(251, 191, 36, .35);
+      background: rgba(120, 53, 15, .18);
+    }
+
+    .schedule-seat-tile.is-preview {
+      border-color: rgba(96, 165, 250, .48);
+      background: rgba(30, 64, 120, .2);
+    }
+
+    .schedule-seat-preview-badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(96, 165, 250, .4);
+      border-radius: 999px;
+      background: rgba(30, 64, 120, .38);
+      color: #bfdbfe;
+      padding: .08rem .35rem;
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      line-height: 1.25;
+    }
+
+    .schedule-search {
+      min-height: 3.2rem;
+      width: 100%;
+      border: 1px solid rgba(74, 222, 128, .17);
+      border-radius: .9rem;
+      background: rgba(3, 24, 15, .82);
+      color: #f8fafc;
+      padding: .75rem 1rem;
+      font-size: .9375rem;
+      font-weight: 500;
+      outline: none;
+    }
+
+    #scheduleSearch {
+      width: 3in;
+      max-width: 3in;
+      flex: 0 0 3in;
+    }
+
+    .schedule-filter-select {
+      width: 9rem;
+      max-width: 9rem;
+      flex: 0 1 9rem;
+      cursor: pointer;
+    }
+
+    .schedule-search:focus {
+      border-color: rgba(74, 222, 128, .5);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .1);
+    }
+
+    .main-container.theme-light main.faculty-content {
+      min-height: calc(100vh - 4rem);
+      border-radius: 1.25rem;
+      background: #f1f5f9;
+      color: #0f172a;
+      color-scheme: light;
+    }
+
+    .main-container.theme-light main.faculty-content .system-dashboard-heading {
+      border-color: #cbd5e1;
+      background: linear-gradient(180deg, #fff, #f8fafc);
+      box-shadow: 0 12px 35px rgba(15, 23, 42, .08);
+    }
+
+    .main-container.theme-light main.faculty-content .system-dashboard-heading h1,
+    .main-container.theme-light main.faculty-content .schedule-toolbar-title,
+    .main-container.theme-light main.faculty-content .schedule-card .text-white,
+    .main-container.theme-light main.faculty-content .schedule-empty-title {
+      color: #0f172a;
+    }
+
+    .main-container.theme-light main.faculty-content .faculty-surface,
+    .main-container.theme-light main.faculty-content .schedule-card {
+      border-color: #cbd5e1;
+      background: #fff;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, .07);
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-card.is-live {
+      border-color: #34d399;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-toolbar-copy > p,
+    .main-container.theme-light main.faculty-content .schedule-toolbar-count,
+    .main-container.theme-light main.faculty-content .schedule-card .text-emerald-200,
+    .main-container.theme-light main.faculty-content .schedule-card-copy .schedule-section,
+    .main-container.theme-light main.faculty-content .schedule-card-copy .schedule-location,
+    .main-container.theme-light main.faculty-content .schedule-card-copy .schedule-time,
+    .main-container.theme-light main.faculty-content .schedule-card-footer-hint {
+      color: #047857;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-status {
+      border-color: #86efac;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-card .text-slate-300,
+    .main-container.theme-light main.faculty-content .schedule-card .text-slate-400,
+    .main-container.theme-light main.faculty-content #scheduleList > .faculty-surface {
+      color: #334155;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-search {
+      border-color: #cbd5e1;
+      background: #fff;
+      color: #0f172a;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-search::placeholder {
+      color: #64748b;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-card:hover,
+    .main-container.theme-light main.faculty-content .schedule-card:focus-visible {
+      border-color: #10b981;
+      background: #f0fdf4;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, .1);
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-card-date {
+      border-color: #a7f3d0;
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .main-container.theme-light .schedule-calendar-header {
+      background: #f8fafc;
+    }
+
+    .main-container.theme-light .schedule-calendar-day-heading {
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    .main-container.theme-light .schedule-calendar-time {
+      color: #334155;
+    }
+
+    .main-container.theme-light .schedule-calendar-day-column {
+      border-color: #cbd5e1;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 2.4rem,
+        rgba(16, 185, 129, .18) 2.4rem,
+        rgba(16, 185, 129, .18) 2.5rem
+      );
+    }
+
+    .main-container.theme-light .schedule-calendar-weekend-day {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+
+    .main-container.theme-light .schedule-calendar-weekend-day h3 {
+      color: #047857;
+    }
+
+    .main-container.theme-light .schedule-calendar-weekend-entry {
+      background: #ecfdf5;
+      color: #334155;
+    }
+
+    .main-container.theme-light .schedule-calendar-weekend-entry strong {
+      color: #0f172a;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-details-action:not(.schedule-details-action--primary) {
+      border-color: #a7f3d0;
+      background: #f0fdf4;
+      color: #065f46;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-details-action:not(.schedule-details-action--primary):hover {
+      background: #dcfce7;
+    }
+
+    .main-container.theme-light main.faculty-content #scheduleError {
+      border-color: #fecaca;
+      background: #fff1f2;
+      color: #9f1239;
+    }
+
+    body.schedule-page main.faculty-content {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      gap: .75rem !important;
+    }
+
+    body.schedule-page .system-dashboard-heading {
+      margin-bottom: 0;
+      padding: .6rem .9rem;
+    }
+
+    body.schedule-page .main-container {
+      padding-top: .65rem !important;
+      padding-bottom: 1rem !important;
+    }
+
+    body.schedule-page.system-layout-page .system-dashboard-heading h1 {
+      margin: 0;
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .schedule-toolbar {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin: 0;
+      padding: .45rem .65rem;
+    }
+
+    .schedule-toolbar-description {
+      display: none;
+    }
+
+    .schedule-toolbar-controls {
+      display: flex;
+      width: 100%;
+      flex: 1 1 auto;
+      flex-direction: row;
+      align-items: center;
+      gap: .5rem;
+      min-width: 0;
+    }
+
+    .schedule-toolbar-count {
+      flex: 0 0 auto;
+      font-size: .9375rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #scheduleList {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+      align-items: stretch;
+      gap: .75rem;
+    }
+
+    #scheduleList > .faculty-surface {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .schedule-card h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .schedule-card-copy {
+      gap: .4rem;
+      font-size: .9375rem;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .schedule-details-action {
+      min-height: 2.35rem;
+      padding: .4rem .55rem;
+      font-size: .76rem;
+    }
+
+    .schedule-empty-state {
+      padding: 2rem 1.5rem;
+    }
+
+    .schedule-empty-icon {
+      width: 4rem;
+      height: 4rem;
+      font-size: 1.5rem;
+    }
+
+    .schedule-empty-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .schedule-empty-description {
+      margin-top: .5rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 640px) {
+      .schedule-card-main {
+        grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+        gap: .7rem;
+      }
+
+      .schedule-card-date {
+        min-height: 4.75rem;
+      }
+
+      .schedule-card-date-time {
+        font-size: .75rem;
+      }
+
+      .schedule-toolbar {
+        padding: .4rem .5rem;
+      }
+
+      .schedule-toolbar-controls {
+        gap: .45rem;
+      }
+
+      .schedule-search {
+        min-height: 2.3rem;
+        padding: .4rem .55rem;
+        font-size: .875rem;
+      }
+
+      #scheduleSearch {
+        width: auto;
+        max-width: 100%;
+        flex: 1 1 12rem;
+      }
+
+      .schedule-filter-select {
+        width: auto;
+        max-width: 100%;
+        flex: 1 1 9rem;
+      }
+
+      .schedule-toolbar-count {
+        font-size: .875rem;
+      }
+
+
+      .schedule-empty-state {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      body.faculty-page.student-portal.schedule-page .main-container {
+        margin-left: 0 !important;
+        padding-top: .65rem !important;
+        padding-bottom: 1rem !important;
+      }
+
+      body.schedule-page main.faculty-content {
+        gap: .65rem !important;
+      }
+
+      body.schedule-page .system-dashboard-heading {
+        padding: .55rem .75rem;
+      }
+
+      #scheduleCalendarModal .schedule-calendar-scroll {
+        height: min(68vh, 48rem);
+        min-height: 22rem;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=5">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <style>
+    body.schedule-page {
+      background: linear-gradient(180deg, #062417 0%, #03180f 100%) !important;
+      color: #f0fdf4;
+    }
+
+    body.schedule-page .main-container.theme-light main.faculty-content {
+      background: #03180f !important;
+      color: #f0fdf4 !important;
+      color-scheme: dark;
+    }
+
+    body.schedule-page .main-container.theme-light main.faculty-content .system-dashboard-heading,
+    body.schedule-page .main-container.theme-light main.faculty-content .schedule-search,
+    body.schedule-page .main-container.theme-light .schedule-calendar-header,
+    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-day {
+      border-color: rgba(74, 222, 128, .22) !important;
+      background: #062417 !important;
+      color: #f0fdf4 !important;
+    }
+
+    body.schedule-page .main-container.theme-light .schedule-calendar-day-heading,
+    body.schedule-page .main-container.theme-light .schedule-calendar-time,
+    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-entry,
+    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-entry strong {
+      color: #bbf7d0 !important;
+    }
+
+    body.schedule-page main.faculty-content .faculty-surface {
+      border-color: rgba(74, 222, 128, .18) !important;
+      background: #062417 !important;
+      color: #f0fdf4 !important;
+    }
+
+    body.schedule-page main.faculty-content .schedule-card {
+      background: linear-gradient(145deg, #0c3924, #062417) !important;
+    }
+
+    body.schedule-page .faculty-modal .schedule-modal-panel {
+      background: linear-gradient(145deg, #0b2117, #06110c) !important;
+      color: #f0fdf4 !important;
+    }
+
+    body.schedule-page main.faculty-content [class*="text-slate-"],
+    body.schedule-page .faculty-modal [class*="text-slate-"] {
+      color: #bbf7d0 !important;
+    }
+
+    body.schedule-page main.faculty-content [class*="bg-slate-"],
+    body.schedule-page .faculty-modal [class*="bg-slate-"] {
+      background-color: #062417 !important;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-panel {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      min-height: 0;
+      overflow: visible;
+      padding: 0;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-scroll {
+      height: min(68vh, 48rem);
+      min-height: 28rem;
+      overflow: auto;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-grid {
+      min-width: 900px;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-header,
+    #scheduleCalendarModal .schedule-calendar-body {
+      grid-template-columns: 5.25rem repeat(5, minmax(0, 1fr));
+    }
+
+    #scheduleCalendarModal .schedule-calendar-day-heading {
+      padding: .65rem .3rem;
+      font-size: .875rem;
+      font-weight: 800;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-time {
+      padding-right: .45rem;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry {
+      font-size: .72rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="app-shell student-portal faculty-page faculty-page-heading-page system-layout-page schedule-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+
+  <div class="main-container">
+    <main class="faculty-content flex flex-col">
+      <div class="system-dashboard-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+          <div class="student-page-user system-profile-badge">
+            <span class="system-profile-badge-avatar" data-user-initials>FC</span>
+            <span class="system-profile-badge-copy">
+              <span class="system-profile-badge-name" data-user-name>Faculty</span>
+              <span class="system-profile-badge-role" data-user-role>Faculty</span>
+            </span>
+          </div>
+          </a>
+        </div>
+      </div>
+      <section class="faculty-surface schedule-toolbar hidden" aria-label="Search laboratory schedules" hidden>
+        <div class="schedule-toolbar-controls">
+          <label class="sr-only" for="scheduleSearch">Search your schedules</label>
+          <input id="scheduleSearch" class="schedule-search" type="search" placeholder="Search subject, year, section, day, or room" autocomplete="off">
+          <label class="sr-only" for="scheduleYearFilter">Filter schedules by year</label>
+          <select id="scheduleYearFilter" class="schedule-search schedule-filter-select" aria-label="Filter schedules by year">
+            <option value="">All years</option>
+          </select>
+          <label class="sr-only" for="scheduleSectionFilter">Filter schedules by section</label>
+          <select id="scheduleSectionFilter" class="schedule-search schedule-filter-select" aria-label="Filter schedules by section">
+            <option value="">All sections</option>
+          </select>
+          <span id="scheduleCount" class="schedule-toolbar-count text-emerald-200" role="status" aria-live="polite">Loading schedules…</span>
+        </div>
+      </section>
+
+      <section id="scheduleCalendarModal" class="faculty-surface min-w-0 rounded-xl border border-emerald-400/15 p-3" aria-label="Laboratory schedule timetable">
+        <div class="schedule-calendar-panel">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-extrabold text-white">Weekly Schedule Map</h2>
+              <p class="mt-1 text-xs text-emerald-200/80">View laboratory schedules by day and time.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div class="schedule-lab-filters" role="group" aria-label="Filter timetable by laboratory">
+              <button type="button" class="schedule-lab-filter is-active" data-schedule-map-room="" aria-pressed="true">All Laboratories</button>
+              <button type="button" class="schedule-lab-filter" data-schedule-map-room="1" aria-pressed="false">COMLAB 1</button>
+              <button type="button" class="schedule-lab-filter" data-schedule-map-room="2" aria-pressed="false">COMLAB 2</button>
+            </div>
+            <label class="grid gap-1 text-xs font-semibold text-emerald-200">
+              View Schedules
+              <select id="scheduleMapInstructor" class="schedule-search min-h-10 py-2 text-sm" aria-label="Choose whose schedules to view">
+                <option value="__mine__">My Schedule</option>
+              </select>
+            </label>
+          </div>
+          <p id="scheduleCalendarMessage" class="text-sm text-emerald-200" role="status">Choose room and instructor filters to view the weekly timetable.</p>
+          <div id="scheduleCalendarMap" class="schedule-calendar-map" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <p id="scheduleSuccess" role="status" aria-live="polite" class="fixed right-4 top-20 z-[120] hidden max-w-md rounded-xl border border-emerald-400/25 bg-emerald-950/95 px-4 py-3 text-sm font-medium text-emerald-200 shadow-2xl"></p>
+      <section id="scheduleList" aria-live="polite" class="schedule-view-hidden grid gap-3">
+        <div class="faculty-surface col-span-full p-6 text-sm text-slate-400">
+          <i class="fas fa-spinner fa-spin mr-2 text-emerald-300" aria-hidden="true"></i>Loading your schedules…
+        </div>
+      </section>
+      <p id="scheduleError" role="alert" class="hidden rounded-xl border border-rose-400/20 bg-rose-950/30 px-4 py-3 text-sm text-rose-200"></p>
+    </main>
+  </div>
+
+  <div id="createScheduleModal" class="faculty-modal fixed inset-0 z-[110] hidden items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true" aria-labelledby="createScheduleTitle">
+    <section class="schedule-create-panel">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="createScheduleTitle" class="text-xl font-bold text-white">Add Lab Schedule</h2>
+          <p class="mt-1 text-sm font-medium text-emerald-200">Create a weekly schedule and assign it to a weekday.</p>
+        </div>
+        <button type="button" class="rounded-lg px-3 py-2 text-emerald-100 hover:bg-emerald-900/60" data-close-schedule-modal aria-label="Close create schedule dialog">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <form id="createScheduleForm" class="mt-5 grid gap-4" novalidate>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="schedule-create-field">
+            Weekly day
+            <select name="dayOfWeek" required>
+              <option value="">Select day</option>
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option>
+              <option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+          </label>
+          <label class="schedule-create-field">
+            Laboratory
+            <select name="laboratoryRoom" required>
+              <option value="">Select Laboratory</option>
+              <option value="Laboratory 1 — Room 202">Laboratory 1 — Room 202</option>
+              <option value="Laboratory 2 — Room 204">Laboratory 2 — Room 204</option>
+            </select>
+          </label>
+          <label class="schedule-create-field">
+            Subject / Course
+            <input name="subject" type="text" maxlength="160" placeholder="e.g., Circuit Design" required>
+          </label>
+          <label class="schedule-create-field">
+            Year level
+            <select name="yearLevel" required>
+              <option value="">Select Year Level</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+            </select>
+          </label>
+          <label class="schedule-create-field">
+            Section
+            <select name="section" required>
+              <option value="">Select Section</option>
+              <option>F1</option><option>F2</option><option>F3</option>
+            </select>
+            <span class="text-xs font-medium text-emerald-200/75">Example class: 4th Year - F1</span>
+          </label>
+          <label class="schedule-create-field">
+            Campus
+            <input id="scheduleCampus" name="campus" type="text" readonly aria-readonly="true">
+          </label>
+          <label class="schedule-create-field">
+            Schedule color
+            <span class="flex min-h-12 items-center gap-3 rounded-lg border border-emerald-400/25 bg-[#03180f] px-3">
+              <input id="scheduleColor" name="scheduleColor" class="!h-8 !w-10 !min-h-0 cursor-pointer !border-0 !bg-transparent !p-0" type="color" value="#16a34a" aria-label="Schedule color">
+              <span id="scheduleColorHex" class="text-sm font-medium uppercase tracking-wider text-white">#16A34A</span>
+            </span>
+          </label>
+          <label class="schedule-create-field">
+            Start Time
+            <select name="startTime" required><option value="">Select Start Time</option></select>
+          </label>
+          <label class="schedule-create-field">
+            End Time
+            <select name="endTime" required><option value="">Select End Time</option></select>
+          </label>
+        </div>
+
+        <section class="grid gap-3 rounded-xl border border-emerald-400/20 bg-emerald-950/25 p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-white">Student Class List (Optional)</h3>
+              <p class="mt-1 max-w-xl text-sm font-medium text-emerald-200">Upload the official class list for this laboratory schedule. You can add this later if needed.</p>
+            </div>
+            <span class="rounded-full border border-emerald-400/25 bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-200">.xlsx, .xls, .csv</span>
+          </div>
+          <label class="schedule-create-field">
+            Choose class list file
+            <input id="scheduleRosterFile" name="classListFile" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+          </label>
+          <p id="scheduleRosterFileName" class="text-xs font-medium text-emerald-200/75">No file selected.</p>
+        </section>
+        <p id="createScheduleMessage" class="schedule-create-message hidden rounded-lg border px-3 py-2 text-sm" role="status" aria-live="polite"></p>
+        <div class="flex flex-wrap justify-end gap-2 border-t border-emerald-400/15 pt-4">
+          <button type="button" class="rounded-lg border border-emerald-800 px-4 py-2.5 text-sm font-bold text-emerald-200 hover:bg-emerald-900/50" data-close-schedule-modal>Cancel</button>
+          <button id="saveCreateSchedule" type="submit" class="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-500 disabled:cursor-wait disabled:opacity-60">Create Schedule</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="scheduleDetailsModal" class="faculty-modal fixed inset-0 z-[100] hidden items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="scheduleDetailsTitle">
+    <section class="schedule-modal-panel">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="schedule-details-eyebrow uppercase">Schedule details</p>
+          <h2 id="scheduleDetailsTitle" class="mt-1 text-2xl font-bold text-white"></h2>
+        </div>
+        <button type="button" class="rounded-lg px-3 py-2 text-slate-300 hover:bg-white/10 hover:text-white" data-close-schedule-modal aria-label="Close schedule details"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <dl id="scheduleDetailsContent" class="grid grid-cols-2 gap-2"></dl>
+      <div class="mt-3 grid gap-2" aria-label="Schedule actions">
+        <button type="button" class="schedule-details-action" data-schedule-detail-action="seating"><i class="fas fa-desktop" aria-hidden="true"></i> PC seat map</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="scheduleRosterModal" class="faculty-modal fixed inset-0 z-[110] hidden items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true" aria-labelledby="scheduleRosterTitle">
+    <section class="schedule-roster-panel">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[.16em] text-emerald-300">Your class</p>
+          <h2 id="scheduleRosterTitle" class="mt-1 text-xl font-bold text-white">View Roster</h2>
+          <p id="scheduleRosterSubtitle" class="mt-1 text-sm font-medium text-emerald-200"></p>
+        </div>
+        <button type="button" class="rounded-lg px-3 py-2 text-emerald-100 hover:bg-emerald-900/60" data-close-schedule-modal aria-label="Close class roster">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <label class="schedule-create-field relative">
+          Add registered student
+          <input id="manageRosterSearch" class="schedule-roster-search" type="search" autocomplete="off" placeholder="Search by student ID or name" aria-autocomplete="list" aria-controls="manageRosterSuggestions">
+          <span id="manageRosterSuggestions" class="schedule-roster-suggestions hidden" role="listbox"></span>
+        </label>
+        <p id="manageRosterCount" class="self-end pb-3 text-sm font-semibold text-emerald-200">Loading roster…</p>
+      </div>
+      <p id="manageRosterMessage" class="schedule-create-message hidden mt-3 rounded-lg border px-3 py-2 text-sm" role="status" aria-live="polite"></p>
+      <div class="schedule-roster-table-wrap mt-3">
+        <table class="schedule-roster-modal-table">
+          <thead><tr><th scope="col">Student ID</th><th scope="col">Student Name</th><th scope="col">Section</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+          <tbody id="manageRosterRows"></tbody>
+        </table>
+      </div>
+      <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-emerald-400/15 pt-4">
+        <button type="button" class="rounded-lg border border-emerald-400/25 px-4 py-2.5 text-sm font-bold text-emerald-100 hover:bg-emerald-950/70" data-close-schedule-modal>Close</button>
+        <button id="saveManagedRoster" type="button" class="rounded-lg bg-[#046A38] px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">Save Roster</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="scheduleQrModal" class="faculty-modal fixed inset-0 z-[100] hidden items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="scheduleQrTitle">
+    <section class="schedule-modal-panel max-w-2xl text-center">
+      <div class="flex items-start justify-between gap-4 text-left">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">Attendance</p>
+          <h2 id="scheduleQrTitle" class="mt-1 text-xl font-bold text-white">Individual Student Attendance QR</h2>
+          <p id="scheduleQrSubtitle" class="mt-1 text-sm text-emerald-100/70"></p>
+        </div>
+        <button type="button" class="rounded-lg px-3 py-2 text-emerald-100 hover:bg-emerald-900/50 hover:text-white" data-close-schedule-modal aria-label="Close QR"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <section id="scheduleQrRosterPicker" class="mt-5 rounded-xl border border-emerald-400/15 bg-emerald-950/35 p-4 text-left">
+        <p class="text-sm font-semibold text-emerald-100">Select only students bringing their own laptops (BYOD). Students using a lab PC should continue using the existing PC station login flow.</p>
+        <div id="scheduleQrStudentList" class="mt-4 grid max-h-64 gap-2 overflow-y-auto"></div>
+        <p id="scheduleQrRosterMessage" class="mt-3 text-sm text-amber-200" role="status"></p>
+        <div class="mt-4 flex justify-end">
+          <button id="generateByodScheduleQr" type="button" class="schedule-details-action schedule-details-action--primary" disabled>
+            <i class="fas fa-qrcode" aria-hidden="true"></i> Generate QR for selected BYOD students
+          </button>
+        </div>
+      </section>
+      <div id="scheduleQrContent" class="mt-5 hidden min-h-56 place-items-center rounded-xl border border-emerald-400/10 bg-white p-4">
+        <p class="text-sm text-emerald-950">Preparing individual student QR codes…</p>
+      </div>
+      <p id="scheduleQrExpiry" class="mt-3 text-xs text-emerald-100/70"></p>
+      <p id="scheduleQrWarning" class="mt-2 text-sm font-medium text-amber-200" role="status"></p>
+      <p class="mt-2 text-xs text-emerald-100/70">Show one QR at a time. Each student must scan the code assigned to their name while signed in to their student account.</p>
+      <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <button id="chooseByodScheduleStudents" type="button" class="schedule-details-action hidden"><i class="fas fa-users" aria-hidden="true"></i> Choose BYOD students</button>
+        <button id="previousScheduleQr" type="button" class="schedule-details-action" disabled><i class="fas fa-arrow-left" aria-hidden="true"></i> Previous</button>
+        <button id="nextScheduleQr" type="button" class="schedule-details-action schedule-details-action--primary" disabled>Next student <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+        <button id="regenerateScheduleQr" type="button" class="schedule-details-action"><i class="fas fa-rotate" aria-hidden="true"></i> Refresh QR codes</button>
+        <button type="button" class="schedule-details-action" data-close-schedule-modal>Close</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="scheduleSeatMapModal" class="faculty-modal fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="scheduleSeatMapTitle">
+    <section class="schedule-modal-panel schedule-seat-map-panel">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">PC set map</p>
+          <h2 id="scheduleSeatMapTitle" class="mt-1 text-xl font-bold text-white">Student seating</h2>
+          <p id="scheduleSeatMapSubtitle" class="mt-1 text-sm text-slate-400"></p>
+        </div>
+        <button type="button" class="rounded-lg px-3 py-2 text-slate-300 hover:bg-white/10 hover:text-white" data-close-schedule-modal aria-label="Close PC set map"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div id="scheduleSeatMapStats" class="mt-4 grid gap-2 sm:grid-cols-3"></div>
+      <div id="scheduleSeatMapContent" class="schedule-seat-map-grid">
+        <p class="schedule-modal-status">Loading PC set map…</p>
+      </div>
+      <button type="button" class="schedule-details-action schedule-seat-map-close w-full" data-close-schedule-modal>Close</button>
+    </section>
+  </div>
+
+  <script>
+    const scheduleList = document.getElementById('scheduleList');
+    const scheduleCount = document.getElementById('scheduleCount');
+    const scheduleSearch = document.getElementById('scheduleSearch');
+    const scheduleYearFilter = document.getElementById('scheduleYearFilter');
+    const scheduleSectionFilter = document.getElementById('scheduleSectionFilter');
+    const scheduleError = document.getElementById('scheduleError');
+    const scheduleCalendarMap = document.getElementById('scheduleCalendarMap');
+    const scheduleCalendarMessage = document.getElementById('scheduleCalendarMessage');
+    const scheduleCalendarView = document.getElementById('scheduleCalendarModal');
+    const scheduleMapInstructor = document.getElementById('scheduleMapInstructor');
+    const scheduleMapRoomButtons = [...document.querySelectorAll('[data-schedule-map-room]')];
+    const scheduleWeekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let schedules = [];
+    let calendarSchedules = [];
+    let activeQrSchedule = null;
+    let scheduleQrCodes = [];
+    let scheduleQrIndex = 0;
+    let activeDetailsSchedule = null;
+    let calendarLoadId = 0;
+    let selectedScheduleMapRoom = '';
+
+    function openScheduleModal(modal) {
+      document.body.classList.add('schedule-modal-open');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeScheduleModal(modal) {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (!document.querySelector('.faculty-modal:not(.hidden)')) {
+        document.body.classList.remove('schedule-modal-open');
+      }
+    }
+
+    function addScheduleModalDetail(list, label, value) {
+      const row = document.createElement('div');
+      row.className = 'rounded-lg border border-emerald-400/10 bg-emerald-950/35 p-4';
+      const term = document.createElement('dt');
+      term.className = 'text-xs font-semibold text-emerald-200/80';
+      term.textContent = label;
+      const detail = document.createElement('dd');
+      detail.className = 'mt-1 break-words text-base font-bold text-white';
+      detail.textContent = value || '—';
+      row.append(term, detail);
+      list.append(row);
+    }
+
+    function makeSummaryCard(label, value, tone = 'emerald') {
+      const card = document.createElement('div');
+      const toneClasses = {
+        emerald: ['border-emerald-400/15', 'text-emerald-200', 'text-emerald-400'],
+        amber: ['border-amber-400/35', 'text-amber-300', 'text-amber-400'],
+        rose: ['border-rose-400/35', 'text-rose-300', 'text-rose-400']
+      };
+      const [borderClass, titleClass, countClass] = toneClasses[tone] || toneClasses.emerald;
+      card.className = `flex min-w-0 items-center justify-between gap-2 rounded-lg border ${borderClass} bg-emerald-950/25 px-2.5 py-1.5`;
+      const title = document.createElement('p');
+      title.className = `min-w-0 text-[.62rem] font-bold uppercase tracking-wide ${titleClass}`;
+      title.textContent = label;
+      const count = document.createElement('p');
+      count.className = `shrink-0 text-lg font-bold leading-none ${countClass}`;
+      count.textContent = String(value);
+      card.append(title, count);
+      return card;
+    }
+
+    function getScheduleSectionLabel(schedule) {
+      const label = [
+        schedule.yearLevel,
+        schedule.section ? `Section ${schedule.section}` : ''
+      ].filter(Boolean).join(' · ');
+      return label || 'Year/section not set';
+    }
+
+    function parseScheduleMinutes(value) {
+      const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+      if (!match) return null;
+      let hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (minutes > 59 || hours > 23 || hours < 0) return null;
+      const meridiem = match[3]?.toUpperCase();
+      if (meridiem) {
+        if (hours < 1 || hours > 12) return null;
+        hours = (hours % 12) + (meridiem === 'PM' ? 12 : 0);
+      }
+      return hours * 60 + minutes;
+    }
+
+    function getReadableScheduleTextColor(backgroundColor) {
+      const color = String(backgroundColor || '').replace('#', '');
+      if (!/^[\da-f]{6}$/i.test(color)) return '#ffffff';
+      const channels = [0, 2, 4].map((offset) => Number.parseInt(color.slice(offset, offset + 2), 16) / 255);
+      const linear = channels.map((channel) => channel <= 0.04045
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4);
+      const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+      const contrast = (foreground) => {
+        const ratio = foreground === '#ffffff' ? 1 : 0.007;
+        return (Math.max(luminance, ratio) + 0.05) / (Math.min(luminance, ratio) + 0.05);
+      };
+      return contrast('#03180f') >= contrast('#ffffff') ? '#03180f' : '#ffffff';
+    }
+
+    function getScheduleWeekdayIndex(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      return scheduleWeekdays.findIndex((day) =>
+        day.toLowerCase() === normalized || day.slice(0, 3).toLowerCase() === normalized
+      );
+    }
+
+    function getScheduleLiveState(schedule, now = new Date()) {
+      const weekday = getScheduleWeekdayIndex(schedule.dayOfWeek);
+      const start = parseScheduleMinutes(schedule.startTime);
+      const end = parseScheduleMinutes(schedule.endTime);
+      if (weekday < 0 || start === null || end === null || start === end) {
+        return { live: false, progress: 0 };
+      }
+
+      const today = (now.getDay() + 6) % 7;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const overnight = end < start;
+      const isLive = overnight
+        ? (today === weekday && currentMinutes >= start) ||
+          (today === (weekday + 1) % 7 && currentMinutes < end)
+        : today === weekday && currentMinutes >= start && currentMinutes < end;
+      if (!isLive) return { live: false, progress: 0 };
+
+      const elapsed = overnight && today !== weekday
+        ? currentMinutes + 1440 - start
+        : currentMinutes - start;
+      const duration = overnight ? end + 1440 - start : end - start;
+      return { live: true, progress: Math.max(0, Math.min(100, elapsed / duration * 100)) };
+    }
+
+    function updateScheduleLiveStates() {
+      const now = new Date();
+      scheduleList.querySelectorAll('[data-schedule-id]').forEach((card) => {
+        const schedule = schedules.find((item) => String(item.id) === card.dataset.scheduleId);
+        if (!schedule) return;
+        const state = getScheduleLiveState(schedule, now);
+        const badge = card.querySelector('.schedule-status');
+        const footerLabel = card.querySelector('[data-schedule-footer-label]');
+        const progress = card.querySelector('.schedule-live-progress');
+        const progressFill = progress?.firstElementChild;
+        if (!badge || !footerLabel || !progress || !progressFill) return;
+        card.classList.toggle('is-live', state.live);
+        badge.classList.toggle('is-live', state.live);
+        badge.textContent = state.live ? 'LIVE' : 'UPCOMING';
+        footerLabel.textContent = state.live ? 'Class in progress' : 'Click to view details';
+        progress.hidden = !state.live;
+        progress.setAttribute('aria-valuenow', String(Math.round(state.progress)));
+        progressFill.style.width = `${state.progress}%`;
+      });
+      scheduleCalendarMap.querySelectorAll('[data-calendar-schedule-id]').forEach((entry) => {
+        const schedule = calendarSchedules.find((item) => String(item.id) === entry.dataset.calendarScheduleId);
+        if (!schedule) return;
+        const state = getScheduleLiveState(schedule, now);
+        entry.classList.toggle('is-live', state.live);
+        const status = entry.querySelector('[data-calendar-status]');
+        if (status) status.textContent = state.live ? 'LIVE' : 'UPCOMING';
+      });
+    }
+
+    function openScheduleDetails(schedule) {
+      activeDetailsSchedule = schedule;
+      const modal = document.getElementById('scheduleDetailsModal');
+      const qrAction = modal.querySelector('[data-schedule-detail-action="qr"]');
+      if (qrAction) qrAction.hidden = !schedule.isOwnSchedule;
+      document.getElementById('scheduleDetailsTitle').textContent = schedule.subject || 'Laboratory session';
+      const content = document.getElementById('scheduleDetailsContent');
+      content.replaceChildren();
+      [
+        ['Weekly day', schedule.dayOfWeek],
+        ['Time', [schedule.startTime, schedule.endTime].filter(Boolean).join(' – ')],
+        ['Year level', schedule.yearLevel || 'Not set — ask the administrator to edit this schedule'],
+        ['Section', schedule.section || 'Not set — ask the administrator to edit this schedule'],
+        ['Laboratory', schedule.laboratoryRoom],
+        ['Status', getScheduleLiveState(schedule).live ? 'LIVE' : 'UPCOMING']
+      ].forEach(([label, value]) => addScheduleModalDetail(content, label, value));
+      openScheduleModal(modal);
+    }
+
+    async function loadScheduleQrRoster(schedule) {
+      const picker = document.getElementById('scheduleQrRosterPicker');
+      const list = document.getElementById('scheduleQrStudentList');
+      const message = document.getElementById('scheduleQrRosterMessage');
+      const generateButton = document.getElementById('generateByodScheduleQr');
+      const content = document.getElementById('scheduleQrContent');
+      const chooseButton = document.getElementById('chooseByodScheduleStudents');
+      const warning = document.getElementById('scheduleQrWarning');
+      picker.classList.remove('hidden');
+      content.classList.add('hidden');
+      chooseButton.classList.add('hidden');
+      scheduleQrCodes = [];
+      scheduleQrIndex = 0;
+      list.replaceChildren();
+      message.textContent = 'Loading the registered class roster…';
+      message.classList.remove('text-rose-200');
+      warning.textContent = '';
+      document.getElementById('scheduleQrExpiry').textContent = '';
+      document.getElementById('previousScheduleQr').disabled = true;
+      document.getElementById('nextScheduleQr').disabled = true;
+      generateButton.disabled = true;
+
+      try {
+        const response = await fetch(`/api/faculty/schedules/${encodeURIComponent(schedule.id)}/attendance-qr-students`, {
+          cache: 'no-store',
+          credentials: 'same-origin'
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success !== true || !Array.isArray(payload.students)) {
+          throw new Error(payload.error || 'Unable to load the class roster.');
+        }
+
+        payload.students.forEach((student) => {
+          const row = document.createElement('label');
+          row.className = 'flex cursor-pointer items-center gap-3 rounded-lg border border-emerald-400/15 bg-emerald-950/40 px-3 py-2 text-sm text-white hover:bg-emerald-900/50';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'accent-emerald-500';
+          checkbox.value = String(student.userId);
+          checkbox.dataset.byodStudent = '';
+          const details = document.createElement('span');
+          details.className = 'grid';
+          const name = document.createElement('span');
+          name.className = 'font-semibold';
+          name.textContent = student.studentName || 'Student';
+          const studentId = document.createElement('span');
+          studentId.className = 'text-xs text-emerald-200/75';
+          studentId.textContent = student.studentId || 'No Student ID';
+          details.append(name, studentId);
+          row.append(checkbox, details);
+          list.append(row);
+        });
+        message.textContent = payload.students.length
+          ? `Choose only BYOD students. ${payload.students.length} registered student${payload.students.length === 1 ? '' : 's'} available.`
+          : 'There are no matched registered students on this class roster.';
+        if (payload.unmatchedStudentCount) {
+          warning.textContent = `${payload.unmatchedStudentCount} class-list ${payload.unmatchedStudentCount === 1 ? 'student is' : 'students are'} not linked to registered student accounts.`;
+        }
+      } catch (error) {
+        message.textContent = error.message || 'Unable to load the class roster.';
+        message.classList.add('text-rose-200');
+        console.error('Unable to load roster for BYOD attendance QR codes:', error);
+      }
+      updateByodQrSelection();
+    }
+
+    function updateByodQrSelection() {
+      const checkboxes = [...document.querySelectorAll('[data-byod-student]')];
+      const selectedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
+      const generateButton = document.getElementById('generateByodScheduleQr');
+      generateButton.disabled = selectedCount === 0;
+    }
+
+    async function generateScheduleQr(schedule, studentUserIds) {
+      const content = document.getElementById('scheduleQrContent');
+      const expiry = document.getElementById('scheduleQrExpiry');
+      const warning = document.getElementById('scheduleQrWarning');
+      const previousButton = document.getElementById('previousScheduleQr');
+      const nextButton = document.getElementById('nextScheduleQr');
+      const picker = document.getElementById('scheduleQrRosterPicker');
+      const chooseButton = document.getElementById('chooseByodScheduleStudents');
+      const generateButton = document.getElementById('generateByodScheduleQr');
+      generateButton.disabled = true;
+      scheduleQrCodes = [];
+      scheduleQrIndex = 0;
+      content.replaceChildren();
+      content.classList.remove('hidden');
+      content.classList.add('grid');
+      const loading = document.createElement('p');
+      loading.className = 'text-sm text-emerald-950';
+      loading.textContent = 'Preparing individual student QR codes…';
+      content.append(loading);
+      expiry.textContent = '';
+      warning.textContent = '';
+      previousButton.disabled = true;
+      nextButton.disabled = true;
+      try {
+        const response = await fetch(`/api/faculty/schedules/${encodeURIComponent(schedule.id)}/attendance-qr-codes`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentUserIds })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success !== true || !Array.isArray(payload.codes) || !payload.codes.length) {
+          throw new Error(payload.error || 'Unable to generate student attendance QR codes.');
+        }
+        scheduleQrCodes = payload.codes;
+        picker.classList.add('hidden');
+        chooseButton.classList.remove('hidden');
+        renderScheduleQrCode();
+        if (payload.unmatchedStudentCount) {
+          warning.textContent = `${payload.unmatchedStudentCount} class-list ${payload.unmatchedStudentCount === 1 ? 'student is' : 'students are'} not linked to registered student accounts and do not have a QR code yet.`;
+        }
+        expiry.textContent = `Attendance QR codes expire ${new Date(payload.expiresAt).toLocaleString()}.`;
+      } catch (error) {
+        console.error('Unable to generate schedule attendance QR codes:', error);
+        const message = document.createElement('p');
+        message.className = 'schedule-modal-status text-rose-200';
+        message.textContent = error.message || 'Unable to generate student attendance QR codes.';
+        content.replaceChildren(message);
+        updateByodQrSelection();
+      }
+    }
+
+    function renderScheduleQrCode() {
+      const content = document.getElementById('scheduleQrContent');
+      const previousButton = document.getElementById('previousScheduleQr');
+      const nextButton = document.getElementById('nextScheduleQr');
+      const code = scheduleQrCodes[scheduleQrIndex];
+      if (!code) return;
+
+      const card = document.createElement('div');
+      card.className = 'grid w-full justify-items-center gap-3 text-center';
+      const studentLabel = document.createElement('p');
+      studentLabel.className = 'text-sm font-bold text-emerald-950';
+      studentLabel.textContent = `${code.studentName || 'Student'} · ${code.studentId || 'No Student ID'} · ${scheduleQrIndex + 1} of ${scheduleQrCodes.length}`;
+      const image = document.createElement('img');
+      image.className = 'mx-auto h-64 w-64 max-w-full object-contain';
+      image.alt = `Individual attendance QR for ${code.studentName || 'student'} (${code.studentId || 'no Student ID'})`;
+      image.src = code.qrCode;
+      card.append(studentLabel, image);
+      content.replaceChildren(card);
+      previousButton.disabled = scheduleQrIndex <= 0;
+      nextButton.disabled = scheduleQrIndex >= scheduleQrCodes.length - 1;
+    }
+
+    async function openScheduleQr(schedule) {
+      activeQrSchedule = schedule;
+      document.getElementById('scheduleQrSubtitle').textContent = [
+        schedule.subject || 'Laboratory session',
+        getScheduleSectionLabel(schedule),
+        schedule.dayOfWeek || 'Day not set',
+        `${schedule.startTime || ''} – ${schedule.endTime || ''}`
+      ].filter(Boolean).join(' · ');
+      openScheduleModal(document.getElementById('scheduleQrModal'));
+      await loadScheduleQrRoster(schedule);
+    }
+
+    async function openScheduleSeatMap(schedule) {
+      document.getElementById('scheduleSeatMapSubtitle').textContent =
+        [schedule.subject || 'Laboratory session', getScheduleSectionLabel(schedule), schedule.laboratoryRoom || 'Laboratory'].filter(Boolean).join(' · ');
+      const modal = document.getElementById('scheduleSeatMapModal');
+      const stats = document.getElementById('scheduleSeatMapStats');
+      const content = document.getElementById('scheduleSeatMapContent');
+      stats.replaceChildren();
+      content.replaceChildren();
+      const loading = document.createElement('p');
+      loading.className = 'schedule-modal-status';
+      loading.textContent = 'Loading PC set map…';
+      content.append(loading);
+      openScheduleModal(modal);
+      try {
+        const response = await fetch(`/api/laboratory-schedules/${encodeURIComponent(schedule.id)}/seating-chart`, {
+          cache: 'no-store',
+          credentials: 'same-origin'
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to load PC set map.');
+        const data = Array.isArray(payload) ? payload[0] : payload;
+        const seats = Array.isArray(data?.seatingChart) ? data.seatingChart : [];
+        const totals = data?.statistics || {};
+        stats.replaceChildren(
+          makeSummaryCard('PC sets', totals.totalPCs || 0),
+          makeSummaryCard('Occupied', totals.occupiedPCs || 0),
+          makeSummaryCard('Students', totals.totalStudents || 0)
+        );
+        content.replaceChildren();
+        if (!seats.length) {
+          const empty = document.createElement('p');
+          empty.className = 'schedule-modal-status sm:col-span-2 lg:col-span-3';
+          empty.textContent = 'No active PC sets were found for this laboratory.';
+          content.append(empty);
+          return;
+        }
+        const unassignedStudents = Array.isArray(data?.unassignedStudents) ? data.unassignedStudents : [];
+        const hasRealStudents = seats.some((seat) => Boolean(seat.student)) || unassignedStudents.length > 0;
+        const previewSeat = hasRealStudents ? null : seats.find((seat) => !seat.student);
+        if (previewSeat) {
+          const notice = document.createElement('p');
+          notice.className = 'schedule-seat-map-notice';
+          notice.textContent = 'Sample preview only — this student is not assigned, and attendance is not recorded.';
+          content.append(notice);
+        }
+        seats.forEach((seat) => {
+          const isPreview = seat === previewSeat;
+          const hasStudent = Boolean(seat.student) || isPreview;
+          const tile = document.createElement('article');
+          tile.className = `schedule-seat-tile${seat.student ? ' is-occupied' : ''}${isPreview ? ' is-preview' : ''}`;
+          const seatName = document.createElement('p');
+          seatName.className = 'font-bold text-white';
+          seatName.textContent = seat.setName || 'PC set';
+          const occupant = document.createElement('p');
+          occupant.className = `mt-3 text-sm font-semibold ${hasStudent ? 'text-amber-200' : 'text-slate-400'}`;
+          occupant.textContent = seat.student?.fullName || (isPreview ? 'Sample Student' : 'Available');
+          tile.append(seatName, occupant);
+          if (isPreview) {
+            const cohort = document.createElement('p');
+            cohort.className = 'mt-1 text-xs text-blue-100/80';
+            cohort.textContent = [schedule.yearLevel, schedule.section ? `Section ${schedule.section}` : ''].filter(Boolean).join(' · ') || 'Matches this class';
+            const badge = document.createElement('span');
+            badge.className = 'schedule-seat-preview-badge mt-2';
+            badge.textContent = 'PREVIEW';
+            tile.append(cohort, badge);
+          }
+          if (seat.student?.attendanceStatus) {
+            const attendance = document.createElement('p');
+            attendance.className = `mt-1 text-xs font-semibold ${seat.student.attendanceStatus === 'Late' ? 'text-amber-300' : 'text-emerald-300'}`;
+            attendance.textContent = `${seat.student.attendanceStatus} · ${seat.student.scannedAt ? new Date(seat.student.scannedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'attendance recorded'}`;
+            tile.append(attendance);
+          }
+          content.append(tile);
+        });
+        unassignedStudents.forEach((student) => {
+          const tile = document.createElement('article');
+          tile.className = 'schedule-seat-tile is-occupied';
+          const title = document.createElement('p');
+          title.className = 'font-bold text-white';
+          title.textContent = student.fullName || 'Unknown student';
+          const note = document.createElement('p');
+          note.className = 'mt-2 text-xs text-slate-400';
+          note.textContent = 'Attended · no PC set assigned';
+          tile.append(title, note);
+          content.append(tile);
+        });
+      } catch (error) {
+        console.error('Unable to load schedule PC map:', error);
+        content.replaceChildren();
+        const message = document.createElement('p');
+        message.className = 'schedule-modal-status text-rose-200';
+        message.textContent = error.message || 'Unable to load PC set map.';
+        content.append(message);
+      }
+    }
+
+    function renderScheduleCalendar(mapSchedules, loadId) {
+      if (loadId !== calendarLoadId) return;
+      calendarSchedules = mapSchedules;
+      scheduleCalendarMap.replaceChildren();
+      const now = new Date();
+      const calendarDays = scheduleWeekdays.slice(0, 5);
+      const byDay = Array.from({ length: calendarDays.length }, () => []);
+      mapSchedules.forEach((schedule) => {
+        const weekday = getScheduleWeekdayIndex(schedule.dayOfWeek);
+        if (weekday >= 0 && weekday < calendarDays.length) byDay[weekday].push(schedule);
+      });
+      const getTime = (schedule, field) => parseScheduleMinutes(schedule[field]);
+      const timedWeekdaySchedules = byDay.flat().filter((schedule) => {
+        const start = getTime(schedule, 'startTime');
+        const end = getTime(schedule, 'endTime');
+        return start !== null && end !== null && end > start;
+      });
+      const calendarStart = Math.min(
+        7 * 60 + 30,
+        ...timedWeekdaySchedules.map((schedule) => Math.floor(getTime(schedule, 'startTime') / 30) * 30)
+      );
+      const calendarEnd = Math.max(
+        17 * 60 + 30,
+        ...timedWeekdaySchedules.map((schedule) => Math.ceil(getTime(schedule, 'endTime') / 30) * 30)
+      );
+      const slotMinutes = 30;
+      const slotCount = Math.ceil((calendarEnd - calendarStart) / slotMinutes);
+      const formatSlotTime = (minutes) => {
+        const hour = Math.floor(minutes / 60);
+        return `${hour % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+      };
+
+      const scroll = document.createElement('div');
+      scroll.className = 'schedule-calendar-scroll';
+      const grid = document.createElement('div');
+      grid.className = 'schedule-calendar-grid';
+      const header = document.createElement('div');
+      header.className = 'schedule-calendar-header';
+      const timeHeader = document.createElement('div');
+      timeHeader.className = 'schedule-calendar-day-heading';
+      timeHeader.textContent = 'TIME';
+      header.append(timeHeader);
+      calendarDays.forEach((day) => {
+        const heading = document.createElement('div');
+        heading.className = 'schedule-calendar-day-heading';
+        heading.textContent = day.slice(0, 3).toUpperCase();
+        heading.title = day;
+        header.append(heading);
+      });
+      grid.append(header);
+
+      const body = document.createElement('div');
+      body.className = 'schedule-calendar-body';
+      grid.append(body);
+      scroll.append(grid);
+      scheduleCalendarMap.append(scroll);
+      const availableGridHeight = scroll.clientHeight - header.offsetHeight;
+      const rowHeight = Math.max(
+        12,
+        Math.min(40, Math.floor((availableGridHeight || window.innerHeight - 300) / slotCount))
+      );
+      body.style.gridTemplateRows = `repeat(${slotCount}, ${rowHeight}px)`;
+      body.style.minHeight = `${slotCount * rowHeight}px`;
+      body.style.setProperty('--schedule-row-height', `${rowHeight}px`);
+      for (let offset = 0; offset < slotCount; offset += 1) {
+        const slotStart = calendarStart + offset * slotMinutes;
+        const label = document.createElement('div');
+        label.className = 'schedule-calendar-time';
+        label.style.gridColumn = '1';
+        label.style.gridRow = String(offset + 1);
+        label.textContent = formatSlotTime(slotStart);
+        body.append(label);
+      }
+
+      calendarDays.forEach((day, dayIndex) => {
+        const column = document.createElement('div');
+        column.className = 'schedule-calendar-day-column';
+        column.dataset.day = day;
+        column.style.height = `${slotCount * rowHeight}px`;
+        column.style.gridColumn = String(dayIndex + 2);
+        body.append(column);
+      });
+
+      timedWeekdaySchedules.forEach((schedule) => {
+        const weekday = getScheduleWeekdayIndex(schedule.dayOfWeek);
+        const start = getTime(schedule, 'startTime');
+        const end = getTime(schedule, 'endTime');
+        const visibleStart = Math.max(start, calendarStart);
+        const visibleEnd = Math.min(end, calendarEnd);
+        if (weekday < 0 || weekday >= calendarDays.length || visibleEnd <= visibleStart) return;
+        const column = body.querySelector(`[data-day="${calendarDays[weekday]}"]`);
+        if (!column) return;
+        const event = document.createElement('button');
+        event.type = 'button';
+        event.className = `schedule-calendar-entry${getScheduleLiveState(schedule, now).live ? ' is-live' : ''}`;
+        event.dataset.calendarScheduleId = String(schedule.id);
+        const color = /^#[\da-f]{6}$/i.test(String(schedule.scheduleColor || ''))
+          ? schedule.scheduleColor
+          : '#16a34a';
+        const textColor = getReadableScheduleTextColor(color);
+        event.style.backgroundColor = color;
+        event.style.color = textColor;
+        event.style.borderColor = textColor === '#ffffff' ? 'rgba(255,255,255,.55)' : 'rgba(7,20,14,.42)';
+        const eventHeight = Math.max(1, ((visibleEnd - visibleStart) / slotMinutes) * rowHeight - 2);
+        event.style.top = `${((visibleStart - calendarStart) / slotMinutes) * rowHeight + 1}px`;
+        event.style.height = `${eventHeight}px`;
+        event.title = [
+          schedule.subject || 'Laboratory session',
+          getScheduleSectionLabel(schedule),
+          schedule.instructor || 'No instructor',
+          schedule.laboratoryRoom || 'Room not set',
+          `${formatSlotTime(start)} – ${formatSlotTime(end)}`
+        ].join(' · ');
+        event.setAttribute('aria-label', event.title);
+        const time = document.createElement('span');
+        time.className = 'schedule-calendar-time-label';
+        time.textContent = `${formatSlotTime(start)}–${formatSlotTime(end)}`;
+        const status = document.createElement('span');
+        status.dataset.calendarStatus = '';
+        status.textContent = getScheduleLiveState(schedule, now).live ? 'LIVE' : 'UPCOMING';
+        time.append(status);
+        const subject = document.createElement('strong');
+        subject.textContent = schedule.subject || 'Laboratory session';
+        const section = document.createElement('span');
+        section.textContent = getScheduleSectionLabel(schedule);
+        if (eventHeight >= rowHeight * 1.5) event.append(time);
+        event.append(subject);
+        if (eventHeight >= rowHeight * 2.5) {
+          const room = document.createElement('span');
+          room.textContent = schedule.laboratoryRoom || 'Room not set';
+          const instructor = document.createElement('span');
+          instructor.textContent = schedule.instructor || 'No instructor';
+          instructor.title = instructor.textContent;
+          event.append(section, room, instructor);
+        } else if (eventHeight >= rowHeight * 1.5) {
+          event.append(section);
+        }
+        event.addEventListener('click', () => openScheduleDetails(schedule));
+        event.addEventListener('contextmenu', (event) => {
+          event.preventDefault();
+          openScheduleDetails(schedule);
+        });
+        column.append(event);
+      });
+
+      if (!timedWeekdaySchedules.length) {
+        const empty = document.createElement('p');
+        empty.className = 'schedule-calendar-empty';
+        empty.textContent = 'No schedules match the selected filters.';
+        scheduleCalendarMap.append(empty);
+      }
+
+      const unplacedCount = mapSchedules.length - timedWeekdaySchedules.length;
+      scheduleCalendarMessage.textContent = `${mapSchedules.length} ${mapSchedules.length === 1 ? 'schedule' : 'schedules'} shown${unplacedCount ? ` · ${unplacedCount} ${unplacedCount === 1 ? 'schedule is' : 'schedules are'} outside Monday–Friday or have missing/invalid times` : ''}`;
+    }
+
+    async function loadScheduleCalendar() {
+      const loadId = ++calendarLoadId;
+      const query = scheduleSearch.value.trim().toLocaleLowerCase();
+      const instructor = scheduleMapInstructor.value;
+      const mapSchedules = schedules.filter((schedule) => {
+        const roomNumber = String(schedule.laboratoryRoom || '').match(/(?:laboratory|comlab)\s*([12])/i)?.[1] || '';
+        const matchesRoom = !selectedScheduleMapRoom || roomNumber === selectedScheduleMapRoom;
+        const matchesInstructor = instructor === '__mine__'
+          ? Boolean(schedule.isOwnSchedule)
+          : instructor === '__all__' || !instructor
+            ? true
+            : String(schedule.instructor || '') === instructor.slice('faculty:'.length);
+        const matchesYear = !scheduleYearFilter.value || String(schedule.yearLevel || '').trim() === scheduleYearFilter.value;
+        const matchesSection = !scheduleSectionFilter.value || String(schedule.section || '').trim() === scheduleSectionFilter.value;
+        const matchesSearch = !query || [
+          schedule.subject, schedule.instructor, schedule.yearLevel, schedule.section,
+          schedule.dayOfWeek, schedule.laboratoryRoom, schedule.campus
+        ].some((value) => String(value || '').toLocaleLowerCase().includes(query));
+        return matchesRoom && matchesInstructor && matchesYear && matchesSection && matchesSearch;
+      });
+      renderScheduleCalendar(mapSchedules, loadId);
+    }
+
+    function populateScheduleCalendarLaboratories() {
+      const selectedInstructor = scheduleMapInstructor.value;
+      const instructors = [...new Set(schedules
+        .filter((schedule) => !schedule.isOwnSchedule)
+        .map((schedule) => String(schedule.instructor || '').trim())
+        .filter(Boolean))]
+        .sort((first, second) => first.localeCompare(second));
+      scheduleMapInstructor.replaceChildren(
+        new Option('My Schedule', '__mine__'),
+        new Option('All Schedules', '__all__')
+      );
+      instructors.forEach((instructor) => {
+        const option = document.createElement('option');
+        option.value = `faculty:${instructor}`;
+        option.textContent = instructor;
+        scheduleMapInstructor.append(option);
+      });
+      const validSelection = selectedInstructor === '__mine__' || selectedInstructor === '__all__' ||
+        instructors.some((instructor) => selectedInstructor === `faculty:${instructor}`);
+      scheduleMapInstructor.value = validSelection ? selectedInstructor : '__mine__';
+    }
+
+    function addScheduleText(parent, className, value) {
+      const element = document.createElement('p');
+      element.className = className;
+      element.textContent = value;
+      parent.append(element);
+      return element;
+    }
+
+    function compareScheduleYears(left, right) {
+      const getYearNumber = (value) => {
+        const normalized = String(value || '').trim().toLocaleLowerCase();
+        const numeric = normalized.match(/\b([1-4])(?:st|nd|rd|th)?\b/);
+        if (numeric) return Number(numeric[1]);
+        const wordYears = { first: 1, second: 2, third: 3, fourth: 4 };
+        const word = Object.keys(wordYears).find((name) => normalized.includes(name));
+        return word ? wordYears[word] : 99;
+      };
+      return getYearNumber(left) - getYearNumber(right) || String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function populateScheduleFilters() {
+      const selectedYear = scheduleYearFilter.value;
+      const selectedSection = scheduleSectionFilter.value;
+      const years = [...new Set(schedules.map((schedule) => String(schedule.yearLevel || '').trim()).filter(Boolean))]
+        .sort(compareScheduleYears);
+      scheduleYearFilter.replaceChildren(new Option('All years', ''));
+      years.forEach((year) => scheduleYearFilter.add(new Option(year, year)));
+      scheduleYearFilter.value = years.includes(selectedYear) ? selectedYear : '';
+
+      const eligibleSchedules = scheduleYearFilter.value
+        ? schedules.filter((schedule) => String(schedule.yearLevel || '').trim() === scheduleYearFilter.value)
+        : schedules;
+      const sections = [...new Set(eligibleSchedules.map((schedule) => String(schedule.section || '').trim()).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' }));
+      scheduleSectionFilter.replaceChildren(new Option('All sections', ''));
+      sections.forEach((section) => scheduleSectionFilter.add(new Option(section, section)));
+      scheduleSectionFilter.value = sections.includes(selectedSection) ? selectedSection : '';
+    }
+
+    function renderSchedules() {
+      const query = scheduleSearch.value.trim().toLocaleLowerCase();
+      const filtered = schedules.filter((schedule) =>
+        (!scheduleYearFilter.value || String(schedule.yearLevel || '').trim() === scheduleYearFilter.value) &&
+        (!scheduleSectionFilter.value || String(schedule.section || '').trim() === scheduleSectionFilter.value) &&
+        [schedule.subject, schedule.instructor, schedule.yearLevel, schedule.section, schedule.dayOfWeek, schedule.laboratoryRoom, schedule.campus]
+          .some((value) => String(value || '').toLocaleLowerCase().includes(query))
+      );
+
+      scheduleCount.textContent = `${filtered.length} ${filtered.length === 1 ? 'schedule' : 'schedules'} shown`;
+      scheduleList.replaceChildren();
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'faculty-surface schedule-empty-state col-span-full text-center';
+        const icon = document.createElement('span');
+        icon.className = 'schedule-empty-icon mx-auto grid place-items-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300';
+        icon.innerHTML = '<i class="fas fa-calendar-xmark" aria-hidden="true"></i>';
+        empty.append(icon);
+        addScheduleText(empty, 'schedule-empty-title mt-3 font-bold text-white', query ? 'No matching schedules' : 'No schedules assigned');
+        addScheduleText(empty, 'schedule-empty-description text-slate-400', query
+          ? 'Try another subject, day, or room.'
+          : 'Your assigned schedules will appear here.');
+        scheduleList.append(empty);
+        return;
+      }
+
+      filtered.forEach((schedule) => {
+        const card = document.createElement('article');
+        card.className = 'schedule-card p-3 sm:p-4';
+        card.dataset.scheduleId = String(schedule.id);
+        card.tabIndex = 0;
+        card.setAttribute('aria-haspopup', 'dialog');
+        card.setAttribute('aria-label', `View schedule details for ${schedule.subject || 'laboratory session'}`);
+        card.addEventListener('click', (event) => {
+          if (event.target.closest('button, a, input, select, textarea')) return;
+          openScheduleDetails(schedule);
+        });
+        card.addEventListener('keydown', (event) => {
+          if (event.target !== card || (event.key !== 'Enter' && event.key !== ' ')) return;
+          event.preventDefault();
+          openScheduleDetails(schedule);
+        });
+        const main = document.createElement('div');
+        main.className = 'schedule-card-main';
+        const date = document.createElement('div');
+        date.className = 'schedule-card-date';
+        const day = document.createElement('span');
+        day.className = 'schedule-card-date-day';
+        day.textContent = String(schedule.dayOfWeek || 'Day').slice(0, 3);
+        const divider = document.createElement('span');
+        divider.className = 'schedule-card-date-divider';
+        divider.textContent = '—';
+        const startTime = document.createElement('span');
+        startTime.className = 'schedule-card-date-time';
+        startTime.textContent = schedule.startTime || 'Time TBD';
+        date.append(day, divider, startTime);
+
+        const copy = document.createElement('div');
+        copy.className = 'schedule-card-copy';
+        const titleRow = document.createElement('div');
+        titleRow.className = 'flex min-w-0 items-center justify-between gap-2';
+        const subject = document.createElement('h3');
+        subject.className = 'text-base font-bold text-white';
+        subject.textContent = schedule.subject || 'Laboratory session';
+        const state = getScheduleLiveState(schedule);
+        card.classList.toggle('is-live', state.live);
+        const status = document.createElement('span');
+        status.className = `schedule-status${state.live ? ' is-live' : ''}`;
+        status.textContent = state.live ? 'LIVE' : 'UPCOMING';
+        titleRow.append(subject, status);
+        copy.append(titleRow);
+        const classSection = getScheduleSectionLabel(schedule);
+        if (classSection !== 'Year/section not set') {
+          const section = document.createElement('p');
+          section.className = 'schedule-section text-base font-semibold text-emerald-200';
+          section.textContent = classSection;
+          copy.append(section);
+        }
+        const location = document.createElement('p');
+        location.className = 'schedule-location text-sm font-medium text-emerald-100';
+        const locationIcon = document.createElement('i');
+        locationIcon.className = 'fas fa-location-dot text-emerald-300';
+        locationIcon.setAttribute('aria-hidden', 'true');
+        const locationText = document.createElement('span');
+        locationText.textContent = schedule.laboratoryRoom || 'Room not set';
+        location.append(locationIcon, locationText);
+        copy.append(location);
+        const instructor = document.createElement('p');
+        instructor.className = 'schedule-card-instructor';
+        const instructorIcon = document.createElement('i');
+        instructorIcon.className = 'fas fa-user-tie text-emerald-300';
+        instructorIcon.setAttribute('aria-hidden', 'true');
+        const instructorName = document.createElement('span');
+        instructorName.textContent = schedule.instructor || 'Instructor not set';
+        instructor.append(instructorIcon, instructorName);
+        copy.append(instructor);
+        const time = document.createElement('p');
+        time.className = 'schedule-time text-sm font-medium text-emerald-200';
+        const timeIcon = document.createElement('i');
+        timeIcon.className = 'far fa-clock text-emerald-300';
+        timeIcon.setAttribute('aria-hidden', 'true');
+        const timeText = document.createElement('span');
+        timeText.textContent = [schedule.startTime, schedule.endTime].filter(Boolean).join(' – ') || 'Time not set';
+        time.append(timeIcon, timeText);
+        copy.append(time);
+        const enrollment = document.createElement('p');
+        enrollment.className = 'schedule-card-enrollment';
+        const enrollmentIcon = document.createElement('i');
+        enrollmentIcon.className = 'fas fa-user-group text-emerald-300';
+        enrollmentIcon.setAttribute('aria-hidden', 'true');
+        const enrollmentText = document.createElement('span');
+        const enrolledCount = Number(schedule.classListCount || 0);
+        enrollmentText.textContent = `${enrolledCount} enrolled ${enrolledCount === 1 ? 'student' : 'students'}`;
+        enrollment.append(enrollmentIcon, enrollmentText);
+        copy.append(enrollment);
+
+        const chevron = document.createElement('i');
+        chevron.className = 'schedule-card-chevron fas fa-chevron-right';
+        chevron.setAttribute('aria-hidden', 'true');
+        main.append(date, copy, chevron);
+        card.append(main);
+
+        const progress = document.createElement('div');
+        progress.className = 'schedule-live-progress';
+        progress.hidden = !state.live;
+        progress.setAttribute('role', 'progressbar');
+        progress.setAttribute('aria-label', 'Session progress');
+        progress.setAttribute('aria-valuemin', '0');
+        progress.setAttribute('aria-valuemax', '100');
+        progress.setAttribute('aria-valuenow', String(Math.round(state.progress)));
+        const progressFill = document.createElement('span');
+        progressFill.style.width = `${state.progress}%`;
+        progress.append(progressFill);
+        card.append(progress);
+
+        const footer = document.createElement('div');
+        footer.className = 'schedule-card-footer mt-4 flex items-center justify-between gap-3 border-t border-emerald-400/10 pt-3';
+        const statusHint = document.createElement('span');
+        statusHint.className = 'schedule-card-footer-hint flex items-center gap-1.5 font-medium text-emerald-300';
+        statusHint.dataset.scheduleFooterLabel = '';
+        statusHint.textContent = state.live ? 'Class in progress' : 'Click to view details';
+        footer.append(statusHint);
+        const actions = document.createElement('div');
+        actions.className = 'flex flex-wrap items-center justify-end gap-2';
+        const rosterButton = document.createElement('button');
+        rosterButton.className = 'schedule-roster-action';
+        rosterButton.type = 'button';
+        rosterButton.textContent = 'View Roster';
+        rosterButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openScheduleRoster(schedule);
+        });
+        const editButton = document.createElement('button');
+        editButton.className = 'schedule-roster-action';
+        editButton.type = 'button';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          window.openFacultyScheduleEditor(schedule);
+        });
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'schedule-roster-action';
+        deleteButton.type = 'button';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          window.removeFacultySchedule(schedule);
+        });
+        actions.append(rosterButton, editButton, deleteButton);
+        footer.append(actions);
+        card.append(footer);
+        scheduleList.append(card);
+      });
+    }
+
+    async function loadSchedules() {
+      try {
+        const response = await fetch('/api/laboratory-schedules', { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !Array.isArray(payload)) {
+          throw new Error(payload?.error || 'Unable to load your laboratory schedules.');
+        }
+        schedules = payload;
+        populateScheduleFilters();
+        populateScheduleCalendarLaboratories();
+        renderSchedules();
+        if (!scheduleCalendarView.classList.contains('schedule-view-hidden')) loadScheduleCalendar();
+      } catch (error) {
+        scheduleList.replaceChildren();
+        scheduleCount.textContent = 'Schedules unavailable';
+        scheduleError.textContent = error.message || 'Unable to load schedules. Refresh the page to try again.';
+        scheduleError.classList.remove('hidden');
+        console.error('Failed to load Faculty schedules:', error);
+      }
+    }
+
+    scheduleSearch.addEventListener('input', () => {
+      renderSchedules();
+      if (!scheduleCalendarView.classList.contains('schedule-view-hidden')) loadScheduleCalendar();
+    });
+    scheduleYearFilter.addEventListener('change', () => {
+      populateScheduleFilters();
+      renderSchedules();
+      loadScheduleCalendar();
+    });
+    scheduleSectionFilter.addEventListener('change', () => {
+      renderSchedules();
+      loadScheduleCalendar();
+    });
+    scheduleMapInstructor.addEventListener('change', loadScheduleCalendar);
+    scheduleMapRoomButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        selectedScheduleMapRoom = button.dataset.scheduleMapRoom || '';
+        scheduleMapRoomButtons.forEach((item) => {
+          const active = item === button;
+          item.classList.toggle('is-active', active);
+          item.setAttribute('aria-pressed', String(active));
+        });
+        loadScheduleCalendar();
+      });
+    });
+    document.querySelectorAll('[data-close-schedule-modal]').forEach((button) => {
+      button.addEventListener('click', () => closeScheduleModal(button.closest('.faculty-modal')));
+    });
+    document.querySelectorAll('.faculty-modal').forEach((modal) => {
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeScheduleModal(modal);
+      });
+    });
+    document.getElementById('regenerateScheduleQr').addEventListener('click', () => {
+      if (!activeQrSchedule) return;
+      const selectedStudentIds = [...document.querySelectorAll('[data-byod-student]:checked')]
+        .map((checkbox) => Number(checkbox.value));
+      if (selectedStudentIds.length) generateScheduleQr(activeQrSchedule, selectedStudentIds);
+      else loadScheduleQrRoster(activeQrSchedule);
+    });
+    document.getElementById('scheduleQrStudentList').addEventListener('change', updateByodQrSelection);
+    document.getElementById('generateByodScheduleQr').addEventListener('click', () => {
+      if (!activeQrSchedule) return;
+      const selectedStudentIds = [...document.querySelectorAll('[data-byod-student]:checked')]
+        .map((checkbox) => Number(checkbox.value));
+      if (selectedStudentIds.length) generateScheduleQr(activeQrSchedule, selectedStudentIds);
+    });
+    document.getElementById('chooseByodScheduleStudents').addEventListener('click', () => {
+      document.getElementById('scheduleQrRosterPicker').classList.remove('hidden');
+      document.getElementById('scheduleQrContent').classList.add('hidden');
+      document.getElementById('chooseByodScheduleStudents').classList.add('hidden');
+      updateByodQrSelection();
+    });
+    document.getElementById('previousScheduleQr').addEventListener('click', () => {
+      if (scheduleQrIndex > 0) {
+        scheduleQrIndex -= 1;
+        renderScheduleQrCode();
+      }
+    });
+    document.getElementById('nextScheduleQr').addEventListener('click', () => {
+      if (scheduleQrIndex < scheduleQrCodes.length - 1) {
+        scheduleQrIndex += 1;
+        renderScheduleQrCode();
+      }
+    });
+    document.querySelectorAll('[data-schedule-detail-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!activeDetailsSchedule) return;
+        const schedule = activeDetailsSchedule;
+        closeScheduleModal(document.getElementById('scheduleDetailsModal'));
+        const action = button.dataset.scheduleDetailAction;
+        if (action === 'seating') openScheduleSeatMap(schedule);
+      });
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      document.querySelectorAll('.faculty-modal:not(.hidden)').forEach(closeScheduleModal);
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateScheduleLiveStates();
+    });
+    window.setInterval(updateScheduleLiveStates, 60000);
+    loadSchedules();
+  </script>
+  <script>
+    (() => {
+      const currentUser = window.__CURRENT_USER__ || {};
+      const currentRole = String(currentUser.role || currentUser.userRole || '').trim().toLowerCase().replace(/[_-]+/g, '');
+      const createScheduleModal = document.getElementById('createScheduleModal');
+      const createScheduleForm = document.getElementById('createScheduleForm');
+      const scheduleRosterFile = document.getElementById('scheduleRosterFile');
+      const scheduleRosterFileName = document.getElementById('scheduleRosterFileName');
+      const createScheduleMessage = document.getElementById('createScheduleMessage');
+      const saveScheduleButton = document.getElementById('saveCreateSchedule');
+      let editingScheduleId = null;
+      let successToastTimeout = 0;
+
+      if (!['faculty', 'instructor'].includes(currentRole)) return;
+
+      const laboratorySelect = createScheduleForm?.elements?.laboratoryRoom;
+      if (laboratorySelect) {
+        fetch('/api/computer-labs', { credentials: 'same-origin', cache: 'no-store' })
+          .then((response) => response.ok ? response.json() : [])
+          .then((labs) => {
+            if (!Array.isArray(labs)) return;
+            const selectedValue = laboratorySelect.value;
+            laboratorySelect.replaceChildren(new Option('Select a computer lab', ''));
+            labs.forEach((lab) => {
+              const label = [lab.name, lab.roomNumbers?.[0] || lab.roomNumber].filter(Boolean).join(' — ');
+              laboratorySelect.add(new Option(label, label));
+            });
+            if ([...laboratorySelect.options].some((option) => option.value === selectedValue)) {
+              laboratorySelect.value = selectedValue;
+            }
+          })
+          .catch((error) => console.warn('Could not load registered computer labs:', error));
+      }
+
+      function showMessage(message, type = 'error') {
+        createScheduleMessage.textContent = message;
+        createScheduleMessage.dataset.type = type;
+        createScheduleMessage.classList.remove('hidden');
+      }
+
+      function clearMessage() {
+        createScheduleMessage.textContent = '';
+        createScheduleMessage.classList.add('hidden');
+        delete createScheduleMessage.dataset.type;
+      }
+
+      function showSuccessToast(message) {
+        const toast = document.getElementById('scheduleSuccess');
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        window.clearTimeout(successToastTimeout);
+        successToastTimeout = window.setTimeout(() => toast.classList.add('hidden'), 6000);
+      }
+
+      function fillTimeOptions() {
+        const startSelect = createScheduleForm.elements.startTime;
+        const endSelect = createScheduleForm.elements.endTime;
+        const times = [];
+        for (let minutes = 7 * 60 + 30; minutes <= 17 * 60 + 30; minutes += 30) {
+          const hour = String(Math.floor(minutes / 60)).padStart(2, '0');
+          const minute = String(minutes % 60).padStart(2, '0');
+          const value = `${hour}:${minute}`;
+          const displayHour = ((Math.floor(minutes / 60) + 11) % 12) + 1;
+          const display = `${displayHour}:${minute} ${minutes < 12 * 60 ? 'AM' : 'PM'}`;
+          times.push({ value, display, minutes });
+        }
+        [[startSelect, 'Select Start Time'], [endSelect, 'Select End Time']].forEach(([select, placeholder]) => {
+          select.replaceChildren(new Option(placeholder, ''));
+          times.forEach((time) => select.add(new Option(time.display, time.value)));
+        });
+        startSelect.addEventListener('change', () => {
+          const selectedEnd = endSelect.value;
+          const minEnd = times.findIndex((time) => time.value === startSelect.value) + 1;
+          endSelect.replaceChildren(new Option('Select End Time', ''));
+          times.slice(minEnd).forEach((time) => endSelect.add(new Option(time.display, time.value)));
+          if (times.slice(minEnd).some((time) => time.value === selectedEnd)) endSelect.value = selectedEnd;
+        });
+      }
+
+      fillTimeOptions();
+
+      const campus = String(currentUser.campus || 'Bongabong').replace(/\s*Campus\s*$/i, '').trim();
+      document.getElementById('scheduleCampus').value = campus || 'Bongabong';
+      const scheduleColor = document.getElementById('scheduleColor');
+      const scheduleColorHex = document.getElementById('scheduleColorHex');
+      scheduleColor.addEventListener('input', () => {
+        scheduleColorHex.textContent = scheduleColor.value.toUpperCase();
+      });
+
+      window.openFacultyScheduleEditor = (schedule) => {
+        editingScheduleId = schedule.id;
+        createScheduleForm.reset();
+        createScheduleForm.elements.dayOfWeek.value = schedule.dayOfWeek || '';
+        createScheduleForm.elements.laboratoryRoom.value = schedule.laboratoryRoom || '';
+        createScheduleForm.elements.subject.value = schedule.subject || '';
+        createScheduleForm.elements.yearLevel.value = schedule.yearLevel || '';
+        createScheduleForm.elements.section.value = schedule.section || '';
+        createScheduleForm.elements.startTime.value = String(schedule.startTime || '').slice(0, 5);
+        createScheduleForm.elements.endTime.value = String(schedule.endTime || '').slice(0, 5);
+        scheduleColor.value = schedule.scheduleColor || '#16a34a';
+        scheduleColorHex.textContent = scheduleColor.value.toUpperCase();
+        document.getElementById('scheduleCampus').value = campus || 'Bongabong';
+        document.getElementById('createScheduleTitle').textContent = 'Edit Lab Schedule';
+        saveScheduleButton.textContent = 'Save Changes';
+        scheduleRosterFileName.textContent = 'No file selected.';
+        document.getElementById('scheduleSuccess').classList.add('hidden');
+        clearMessage();
+        openScheduleModal(createScheduleModal);
+        createScheduleForm.elements.subject.focus();
+      };
+
+      window.removeFacultySchedule = async (schedule) => {
+        if (!window.confirm('Delete this schedule? It will be archived and can be restored by an administrator.')) return;
+        try {
+          const response = await fetch(`/api/archive/laboratory-schedule/${encodeURIComponent(schedule.id)}`, {
+            method: 'POST',
+            credentials: 'same-origin'
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) throw new Error(payload?.error || 'Unable to delete this schedule.');
+          schedules = schedules.filter((item) => String(item.id) !== String(schedule.id));
+          populateScheduleCalendarLaboratories();
+          renderSchedules();
+          if (!scheduleCalendarView.classList.contains('schedule-view-hidden')) loadScheduleCalendar();
+          showSuccessToast('Schedule deleted and archived successfully.');
+          scheduleError.classList.add('hidden');
+        } catch (error) {
+          scheduleError.textContent = error.message || 'Unable to delete this schedule.';
+          scheduleError.classList.remove('hidden');
+        }
+      };
+
+      scheduleRosterFile.addEventListener('change', () => {
+        const file = scheduleRosterFile.files?.[0];
+        scheduleRosterFileName.textContent = file ? `${file.name} · ${(file.size / 1024).toFixed(1)} KB` : 'No file selected.';
+        if (!file) return;
+        if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
+          scheduleRosterFile.value = '';
+          scheduleRosterFileName.textContent = 'No file selected.';
+          showMessage('Choose an .xlsx, .xls, or .csv class list.');
+          return;
+        }
+        clearMessage();
+      });
+
+      createScheduleForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearMessage();
+        document.getElementById('scheduleSuccess').classList.add('hidden');
+        if (!editingScheduleId) {
+          showMessage('Only an administrator can create laboratory schedules.');
+          return;
+        }
+        if (!createScheduleForm.reportValidity()) return;
+        if (createScheduleForm.elements.startTime.value >= createScheduleForm.elements.endTime.value) {
+          showMessage('End Time must be later than Start Time.');
+          return;
+        }
+        saveScheduleButton.disabled = true;
+        saveScheduleButton.textContent = editingScheduleId ? 'Saving changes…' : 'Creating schedule…';
+        const formData = new FormData(createScheduleForm);
+        try {
+          const response = await fetch(editingScheduleId
+            ? `/api/laboratory-schedules/${encodeURIComponent(editingScheduleId)}`
+            : '/api/laboratory-schedules', {
+            method: editingScheduleId ? 'PUT' : 'POST',
+            body: formData,
+            credentials: 'same-origin'
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) {
+            throw new Error(payload?.message || payload?.error || 'Unable to save the laboratory schedule.');
+          }
+          closeScheduleModal(createScheduleModal);
+          createScheduleForm.reset();
+          scheduleRosterFileName.textContent = 'No file selected.';
+          scheduleColorHex.textContent = scheduleColor.value.toUpperCase();
+          document.getElementById('scheduleCampus').value = campus || 'Bongabong';
+          clearMessage();
+          await loadSchedules();
+          showSuccessToast((editingScheduleId
+            ? 'Laboratory schedule updated successfully.'
+            : 'Laboratory schedule created successfully.') + (payload?.warning ? ` ${payload.warning}` : ''));
+          editingScheduleId = null;
+        } catch (error) {
+          showMessage(error.message || 'Unable to save the laboratory schedule.');
+        } finally {
+          saveScheduleButton.disabled = false;
+          saveScheduleButton.textContent = editingScheduleId ? 'Save Changes' : 'Create Schedule';
+        }
+      });
+    })();
+  </script>
+  <script>
+    (() => {
+      const modal = document.getElementById('scheduleRosterModal');
+      const rows = document.getElementById('manageRosterRows');
+      const count = document.getElementById('manageRosterCount');
+      const search = document.getElementById('manageRosterSearch');
+      const suggestions = document.getElementById('manageRosterSuggestions');
+      const message = document.getElementById('manageRosterMessage');
+      const saveButton = document.getElementById('saveManagedRoster');
+      let activeSchedule = null;
+      let roster = [];
+      let showSamplePreview = false;
+      let searchTimer = 0;
+      let searchController = null;
+
+      function showRosterMessage(text, error = false) {
+        message.textContent = text;
+        message.dataset.type = error ? 'error' : 'success';
+        message.classList.remove('hidden');
+      }
+
+      function clearRosterMessage() {
+        message.textContent = '';
+        message.classList.add('hidden');
+        delete message.dataset.type;
+      }
+
+      function renderManagedRoster() {
+        rows.replaceChildren();
+        if (!roster.length) {
+          const row = document.createElement('tr');
+          if (showSamplePreview) {
+            row.className = 'schedule-roster-sample-row';
+            const studentId = document.createElement('td');
+            studentId.textContent = 'SAMPLE-001';
+            const studentName = document.createElement('td');
+            studentName.textContent = 'Sample Student';
+            const section = document.createElement('td');
+            section.textContent = [activeSchedule?.yearLevel, activeSchedule?.section].filter(Boolean).join(' · ') || 'Year/section not set';
+            const preview = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = 'schedule-roster-preview-badge';
+            badge.textContent = 'PREVIEW';
+            preview.append(badge);
+            row.append(studentId, studentName, section, preview);
+          } else {
+            const cell = document.createElement('td');
+            cell.colSpan = 4;
+            cell.className = 'text-center text-emerald-100/70';
+            cell.textContent = 'No students are enrolled in this class yet.';
+            row.append(cell);
+          }
+          rows.append(row);
+          saveButton.disabled = showSamplePreview;
+        } else {
+          saveButton.disabled = false;
+          roster.forEach((student, index) => {
+            const row = document.createElement('tr');
+            [['studentId', 'Student ID'], ['fullName', 'Student name'], ['section', 'Section']].forEach(([field, label]) => {
+              const cell = document.createElement('td');
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = student[field] || '';
+              input.setAttribute('aria-label', `${label} for roster entry ${index + 1}`);
+              input.addEventListener('input', () => {
+                student[field] = input.value.trim();
+              });
+              cell.append(input);
+              row.append(cell);
+            });
+            const actionCell = document.createElement('td');
+            const removeButton = document.createElement('button');
+            removeButton.className = 'schedule-roster-remove';
+            removeButton.type = 'button';
+            removeButton.textContent = 'Remove';
+            removeButton.setAttribute('aria-label', `Remove ${student.fullName || student.studentId} from roster`);
+            removeButton.addEventListener('click', () => {
+              roster.splice(index, 1);
+              renderManagedRoster();
+              clearRosterMessage();
+            });
+            actionCell.append(removeButton);
+            row.append(actionCell);
+            rows.append(row);
+          });
+        }
+        count.textContent = showSamplePreview && !roster.length
+          ? '0 students enrolled · sample preview only'
+          : `${roster.length} ${roster.length === 1 ? 'student' : 'students'} enrolled`;
+      }
+
+      function addManagedStudent(student) {
+        const studentId = String(student.studentId || '').trim();
+        const fullName = String(student.name || student.fullName || '').trim();
+        const normalize = (value) => String(value || '').trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+        const duplicate = roster.some((entry) =>
+          (studentId && entry.studentId && normalize(studentId) === normalize(entry.studentId)) ||
+          (fullName && entry.fullName && normalize(fullName) === normalize(entry.fullName))
+        );
+        if (duplicate) return false;
+        showSamplePreview = false;
+        roster.push({
+          studentId,
+          fullName,
+          section: String(student.section || activeSchedule?.section || '').trim(),
+          year: String(student.year || activeSchedule?.yearLevel || '').trim(),
+          program: String(student.program || '').trim(),
+          email: String(student.email || '').trim()
+        });
+        renderManagedRoster();
+        return true;
+      }
+
+      async function openScheduleRoster(schedule) {
+        activeSchedule = schedule;
+        roster = [];
+        showSamplePreview = false;
+        saveButton.disabled = true;
+        clearRosterMessage();
+        search.value = '';
+        suggestions.replaceChildren();
+        suggestions.classList.add('hidden');
+        document.getElementById('scheduleRosterTitle').textContent = 'View Roster';
+        document.getElementById('scheduleRosterSubtitle').textContent =
+          `${schedule.subject || 'Class'} · ${schedule.dayOfWeek || 'Day TBD'} · ${schedule.laboratoryRoom || 'Laboratory TBD'}`;
+        count.textContent = 'Loading roster…';
+        rows.replaceChildren();
+        openScheduleModal(modal);
+        try {
+          const response = await fetch(`/api/laboratory-schedules/${encodeURIComponent(schedule.id)}/roster`, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !Array.isArray(payload)) {
+            throw new Error(payload?.error || 'Unable to load this class roster.');
+          }
+          if (activeSchedule?.id !== schedule.id) return;
+          roster = payload.map((student) => ({
+            studentId: student.studentId || '',
+            fullName: student.fullName || '',
+            section: student.section || '',
+            year: student.year || '',
+            program: student.program || ''
+          }));
+          showSamplePreview = roster.length === 0;
+          renderManagedRoster();
+        } catch (error) {
+          count.textContent = 'Roster unavailable';
+          saveButton.disabled = false;
+          showRosterMessage(error.message || 'Unable to load this class roster.', true);
+        }
+      }
+
+      window.openScheduleRoster = openScheduleRoster;
+
+      search.addEventListener('input', () => {
+        window.clearTimeout(searchTimer);
+        if (searchController) searchController.abort();
+        const query = search.value.trim();
+        suggestions.replaceChildren();
+        suggestions.classList.add('hidden');
+        if (query.length < 2) return;
+        searchTimer = window.setTimeout(async () => {
+          searchController = new AbortController();
+          try {
+            const response = await fetch(`/api/faculty/schedule-students?q=${encodeURIComponent(query)}`, {
+              cache: 'no-store',
+              credentials: 'same-origin',
+              signal: searchController.signal
+            });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Student search failed.');
+            suggestions.replaceChildren();
+            if (!Array.isArray(payload) || !payload.length) {
+              const empty = document.createElement('p');
+              empty.className = 'px-3 py-2 text-sm text-emerald-100/70';
+              empty.textContent = 'No matching students found.';
+              suggestions.append(empty);
+            } else {
+              payload.forEach((student) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'schedule-roster-suggestion';
+                option.setAttribute('role', 'option');
+                option.textContent = `${student.studentId || 'No ID'} — ${student.name}${student.section ? ` (${student.section})` : ''}`;
+                option.addEventListener('click', () => {
+                  if (!addManagedStudent(student)) showRosterMessage('That student is already in the roster.', true);
+                  else clearRosterMessage();
+                  search.value = '';
+                  suggestions.classList.add('hidden');
+                  search.focus();
+                });
+                suggestions.append(option);
+              });
+            }
+            suggestions.classList.remove('hidden');
+          } catch (error) {
+            if (error.name !== 'AbortError') showRosterMessage(error.message || 'Student search failed.', true);
+          }
+        }, 250);
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!search.contains(event.target) && !suggestions.contains(event.target)) {
+          suggestions.classList.add('hidden');
+        }
+      });
+
+      saveButton.addEventListener('click', async () => {
+        if (!activeSchedule || (showSamplePreview && !roster.length)) return;
+        clearRosterMessage();
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving roster…';
+        try {
+          const response = await fetch(`/api/laboratory-schedules/${encodeURIComponent(activeSchedule.id)}/roster`, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ students: roster })
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) throw new Error(payload?.error || 'Unable to save this class roster.');
+          activeSchedule.classListCount = payload.studentCount;
+          schedules = schedules.map((schedule) => schedule.id === activeSchedule.id
+            ? { ...schedule, classListCount: payload.studentCount }
+            : schedule);
+          renderSchedules();
+          closeScheduleModal(modal);
+        } catch (error) {
+          showRosterMessage(error.message || 'Unable to save this class roster.', true);
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Save Roster';
+        }
+      });
+    })();
+  </script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+</body>
+</html>

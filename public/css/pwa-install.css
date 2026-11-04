@@ -1,0 +1,173 @@
+#comlabInstallBanner[hidden],
+#comlabInstallHelp[hidden],
+#comlabOpenAppPrompt[hidden],
+#comlabUpdateNotice[hidden] {
+  display: none !important;
+}
+
+#comlabInstallBanner,
+#comlabUpdateNotice {
+  position: fixed;
+  z-index: 2147483600;
+  box-sizing: border-box;
+  color: #effff4;
+  border: 1px solid rgba(110, 231, 183, .3);
+  background: linear-gradient(145deg, #103d2a, #062719 80%);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, .38);
+  font: 500 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#comlabInstallBanner {
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  width: min(460px, calc(100vw - 24px));
+  padding: 12px;
+  border-radius: 18px;
+  transform: translateX(-50%);
+  animation: comlab-pwa-enter .22s ease-out both;
+}
+
+#comlabInstallBanner img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+#comlabInstallBanner .comlab-install-copy { min-width: 0; }
+#comlabInstallBanner .comlab-install-title { display: block; padding-right: 18px; color: #f0fdf4; font-size: 14px; font-weight: 800; }
+#comlabInstallBanner .comlab-install-description { margin: 3px 0 0; color: #c7e6d2; font-size: 11px; line-height: 1.35; }
+#comlabInstallBanner .comlab-install-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #b8d7c4;
+  font-size: 19px;
+  cursor: pointer;
+}
+#comlabInstallBanner .comlab-install-close:hover { background: rgba(255,255,255,.1); color: #fff; }
+#comlabInstallButton,
+#comlabUpdateButton {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: #27c768;
+  color: #052719;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#comlabInstallButton:hover,
+#comlabUpdateButton:hover { background: #4ade80; }
+
+#comlabInstallHelp {
+  position: fixed;
+  z-index: 2147483601;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 10, 7, .76);
+  color: #f0fdf4;
+  font: 500 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  backdrop-filter: blur(5px);
+}
+#comlabInstallHelp .comlab-install-help-card {
+  width: min(100%, 390px);
+  padding: 22px;
+  border: 1px solid rgba(110, 231, 183, .34);
+  border-radius: 20px;
+  background: #0a2b1d;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, .45);
+}
+#comlabInstallHelp h2 { margin: 0; color: #f0fdf4; font-size: 18px; font-weight: 800; }
+#comlabInstallHelp p { margin: 10px 0 18px; color: #c7e6d2; }
+#comlabInstallHelp button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid rgba(110, 231, 183, .35);
+  border-radius: 11px;
+  background: #12432e;
+  color: #effff4;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+#comlabInstallHelp button:hover { background: #19583a; }
+#comlabInstallHelp .comlab-install-help-actions { display: flex; justify-content: flex-end; }
+
+#comlabOpenAppPrompt {
+  position: fixed;
+  z-index: 2147483602;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 10, 7, .72);
+  color: #effff4;
+  font: 500 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  backdrop-filter: blur(5px);
+}
+#comlabOpenAppPrompt .comlab-open-app-card {
+  width: min(100%, 410px);
+  padding: 24px;
+  border: 1px solid rgba(110, 231, 183, .34);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #103d2a, #062719 82%);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, .45);
+  text-align: center;
+}
+#comlabOpenAppPrompt img { width: 54px; height: 54px; margin-bottom: 8px; border-radius: 15px; }
+#comlabOpenAppPrompt h2 { margin: 0; color: #f0fdf4; font-size: 19px; font-weight: 800; }
+#comlabOpenAppPrompt p { margin: 9px 0 20px; color: #c7e6d2; font-size: 13px; }
+#comlabOpenAppPrompt .comlab-open-app-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; }
+#comlabOpenAppPrompt button {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid rgba(110, 231, 183, .38);
+  border-radius: 11px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+#comlabOpenAppPrompt .comlab-open-app-primary { background: #27c768; color: #052719; }
+#comlabOpenAppPrompt .comlab-open-app-primary:hover { background: #4ade80; }
+#comlabOpenAppPrompt .comlab-open-app-secondary { background: rgba(255,255,255,.06); color: #effff4; }
+#comlabOpenAppPrompt .comlab-open-app-secondary:hover { background: rgba(255,255,255,.13); }
+
+#comlabUpdateNotice {
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(430px, calc(100vw - 28px));
+  padding: 12px 14px;
+  border-radius: 15px;
+}
+#comlabUpdateNotice p { flex: 1; margin: 0; font-size: 12px; }
+
+@keyframes comlab-pwa-enter {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #comlabInstallBanner { animation: none; }
+}

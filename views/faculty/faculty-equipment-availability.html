@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equipment Availability | ComLab Faculty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=5">
+  <style>
+    body {
+      min-height: 100vh;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 5% 0%, rgba(34, 197, 94, .12), transparent 28rem),
+        linear-gradient(180deg, #020617 0%, #07111f 100%);
+    }
+
+    .main-container {
+      min-height: 100vh;
+      padding: 1.5rem .5rem 2.5rem;
+    }
+
+    .faculty-surface {
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: 1.25rem;
+      background: rgba(2, 6, 23, .92);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .18);
+    }
+
+    .availability-table-scroll {
+      max-height: calc(100vh - 24rem);
+      min-height: 14rem;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: rgba(74, 222, 128, .55) rgba(4, 20, 15, .8);
+      scrollbar-width: thin;
+    }
+
+    .availability-table-scroll thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #0a2419;
+    }
+
+    .availability-table-scroll::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .availability-table-scroll::-webkit-scrollbar-track {
+      background: rgba(4, 20, 15, .8);
+    }
+
+    .availability-table-scroll::-webkit-scrollbar-thumb {
+      border: 2px solid rgba(4, 20, 15, .8);
+      border-radius: 999px;
+      background: rgba(74, 222, 128, .55);
+    }
+
+    @media (max-width: 640px) {
+      .availability-table-scroll {
+        max-height: calc(100vh - 27rem);
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal faculty-page faculty-equipment-availability-page faculty-page-heading-page system-layout-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+
+  <div class="main-container">
+    <main class="mt-5 space-y-5">
+      <div class="system-dashboard-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+          <div class="student-page-user system-profile-badge">
+            <span class="system-profile-badge-avatar" data-user-initials>FC</span>
+            <span class="system-profile-badge-copy">
+              <span class="system-profile-badge-name" data-user-name>Faculty</span>
+              <span class="system-profile-badge-role" data-user-role>Faculty</span>
+            </span>
+          </div>
+          </a>
+        </div>
+      </div>
+      <section class="faculty-surface p-4 sm:p-5" aria-label="Availability summary">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-white">Campus equipment</h2>
+            <p class="mt-1 text-sm text-slate-400">Live availability based on equipment condition and active borrow requests.</p>
+          </div>
+          <a href="/faculty-borrow-equipment" class="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-emerald-950 hover:bg-emerald-400">
+            <i class="fas fa-box-open" aria-hidden="true"></i>
+            Borrow Equipment
+          </a>
+        </div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-200/70">Available</p>
+            <p id="availableCount" class="mt-1 text-2xl font-extrabold text-emerald-300" aria-live="polite">—</p>
+          </div>
+          <div class="rounded-xl border border-amber-400/15 bg-amber-400/5 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-amber-200/70">Borrowed</p>
+            <p id="borrowedCount" class="mt-1 text-2xl font-extrabold text-amber-300" aria-live="polite">—</p>
+          </div>
+          <div class="rounded-xl border border-rose-400/15 bg-rose-400/5 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-rose-200/70">Unavailable</p>
+            <p id="unavailableCount" class="mt-1 text-2xl font-extrabold text-rose-300" aria-live="polite">—</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="faculty-surface overflow-hidden" aria-label="Equipment availability list">
+        <div class="flex flex-col gap-3 border-b border-emerald-400/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div class="flex flex-1 flex-col gap-3 sm:flex-row system-filter-row">
+            <label class="sr-only" for="availabilitySearch">Search equipment</label>
+            <input id="availabilitySearch" type="search" placeholder="Search by equipment name or ID"
+              class="min-h-11 w-full rounded-xl border border-emerald-400/20 bg-[#020617] px-3 text-sm text-white outline-none focus:border-emerald-300 sm:max-w-md">
+            <label class="sr-only" for="availabilityFilter">Filter by availability</label>
+            <select id="availabilityFilter" class="min-h-11 rounded-xl border border-emerald-400/20 bg-[#020617] px-3 text-sm text-white outline-none focus:border-emerald-300">
+              <option value="">All availability</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="BORROWED">Borrowed</option>
+              <option value="UNAVAILABLE">Unavailable</option>
+            </select>
+          </div>
+          <button id="reloadAvailability" type="button" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-400/20 px-4 text-sm font-semibold text-emerald-200 hover:bg-emerald-400/10">
+            <i class="fas fa-rotate" aria-hidden="true"></i>
+            Refresh
+          </button>
+        </div>
+        <div class="availability-table-scroll">
+          <table class="w-full min-w-[760px] text-left text-sm">
+            <thead class="bg-emerald-400/5 text-xs uppercase tracking-wide text-emerald-100/70">
+              <tr>
+                <th scope="col" class="px-4 py-3">Equipment</th>
+                <th scope="col" class="px-4 py-3">Category</th>
+                <th scope="col" class="px-4 py-3">Location</th>
+                <th scope="col" class="px-4 py-3">Condition</th>
+                <th scope="col" class="px-4 py-3">Availability</th>
+                <th scope="col" class="px-4 py-3">Borrow history</th>
+              </tr>
+            </thead>
+            <tbody id="availabilityRows" class="divide-y divide-emerald-400/10">
+              <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400" role="status">Loading equipment availability...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="availabilityResultCount" class="px-4 py-4 text-sm text-slate-400" aria-live="polite">Loading equipment availability...</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const availabilityState = { equipment: [] };
+    const availabilityRows = document.getElementById('availabilityRows');
+    const searchInput = document.getElementById('availabilitySearch');
+    const availabilityFilter = document.getElementById('availabilityFilter');
+
+    function addAvailabilityCell(row, value, className = '') {
+      const cell = document.createElement('td');
+      cell.className = `px-4 py-4 text-slate-200 ${className}`.trim();
+      cell.textContent = value || '—';
+      row.appendChild(cell);
+    }
+
+    function setAvailabilityMessage(message, isError = false) {
+      availabilityRows.replaceChildren();
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 6;
+      cell.className = `px-4 py-8 text-center ${isError ? 'text-rose-300' : 'text-slate-400'}`;
+      cell.setAttribute('role', isError ? 'alert' : 'status');
+      cell.textContent = message;
+      row.appendChild(cell);
+      availabilityRows.appendChild(row);
+    }
+
+    function renderAvailability() {
+      const search = String(searchInput.value || '').trim().toLowerCase();
+      const filter = availabilityFilter.value;
+      const filtered = availabilityState.equipment.filter((item) => {
+        const searchable = [item.equipmentId, item.name, item.category, item.laboratoryRoom]
+          .filter(Boolean).join(' ').toLowerCase();
+        return (!search || searchable.includes(search)) &&
+          (!filter || item.availability === filter);
+      });
+
+      availabilityRows.replaceChildren();
+      if (!filtered.length) {
+        setAvailabilityMessage(availabilityState.equipment.length
+          ? 'No equipment matches your search.'
+          : 'No equipment is registered for your campus.');
+      } else {
+        filtered.forEach((item) => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-emerald-400/5';
+          const equipmentCell = document.createElement('td');
+          equipmentCell.className = 'px-4 py-4';
+          const name = document.createElement('strong');
+          name.className = 'block font-semibold text-white';
+          name.textContent = item.name || 'Unnamed equipment';
+          const id = document.createElement('span');
+          id.className = 'mt-1 block text-xs text-emerald-100/60';
+          id.textContent = item.equipmentId || 'No ID';
+          equipmentCell.append(name, id);
+          row.appendChild(equipmentCell);
+
+          addAvailabilityCell(row, item.category);
+          addAvailabilityCell(row, [item.laboratoryRoom, item.campus].filter(Boolean).join(' · '));
+          addAvailabilityCell(row, item.status);
+
+          const stateCell = document.createElement('td');
+          stateCell.className = 'px-4 py-4';
+          const badge = document.createElement('span');
+          const state = String(item.availability || 'UNAVAILABLE').toUpperCase();
+          const badgeStyle = state === 'AVAILABLE'
+            ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+            : state === 'BORROWED'
+              ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
+              : 'border-rose-400/30 bg-rose-400/10 text-rose-200';
+          badge.className = `status-badge inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${badgeStyle}`;
+          badge.textContent = state;
+          stateCell.appendChild(badge);
+          row.appendChild(stateCell);
+
+          addAvailabilityCell(row, String(item.timesBorrowed ?? 0));
+          availabilityRows.appendChild(row);
+        });
+      }
+      document.getElementById('availabilityResultCount').textContent =
+        `Showing ${filtered.length} of ${availabilityState.equipment.length} equipment items`;
+    }
+
+    async function loadEquipmentAvailability() {
+      setAvailabilityMessage('Loading equipment availability...');
+      document.getElementById('availabilityResultCount').textContent = 'Loading equipment availability...';
+      try {
+        const response = await fetch('/api/equipment-availability', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.error || 'Unable to load equipment availability.');
+        }
+        if (!Array.isArray(payload)) {
+          throw new Error('The equipment availability response was not in the expected format.');
+        }
+        availabilityState.equipment = payload;
+        const counts = availabilityState.equipment.reduce((result, item) => {
+          const status = String(item.availability || '').toUpperCase();
+          if (status === 'AVAILABLE') result.available += 1;
+          else if (status === 'BORROWED') result.borrowed += 1;
+          else result.unavailable += 1;
+          return result;
+        }, { available: 0, borrowed: 0, unavailable: 0 });
+        document.getElementById('availableCount').textContent = counts.available;
+        document.getElementById('borrowedCount').textContent = counts.borrowed;
+        document.getElementById('unavailableCount').textContent = counts.unavailable;
+        renderAvailability();
+      } catch (error) {
+        console.error('Failed to load equipment availability.', error);
+        availabilityState.equipment = [];
+        document.getElementById('availableCount').textContent = '—';
+        document.getElementById('borrowedCount').textContent = '—';
+        document.getElementById('unavailableCount').textContent = '—';
+        setAvailabilityMessage(error.message || 'Unable to load equipment availability.', true);
+        document.getElementById('availabilityResultCount').textContent = 'Availability could not be loaded.';
+      }
+    }
+
+    searchInput.addEventListener('input', renderAvailability);
+    availabilityFilter.addEventListener('change', renderAvailability);
+    document.getElementById('reloadAvailability').addEventListener('click', loadEquipmentAvailability);
+    loadEquipmentAvailability();
+  </script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+</body>
+</html>

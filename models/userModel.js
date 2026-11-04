@@ -33,6 +33,7 @@ export const User = sequelize.define("User", {
   password: { type: DataTypes.STRING, allowNull: false },
   role: { type: DataTypes.STRING, allowNull: false, defaultValue: "admin" },
   student_number: { type: DataTypes.STRING, allowNull: true, unique: true },
+  college: { type: DataTypes.STRING, allowNull: true },
   program: { type: DataTypes.STRING, allowNull: true },
   year: { type: DataTypes.STRING, allowNull: true },
   section: { type: DataTypes.STRING, allowNull: true },

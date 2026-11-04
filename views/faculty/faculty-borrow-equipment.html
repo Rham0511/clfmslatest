@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Equipment Borrowed | ComLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=66" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07150f;
+      --bg-secondary: #0a1d15;
+      --panel: linear-gradient(180deg, rgba(15,36,27,.96), rgba(7,21,15,.96));
+      --panel-strong: linear-gradient(180deg, rgba(15,36,27,.98), rgba(7,21,15,.98));
+      --panel-soft: rgba(74,222,128,.06);
+      --border: rgba(74,222,128,.15);
+      --text: #F8FAFC;
+      --muted: #B6D7C8;
+      --accent: #22C55E;
+      --accent-strong: #16A34A;
+      --accent-soft: rgba(74,222,128,.12);
+      --warning: #FBBF24;
+      --warning-soft: rgba(250,204,21,.14);
+      --danger: #F87171;
+      --danger-soft: rgba(248,113,113,.14);
+      --info: #4ADE80;
+      --info-soft: rgba(74,222,128,.12);
+      --shadow: 0 12px 35px rgba(6,64,43,.18);
+      --shadow-hover: 0 18px 40px rgba(34,197,94,.18);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%), radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%), linear-gradient(180deg, #07150f 0%, #0a1d15 100%);
+      color: var(--text);
+      font-family: Inter, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.55;
+    }
+
+    .page-shell {
+      padding: 1.5rem 1.5rem 2rem;
+      margin-left: 280px;
+      min-height: 100vh;
+    }
+
+    .page-header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: 1.4rem;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(110, 231, 183, 0.72);
+      margin: 0 0 0.4rem;
+    }
+
+    .page-header-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .page-header-subtitle {
+      margin: 0.35rem 0 0;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      max-width: 52rem;
+    }
+
+    .panel-card {
+      position: relative;
+      border: 1px solid rgba(74, 222, 128, 0.18);
+      background:
+        radial-gradient(420px 220px at 100% 0%, rgba(34, 197, 94, 0.07), transparent 72%),
+        linear-gradient(155deg, rgba(15, 36, 27, 0.98), rgba(10, 29, 21, 0.98));
+      border-radius: 1.5rem;
+      box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 20px 48px rgba(0, 0, 0, 0.25);
+      overflow: visible;
+    }
+
+    .panel-body {
+      padding: 1.4rem;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #d1fae5;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 0.25rem;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid rgba(74, 222, 128, 0.12);
+      border-radius: 0.85rem;
+      background: linear-gradient(100deg, rgba(34, 197, 94, 0.09), rgba(3, 18, 12, 0.32));
+    }
+
+    .section-title i {
+      display: inline-flex;
+      width: 1.9rem;
+      height: 1.9rem;
+      flex: 0 0 1.9rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(74, 222, 128, 0.16);
+      border-radius: 0.6rem;
+      background: rgba(34, 197, 94, 0.1);
+      color: #6ee7b7;
+      letter-spacing: 0;
+    }
+
+    .borrow-form-grid > .grid {
+      gap: 1rem;
+    }
+
+    .borrow-form-field {
+      align-content: start;
+      gap: 0.45rem;
+    }
+
+    .borrow-form-grid {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .borrow-form-field {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .borrow-form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .borrow-form-field label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #a7d9bb;
+      letter-spacing: 0.015em;
+    }
+
+    .borrow-form-field input,
+    .borrow-form-field select,
+    .borrow-form-field textarea {
+      width: 100%;
+      min-height: 3.1rem;
+      border-radius: 0.85rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      background: linear-gradient(145deg, rgba(7, 21, 15, 0.96), rgba(10, 29, 21, 0.94));
+      color: #f0fdf4;
+      padding: 0.75rem 0.9rem;
+      outline: none;
+      box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .borrow-equipment-option {
+      display: grid;
+      grid-template-columns: 1.25rem minmax(0, 1fr) minmax(8rem, 12rem);
+      align-items: start;
+      gap: 0.75rem;
+      min-width: 0;
+      padding: 0.8rem;
+      border: 1px solid rgba(74, 222, 128, 0.1);
+      border-radius: 0.65rem;
+      background: rgba(7, 21, 15, 0.55);
+      cursor: pointer;
+    }
+
+    .borrow-equipment-option.is-unavailable {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .borrow-equipment-option:hover {
+      background: rgba(74, 222, 128, 0.05);
+    }
+
+    .borrow-equipment-option input[type="checkbox"] {
+      width: 1.1rem;
+      min-width: 1.1rem;
+      height: 1.1rem;
+      min-height: 1.1rem;
+      margin: 0.15rem 0 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0.2rem;
+      background: transparent;
+      box-shadow: none;
+      accent-color: #4ade80;
+    }
+
+    .borrow-equipment-option input[type="checkbox"]:focus {
+      border: 0;
+      background: transparent;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+    }
+
+    .borrow-equipment-option-details {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-equipment-option-status {
+      justify-self: end;
+      max-width: 12rem;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    body.faculty-borrower-page .panel-body {
+      padding: 1.75rem;
+    }
+
+    body.faculty-borrower-page .section-title {
+      margin-bottom: 0.35rem;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      letter-spacing: 0.09em;
+    }
+
+    body.faculty-borrower-page .borrow-form-grid {
+      gap: 1.2rem;
+    }
+
+    body.faculty-borrower-page .borrow-form-field {
+      gap: 0.55rem;
+    }
+
+    body.faculty-borrower-page .borrow-form-field label {
+      color: #c0e5cf;
+      font-size: 0.98rem;
+      font-weight: 750;
+    }
+
+    body.faculty-borrower-page .borrow-form-field input,
+    body.faculty-borrower-page .borrow-form-field select,
+    body.faculty-borrower-page .borrow-form-field textarea {
+      min-height: 3.4rem;
+      padding: 0.85rem 1rem;
+      font-size: 1.05rem;
+    }
+
+    body.faculty-borrower-page .borrow-form-field textarea {
+      min-height: 8rem;
+    }
+
+    body.faculty-borrower-page .borrow-form-field input::placeholder,
+    body.faculty-borrower-page .borrow-form-field textarea::placeholder {
+      color: #a4bcad;
+      font-size: 1rem;
+      opacity: 1;
+    }
+
+    body.faculty-borrower-page .borrow-form-field > .text-xs {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    body.faculty-borrower-page #selectedEquipmentCount {
+      margin: 0.1rem 0 0.25rem;
+      font-size: 0.92rem;
+    }
+
+    body.faculty-borrower-page #equipmentSelectionList {
+      gap: 0.65rem;
+      max-height: 24rem;
+      padding: 0.85rem;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option {
+      align-items: center;
+      gap: 0.9rem;
+      min-height: 4.4rem;
+      padding: 0.9rem 1rem;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-details strong {
+      font-size: 1.02rem;
+      line-height: 1.4;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-details > span {
+      margin-top: 0.25rem;
+      color: #a7cbb5;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-status {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    body.faculty-borrower-page .borrow-form-field > p.rounded-xl {
+      padding: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    body.faculty-borrower-page .borrow-action-row {
+      margin-top: 1.4rem;
+    }
+
+    body.faculty-borrower-page .borrow-action-row .borrow-btn {
+      min-height: 3.25rem;
+      font-size: 0.98rem;
+    }
+
+    body.faculty-borrow-equipment-page .page-shell {
+      padding-top: .85rem;
+      padding-bottom: 1.25rem;
+    }
+
+    body.faculty-borrow-equipment-page .system-dashboard-heading {
+      margin-bottom: .65rem;
+      padding: .7rem 1rem;
+    }
+
+    body.faculty-borrow-equipment-page .panel-body {
+      padding: 1rem;
+    }
+
+    body.faculty-borrow-equipment-page .section-title {
+      margin-bottom: .2rem;
+      padding: .45rem .65rem;
+      font-size: .78rem;
+      letter-spacing: .08em;
+    }
+
+    body.faculty-borrow-equipment-page .section-title i {
+      width: 1.65rem;
+      height: 1.65rem;
+      flex-basis: 1.65rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-grid {
+      gap: .55rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-field {
+      gap: .25rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-field label {
+      font-size: .78rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-field input,
+    body.faculty-borrow-equipment-page .borrow-form-field select,
+    body.faculty-borrow-equipment-page .borrow-form-field textarea {
+      min-height: 2.55rem;
+      padding: .55rem .75rem;
+      font-size: .88rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-field textarea {
+      min-height: 4rem;
+    }
+
+    body.faculty-borrow-equipment-page #equipmentSelectionList {
+      max-height: 14rem;
+      gap: .35rem;
+      padding: .5rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-equipment-option {
+      grid-template-columns: 1rem minmax(0, 1fr) minmax(6rem, 10rem);
+      align-items: center;
+      gap: .55rem;
+      min-height: 3rem;
+      padding: .5rem .65rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-equipment-option input[type="checkbox"] {
+      width: .95rem;
+      min-width: .95rem;
+      height: .95rem;
+      min-height: .95rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-equipment-option-details strong {
+      font-size: .85rem;
+      line-height: 1.25;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-equipment-option-details > span,
+    body.faculty-borrow-equipment-page .borrow-equipment-option-status {
+      margin-top: .1rem;
+      font-size: .72rem;
+      line-height: 1.25;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-form-field > p.rounded-xl {
+      padding: .6rem .75rem;
+      font-size: .76rem;
+      line-height: 1.4;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-action-row {
+      margin-top: .65rem;
+    }
+
+    body.faculty-borrow-equipment-page .borrow-action-row .borrow-btn {
+      min-height: 2.45rem;
+      padding: .5rem .8rem;
+      font-size: .8rem;
+    }
+
+    .borrow-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      min-width: 0;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .borrow-tab-switcher {
+      display: flex;
+      width: 100%;
+      gap: .5rem;
+      margin: 1rem 0;
+      padding: .35rem;
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: 1rem;
+      background: rgba(3, 18, 12, .72);
+    }
+
+    .borrow-tab-button {
+      display: inline-flex;
+      min-height: 2.8rem;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      border: 1px solid transparent;
+      border-radius: .75rem;
+      padding: .65rem 1rem;
+      background: transparent;
+      color: #b6d7c8;
+      font-size: .9rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .borrow-tab-button[aria-selected="true"] {
+      border-color: rgba(4, 106, 56, .85);
+      background: #046A38;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(4, 106, 56, .22);
+    }
+
+    .borrow-tab-button:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .borrow-tab-panel[hidden] { display: none !important; }
+
+    .faculty-borrow-requests {
+      min-width: 0;
+      scroll-margin-top: 1rem;
+    }
+
+    .faculty-borrow-requests .panel-body {
+      padding: .9rem 1rem;
+    }
+
+    .borrow-request-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin: .65rem 0;
+    }
+
+    .borrow-request-tabs[hidden] {
+      display: none;
+    }
+
+    .borrow-request-tab {
+      min-height: 2rem;
+      padding: .35rem .65rem;
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: 999px;
+      background: rgba(2, 13, 9, .58);
+      color: #9fbbaa;
+      font-size: .75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .borrow-request-tab[aria-selected="true"] {
+      border-color: rgba(52, 211, 153, .4);
+      background: rgba(16, 185, 129, .14);
+      color: #d1fae5;
+    }
+
+    .borrow-request-scroll {
+      width: 100%;
+      min-width: 0;
+      overflow-x: hidden;
+      border: 1px solid rgba(74, 222, 128, .12);
+      border-radius: .8rem;
+    }
+
+    .borrow-request-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+    }
+
+    .borrow-request-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: .7rem .75rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .16);
+      background: #0b261b;
+      color: #fff;
+      font-size: .875rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      line-height: 1.25;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-request-table td {
+      padding: .7rem .75rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .08);
+      color: #f0fdf4;
+      font-size: .875rem;
+      font-weight: 500;
+      line-height: 1.35;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-request-table.my-request-table th:nth-child(1),
+    .borrow-request-table.my-request-table td:nth-child(1) { width: 20%; }
+    .borrow-request-table.my-request-table th:nth-child(2),
+    .borrow-request-table.my-request-table td:nth-child(2) { width: 13%; }
+    .borrow-request-table.my-request-table th:nth-child(3),
+    .borrow-request-table.my-request-table td:nth-child(3) { width: 13%; }
+    .borrow-request-table.my-request-table th:nth-child(4),
+    .borrow-request-table.my-request-table td:nth-child(4) { width: 13%; }
+    .borrow-request-table.my-request-table th:nth-child(5),
+    .borrow-request-table.my-request-table td:nth-child(5) { width: 15%; }
+    .borrow-request-table.my-request-table th:nth-child(6),
+    .borrow-request-table.my-request-table td:nth-child(6) { width: 14%; }
+    .borrow-request-table.my-request-table th:nth-child(7),
+    .borrow-request-table.my-request-table td:nth-child(7) { width: 12%; }
+    .borrow-request-table.student-request-table th:nth-child(1),
+    .borrow-request-table.student-request-table td:nth-child(1) { width: 16%; }
+    .borrow-request-table.student-request-table th:nth-child(2),
+    .borrow-request-table.student-request-table td:nth-child(2) { width: 20%; }
+    .borrow-request-table.student-request-table th:nth-child(3),
+    .borrow-request-table.student-request-table td:nth-child(3) { width: 14%; }
+    .borrow-request-table.student-request-table th:nth-child(4),
+    .borrow-request-table.student-request-table td:nth-child(4) { width: 14%; }
+    .borrow-request-table.student-request-table th:nth-child(5),
+    .borrow-request-table.student-request-table td:nth-child(5) { width: 16%; }
+    .borrow-request-table.student-request-table th:nth-child(6),
+    .borrow-request-table.student-request-table td:nth-child(6) { width: 10%; }
+    .borrow-request-table.student-request-table th:nth-child(7),
+    .borrow-request-table.student-request-table td:nth-child(7) { width: 10%; }
+
+    .borrow-request-table tbody tr:hover {
+      background: rgba(52, 211, 153, .045);
+    }
+
+    .borrow-request-name {
+      color: #f0fdf4;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .borrow-request-meta {
+      margin-top: .15rem;
+      color: #8da99a;
+      font-size: .67rem;
+    }
+
+    .borrow-request-status {
+      display: inline-flex;
+      border: 1px solid rgba(148, 163, 184, .14);
+      border-radius: .5rem;
+      padding: .2rem .42rem;
+      color: #d1fae5;
+      font-size: .68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .borrow-request-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+    }
+
+    .borrow-request-actions button {
+      min-height: 1.8rem;
+      padding: .3rem .5rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .5rem;
+      background: rgba(16, 185, 129, .08);
+      color: #d1fae5;
+      font-size: .68rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .borrow-request-actions button[data-borrow-decision="reject"] {
+      border-color: rgba(248, 113, 113, .25);
+      background: rgba(248, 113, 113, .08);
+      color: #fecaca;
+    }
+
+    .borrow-request-empty {
+      padding: 1.4rem;
+      color: #91a59c;
+      font-size: .82rem;
+      text-align: center;
+    }
+
+    #rejectBorrowRequestDialog {
+      width: min(34rem, calc(100% - 2rem));
+      max-width: 34rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 1rem;
+      background: #071711;
+      color: #ecfdf5;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
+    }
+
+    #rejectBorrowRequestDialog::backdrop {
+      background: rgba(0, 0, 0, .72);
+      backdrop-filter: blur(4px);
+    }
+
+    #rejectBorrowReason {
+      min-height: 6rem;
+      width: 100%;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .7rem;
+      background: #020a08;
+      padding: .65rem;
+      color: #ecfdf5;
+    }
+
+    .borrow-qr-result {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.9rem;
+      background: rgba(7, 21, 15, 0.72);
+    }
+
+    .borrow-qr-result[hidden] {
+      display: none;
+    }
+
+    .borrow-qr-result-copy {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-qr-success {
+      display: grid;
+      gap: 1rem;
+      text-align: left;
+    }
+
+    .borrow-qr-success-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.35;
+      text-align: left;
+    }
+
+    .borrow-qr-success-equipment {
+      display: grid;
+      gap: 0.4rem;
+      padding: 0.15rem 0 0.2rem;
+    }
+
+    .borrow-qr-success-status {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.15rem;
+      padding: 1rem;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      border-radius: 0.85rem;
+      background: rgba(16, 75, 46, 0.42);
+    }
+
+    .borrow-qr-success-status p,
+    .borrow-qr-success-instructions p {
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    .borrow-qr-success-instructions {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.15rem 0.1rem 0;
+    }
+
+    .borrow-qr-active-borrow {
+      display: grid;
+      justify-items: stretch;
+      gap: 1rem;
+      text-align: left;
+    }
+
+    .borrow-qr-active-title {
+      margin: 0;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .borrow-qr-active-profile {
+      display: grid;
+      gap: 0.45rem;
+      padding: 0.15rem 0;
+    }
+
+    .borrow-qr-active-mir {
+      margin: 0;
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(74, 222, 128, 0.24);
+      border-radius: 0.75rem;
+      background: rgba(16, 75, 46, 0.3);
+      line-height: 1.55;
+    }
+
+    .borrow-qr-active-instruction {
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .borrow-qr-active-borrow > .borrow-btn {
+      justify-self: center;
+      width: min(100%, 18rem);
+      margin-top: 0.15rem;
+    }
+
+    .borrow-qr-result-error {
+      color: #fca5a5;
+    }
+
+    #qrBorrowFocused[hidden] {
+      display: none;
+    }
+
+    #qrBorrowFocused {
+      width: min(100%, 760px);
+      margin: max(1rem, 6vh) auto;
+      padding: 1rem;
+    }
+
+    #qrBorrowFocused .qr-borrow-card {
+      overflow: hidden;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 1.25rem;
+      background: linear-gradient(145deg, rgba(8, 28, 19, 0.98), rgba(3, 15, 10, 0.98));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    #qrBorrowFocused .borrow-qr-result {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1.35rem;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    #qrBorrowFocused .borrow-btn {
+      width: 100%;
+      min-height: 3rem;
+    }
+
+    #qrBorrowFocused .qr-borrow-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    #qrBorrowFocused [data-qr-borrow-options][hidden] {
+      display: none;
+    }
+
+    #qrBorrowFocused .qr-borrow-actions .borrow-btn {
+      min-width: 0;
+      margin: 0;
+      padding-inline: 0.65rem;
+      text-align: center;
+    }
+
+    #qrBorrowFocused .qr-return-success {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      border-radius: 999px;
+      background: rgba(16, 75, 46, 0.42);
+      color: #a7f3d0;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason {
+      display: grid;
+      gap: 0.45rem;
+      color: rgba(209, 250, 229, 0.8);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason textarea {
+      width: 100%;
+      min-height: 5rem;
+      resize: vertical;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.75rem;
+      background: rgba(2, 20, 13, 0.72);
+      padding: 0.75rem 0.85rem;
+      color: #f0fdf4;
+      font: inherit;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason textarea:focus {
+      border-color: rgba(74, 222, 128, 0.65);
+      outline: 2px solid rgba(74, 222, 128, 0.18);
+    }
+
+    #qrBorrowFocused .qr-borrow-duration select {
+      width: 100%;
+      min-height: 2.75rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.75rem;
+      background: rgba(2, 20, 13, 0.72);
+      padding: 0.65rem 0.85rem;
+      color: #f0fdf4;
+      font: inherit;
+    }
+
+    body.qr-borrow-focus {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 38%), #06130c;
+    }
+
+    body.qr-borrow-focus #shared-sidebar,
+    body.qr-borrow-focus .page-shell {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .borrow-equipment-option {
+        grid-template-columns: 1.25rem minmax(0, 1fr);
+      }
+
+      .borrow-equipment-option-status {
+        grid-column: 2;
+        justify-self: start;
+        text-align: left;
+      }
+
+      .borrow-qr-result {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .borrow-qr-result .borrow-btn {
+        width: 100%;
+      }
+    }
+
+    .borrow-form-field input::placeholder,
+    .borrow-form-field textarea::placeholder {
+      color: #789988;
+    }
+
+    .borrow-form-field textarea {
+      min-height: 125px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .borrow-form-field input:focus,
+    .borrow-form-field select:focus,
+    .borrow-form-field textarea:focus {
+      border-color: rgba(74, 222, 128, 0.9);
+      background: rgba(4, 22, 14, 0.98);
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12), 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .borrow-form-field input[readonly] {
+      border-color: rgba(74, 222, 128, 0.12);
+      background: rgba(10, 29, 21, 0.88);
+      color: #c5dfd0;
+    }
+
+    .borrow-inventory-card {
+      margin-top: 0.2rem;
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.9rem 1rem;
+      border-radius: 1rem;
+      background: linear-gradient(130deg, rgba(15, 55, 38, 0.82), rgba(7, 21, 15, 0.9));
+      border: 1px solid rgba(74, 222, 128, 0.16);
+      color: #d1fae5;
+      line-height: 1.5;
+    }
+
+    .borrow-inventory-card strong {
+      color: #86efac;
+      font-size: 0.8rem;
+    }
+
+    .equipment-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      padding: 0.32rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .equipment-status-badge.available {
+      background: rgba(10, 29, 21, 0.9);
+      color: #6ee7b7;
+      border: 1px solid rgba(74, 222, 128, 0.6);
+    }
+
+    .equipment-status-badge.unavailable {
+      background: rgba(69, 10, 10, 0.8);
+      color: #fca5a5;
+      border: 1px solid rgba(248, 113, 113, 0.7);
+    }
+
+    .equipment-status-badge.neutral {
+      background: rgba(10, 29, 21, 0.8);
+      color: #d1fae5;
+      border: 1px solid rgba(74, 222, 128, 0.24);
+    }
+
+    .borrow-btn {
+      border: 1px solid rgba(74,222,128,.2);
+      background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+      color: #f0fdf4;
+      border-radius: 999px;
+      padding: 0.78rem 1.1rem;
+      font-weight: 700;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 24px rgba(6,64,43,.16);
+      cursor: pointer;
+    }
+
+    .borrow-btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(34, 197, 94, 0.22);
+    }
+
+    .borrow-btn:focus-visible {
+      outline: 3px solid rgba(134, 239, 172, 0.65);
+      outline-offset: 2px;
+    }
+
+    .borrow-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .borrow-btn.secondary {
+      background: rgba(10, 29, 21, 0.8);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      color: #d1fae5;
+      box-shadow: none;
+    }
+
+    .borrow-action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .borrow-toast {
+      position: fixed;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      z-index: 3000;
+      background: rgba(8, 24, 18, 0.96);
+      color: #ecfdf5;
+      border: 1px solid rgba(74, 222, 128, 0.22);
+      box-shadow: 0 18px 40px rgba(6, 64, 43, 0.2);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      font-size: 0.9rem;
+      max-width: 320px;
+    }
+
+    .borrow-toast.error {
+      border-color: rgba(248, 113, 113, 0.4);
+      color: #fee2e2;
+    }
+
+    .borrow-page-header {
+      margin-bottom: 1rem;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid rgba(74, 222, 128, 0.18);
+      border-radius: 1.4rem;
+      background: linear-gradient(135deg, rgba(8, 30, 20, 0.96), rgba(12, 40, 27, 0.92));
+      box-shadow: 0 12px 30px rgba(1, 10, 8, 0.22);
+    }
+
+    .borrow-page-header h1 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .borrow-page-header p {
+      margin: 0.4rem 0 0;
+      color: #a7c8b7;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1023px) {
+      .page-shell {
+        margin-left: 0;
+        padding: 1rem 1rem 2rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        padding: 0.75rem 0.75rem 1.5rem;
+      }
+
+      .panel-card {
+        border-radius: 1.25rem;
+      }
+
+      .panel-body {
+        padding: 0.95rem;
+      }
+
+      body.faculty-borrower-page .panel-body {
+        padding: 1.1rem;
+      }
+
+      .borrow-form-grid {
+        gap: 0.85rem;
+      }
+
+      body.faculty-borrower-page .section-title {
+        padding: 0.7rem 0.75rem;
+        font-size: 0.86rem;
+      }
+
+      body.faculty-borrower-page .borrow-equipment-option {
+        gap: 0.7rem;
+        min-height: 4.1rem;
+        padding: 0.8rem;
+      }
+
+      body.faculty-borrower-page .borrow-equipment-option-details strong {
+        font-size: 0.96rem;
+      }
+
+      body.faculty-borrower-page .borrow-equipment-option-details > span,
+      body.faculty-borrower-page .borrow-equipment-option-status {
+        font-size: 0.82rem;
+      }
+
+      .borrow-form-field label {
+        font-size: 0.76rem;
+      }
+
+      .borrow-form-field input,
+      .borrow-form-field select,
+      .borrow-form-field textarea {
+        min-height: 3.15rem;
+        font-size: 1rem;
+      }
+
+      .section-title {
+        flex-wrap: nowrap;
+        gap: 0.55rem;
+        margin-top: 0.15rem;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.075em;
+      }
+
+      .section-title i {
+        width: 1.75rem;
+        height: 1.75rem;
+        flex-basis: 1.75rem;
+      }
+
+      .borrow-form-grid > .grid {
+        gap: 0.85rem;
+      }
+
+      .borrow-form-field textarea {
+        min-height: 7rem;
+      }
+
+      .quantity-control {
+        display: grid;
+        grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+        gap: 0.5rem;
+      }
+
+      .quantity-control .borrow-btn {
+        width: 3rem;
+        min-height: 3.15rem;
+        padding: 0;
+        border-radius: 0.85rem;
+        font-size: 1.2rem;
+      }
+
+      .quantity-control input {
+        min-width: 0;
+        }
+
+      #equipmentStatusRow {
+        margin-top: 0.15rem;
+      }
+
+      .equipment-status-badge {
+        max-width: 100%;
+        white-space: normal;
+        border-radius: 0.75rem;
+        line-height: 1.4;
+      }
+
+      .borrow-action-row {
+        position: sticky;
+        bottom: 0.5rem;
+        z-index: 5;
+        margin: 0.35rem -0.25rem -0.25rem;
+        padding: 0.6rem;
+        border: 1px solid rgba(74, 222, 128, 0.15);
+        border-radius: 1rem;
+        background: rgba(7, 21, 15, 0.97);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(14px);
+      }
+
+      .borrow-action-row .borrow-btn {
+        flex: 1;
+        min-height: 3rem;
+        padding: 0.7rem 0.65rem;
+        font-size: 0.82rem;
+      }
+
+      .borrow-toast {
+        right: 0.75rem;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        max-width: none;
+      }
+
+      body.faculty-borrow-equipment-page .borrow-equipment-option {
+        grid-template-columns: 1rem minmax(0, 1fr);
+      }
+
+      body.faculty-borrow-equipment-page .borrow-equipment-option-status {
+        grid-column: 2;
+        justify-self: start;
+        text-align: left;
+      }
+
+      .borrow-tab-switcher { gap: .3rem; }
+      .borrow-tab-button { min-height: 2.6rem; padding: .55rem .45rem; font-size: .78rem; }
+      .borrow-tab-button i { display: none; }
+      .borrow-request-table,
+      .borrow-request-table tbody { display: block; width: 100%; }
+      .borrow-request-table thead { display: none; }
+      .borrow-request-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem .8rem;
+        padding: .85rem;
+        border-bottom: 1px solid rgba(74, 222, 128, .14);
+      }
+      .borrow-request-table tbody tr:last-child { border-bottom: 0; }
+      .borrow-request-table tbody td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        overflow-wrap: anywhere;
+        font-size: .82rem;
+      }
+      .borrow-request-table tbody td::before {
+        display: block;
+        margin-bottom: .15rem;
+        color: #86c9a5;
+        content: attr(data-label);
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+      .borrow-request-table tbody td:first-child,
+      .borrow-request-table tbody td:nth-child(2),
+      .borrow-request-table tbody td:nth-child(5),
+      .borrow-request-table tbody td:nth-child(6),
+      .borrow-request-table tbody td:last-child { grid-column: 1 / -1; }
+      .borrow-request-table tbody td:nth-child(3),
+      .borrow-request-table tbody td:nth-child(4) { grid-column: span 1; }
+      .borrow-request-table tbody td::before {
+        display: block;
+        margin-bottom: .15rem;
+        color: #86c9a5;
+        content: attr(data-label);
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      body.faculty-borrow-equipment-page > .page-shell {
+        padding-top: 0.75rem !important;
+      }
+    }
+
+    body.faculty-borrower-page .section-title {
+      color: #d1fae5;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    body.faculty-borrower-page .borrow-form-field label,
+    body.faculty-borrower-page #selectedEquipmentCount {
+      color: #c0e5cf;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    body.faculty-borrower-page .borrow-form-field input,
+    body.faculty-borrower-page .borrow-form-field select,
+    body.faculty-borrower-page .borrow-form-field textarea,
+    body.faculty-borrower-page .borrow-form-field input::placeholder,
+    body.faculty-borrower-page .borrow-form-field textarea::placeholder {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-details strong {
+      color: #f0fdf4;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-details > span {
+      color: #b6d7c8;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option-status,
+    body.faculty-borrower-page .equipment-status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    body.faculty-borrower-page .borrow-equipment-option.is-unavailable {
+      opacity: 1;
+    }
+
+    body.faculty-borrower-page .borrow-form-field > p.rounded-xl {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    body.faculty-borrower-page .borrow-action-row .borrow-btn {
+      min-height: 2.75rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    body.faculty-borrower-page .faculty-borrow-requests > .panel-body > p {
+      color: #b6d7c8;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    body.faculty-borrower-page .borrow-request-tab {
+      min-height: 2.5rem;
+      padding: 0.5rem 0.875rem;
+      color: #d1fae5;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    body.faculty-borrower-page .borrow-request-table th {
+      padding: 0.65rem 0.75rem;
+      color: #f0fdf4;
+      font-size: 0.875rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    body.faculty-borrower-page .borrow-request-table td {
+      padding: 0.7rem 0.75rem;
+      color: #f0fdf4;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    body.faculty-borrower-page .borrow-request-name {
+      color: #f0fdf4;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    body.faculty-borrower-page .borrow-request-meta {
+      color: #b6d7c8;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    body.faculty-borrower-page .borrow-request-status {
+      border-color: rgba(74, 222, 128, 0.3);
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    body.faculty-borrower-page .borrow-request-actions button {
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    body.faculty-borrower-page .borrow-request-empty {
+      color: #b6d7c8;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      body.faculty-borrower-page .faculty-borrow-requests > .panel-body {
+        padding: .9rem !important;
+      }
+
+      body.faculty-borrower-page .faculty-borrow-requests .section-title {
+        font-size: .9rem !important;
+        line-height: 1.4 !important;
+      }
+
+      body.faculty-borrower-page .faculty-borrow-requests > .panel-body > p {
+        color: #c3ded0 !important;
+        font-size: .9rem !important;
+        line-height: 1.5 !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-tabs {
+        gap: .5rem;
+      }
+
+      body.faculty-borrower-page .borrow-request-tab {
+        min-height: 2.65rem;
+        padding: .55rem .75rem;
+        color: #d7eee0 !important;
+        font-size: .9rem !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-tab[aria-selected="true"] {
+        border-color: #34d399;
+        background: #145c3b;
+        color: #ffffff !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-scroll {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-color: rgba(110, 231, 183, .28);
+        background: #081810;
+      }
+
+      body.faculty-borrower-page .borrow-request-table {
+        display: table !important;
+        width: 100% !important;
+        min-width: 900px !important;
+        table-layout: auto !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-table thead {
+        display: table-header-group !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-table tbody {
+        display: table-row-group !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-table tbody tr {
+        display: table-row !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-table :is(th, td) {
+        display: table-cell !important;
+        min-width: 120px;
+        padding: .65rem .75rem !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        white-space: normal;
+      }
+
+      body.faculty-borrower-page .borrow-request-table th {
+        white-space: nowrap;
+      }
+
+      body.faculty-borrower-page .borrow-request-table tbody td::before {
+        display: none !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-name {
+        color: #f0fdf4 !important;
+        font-size: .95rem !important;
+        line-height: 1.4;
+      }
+
+      body.faculty-borrower-page .borrow-request-meta {
+        color: #bfd8c9 !important;
+        font-size: .82rem !important;
+        line-height: 1.5 !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-status {
+        min-height: 1.8rem;
+        align-items: center;
+        padding: .25rem .55rem;
+        color: #f0fdf4 !important;
+        font-size: .84rem !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-actions button {
+        min-height: 2.55rem;
+        padding: .55rem .75rem;
+        font-size: .88rem !important;
+      }
+
+      body.faculty-borrower-page .borrow-request-empty { color: #c3ded0 !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=7" />
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal faculty-page faculty-borrow-equipment-page faculty-page-heading-page system-layout-page">
+  <script>
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const resetBorrowPageStart = () => {
+      if (window.location.hash === '#borrow-requests') {
+        document.getElementById('borrowRequestsTab')?.click();
+        document.getElementById('borrow-requests')?.scrollIntoView();
+        return;
+      }
+      if (window.location.hash) {
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      }
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('pageshow', resetBorrowPageStart);
+    window.addEventListener('load', resetBorrowPageStart, { once: true });
+  </script>
+  <script>
+    window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+    if (new URLSearchParams(window.location.search).has('equipmentId') &&
+        ['faculty', 'instructor'].includes(String(window.__CURRENT_USER__?.role || '').trim().toLowerCase())) {
+      document.body.classList.add('qr-borrow-focus');
+    }
+  </script>
+  <div id="shared-sidebar"></div>
+  <div class="page-shell">
+    <div class="system-dashboard-heading">
+      <div class="system-dashboard-heading-main">
+        <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="system-dashboard-heading-actions">
+        <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+        <div class="student-page-user system-profile-badge">
+          <span class="system-profile-badge-avatar" data-user-initials>FC</span>
+          <span class="system-profile-badge-copy">
+            <span class="system-profile-badge-name" data-user-name>Faculty</span>
+            <span class="system-profile-badge-role" data-user-role>Faculty</span>
+          </span>
+        </div>
+        </a>
+      </div>
+    </div>
+    <div class="borrow-tab-switcher" role="tablist" aria-label="Borrow equipment sections">
+      <button id="borrowEquipmentTab" class="borrow-tab-button" type="button" role="tab" aria-selected="true" aria-controls="borrowEquipmentPanel">
+        <i class="fas fa-box-open" aria-hidden="true"></i>Equipment Information
+      </button>
+      <button id="borrowRequestsTab" class="borrow-tab-button" type="button" role="tab" aria-selected="false" aria-controls="borrow-requests">
+        <i class="fas fa-list-check" aria-hidden="true"></i>Borrow Requests
+      </button>
+    </div>
+    <div class="borrow-workspace">
+      <main id="borrowEquipmentPanel" class="panel-card h-full borrow-tab-panel" role="tabpanel" aria-labelledby="borrowEquipmentTab">
+        <div class="panel-body">
+          <form id="studentBorrowForm">
+          <div class="borrow-form-grid">
+            <div class="borrow-form-field full">
+              <div class="section-title"><i class="fas fa-tools"></i> Equipment Information</div>
+            </div>
+
+            <div class="borrow-form-field full">
+              <label for="equipmentSearch">Search equipment</label>
+              <input id="equipmentSearch" type="search" placeholder="Search equipment name or ID" autocomplete="off">
+              <p id="selectedEquipmentCount" class="text-xs text-emerald-100/70" aria-live="polite">No equipment selected</p>
+              <div id="equipmentSelectionList" class="grid max-h-72 gap-2 overflow-y-auto rounded-xl border border-emerald-400/15 bg-[#0a1d15]/80 p-3" aria-label="Select equipment to borrow">
+                <span class="text-sm text-emerald-200/70" role="status">Loading equipment...</span>
+              </div>
+            </div>
+
+            <div class="borrow-form-field full">
+              <p class="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3 text-sm text-emerald-100/80">
+                Borrow date and time are recorded automatically when you submit. Mark each item as returned when you bring it back.
+              </p>
+            </div>
+
+            <div class="borrow-form-field full">
+              <label for="borrowPurpose">Purpose / Reason</label>
+              <textarea id="borrowPurpose" placeholder="Describe how you will use the equipment." required></textarea>
+            </div>
+          </div>
+
+          <div class="borrow-action-row">
+            <button type="button" id="cancelBorrowEquipmentRequest" class="borrow-btn secondary">Cancel</button>
+            <button type="submit" class="borrow-btn">Submit Borrow Request</button>
+          </div>
+          <div id="borrowQrResult" class="borrow-qr-result" aria-live="polite" hidden></div>
+          </form>
+
+        </div>
+      </main>
+      <section id="borrow-requests" class="panel-card faculty-borrow-requests borrow-tab-panel" role="tabpanel" aria-labelledby="borrowRequestsTab" hidden>
+        <div class="panel-body">
+        <div class="section-title" id="borrowRequestsHeading"><i class="fas fa-list-check" aria-hidden="true"></i> Borrow Requests</div>
+        <p class="mt-1 text-xs text-emerald-100/60">Track your requests and review student requests for equipment assigned to you.</p>
+        <div id="facultyBorrowRequestTabs" class="borrow-request-tabs" hidden role="tablist" aria-label="Borrow request lists">
+          <button type="button" class="borrow-request-tab" data-borrow-tab="mine" role="tab" aria-selected="true">
+            My Requests <span data-borrow-tab-count="mine">0</span>
+          </button>
+          <button type="button" class="borrow-request-tab" data-borrow-tab="students" role="tab" aria-selected="false">
+            Student Requests <span data-borrow-tab-count="students">0</span>
+          </button>
+        </div>
+        <div id="borrowRequestsState" class="borrow-request-scroll" aria-live="polite">
+          <div class="borrow-request-empty" role="status">Loading borrow requests...</div>
+        </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <dialog id="rejectBorrowRequestDialog" aria-labelledby="rejectBorrowRequestTitle">
+    <form id="rejectBorrowRequestForm" class="grid gap-4 p-5">
+      <div>
+        <h2 id="rejectBorrowRequestTitle" class="text-lg font-bold text-white">Reject Student request</h2>
+        <p class="mt-1 text-sm text-emerald-100/70">Provide a reason so the student understands why the request was rejected.</p>
+      </div>
+      <label for="rejectBorrowReason" class="grid gap-2 text-sm font-semibold text-emerald-100">
+        Rejection reason <span class="font-normal text-rose-300">Required</span>
+        <textarea id="rejectBorrowReason" maxlength="1000" required placeholder="Enter the reason for rejecting this request"></textarea>
+      </label>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="cancelRejectBorrowRequest" class="rounded-lg border border-emerald-800/60 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-900/40">Cancel</button>
+        <button type="submit" class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-200 hover:bg-rose-400/20">Reject request</button>
+      </div>
+    </form>
+  </dialog>
+
+  <main id="qrBorrowFocused" hidden>
+    <section class="qr-borrow-card" aria-label="Scanned equipment borrow request"></section>
+  </main>
+
+  <script>
+    window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+    const state = { equipment: [], selectedEquipmentIds: new Set() };
+    const currentRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
+    const isFacultyBorrower = ['faculty', 'instructor'].includes(currentRole);
+    const scanParams = new URLSearchParams(window.location.search);
+    const scannedEquipmentId = scanParams.get('equipmentId') || '';
+    const scannedEquipmentQr = scanParams.get('equipmentQr') || '';
+    let isQrBorrowFlow = Boolean((scannedEquipmentId || scannedEquipmentQr) && isFacultyBorrower);
+    const focusedBorrowPage = document.getElementById('qrBorrowFocused');
+    const focusedBorrowCard = focusedBorrowPage?.querySelector('.qr-borrow-card');
+    let qrReturnTimer = null;
+
+    function formatQrReturnTime(date, time) {
+      if (!date || !time) return '';
+      const value = new Date(`${String(date).slice(0, 10)}T${String(time).slice(0, 5)}:00+08:00`);
+      return Number.isNaN(value.getTime())
+        ? ''
+        : new Intl.DateTimeFormat(undefined, {
+            timeZone: 'Asia/Manila',
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          }).format(value);
+    }
+
+    function addQrReturnButton(container, recordId) {
+      if (container.querySelector('[data-return-qr-borrow]')) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'borrow-btn';
+      button.dataset.returnQrBorrow = recordId;
+      button.textContent = 'Mark as returned';
+      container.appendChild(button);
+    }
+
+    function watchQrBorrowDue(recordId, date, time, container) {
+      if (qrReturnTimer) clearInterval(qrReturnTimer);
+      const dueAt = date && time ? new Date(`${date}T${time}:00+08:00`) : null;
+      if (!dueAt || Number.isNaN(dueAt.getTime())) return;
+      const update = () => {
+        if (Date.now() >= dueAt.getTime()) {
+          addQrReturnButton(container, recordId);
+          if (qrReturnTimer) clearInterval(qrReturnTimer);
+          qrReturnTimer = null;
+        }
+      };
+      update();
+      if (!container.querySelector('[data-return-qr-borrow]')) {
+        qrReturnTimer = setInterval(update, 15000);
+      }
+    }
+
+    async function markQrBorrowReturned(recordId, button) {
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/borrow-records/${encodeURIComponent(recordId)}/return`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ condition: 'Good' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to mark this equipment as returned.');
+        if (qrReturnTimer) clearInterval(qrReturnTimer);
+        qrReturnTimer = null;
+        const success = document.createElement('span');
+        success.className = 'qr-return-success';
+        success.setAttribute('role', 'status');
+        success.textContent = 'Successfully returned';
+        button.replaceWith(success);
+      } catch (error) {
+        console.error('Failed to mark Faculty QR borrow as returned.', error);
+        const message = document.createElement('p');
+        message.className = 'text-sm text-rose-300';
+        message.setAttribute('role', 'alert');
+        message.textContent = error.message || 'Unable to mark this equipment as returned.';
+        button.insertAdjacentElement('afterend', message);
+        button.disabled = false;
+      }
+    }
+
+    function escapeBorrowText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[character]);
+    }
+
+    function renderQrReportAction(item) {
+      return `<button type="button" class="borrow-btn" data-open-qr-report data-report-equipment-id="${escapeBorrowText(item.equipmentId)}" data-report-equipment-name="${escapeBorrowText(item.name || 'Equipment')}">Report</button>`;
+    }
+
+    function setEquipmentStatusBadge(type, message) {
+      const badge = document.getElementById('equipmentStatusBadge');
+      if (!badge) return;
+      badge.className = 'equipment-status-badge';
+      badge.classList.add(type);
+      badge.replaceChildren();
+      const icon = document.createElement('i');
+      icon.className = type === 'available' ? 'fas fa-check-circle' : type === 'unavailable' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-info';
+      const label = document.createElement('span');
+      label.textContent = message;
+      badge.append(icon, label);
+    }
+
+    function isEquipmentSelectable(item) {
+      const status = String(item.status || 'Serviceable').toLowerCase();
+      return !['lost', 'missing', 'unserviceable', 'borrowed', 'in use', 'maintenance', 'under maintenance', 'for repair', 'for disposal'].includes(status) &&
+        !item.hasActiveBorrowRecord &&
+        Number(item.quantity ?? item.availableQuantity ?? 0) > 0 &&
+        Boolean(item.accountableFacultyUserId || item.accountableFacultyName);
+    }
+
+    function isPortableBorrowOption(item) {
+      const excludedTypes = ['airconditioner', 'aircon', 'acunit', 'ac', 'cabinet', 'serverrack', 'whiteboard', 'fixed', 'fixture'];
+      const normalized = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const types = [item.category, item.name, item.equipmentType, item.itemType, item.type].map(normalized);
+      return item.isFixed !== true &&
+        item.isFixedAsset !== true &&
+        item.isPortable !== false &&
+        item.isBorrowable !== false &&
+        item.borrowable !== false &&
+        !types.some((type) => excludedTypes.some((excluded) => type === excluded || (excluded !== 'ac' && type.includes(excluded))));
+    }
+
+    function activateQrBorrowFocus() {
+      if (!isFacultyBorrower || !focusedBorrowPage || !focusedBorrowCard) return;
+      isQrBorrowFlow = true;
+      document.body.classList.add('qr-borrow-focus');
+      focusedBorrowPage.hidden = false;
+      const result = document.getElementById('borrowQrResult');
+      if (result && result.parentElement !== focusedBorrowCard) {
+        focusedBorrowCard.appendChild(result);
+      }
+    }
+
+    function updateSelectedEquipmentInfo() {
+      const search = String(document.getElementById('equipmentSearch')?.value || '').trim().toLowerCase();
+      const list = document.getElementById('equipmentSelectionList');
+      const count = document.getElementById('selectedEquipmentCount');
+      const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
+      if (!list || !count || !submitButton) return;
+
+      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
+      const filtered = state.equipment.filter((item) => {
+        if (!isPortableBorrowOption(item)) return false;
+        const searchable = [item.name, item.equipmentId, item.category, item.laboratoryRoom].filter(Boolean).join(' ').toLowerCase();
+        return !search || searchable.includes(search);
+      });
+      if (!filtered.length) {
+        list.innerHTML = '<span class="text-sm text-emerald-200/70" role="status">No equipment matches your search.</span>';
+      } else {
+        list.innerHTML = filtered.map((item) => {
+          const id = String(item.equipmentId || '');
+          const selectable = Boolean(id) && isEquipmentSelectable(item);
+          const selected = state.selectedEquipmentIds.has(id);
+          const label = selectable
+            ? 'Available'
+            : !item.accountableFacultyUserId && !item.accountableFacultyName
+              ? 'No current MR Faculty assigned'
+              : String(item.status || 'Unavailable');
+          return `<label class="borrow-equipment-option ${selectable ? '' : 'is-unavailable'}">
+            <input type="checkbox" data-equipment-choice value="${escapeBorrowText(id)}" ${selected ? 'checked' : ''} ${selectable ? '' : 'disabled'}>
+            <span class="borrow-equipment-option-details"><strong class="block text-base font-bold text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+              <span class="mt-0.5 block text-xs font-medium text-emerald-200/80">${escapeBorrowText(id)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span></span>
+            <span class="borrow-equipment-option-status text-xs ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(label)}</span>
+          </label>`;
+        }).join('');
+      }
+      count.textContent = selectedItems.length
+        ? `${selectedItems.length} equipment item${selectedItems.length === 1 ? '' : 's'} selected — one unit each`
+        : 'No equipment selected';
+      submitButton.disabled = selectedItems.length === 0;
+      submitButton.style.opacity = submitButton.disabled ? '0.5' : '1';
+      submitButton.style.cursor = submitButton.disabled ? 'not-allowed' : 'pointer';
+    }
+
+    function showBorrowToast(message, isError = false) {
+      const existing = document.querySelector('.borrow-toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = `borrow-toast${isError ? ' error' : ''}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3400);
+    }
+
+    async function loadBorrowEquipmentOptions() {
+      try {
+        const response = await fetch('/api/student/equipment', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to load equipment inventory.');
+        state.equipment = Array.isArray(payload) ? payload : [];
+        updateSelectedEquipmentInfo();
+      } catch (error) {
+        console.error(error);
+        if (isQrBorrowFlow) {
+          const result = document.getElementById('borrowQrResult');
+          if (result) {
+            result.hidden = false;
+            result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">${escapeBorrowText(error.message || 'Unable to load the scanned equipment.')}</p>`;
+          }
+        }
+        const list = document.getElementById('equipmentSelectionList');
+        if (list) list.innerHTML = `<span class="text-sm text-rose-300" role="alert">${escapeBorrowText(error.message || 'Unable to load equipment inventory.')}</span>`;
+      }
+    }
+
+    function hydrateBorrowPage() {
+      const user = window.__CURRENT_USER__ || {};
+      document.body.classList.toggle('faculty-borrower-page', isFacultyBorrower);
+      document.title = `${isFacultyBorrower ? 'Faculty' : 'Student'} Borrow Equipment | ComLab`;
+      document.querySelector('.student-page-subtitle')?.replaceChildren(document.createTextNode(isFacultyBorrower
+        ? 'Request equipment from your campus and track the approval.'
+        : 'Mindoro State University'));
+    }
+
+    async function submitStudentBorrowRequest(event) {
+      event.preventDefault();
+      const borrowPurpose = document.getElementById('borrowPurpose').value.trim();
+      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
+      if (!selectedItems.length) {
+        showBorrowToast('Select at least one available equipment item.', true);
+        return;
+      }
+      if (!borrowPurpose) {
+        showBorrowToast('Please provide the purpose of the borrowing request.', true);
+        return;
+      }
+
+      const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
+      submitButton.disabled = true;
+      const successfulIds = [];
+      const failedRequests = [];
+      for (const item of selectedItems) {
+        try {
+          const response = await fetch('/api/borrow-records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              equipmentId: item.equipmentId,
+              purpose: borrowPurpose
+            })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to submit borrow request.');
+          successfulIds.push(item.equipmentId);
+        } catch (error) {
+          console.error(`Failed to submit borrow request for ${item.equipmentId}.`, error);
+          failedRequests.push(`${item.equipmentId}: ${error.message}`);
+        }
+      }
+      successfulIds.forEach((id) => state.selectedEquipmentIds.delete(String(id)));
+      if (!failedRequests.length) {
+        document.getElementById('studentBorrowForm').reset();
+        showBorrowToast(isFacultyBorrower
+          ? `${successfulIds.length} request${successfulIds.length === 1 ? '' : 's'} submitted. The accountable Faculty member must approve before release.`
+          : `${successfulIds.length} borrow request${successfulIds.length === 1 ? '' : 's'} submitted.`);
+      } else {
+        const message = `${successfulIds.length} submitted; ${failedRequests.length} failed. ${failedRequests.join(' · ')}`;
+        showBorrowToast(message, true);
+      }
+      updateSelectedEquipmentInfo();
+      if (submitButton) {
+        submitButton.disabled = state.selectedEquipmentIds.size === 0;
+      }
+
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      hydrateBorrowPage();
+      const equipmentTab = document.getElementById('borrowEquipmentTab');
+      const requestsTab = document.getElementById('borrowRequestsTab');
+      const equipmentPanel = document.getElementById('borrowEquipmentPanel');
+      const requestsPanel = document.getElementById('borrow-requests');
+      const activateBorrowTab = (tabName) => {
+        const showRequests = tabName === 'requests';
+        equipmentTab?.setAttribute('aria-selected', String(!showRequests));
+        requestsTab?.setAttribute('aria-selected', String(showRequests));
+        if (equipmentPanel) equipmentPanel.hidden = showRequests;
+        if (requestsPanel) requestsPanel.hidden = !showRequests;
+      };
+      equipmentTab?.addEventListener('click', () => activateBorrowTab('equipment'));
+      requestsTab?.addEventListener('click', () => activateBorrowTab('requests'));
+      activateBorrowTab(window.location.hash === '#borrow-requests' ? 'requests' : 'equipment');
+      if (isQrBorrowFlow && focusedBorrowPage && focusedBorrowCard) {
+        activateQrBorrowFocus();
+        const result = document.getElementById('borrowQrResult');
+        if (result) {
+          result.hidden = false;
+          result.innerHTML = '<p class="borrow-qr-result-copy text-emerald-100/70" role="status">Loading scanned item...</p>';
+        }
+      }
+      window.addEventListener('borrow-equipment-qr-scanned', async (event) => {
+        if (isFacultyBorrower) activateQrBorrowFocus();
+        const scannedValue = String(event.detail?.value || '').trim();
+        let equipmentId = scannedValue;
+        const result = document.getElementById('borrowQrResult');
+        if (!result) return;
+        try {
+          equipmentId = await window.resolveEquipmentQrValue(scannedValue);
+        } catch (error) {
+          result.hidden = false;
+          result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">${escapeBorrowText(error.message || 'Unable to read this equipment QR code. Please scan again.')}</p>`;
+          return;
+        }
+
+        const item = state.equipment.find((equipment) =>
+          String(equipment.equipmentId || '').toLowerCase() === equipmentId.toLowerCase()
+        );
+        if (!item) {
+          result.hidden = false;
+          result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">No equipment in your campus matches this QR code.</p>`;
+          return;
+        }
+
+        result.hidden = false;
+        result.innerHTML = '<p class="borrow-qr-result-copy text-emerald-100/70" role="status">QR recognized. Loading equipment status...</p>';
+        let scanMessage = 'Scan activity recorded.';
+        const scanActivityRequest = (async () => {
+          try {
+            const scanResponse = await fetch(`/api/equipment/${encodeURIComponent(item.equipmentId)}/scan`, {
+              method: 'POST',
+              cache: 'no-store'
+            });
+            const scanPayload = await scanResponse.json().catch(() => ({}));
+            if (!scanResponse.ok) throw new Error(scanPayload.error || 'Unable to record this scan.');
+          } catch (error) {
+            console.error(`Failed to record equipment QR scan for ${item.equipmentId}.`, error);
+            scanMessage = error.message || 'The scan was identified but could not be recorded.';
+          }
+        })();
+
+        let activeQrBorrow = null;
+        if (isQrBorrowFlow) {
+          try {
+            const statusResponse = await fetch(`/api/borrow-records/qr/${encodeURIComponent(item.equipmentId)}/status`, { cache: 'no-store' });
+            const statusPayload = await statusResponse.json().catch(() => ({}));
+            if (!statusResponse.ok) throw new Error(statusPayload.error || 'Unable to check your active borrow.');
+            activeQrBorrow = statusPayload.activeBorrow || null;
+          } catch (error) {
+            console.error(`Failed to check active QR borrow for ${item.equipmentId}.`, error);
+            result.hidden = false;
+            result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">${escapeBorrowText(error.message || 'Unable to check your active borrow. Please scan again.')}</p>`;
+            return;
+          }
+        }
+        await scanActivityRequest;
+
+        const selectable = isEquipmentSelectable(item);
+        const status = selectable
+          ? (isQrBorrowFlow ? 'Available to borrow' : 'Available to request')
+          : !item.accountableFacultyUserId && !item.accountableFacultyName
+            ? 'Cannot borrow — no current MR Faculty assignment'
+          : item.hasActiveBorrowRecord
+            ? 'Currently reserved or borrowed'
+          : isFacultyBorrower && !item.accountableFacultyName
+            ? 'No accountable Faculty assigned'
+            : String(item.status || 'Unavailable');
+        const lastBorrower = item.lastBorrower;
+        const qrItemInformation = `
+          <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+          ${item.serialNumber ? `<span class="mt-1 block text-xs text-emerald-100/55">Serial: ${escapeBorrowText(item.serialNumber)}</span>` : ''}
+          ${activeQrBorrow ? '' : `<span class="mt-2 block text-sm ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(status)}</span>`}
+          <p class="mt-2 text-xs text-emerald-100/65">MR: ${escapeBorrowText(item.accountableFacultyName || 'Unassigned')} · Last borrower: ${escapeBorrowText(lastBorrower?.name || 'None')}</p>`;
+        result.hidden = false;
+        if (activeQrBorrow) {
+          result.innerHTML = `<div class="borrow-qr-result-copy">
+              <p class="text-lg font-bold text-amber-200">${activeQrBorrow.isMine ? 'Your active borrow' : 'Currently borrowed'}</p>
+              <strong class="mt-2 block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+              <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+              <span class="mt-2 block text-sm text-amber-200">${activeQrBorrow.isMine ? 'Borrowed on your account' : 'This item is borrowed by another user'}</span>
+            </div>
+            <div class="qr-borrow-actions">
+              ${activeQrBorrow.isMine ? `<button type="button" class="borrow-btn" data-return-qr-borrow="${escapeBorrowText(activeQrBorrow.id)}">Mark as returned</button>` : ''}
+              ${renderQrReportAction(item)}
+            </div>`;
+          return;
+        }
+        result.innerHTML = `<div class="borrow-qr-result-copy">
+          <strong class="block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+          ${qrItemInformation}
+          ${isQrBorrowFlow ? `<div data-qr-borrow-options hidden><label class="qr-borrow-reason qr-borrow-duration">Borrow time <span class="font-normal text-emerald-100/50">(optional)</span>
+            <select id="qrBorrowDurationHours">
+              <option value="">No time limit</option>
+              <option value="1">1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="3">3 hours</option>
+              <option value="4">4 hours</option>
+              <option value="6">6 hours</option>
+              <option value="8">8 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24">24 hours</option>
+            </select>
+          </label>
+          <label class="qr-borrow-reason">Reason <span class="font-normal text-emerald-100/50">(optional)</span><textarea id="qrBorrowReason" maxlength="1000" placeholder="Reason"></textarea></label></div>` : ''}
+          ${scanMessage !== 'Scan activity recorded.' ? `<span class="mt-1 block text-xs text-amber-200">${escapeBorrowText(scanMessage)}</span>` : ''}
+        </div>
+        <div class="qr-borrow-actions">
+          ${selectable ? `<button type="button" class="borrow-btn" data-borrow-scanned-equipment="${escapeBorrowText(item.equipmentId)}">${isQrBorrowFlow ? 'Borrow' : 'Borrow this item'}</button>` : ''}
+          ${renderQrReportAction(item)}
+        </div>`;
+      });
+      document.getElementById('borrowQrResult')?.addEventListener('click', async (event) => {
+        const returnButton = event.target.closest('[data-return-qr-borrow]');
+        if (returnButton) {
+          await markQrBorrowReturned(returnButton.dataset.returnQrBorrow, returnButton);
+          return;
+        }
+        const button = event.target.closest('[data-borrow-scanned-equipment]');
+        if (!button) return;
+        const item = state.equipment.find((equipment) => String(equipment.equipmentId) === button.dataset.borrowScannedEquipment);
+        if (!item) {
+          showBorrowToast('The scanned equipment is no longer available in the list. Please scan again.', true);
+          return;
+        }
+        if (isQrBorrowFlow && button.dataset.borrowReady !== 'true') {
+          const options = document.querySelector('#borrowQrResult [data-qr-borrow-options]');
+          if (options) options.hidden = false;
+          button.dataset.borrowReady = 'true';
+          button.textContent = 'Submit request';
+          document.getElementById('qrBorrowReason')?.focus();
+          return;
+        }
+        button.disabled = true;
+        try {
+          const response = await fetch(isQrBorrowFlow ? '/api/borrow-records/qr' : '/api/borrow-records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              equipmentId: item.equipmentId,
+              purpose: (isQrBorrowFlow
+                ? document.getElementById('qrBorrowReason')?.value
+                : document.getElementById('borrowPurpose')?.value)?.trim() || null,
+              ...(isQrBorrowFlow && document.getElementById('qrBorrowDurationHours')?.value
+                ? { durationHours: Number(document.getElementById('qrBorrowDurationHours').value) }
+                : {})
+            })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to submit borrow request.');
+          if (isQrBorrowFlow) {
+            const result = document.getElementById('borrowQrResult');
+            const accountableFaculty = payload.currentAccountableFacultyName || item.accountableFacultyName || 'No Faculty currently assigned';
+            const dueTime = formatQrReturnTime(payload.expectedReturnDate, payload.expectedReturnTime);
+            const transferDetails = payload.transferredFrom
+              ? `<p class="mt-3 text-sm text-emerald-100/80">Transferred from <strong>${escapeBorrowText(payload.transferredFrom.name)}</strong>${payload.transferredFrom.college ? ` <span class="rounded-full border border-violet-300/20 bg-violet-300/10 px-2 py-0.5 text-xs font-semibold text-violet-200">${escapeBorrowText(payload.transferredFrom.college)}</span>` : ''}. They are no longer responsible for marking this borrow returned.</p>`
+              : '';
+            result.innerHTML = `<div class="borrow-qr-result-copy borrow-qr-success">
+              <p class="borrow-qr-success-title text-emerald-200" role="status">Borrow completed successfully</p>
+              <div class="borrow-qr-success-equipment">
+                <strong class="block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+                <span class="text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+              </div>
+              <div class="borrow-qr-success-status">
+                <p class="text-sm text-emerald-100">Borrow recorded. MR: <strong>${escapeBorrowText(accountableFaculty)}</strong>.</p>
+                ${transferDetails}
+              </div>
+              <div class="borrow-qr-success-instructions">
+                ${dueTime ? `<p class="text-sm text-emerald-100/80">Expected return: <strong>${escapeBorrowText(dueTime)}</strong>. The return button will appear at that time, or scan the item again to mark it returned sooner.</p>` : '<p class="text-sm text-emerald-100/80">No return time was set. Scan the item again when you are ready to mark it returned.</p>'}
+              </div>
+            </div>`;
+            if (dueTime && payload.id) {
+              const card = result.querySelector('.borrow-qr-result-copy');
+              watchQrBorrowDue(payload.id, payload.expectedReturnDate, payload.expectedReturnTime, card);
+            }
+          } else {
+            document.getElementById('borrowQrResult').hidden = true;
+            showBorrowToast(isFacultyBorrower
+              ? 'Borrow request submitted. Accountability transfers to you after approval and release.'
+              : 'Borrow request submitted.');
+            await loadBorrowEquipmentOptions();
+          }
+        } catch (error) {
+          console.error(`Failed to submit QR borrow request for ${item.equipmentId}.`, error);
+          if (isQrBorrowFlow) {
+            const result = document.getElementById('borrowQrResult');
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'text-sm text-rose-300';
+            errorMessage.setAttribute('role', 'alert');
+            errorMessage.textContent = error.message || 'Unable to submit borrow request.';
+            button.insertAdjacentElement('afterend', errorMessage);
+          } else {
+            showBorrowToast(error.message || 'Unable to submit borrow request.', true);
+          }
+          button.disabled = false;
+        }
+      });
+      document.getElementById('equipmentSearch')?.addEventListener('input', updateSelectedEquipmentInfo);
+      document.getElementById('equipmentSelectionList')?.addEventListener('change', (event) => {
+        const checkbox = event.target.closest('[data-equipment-choice]');
+        if (!checkbox) return;
+        if (checkbox.checked) state.selectedEquipmentIds.add(checkbox.value);
+        else state.selectedEquipmentIds.delete(checkbox.value);
+        updateSelectedEquipmentInfo();
+      });
+      document.getElementById('cancelBorrowEquipmentRequest')?.addEventListener('click', () => {
+        window.location.href = isFacultyBorrower ? '/faculty-dashboard' : '/student/dashboard';
+      });
+      document.getElementById('studentBorrowForm')?.addEventListener('submit', submitStudentBorrowRequest);
+      await loadBorrowEquipmentOptions();
+      updateSelectedEquipmentInfo();
+      const scannedEquipmentValue = scannedEquipmentId ||
+        (scannedEquipmentQr
+          ? `${window.location.origin}/equipment/uid/${encodeURIComponent(scannedEquipmentQr)}`
+          : '');
+      if (scannedEquipmentValue) {
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+          detail: { value: scannedEquipmentValue }
+        }));
+        scanParams.delete('equipmentId');
+        scanParams.delete('equipmentQr');
+        const remainingQuery = scanParams.toString();
+        window.history.replaceState({}, '', `${window.location.pathname}${remainingQuery ? `?${remainingQuery}` : ''}${window.location.hash}`);
+      }
+    });
+  </script>
+  <script src="/js/faculty-borrow-requests.js?v=1" defer></script>
+
+  <script src="/js/qr-equipment-report.js?v=1" defer></script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+  <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
+</body>
+</html>

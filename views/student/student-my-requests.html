@@ -6,7 +6,7 @@
     <title>ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=4">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         body {
             background: #020617;
@@ -33,6 +33,39 @@
             padding-left: 0.85rem;
             padding-right: 0.85rem;
             box-sizing: border-box;
+        }
+
+        body.student-my-requests-page .student-page-heading-copy {
+            margin-left: 0.75rem;
+        }
+
+        body.student-my-requests-page .my-requests-header-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.55rem;
+            margin-left: auto;
+        }
+
+        body.student-my-requests-page:not(.faculty-my-requests-page) .student-page-subtitle {
+            display: block;
+            margin: 0;
+            color: #a7f3d0 !important;
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+        }
+
+        .student-university-title {
+            color: #022c22 !important;
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+        }
+
+        .dark .student-university-title {
+            color: #fff !important;
         }
 
         .page-header-card {
@@ -273,11 +306,215 @@
         }
 
         .glass-card {
-            background: rgba(6, 16, 11, 0.92);
+            background: rgba(2, 6, 23, 0.92);
             border: 1px solid rgba(6, 78, 59, 0.6);
             border-radius: 1.6rem;
             box-shadow: 0 24px 60px rgba(2, 8, 23, 0.3);
             backdrop-filter: blur(18px);
+        }
+
+        .requests-page {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }
+
+        .requests-panel {
+            padding: 1.4rem;
+            border-color: rgba(52, 211, 153, 0.2);
+            background:
+                radial-gradient(circle at 100% 0, rgba(16, 185, 129, 0.07), transparent 38%),
+                linear-gradient(145deg, rgba(9, 29, 20, 0.97), rgba(5, 19, 13, 0.98));
+        }
+
+        .requests-panel-heading {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .requests-panel-icon {
+            display: grid;
+            width: 2.7rem;
+            height: 2.7rem;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            border-radius: 0.9rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+        }
+
+        .requests-panel-heading h2 {
+            margin: 0;
+            color: #ecfdf5;
+            font-size: 1.125rem;
+            font-weight: 700;
+            line-height: 1.25;
+            letter-spacing: -0.02em;
+        }
+
+        #issueReportsPanel .requests-panel-heading h2 {
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .requests-panel-heading p {
+            margin: 0.3rem 0 0;
+            color: #a7f3d0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        #requestsState .maintenance-reports-table thead th {
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        #requestsState .maintenance-reports-table tbody td {
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        #issueReportsPanel .requests-controls {
+            grid-template-columns: minmax(0, 24rem) minmax(10rem, 13rem);
+            justify-content: start;
+        }
+
+        .requests-controls {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.42fr);
+            gap: 0.65rem;
+            margin: 0 0 1rem;
+        }
+
+        .requests-filter-control {
+            min-width: 0;
+            min-height: 3rem;
+            padding: 0 0.9rem;
+            border-color: rgba(52, 211, 153, 0.2);
+            border-radius: 0.9rem;
+            background: rgba(2, 6, 23, 0.58);
+            transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        .requests-filter-control:focus-within {
+            border-color: rgba(52, 211, 153, 0.62);
+            background: rgba(3, 20, 13, 0.88);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .requests-filter-control > i {
+            flex: 0 0 auto;
+            color: #6ee7b7;
+        }
+
+        .requests-filter-control input,
+        .requests-filter-control select {
+            min-width: 0;
+            color: #e7f8ee;
+            font-size: 0.88rem;
+        }
+
+        .requests-filter-control select {
+            cursor: pointer;
+        }
+
+        .requests-filter-control input::placeholder {
+            color: #789989;
+            font-size: 0.86rem;
+        }
+
+        .requests-table-shell {
+            margin-top: 0;
+            border-color: rgba(52, 211, 153, 0.14);
+            border-radius: 1rem;
+            background: rgba(2, 13, 9, 0.32);
+        }
+
+        .requests-empty-state {
+            display: grid;
+            min-height: 10rem;
+            justify-items: center;
+            align-content: center;
+            gap: 0.45rem;
+            padding: 1.5rem 1rem;
+            text-align: center;
+        }
+
+        .requests-empty-icon {
+            display: grid;
+            width: 2.8rem;
+            height: 2.8rem;
+            margin-bottom: 0.25rem;
+            place-items: center;
+            border: 1px solid rgba(52, 211, 153, 0.17);
+            border-radius: 1rem;
+            background: rgba(16, 185, 129, 0.08);
+            color: #6ee7b7;
+            font-size: 1rem;
+        }
+
+        .requests-empty-state strong {
+            color: #d8eee1;
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .requests-empty-state p {
+            max-width: 22rem;
+            margin: 0;
+            color: #85a392;
+            font-size: 0.78rem;
+            line-height: 1.5;
+        }
+
+        .requests-empty-action {
+            display: inline-flex;
+            min-height: 2.35rem;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            margin-top: 0.4rem;
+            padding: 0.45rem 0.8rem;
+            border: 1px solid rgba(52, 211, 153, 0.24);
+            border-radius: 0.75rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #a7f3d0;
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .requests-empty-action:hover {
+            transform: translateY(-1px);
+            border-color: rgba(52, 211, 153, 0.48);
+            background: rgba(16, 185, 129, 0.17);
+        }
+
+        .requests-empty-action:focus-visible {
+            outline: 2px solid #6ee7b7;
+            outline-offset: 2px;
+        }
+
+        .requests-empty-state.is-error {
+            color: #fca5a5;
+        }
+
+        .requests-table td[data-label]::before {
+            content: attr(data-label);
+            display: none;
+        }
+
+        .requests-table tbody tr {
+            transition: background 160ms ease;
         }
 
         @media (max-width: 1023px) {
@@ -376,6 +613,135 @@
             .page-shell main {
                 gap: 1rem;
             }
+
+            .requests-page {
+                padding-top: 0.75rem;
+                padding-bottom: 1.5rem;
+            }
+
+            .requests-panel {
+                padding: 1rem;
+                border-radius: 1.25rem;
+            }
+
+            .requests-panel-heading {
+                gap: 0.65rem;
+                margin-bottom: 0.9rem;
+            }
+
+            .requests-panel-icon {
+                width: 2.45rem;
+                height: 2.45rem;
+                border-radius: 0.8rem;
+            }
+
+            .requests-controls {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.55rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .requests-table-shell {
+                overflow: visible;
+                border: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .requests-table {
+                display: block;
+                width: 100%;
+                min-width: 0 !important;
+                table-layout: auto;
+            }
+
+            .requests-table thead {
+                display: none;
+            }
+
+            .requests-table tbody {
+                display: grid;
+                gap: 0.7rem;
+            }
+
+            .requests-table tbody tr {
+                display: grid;
+                overflow: hidden;
+                border: 1px solid rgba(52, 211, 153, 0.17);
+                border-radius: 1rem;
+                background: linear-gradient(145deg, rgba(11, 34, 23, 0.96), rgba(5, 20, 13, 0.98));
+                box-shadow: inset 0 1px rgba(255, 255, 255, 0.025), 0 8px 20px rgba(0, 0, 0, 0.12);
+            }
+
+            .requests-table tbody tr:hover {
+                background: linear-gradient(145deg, rgba(11, 34, 23, 0.96), rgba(5, 20, 13, 0.98));
+            }
+
+            .requests-table td,
+            .requests-table td.col-equipment,
+            .requests-table td.col-description,
+            .requests-table td.col-status,
+            .requests-table td.col-dates {
+                display: flex;
+                width: 100%;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 0.75rem;
+                padding: 0.7rem 0.8rem;
+                border-bottom: 1px solid rgba(52, 211, 153, 0.09);
+                text-align: right;
+                font-size: 0.8rem;
+                line-height: 1.45;
+            }
+
+            .requests-table td:last-child {
+                border-bottom: 0;
+            }
+
+            .requests-table td[data-label]::before {
+                display: block;
+                flex: 0 0 5.8rem;
+                color: #78a48d;
+                font-size: 0.62rem;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                line-height: 1.5;
+                text-align: left;
+                text-transform: uppercase;
+            }
+
+            .requests-table td.equipment-cell {
+                display: block;
+                padding: 0.85rem 0.8rem;
+                text-align: left;
+            }
+
+            .requests-table td.equipment-cell::before {
+                margin-bottom: 0.35rem;
+            }
+
+            .requests-table .equipment-name {
+                font-size: 0.9rem;
+            }
+
+            .requests-table .equipment-id {
+                font-size: 0.7rem;
+            }
+
+            .requests-table .status-cell {
+                align-items: center;
+            }
+
+            .requests-table .status-badge {
+                min-width: 0;
+                padding: 0.28rem 0.55rem;
+                font-size: 0.68rem;
+            }
+
+            .requests-pagination {
+                margin-top: 0.65rem;
+                border-top: 1px solid rgba(52, 211, 153, 0.12);
+            }
         }
 
         @media (max-width: 479px) {
@@ -411,7 +777,6 @@
 
             .requests-table-shell {
                 border-radius: 0.9rem;
-                -webkit-overflow-scrolling: touch;
             }
 
             .requests-pagination {
@@ -419,37 +784,182 @@
                 padding: 0.65rem 0.35rem;
             }
         }
+
+        .borrow-requests-table {
+            min-width: 1040px;
+        }
+
+        .borrow-requests-table th {
+            padding: 1.1rem 1.15rem;
+            font-size: 1.05rem;
+            letter-spacing: 0.1em;
+        }
+
+        .borrow-requests-table td {
+            padding: 1rem 1.15rem;
+            font-size: 1.05rem;
+            line-height: 1.65;
+        }
+
+        .borrow-requests-table .equipment-name {
+            font-size: 1.1rem;
+        }
+
+        .borrow-requests-table .equipment-id,
+        .borrow-requests-table .text-xs {
+            font-size: 0.82rem;
+        }
+
+        .borrow-requests-table .status-badge {
+            font-size: 0.82rem;
+        }
+
+        .borrow-requests-pagination button {
+            min-width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 767px) {
+            .borrow-requests-table {
+                min-width: 0;
+            }
+
+            .borrow-requests-table tbody {
+                gap: 0.9rem;
+            }
+
+            .borrow-requests-table td,
+            .borrow-requests-table td.equipment-cell {
+                padding: 0.9rem 1rem;
+                font-size: 0.95rem;
+            }
+
+            .borrow-requests-table td[data-label]::before {
+                flex-basis: 7rem;
+                font-size: 0.72rem;
+            }
+
+            .borrow-requests-table .equipment-name {
+                font-size: 1.05rem;
+            }
+
+            .borrow-requests-table .equipment-id,
+            .borrow-requests-table .text-xs {
+                font-size: 0.8rem;
+            }
+
+            .borrow-requests-pagination {
+                justify-content: center;
+                gap: 0.5rem;
+                padding: 0.85rem 0.5rem;
+            }
+        }
+
+        #requestsState.requests-table-shell {
+            max-height: min(60vh, 32rem);
+            overflow: auto;
+            scrollbar-gutter: stable;
+        }
+
+        #requestsState .maintenance-reports-table-scroll {
+            min-width: max-content;
+        }
+
+        #requestsState .maintenance-reports-table {
+            min-width: 920px;
+        }
+
+        @media (max-width: 767px) {
+            #issueReportsPanel .requests-controls {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            #requestsState .maintenance-reports-table {
+                display: table;
+                width: 720px;
+                min-width: 720px !important;
+                table-layout: fixed;
+            }
+
+            #requestsState .maintenance-reports-table thead {
+                display: table-header-group;
+            }
+
+            #requestsState .maintenance-reports-table tbody {
+                display: table-row-group;
+            }
+
+            #requestsState .maintenance-reports-table tbody tr {
+                display: table-row;
+                overflow: visible;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            #requestsState .maintenance-reports-table td {
+                display: table-cell;
+                width: auto;
+                padding: 0.65rem 0.75rem;
+                border-bottom: 1px solid rgba(52, 211, 153, 0.09);
+                text-align: left;
+                font-size: 0.78rem;
+            }
+
+            #requestsState .maintenance-reports-table td[data-label]::before {
+                display: none;
+            }
+
+            #requestsState .maintenance-reports-table td.equipment-cell {
+                display: table-cell;
+                padding: 0.65rem 0.75rem;
+            }
+        }
     </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page student-my-requests-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
         <header class="sticky top-0 z-30 pt-2 pb-0 md:pt-3 md:pb-0">
             <div class="page-shell">
-                <div class="page-header-card">
-                    <div class="page-header-leading flex items-center gap-3">
-                        <button id="mobileMenuToggle" type="button" onclick="toggleSidebar()" class="menu-toggle block lg:hidden" aria-label="Open navigation">
-                            <i class="fas fa-bars"></i>
+                <div class="student-page-header">
+                    <div class="student-page-heading">
+                        <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+                            <i class="fas fa-bars" aria-hidden="true"></i>
                         </button>
-                        <h1 class="page-header-title m-0 text-xl font-bold leading-none text-white whitespace-nowrap md:text-3xl">My Reports</h1>
+                        <div class="student-page-heading-copy">
+                            <h1 class="student-page-title">My Reports</h1>
+                            <p class="student-page-subtitle">Mindoro State University</p>
+                        </div>
                     </div>
-                    <div class="ml-auto flex shrink-0 items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/80 px-2.5 py-1 text-[10px] text-emerald-300 sm:px-3 sm:text-xs">
-                        <div class="flex h-6 w-6 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.65rem] font-semibold text-emerald-200" data-user-initials>VS</div>
-                        <span class="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200 sm:text-xs" data-user-role>Student</span>
+                    <div class="my-requests-header-actions" data-theme-toggle-anchor>
+                        <div class="student-page-user">
+                            <span class="student-page-user-initials" data-user-initials>ST</span>
+                            <span class="student-page-user-role" data-user-role>Student</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="page-shell flex w-full flex-col gap-4 pt-2 pb-0">
-            <section class="glass-card rounded-[1.5rem] p-5 md:p-6">
-                <h2 class="text-2xl font-semibold text-white">Your requests</h2>
+        <main class="page-shell requests-page flex w-full flex-col gap-4">
+            <section id="issueReportsPanel" class="glass-card requests-panel">
+                <div class="requests-panel-heading">
+                    <span class="requests-panel-icon" aria-hidden="true"><i class="fas fa-screwdriver-wrench"></i></span>
+                    <div>
+                        <h2>My Reports</h2>
+                    </div>
+                </div>
 
-                <div class="requests-controls">
+                <div class="requests-controls system-filter-row">
                     <label class="requests-filter-control">
                         <i class="fas fa-search text-emerald-300"></i>
-                        <input id="maintenanceSearch" type="text" placeholder="Search Equipment / Issue" />
+                        <input id="maintenanceSearch" type="search" aria-label="Search equipment or issue" placeholder="Search equipment or issue" />
                     </label>
                     <label class="requests-filter-control">
                         <i class="fas fa-filter text-emerald-300"></i>
@@ -462,19 +972,53 @@
                     </label>
                 </div>
 
-                <div id="requestsState" class="requests-table-shell text-sm text-emerald-100/70">
-                    Loading your requests...
+                <div id="requestsState" class="requests-table-shell text-sm text-emerald-100/70" aria-live="polite">
+                    <div class="requests-empty-state">
+                        <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-spinner fa-spin"></i></span>
+                        <strong>Loading issue reports...</strong>
+                        <p>Your latest submitted issue reports will appear here.</p>
+                    </div>
                 </div>
             </section>
-            <section class="glass-card rounded-[1.5rem] p-5 md:p-6">
-                <h2 class="text-2xl font-semibold text-white">Borrow requests</h2>
-                <div id="borrowRequestsState" class="requests-table-shell mt-4 text-sm text-emerald-100/70">Loading borrow requests...</div>
+            <section id="borrowRequestsPanel" class="glass-card requests-panel">
+                <div class="requests-panel-heading">
+                    <span class="requests-panel-icon" aria-hidden="true"><i class="fas fa-box-open"></i></span>
+                    <div>
+                        <h2>Borrow requests</h2>
+                        <p>Track your equipment requests and review requests for equipment assigned to you.</p>
+                    </div>
+                </div>
+                <div id="facultyApprovalQueue" class="mb-4 hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/45 to-[#020617] p-4 sm:p-5" aria-live="polite"></div>
+                <div id="borrowRequestsState" class="requests-table-shell text-sm text-emerald-100/70" aria-live="polite">
+                    <div class="requests-empty-state">
+                        <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-spinner fa-spin"></i></span>
+                        <strong>Loading borrow requests</strong>
+                        <p>Your equipment requests will appear here.</p>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
 
     <script>
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+        const currentPageRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
+        const isFacultyPage = ['faculty', 'instructor'].includes(currentPageRole);
+        if (!isFacultyPage) document.getElementById('borrowRequestsPanel')?.remove();
+        if (isFacultyPage) {
+            document.body.classList.add('faculty-my-requests-page');
+            document.title = 'My Requests | ComLab Faculty';
+            document.querySelector('.student-page-subtitle')?.replaceChildren(document.createTextNode('Track your requests and approve borrowing requests for equipment assigned to you.'));
+            const issueSection = document.getElementById('issueReportsPanel');
+            if (issueSection) issueSection.classList.add('hidden');
+        } else {
+            const pageTitle = document.querySelector('.student-page-title');
+            if (pageTitle) {
+                pageTitle.textContent = 'MINDORO STATE UNIVERSITY';
+                pageTitle.classList.add('student-university-title', 'text-emerald-950', 'dark:text-white', 'text-xl', 'font-bold');
+            }
+            document.querySelector('.student-page-subtitle')?.remove();
+        }
 
         function getStudentInitials(user) {
             const candidateName = (user && (user.name || user.fullName || user.displayName)) || '';
@@ -500,8 +1044,8 @@
             element.textContent = roleLabel;
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=5" defer></script>
-    <script src="/js/sidebar-component.js?v=5" defer></script>
+    <script src="/js/student-sidebar-config.js?v=30" defer></script>
+    <script src="/js/sidebar-component.js?v=64" defer></script>
     <script>
         const requestsState = document.getElementById('requestsState');
         const maintenanceSearch = document.getElementById('maintenanceSearch');
@@ -509,19 +1053,20 @@
         const requestsStateData = {
             records: [],
             currentPage: 1,
-            rowsPerPage: 5
+            rowsPerPage: 100
         };
         const borrowRequestsStateData = {
             records: [],
             currentPage: 1,
-            rowsPerPage: 5
+            rowsPerPage: 7
         };
 
         const statusClasses = {
             Pending: 'bg-amber-500/15 text-amber-300',
-            'In Progress': 'bg-blue-500/15 text-blue-300',
+            'In Progress': 'bg-emerald-500/15 text-emerald-200',
             Resolved: 'bg-emerald-500/15 text-emerald-300',
-            Rejected: 'bg-red-500/15 text-red-300'
+            Rejected: 'bg-red-500/15 text-red-300',
+            Cancelled: 'bg-emerald-950/70 text-emerald-200'
         };
 
         const getStatusClass = (status) => {
@@ -530,6 +1075,9 @@
             const key = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
             return statusClasses[key] || 'bg-emerald-950/70 text-emerald-200';
         };
+        const escapeBorrowRequestText = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[character]);
 
         const formatDate = (value) => {
             if (!value) return '—';
@@ -587,33 +1135,44 @@
             const pageRecords = filteredRecords.slice(startIndex, startIndex + requestsStateData.rowsPerPage);
 
             if (!filteredRecords.length) {
-                requestsState.innerHTML = '<div class="p-4 text-sm text-emerald-100/70">No reports match your filters.</div>';
+                const hasFilters = Boolean(searchValue) || statusValue !== 'all';
+                requestsState.innerHTML = hasFilters
+                    ? `<div class="requests-empty-state">
+                           <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-magnifying-glass"></i></span>
+                           <strong>No matching reports</strong>
+                           <p>Try a different search or status filter.</p>
+                       </div>`
+                    : `<div class="requests-empty-state">
+                           <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+                           <strong>No submitted issue reports found.</strong>
+                           <a class="requests-empty-action" href="/student-report-issue"><i class="fas fa-plus" aria-hidden="true"></i>Report an issue</a>
+                       </div>`;
                 return;
             }
 
             requestsState.innerHTML = `
-                <div class="overflow-x-auto">
-                    <table class="requests-table text-left">
+                <div class="maintenance-reports-table-scroll">
+                    <table class="requests-table maintenance-reports-table text-left">
                         <thead>
                             <tr>
+                                <th class="col-report-id">Report ID</th>
                                 <th class="col-equipment">Equipment</th>
-                                <th class="col-description">Damage Description</th>
+                                <th class="col-description">Issue Description</th>
+                                <th class="col-dates">Date Submitted</th>
                                 <th class="col-status">Status</th>
-                                <th class="col-dates">Date Reported</th>
-                                <th class="col-dates">Resolved Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${pageRecords.map((item) => `
                                 <tr>
-                                    <td class="col-equipment equipment-cell">
-                                        <div class="equipment-name">${item.equipmentName || item.equipment_id || '—'}</div>
-                                        <div class="equipment-id">${item.equipmentId || item.equipment_id || '—'}</div>
+                                    <td class="col-report-id" data-label="Report ID">${escapeBorrowRequestText(item.id || '—')}</td>
+                                    <td class="col-equipment equipment-cell" data-label="Equipment">
+                                        <div class="equipment-name">${escapeBorrowRequestText(item.equipmentName || item.equipment_id || '—')}</div>
+                                        <div class="equipment-id">${escapeBorrowRequestText(item.equipmentId || item.equipment_id || '—')}</div>
                                     </td>
-                                    <td class="col-description description-cell">${item.description || '—'}</td>
-                                    <td class="col-status status-cell"><span class="status-badge ${statusClasses[item.status] || 'bg-emerald-950/70 text-emerald-200'}">${item.status || 'Pending'}</span></td>
-                                    <td class="col-dates date-cell">${formatDate(item.dateReported || item.date || item.created_at || item.createdAt)}</td>
-                                    <td class="col-dates date-cell">${formatDate(item.dateResolved || item.resolvedDate)}</td>
+                                    <td class="col-description description-cell" data-label="Issue Description">${escapeBorrowRequestText(item.description || '—')}</td>
+                                    <td class="col-dates date-cell" data-label="Date Submitted">${escapeBorrowRequestText(formatDate(item.dateReported || item.date || item.created_at || item.createdAt))}</td>
+                                    <td class="col-status status-cell" data-label="Status"><span class="status-badge ${statusClasses[item.status] || 'bg-emerald-950/70 text-emerald-200'}">${escapeBorrowRequestText(item.status || 'Pending')}</span></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -653,7 +1212,7 @@
                 renderRequests();
             } catch (error) {
                 console.error(error);
-                requestsState.innerHTML = '<div class="text-sm text-red-300">Unable to load your requests right now.</div>';
+                requestsState.innerHTML = '<div class="requests-empty-state is-error"><span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span><strong>Could not load reports</strong><p>Unable to load your requests right now. Please try again later.</p></div>';
             }
         };
 
@@ -685,8 +1244,8 @@
             }
 
             return `
-                <div class="requests-pagination" aria-label="Borrow requests pagination">
-                    <button type="button" data-borrow-action="prev" ${borrowRequestsStateData.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+                <div class="requests-pagination borrow-requests-pagination" aria-label="Borrow requests pagination">
+                    <button type="button" data-borrow-action="prev" ${borrowRequestsStateData.currentPage === 1 ? 'disabled' : ''}>Previous</button>
                     ${pages.join('')}
                     <button type="button" data-borrow-action="next" ${borrowRequestsStateData.currentPage === totalPages ? 'disabled' : ''}>Next</button>
                 </div>
@@ -695,26 +1254,72 @@
 
         const renderBorrowRequests = () => {
             const target = document.getElementById('borrowRequestsState');
-            const rows = borrowRequestsStateData.records;
+            const allRows = borrowRequestsStateData.records;
+            const approvalQueue = allRows.filter((record) => record.canApprove && String(record.status || '').toLowerCase() === 'pending');
+            const queueTarget = document.getElementById('facultyApprovalQueue');
+            if (isFacultyPage && queueTarget) {
+                queueTarget.classList.remove('hidden');
+                queueTarget.innerHTML = `
+                    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2 text-emerald-100">
+                                <span class="grid h-9 w-9 place-items-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"><i class="fas fa-user-check"></i></span>
+                                <h3 class="text-base font-bold">Requests awaiting your approval</h3>
+                                ${approvalQueue.length ? `<span class="rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-bold text-amber-200">${approvalQueue.length}</span>` : ''}
+                            </div>
+                            <p class="mt-1 text-xs text-emerald-100/60">Only requests for equipment currently assigned to you appear here.</p>
+                        </div>
+                    </div>
+                    ${approvalQueue.length ? `<div class="grid gap-3">${approvalQueue.map((record) => `
+                        <article class="rounded-xl border border-emerald-800/50 bg-[#06140D]/80 p-4" data-approval-record="${escapeBorrowRequestText(record.id)}">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-white">${escapeBorrowRequestText(record.equipmentName)} <span class="font-mono text-xs text-emerald-300">${escapeBorrowRequestText(record.equipmentId)}</span></div>
+                                    <div class="mt-1 text-sm text-emerald-100/80">Requested by <strong class="text-white">${escapeBorrowRequestText(record.borrowerName)}</strong></div>
+                                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                                        <span><i class="fas fa-calendar-day mr-1 text-emerald-400"></i>${escapeBorrowRequestText(record.borrowDate)} ${escapeBorrowRequestText(record.borrowStartTime || '')}</span>
+                                        <span><i class="fas fa-rotate-left mr-1 text-emerald-400"></i>${record.returnDate ? `Marked returned ${escapeBorrowRequestText(record.returnDate)} ${escapeBorrowRequestText(record.returnTime || '')}` : record.expectedReturnDate ? `Due ${escapeBorrowRequestText(record.expectedReturnDate)} ${escapeBorrowRequestText(record.expectedReturnTime || '')}` : 'Return when finished'}</span>
+                                        <span><i class="fas fa-location-dot mr-1 text-emerald-400"></i>${escapeBorrowRequestText(record.laboratoryRoom || record.campus || 'Location not specified')}</span>
+                                    </div>
+                                    ${record.purpose ? `<p class="mt-3 rounded-lg border border-emerald-900/50 bg-emerald-950/20 px-3 py-2 text-sm text-slate-300">${escapeBorrowRequestText(record.purpose)}</p>` : ''}
+                                </div>
+                                <div class="flex shrink-0 gap-2">
+                                    <button type="button" data-approval-action="approve" data-record-id="${escapeBorrowRequestText(record.id)}" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-500"><i class="fas fa-check mr-1"></i>Approve</button>
+                                    <button type="button" data-approval-action="reject" data-record-id="${escapeBorrowRequestText(record.id)}" class="rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs font-bold text-rose-200 transition hover:bg-rose-900/40"><i class="fas fa-xmark mr-1"></i>Reject</button>
+                                </div>
+                            </div>
+                        </article>`).join('')}</div>` : `
+                        <div class="flex items-center gap-3 rounded-xl border border-emerald-900/40 bg-[#06140D]/50 px-4 py-4">
+                            <span class="text-xl text-emerald-400"><i class="fas fa-circle-check"></i></span>
+                            <div><strong class="block text-sm text-emerald-100">You’re all caught up</strong><span class="text-xs text-emerald-100/55">No requests are waiting for your approval.</span></div>
+                        </div>`}`;
+            }
+
+            const rows = isFacultyPage ? allRows.filter((record) => record.isMyRequest) : allRows;
             const totalPages = Math.max(1, Math.ceil(rows.length / borrowRequestsStateData.rowsPerPage));
             borrowRequestsStateData.currentPage = Math.min(borrowRequestsStateData.currentPage, totalPages);
             const startIndex = (borrowRequestsStateData.currentPage - 1) * borrowRequestsStateData.rowsPerPage;
             const pageRecords = rows.slice(startIndex, startIndex + borrowRequestsStateData.rowsPerPage);
 
             if (!rows.length) {
-                target.textContent = 'No borrow requests found.';
+                target.innerHTML = `<div class="requests-empty-state">
+                    <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-box-open"></i></span>
+                    <strong>No borrow requests yet</strong>
+                    <p>Equipment requests you submit will be listed here so you can follow their status.</p>
+                    <a class="requests-empty-action" href="/student/borrow-equipment"><i class="fas fa-arrow-right" aria-hidden="true"></i>Browse equipment</a>
+                </div>`;
                 return;
             }
 
             target.innerHTML = `
                 <div class="overflow-x-auto">
-                    <table class="requests-table text-left">
+                    <table class="requests-table borrow-requests-table text-left">
                         <thead>
                             <tr>
                                 <th>Equipment</th>
                                 <th>Laboratory</th>
                                 <th>Borrow date</th>
-                                <th>Expected return</th>
+                                <th>Return date</th>
                                 <th>Status</th>
                                 <th>Reason</th>
                             </tr>
@@ -724,7 +1329,23 @@
                                 const statusText = record.status || 'Pending';
                                 const statusClass = getStatusClass(statusText);
                                 const reasonText = String(statusText).toLowerCase() === 'rejected' ? (record.remarks || 'No reason provided') : '—';
-                                return `<tr><td><strong>${record.equipmentName || '—'}</strong><br><span class="equipment-id">${record.equipmentId || '—'}</span></td><td>${record.laboratoryRoom || record.campus || '—'}</td><td>${record.borrowDate || '—'} ${record.borrowStartTime || ''}</td><td>${record.expectedReturnDate || '—'} ${record.expectedReturnTime || ''}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td>${reasonText}</td></tr>`;
+                                return `<tr>
+                                                    <td class="equipment-cell" data-label="Equipment"><div class="equipment-name">${escapeBorrowRequestText(record.equipmentName || '—')}</div><div class="equipment-id">${escapeBorrowRequestText(record.equipmentId || '—')}</div></td>
+                                                    <td data-label="Laboratory">${escapeBorrowRequestText(record.laboratoryRoom || record.campus || '—')}</td>
+                                                    <td data-label="Borrow date">${escapeBorrowRequestText(record.borrowDate || '—')} ${escapeBorrowRequestText(record.borrowStartTime || '')}</td>
+                                                    <td data-label="Return date">${escapeBorrowRequestText(record.returnDate || record.expectedReturnDate || 'When returned')} ${escapeBorrowRequestText(record.returnTime || record.expectedReturnTime || '')}</td>
+                                                    <td class="status-cell" data-label="Status">
+                                                        <span class="status-badge ${statusClass}">${escapeBorrowRequestText(statusText)}</span>
+                                                        ${record.accountableFacultyName ? `<div class="mt-1 text-xs text-slate-400">Accountable Faculty: ${escapeBorrowRequestText(record.accountableFacultyName)}</div>` : ''}
+                                                        ${String(statusText).toLowerCase() === 'pending' && record.requiresFacultyApproval ? '<div class="mt-1 text-xs font-semibold text-amber-300">Waiting for the accountable MR Faculty member to approve.</div>' : ''}
+                                                        ${record.takenOverFrom ? `<div class="mt-1 text-xs font-semibold text-sky-300">You took over this item from ${escapeBorrowRequestText(record.takenOverFrom)}.</div>` : ''}
+                                                        ${record.takenOverBy ? `<div class="mt-1 text-xs text-slate-400">This item was transferred to ${escapeBorrowRequestText(record.takenOverBy)}.</div>` : ''}
+                                                        ${record.approvedByName ? `<div class="mt-1 text-xs text-slate-400">${String(statusText).toLowerCase() === 'rejected' ? 'Rejected' : 'Approved'} by ${escapeBorrowRequestText(record.approvedByName)}</div>` : ''}
+                                                        ${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeBorrowRequestText(record.returnRequestedBy)}` : ''}</div>` : ''}
+                                                        ${record.isMyRequest && record.requesterUserId && ['student', 'faculty', 'instructor'].includes(currentPageRole) && String(record.status || '').toLowerCase() === 'borrowed' && !record.returnRequestedAt ? `<button type="button" data-request-return="${escapeBorrowRequestText(record.id)}" class="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/20"><i class="fas fa-rotate-left mr-1"></i>Mark as returned</button>` : ''}
+                                                    </td>
+                                                    <td data-label="Reason">${escapeBorrowRequestText(reasonText)}</td>
+                                </tr>`;
                             }).join('')}
                         </tbody>
                     </table>
@@ -749,20 +1370,71 @@
             });
         };
 
+        document.getElementById('facultyApprovalQueue')?.addEventListener('click', async (event) => {
+            const button = event.target.closest('[data-approval-action]');
+            if (!button) return;
+            const action = button.dataset.approvalAction;
+            const recordId = button.dataset.recordId;
+            const reason = action === 'reject'
+                ? (await window.appDialogs.prompt('Please provide a reason for rejecting this request:'))?.trim()
+                : '';
+            if (action === 'reject' && !reason) return;
+            if (action === 'approve' && !await window.appDialogs.confirm('Approve this equipment borrow request?')) return;
+
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/borrow-records/${encodeURIComponent(recordId)}/${action}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...(action === 'reject' ? { reason } : {}) })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || `Unable to ${action} this request.`);
+                await loadBorrowRequests();
+            } catch (error) {
+                window.alert(error.message || `Unable to ${action} this request.`);
+                button.disabled = false;
+            }
+        });
+
         const loadBorrowRequests = async () => {
             const target = document.getElementById('borrowRequestsState');
             try {
                 const response = await fetch('/api/borrow-records', { cache: 'no-store' });
-                const records = response.ok ? await response.json() : [];
-                const rows = (Array.isArray(records) ? records : []).filter((record) => ['pending', 'approved', 'rejected', 'returned', 'overdue', 'lost'].includes(String(record.status || '').toLowerCase()));
+                if (!response.ok) {
+                    throw new Error(`Unable to load borrow requests (${response.status})`);
+                }
+                const records = await response.json();
+                const rows = (Array.isArray(records) ? records : []).filter((record) => ['pending', 'approved', 'borrowed', 'rejected', 'cancelled', 'returned', 'overdue', 'lost', 'pending replacement'].includes(String(record.status || '').toLowerCase()));
                 borrowRequestsStateData.records = rows;
                 borrowRequestsStateData.currentPage = 1;
                 renderBorrowRequests();
             } catch (error) {
-                target.textContent = 'Unable to load borrow requests right now.';
+                console.error(error);
+                target.innerHTML = '<div class="requests-empty-state is-error"><span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span><strong>Could not load borrow requests</strong><p>Unable to load borrow requests right now. Please try again later.</p></div>';
             }
         };
-        loadBorrowRequests();
+        document.getElementById('borrowRequestsState')?.addEventListener('click', async (event) => {
+            const button = event.target.closest('[data-request-return]');
+            if (!button) return;
+            const note = await window.appDialogs.prompt('Optional note for the Admin/Technician receiving the equipment:', '') || '';
+            if (!await window.appDialogs.confirm('Submit a request to return this equipment? Please hand the item to an Admin or Technician to complete the return.')) return;
+            button.disabled = true;
+            try {
+                const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.requestReturn)}/request-return`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ remarks: note })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Unable to request this return.');
+                await loadBorrowRequests();
+            } catch (error) {
+                window.alert(error.message || 'Unable to request this return.');
+                button.disabled = false;
+            }
+        });
+        if (isFacultyPage) loadBorrowRequests();
     </script>
     <script src="/js/qr-scanner-button.js?v=1" defer></script>
 </body>

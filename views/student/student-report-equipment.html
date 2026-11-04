@@ -6,17 +6,60 @@
     <title>Report Equipment Issue | ComLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=4">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
-        :root { --bg: #07150F; --bg-secondary: #0A1D15; }
+        :root { --bg: #020617; --bg-secondary: #07111f; }
         body {
-            background: radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 28%), linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+            background: radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 28%), linear-gradient(180deg, #020617 0%, #07111f 100%);
             color: #f8fafc; min-height: 100vh;
         }
         .main-container {
             min-height: 100vh;
             margin-left: calc(var(--sidebar-width, 280px) + 0.75rem);
             width: calc(100% - var(--sidebar-width, 280px) - 0.75rem);
+        }
+        body.student-portal.student-report-equipment-page .student-page-heading-copy {
+            margin-left: 0.75rem;
+        }
+        body.student-portal.student-report-equipment-page .student-page-subtitle {
+            display: block;
+            max-width: 100%;
+            margin: 0;
+            overflow: visible;
+            color: #a7f3d0 !important;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+            text-overflow: clip;
+            white-space: normal;
+        }
+        body.student-report-equipment-page .report-choice-heading {
+            font-size: 19px;
+        }
+        body.student-report-equipment-page .report-scope-heading {
+            font-size: 20px;
+        }
+        body.student-report-equipment-page .issue-type-label,
+        body.student-report-equipment-page .issue-description-label,
+        body.student-report-equipment-page .component-label,
+        body.student-report-equipment-page .pc-station-label {
+            font-size: 20px;
+        }
+        body.student-report-equipment-page #pcEntireSummary > p,
+        body.student-report-equipment-page #pcEntireList {
+            font-size: 18px !important;
+        }
+        body.student-report-equipment-page #issueCategory {
+            font-size: 16px;
+        }
+        .report-issue-header-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.55rem;
+            margin-left: auto;
         }
         .glass-card {
             background: linear-gradient(135deg, rgba(10,31,19,.95), rgba(8,25,16,.9));
@@ -26,17 +69,39 @@
         }
         .radio-card {
             border: 2px solid rgba(74,222,128,.15);
-            background: rgba(10,30,20,.4);
+            background: rgba(7, 17, 31,.4);
             border-radius: 12px;
             padding: 14px;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .radio-card:hover { border-color: rgba(74,222,128,.35); background: rgba(15,45,30,.5); }
+        .report-method-options,
+        .report-scope-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+        .report-method-options .radio-card,
+        .report-scope-options .radio-card {
+            min-width: 0;
+            min-height: 5rem;
+            align-items: flex-start;
+            padding: 0.8rem 0.9rem;
+        }
+        .report-method-options .radio-card > div,
+        .report-scope-options .radio-card > div {
+            min-width: 0;
+        }
+        .report-method-options .radio-card p:last-child,
+        .report-scope-options .radio-card p:last-child {
+            overflow-wrap: anywhere;
+        }
+        .radio-card:hover { border-color: rgba(74,222,128,.35); background: rgba(7, 17, 31,.5); }
         .radio-card.selected { border-color: #22c55e; background: rgba(34,197,94,.08); }
         .form-input, .form-select {
             width: 100%; border-radius: 0.875rem;
-            border: 1px solid rgba(74,222,128,.18); background: rgba(5,15,10,.8);
+            border: 1px solid rgba(74,222,128,.18); background: rgba(2, 6, 23,.8);
             color: #f8fafc; padding: 0.875rem 1rem; outline: none;
         }
         .form-input:focus, .form-select:focus {
@@ -50,6 +115,50 @@
             box-shadow: 0 8px 20px rgba(34,197,94,.2);
         }
         .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .equipment-suggestion-list {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 0.35rem);
+            left: 0;
+            right: 0;
+            max-height: 15rem;
+            overflow-y: auto;
+            padding: 0.3rem;
+            border: 1px solid rgba(74,222,128,.25);
+            border-radius: 0.875rem;
+            background: #020617;
+            box-shadow: 0 14px 30px rgba(0,0,0,.35);
+        }
+        .equipment-suggestion {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            border: 0;
+            border-radius: 0.6rem;
+            background: transparent;
+            color: #f8fafc;
+            text-align: left;
+            cursor: pointer;
+        }
+        .equipment-suggestion:hover,
+        .equipment-suggestion:focus-visible {
+            outline: none;
+            background: rgba(34,197,94,.14);
+        }
+        .equipment-suggestion-id {
+            color: #6ee7b7;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        .equipment-suggestion-name {
+            overflow: hidden;
+            color: #cbd5e1;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         @media (max-width: 1023px) {
             .main-container {
                 margin-left: 0;
@@ -58,41 +167,68 @@
         }
 
         @media (max-width: 640px) {
+            .report-method-options,
+            .report-scope-options {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
             .main-container > header {
-                padding-top: 0.75rem;
+                position: static !important;
+                padding: 0 !important;
             }
 
             .main-container > header > div {
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
+                padding: 0 !important;
             }
 
-            .main-container > header > div > div {
-                align-items: flex-start;
-                flex-wrap: wrap;
-                gap: 0.75rem;
-                padding: 1rem;
-                border-radius: 1.2rem;
+            .student-page-header {
+                min-height: 4.25rem;
+                align-items: center;
+                flex-wrap: nowrap;
+                gap: 0.45rem;
+                margin: 0;
+                padding: 0.4rem 0.5rem;
+                border-radius: 1rem;
             }
 
-            .main-container > header > div > div > div:first-child {
-                width: 100%;
+            .student-page-header .student-page-heading {
+                width: auto;
                 min-width: 0;
-                padding-left: 3.25rem;
+                flex: 1 1 auto;
+                gap: 0.5rem;
             }
 
-            .main-container > header h1 {
-                font-size: 1.15rem;
-                line-height: 1.3;
+            .student-page-header .student-page-menu {
+                width: 2.45rem;
+                height: 2.45rem;
+                flex-basis: 2.45rem;
             }
 
-            .main-container > header p {
-                max-width: 30ch;
-                line-height: 1.45;
+            .student-page-header .student-page-title {
+                font-size: clamp(0.78rem, 3.6vw, 0.96rem);
+                line-height: 1.15;
             }
 
-            .main-container > header > div > div > div:last-child {
-                margin-left: 3.25rem;
+            .student-page-header .student-page-subtitle {
+                font-size: 0.48rem;
+                letter-spacing: 0.09em;
+            }
+
+            .student-page-header .student-page-user {
+                min-height: 1.9rem;
+                gap: 0.25rem;
+                margin: 0;
+                padding: 0.16rem 0.38rem 0.16rem 0.2rem;
+            }
+
+            .student-page-header .student-page-user-initials {
+                width: 1.4rem;
+                height: 1.4rem;
+            }
+
+            .student-page-header .student-page-user-role {
+                font-size: 0.47rem;
+                letter-spacing: 0.08em;
             }
 
             .main-container > main {
@@ -140,26 +276,29 @@
             }
         }
     </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page student-report-equipment-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
         <header class="sticky top-0 z-30 pt-2">
             <div class="px-3">
-                <div class="flex items-center justify-between gap-3 p-4 rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/80 to-emerald-900/60">
-                    <div class="flex items-center gap-3 flex-1">
-                        <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()" class="menu-toggle block lg:hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 p-2.5">
-                            <i class="fas fa-bars text-lg text-emerald-200"></i>
+                <div class="student-page-header">
+                    <div class="student-page-heading">
+                        <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+                            <i class="fas fa-bars" aria-hidden="true"></i>
                         </button>
-                        <div>
-                            <h1 class="text-xl font-bold text-white">Report Equipment Issue</h1>
-                            <p class="text-xs text-emerald-400/70 mt-1">Report damaged or malfunctioning equipment</p>
+                        <div class="student-page-heading-copy">
+                            <h1 class="student-page-title student-university-title">MINDORO STATE UNIVERSITY</h1>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-xs font-bold text-emerald-200" data-user-initials>ST</div>
-                        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-200" data-user-role>Student</span>
+                    <div class="report-issue-header-actions" data-theme-toggle-anchor>
+                        <div class="student-page-user">
+                            <span class="student-page-user-initials" data-user-initials>ST</span>
+                            <span class="student-page-user-role" data-user-role>Student</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -167,13 +306,10 @@
 
         <main class="px-3 pt-4 pb-8">
             <section class="glass-card p-6">
-                <h2 class="text-lg font-bold text-white mb-1">Submit Equipment Report</h2>
-                <p class="text-sm text-slate-400 mb-6">Choose how you want to report</p>
-
                 <!-- STEP 1: Choose Report Method -->
                 <div id="step1" class="mb-5">
-                    <p class="text-sm font-semibold text-white mb-3">How do you want to report?</p>
-                    <div class="space-y-2">
+                    <p class="report-choice-heading mb-3 font-semibold text-white">How do you want to report?</p>
+                    <div class="report-method-options">
                         <label class="radio-card flex items-start gap-3" id="methodCard1">
                             <input type="radio" name="reportMethod" value="by-equipment" onchange="onMethodChange()" style="margin-top:2px;accent-color:#22c55e;">
                             <div>
@@ -195,7 +331,10 @@
                 <div id="equipmentIdPanel" style="display:none;" class="mb-5">
                     <label class="text-sm font-semibold text-emerald-400 block mb-2">Equipment ID</label>
                     <div class="flex gap-2">
-                        <input id="equipmentInput" class="form-input flex-1" placeholder="e.g. KBD-PC-001" />
+                        <div class="relative min-w-0 flex-1">
+                            <input id="equipmentInput" class="form-input" placeholder="e.g. KBD-PC-001" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="equipmentSuggestions" />
+                            <div id="equipmentSuggestions" class="equipment-suggestion-list" role="listbox" style="display:none;"></div>
+                        </div>
                         <button onclick="searchEquipment()" class="btn-primary" style="border-radius:0.875rem;padding:0.875rem 1.2rem;">
                             <i class="fas fa-search"></i>
                         </button>
@@ -212,7 +351,7 @@
 
                 <!-- STEP 2b: PC Station Picker -->
                 <div id="pcStationPanel" style="display:none;" class="mb-5">
-                    <label class="text-sm font-semibold text-emerald-400 block mb-2">Select PC Station</label>
+                    <label class="pc-station-label text-sm font-semibold text-emerald-400 block mb-2">Select PC Station</label>
                     <select id="pcStationSelect" class="form-select" onchange="onPCStationSelect()">
                         <option value="">— Choose PC Station —</option>
                     </select>
@@ -221,8 +360,8 @@
 
                 <!-- PC Set Scope (after selecting PC Station) -->
                 <div id="pcSetScopePanel" style="display:none;" class="mb-5">
-                    <p class="text-sm font-semibold text-white mb-3">What do you want to report?</p>
-                    <div class="space-y-2">
+                    <p class="report-scope-heading text-sm font-semibold text-white mb-3">What do you want to report?</p>
+                    <div class="report-scope-options">
                         <label class="radio-card flex items-start gap-3" id="scopeCard1">
                             <input type="radio" name="pcSetScope" value="component" onchange="onPCSetScopeChange()" style="margin-top:2px;accent-color:#22c55e;">
                             <div>
@@ -241,7 +380,7 @@
 
                     <!-- Component picker -->
                     <div id="pcComponentPicker" style="display:none;" class="mt-3">
-                        <label class="text-sm font-semibold text-emerald-400 block mb-2">Select Component</label>
+                        <label class="component-label text-sm font-semibold text-emerald-400 block mb-2">Select Component</label>
                         <select id="pcComponentSelect" class="form-select" onchange="onPCComponentSelect()">
                             <option value="">— Choose component —</option>
                         </select>
@@ -256,11 +395,21 @@
 
                 <!-- Issue Description -->
                 <div class="mb-5">
-                    <label class="text-sm font-semibold text-emerald-400 block mb-2">Describe the Issue <span class="text-red-400">*</span></label>
-                    <textarea id="issueDescription" rows="4" class="form-input resize-none" placeholder="Describe what's wrong with the equipment..." required></textarea>
+                    <label for="issueCategory" class="issue-type-label text-sm font-semibold text-emerald-400 block mb-2">Issue Type</label>
+                    <select id="issueCategory" class="form-select">
+                        <option value="Equipment Damage">Equipment Damage</option>
+                        <option value="Equipment Missing">Equipment Missing</option>
+                        <option value="Connectivity">Connectivity / Performance</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
 
-                <div id="submitStatus" style="display:none;" class="mb-4 p-3 rounded-xl text-sm"></div>
+                <div class="mb-5">
+                    <label for="issueDescription" class="issue-description-label text-sm font-semibold text-emerald-400 block mb-2">Describe the Issue <span class="text-red-400">*</span></label>
+                    <textarea id="issueDescription" rows="4" maxlength="3000" class="form-input resize-none" placeholder="Describe what's wrong with the equipment..." required></textarea>
+                </div>
+
+                <div id="submitStatus" role="status" aria-live="polite" style="display:none;" class="mb-4 p-3 rounded-xl text-sm"></div>
 
                 <button id="submitBtn" onclick="submitReport()" class="btn-primary w-full justify-center" disabled>
                     <i class="fas fa-paper-plane"></i> Submit Report
@@ -273,12 +422,23 @@
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
         const user = window.__CURRENT_USER__ || {};
         const name = user.name || '';
+        const userRole = String(user.role || 'student').trim().toLowerCase();
+        const isFaculty = userRole === 'faculty' || userRole === 'instructor';
         const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('') || 'ST';
         document.querySelectorAll('[data-user-initials]').forEach(el => el.textContent = user.initials || initials);
-        document.querySelectorAll('[data-user-role]').forEach(el => el.textContent = (user.role||'student').charAt(0).toUpperCase() + (user.role||'student').slice(1));
+        document.querySelectorAll('[data-user-role]').forEach(el => el.textContent = isFaculty ? 'Faculty' : (user.role||'student').charAt(0).toUpperCase() + (user.role||'student').slice(1));
+        if (isFaculty) {
+            document.getElementById('reportHeading').textContent = 'Report a Lab Equipment Issue';
+            document.getElementById('reportIntro').textContent = 'Select the affected equipment and share clear details so your campus technician can follow up.';
+            document.querySelector('#methodCard1 p:last-child').textContent = 'Search equipment assigned to your campus';
+        }
 
         let currentEquipmentId = null;
         let pcSetComponents = [];
+        let pcStations = new Map();
+        let equipmentCatalogRequest = null;
+        let equipmentSuggestionIndex = -1;
+        let equipmentValidationRequest = 0;
 
         function onMethodChange() {
             const selected = document.querySelector('input[name="reportMethod"]:checked');
@@ -302,15 +462,25 @@
 
         async function loadPCStations() {
             const select = document.getElementById('pcStationSelect');
-            select.innerHTML = '<option value="">Loading PC Stations...</option>';
+            select.replaceChildren(new Option('Loading PC Stations...', ''));
             try {
-                const res = await fetch('/api/equipment-sets');
-                const data = await res.json().catch(() => ({}));
-                const sets = data.sets || [];
-                select.innerHTML = '<option value="">— Choose PC Station —</option>' +
-                    sets.map(s => `<option value="${s.setId}">${s.setName || s.setId}</option>`).join('');
-            } catch(e) {
-                select.innerHTML = '<option value="">Failed to load</option>';
+                const equipment = await getEquipmentCatalog();
+                pcStations = new Map();
+                equipment.forEach(item => {
+                    if (!item.setId) return;
+                    if (!pcStations.has(item.setId)) pcStations.set(item.setId, []);
+                    pcStations.get(item.setId).push(item);
+                });
+                select.replaceChildren(new Option('— Choose PC Station —', ''));
+                [...pcStations.entries()]
+                    .sort(([left], [right]) => left.localeCompare(right))
+                    .forEach(([setId, components]) => {
+                        const room = components.find(component => component.laboratoryRoom)?.laboratoryRoom;
+                        select.add(new Option(room ? `${setId} — ${room}` : setId, setId));
+                    });
+                if (!pcStations.size) select.replaceChildren(new Option('No PC Stations found on your campus', ''));
+            } catch(error) {
+                select.replaceChildren(new Option(error.message || 'Failed to load PC stations.', ''));
             }
         }
 
@@ -322,25 +492,31 @@
                 return;
             }
 
-            document.getElementById('pcStationStatus').innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Loading components...';
-            document.getElementById('pcStationStatus').style.display = '';
-
             try {
-                const res = await fetch(`/api/equipment-sets/${encodeURIComponent(setId)}`);
-                const data = await res.json().catch(() => ({}));
-                pcSetComponents = (data.components || []).filter(c => c.status !== 'Missing');
+                pcSetComponents = (pcStations.get(setId) || []).filter(component => component.status !== 'Missing');
+                if (!pcSetComponents.length) throw new Error('No reportable components were found for this PC Station.');
 
                 const compSelect = document.getElementById('pcComponentSelect');
-                compSelect.innerHTML = '<option value="">— Choose component —</option>' +
-                    pcSetComponents.map(c => `<option value="${c.equipmentId}">${c.name} — ${c.serialNumber || 'N/A'} (${c.category})</option>`).join('');
+                compSelect.replaceChildren(new Option('— Choose component —', ''));
+                pcSetComponents.forEach(component => {
+                    compSelect.add(new Option(`${component.name} — ${component.serialNumber || 'N/A'} (${component.category || 'Equipment'})`, component.equipmentId));
+                });
 
-                document.getElementById('pcEntireList').innerHTML = pcSetComponents.map(c => `<div>• ${c.name} — ${c.serialNumber || 'N/A'}</div>`).join('');
+                const entireList = document.getElementById('pcEntireList');
+                entireList.replaceChildren(...pcSetComponents.map(component => {
+                    const item = document.createElement('div');
+                    item.textContent = `• ${component.name} — ${component.serialNumber || 'N/A'}`;
+                    return item;
+                }));
 
                 document.getElementById('pcStationStatus').style.display = 'none';
                 document.getElementById('pcSetScopePanel').style.display = '';
 
-            } catch(e) {
-                document.getElementById('pcStationStatus').innerHTML = '<span class="text-red-400">Failed to load components</span>';
+            } catch(error) {
+                const status = document.getElementById('pcStationStatus');
+                status.textContent = error.message || 'Failed to load components.';
+                status.className = 'mt-2 text-xs text-red-400';
+                status.style.display = '';
             }
         }
 
@@ -368,9 +544,109 @@
             document.getElementById('submitBtn').disabled = !currentEquipmentId;
         }
 
+        async function getEquipmentCatalog() {
+            if (!equipmentCatalogRequest) {
+                equipmentCatalogRequest = fetch('/api/student/equipment', { cache: 'no-store' })
+                    .then(async response => {
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(data.error || `Unable to load equipment (${response.status}).`);
+                        }
+                        if (!Array.isArray(data)) {
+                            throw new Error('Equipment search returned an invalid response.');
+                        }
+                        return data;
+                    })
+                    .catch(error => {
+                        equipmentCatalogRequest = null;
+                        throw error;
+                    });
+            }
+            return equipmentCatalogRequest;
+        }
+
+        function hideEquipmentSuggestions() {
+            const suggestions = document.getElementById('equipmentSuggestions');
+            suggestions.style.display = 'none';
+            suggestions.replaceChildren();
+            document.getElementById('equipmentInput').setAttribute('aria-expanded', 'false');
+            equipmentSuggestionIndex = -1;
+        }
+
+        function selectEquipmentSuggestion(equipmentId) {
+            document.getElementById('equipmentInput').value = equipmentId;
+            hideEquipmentSuggestions();
+            searchEquipment();
+        }
+
+        async function showEquipmentSuggestions() {
+            const input = document.getElementById('equipmentInput');
+            const query = input.value.trim().toLocaleLowerCase();
+            const suggestions = document.getElementById('equipmentSuggestions');
+            equipmentValidationRequest += 1;
+            currentEquipmentId = null;
+            document.getElementById('equipmentInfo').style.display = 'none';
+            document.getElementById('searchStatus').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            hideEquipmentSuggestions();
+            if (!query) return;
+
+            const loadingMessage = document.createElement('p');
+            loadingMessage.className = 'px-3 py-2 text-xs text-slate-400';
+            loadingMessage.textContent = 'Searching equipment...';
+            suggestions.appendChild(loadingMessage);
+            suggestions.style.display = '';
+            input.setAttribute('aria-expanded', 'true');
+
+            try {
+                const equipment = await getEquipmentCatalog();
+                if (input.value.trim().toLocaleLowerCase() !== query) return;
+
+                const matches = equipment.filter(item => {
+                    const equipmentId = String(item.equipmentId || '').toLocaleLowerCase();
+                    return equipmentId.includes(query);
+                }).slice(0, 8);
+
+                suggestions.replaceChildren();
+                if (!matches.length) {
+                    const emptyMessage = document.createElement('p');
+                    emptyMessage.className = 'px-3 py-2 text-xs text-slate-400';
+                    emptyMessage.textContent = 'No matching equipment found.';
+                    suggestions.appendChild(emptyMessage);
+                } else {
+                    matches.forEach(item => {
+                        const option = document.createElement('button');
+                        option.type = 'button';
+                        option.className = 'equipment-suggestion';
+                        option.setAttribute('role', 'option');
+                        option.setAttribute('aria-selected', 'false');
+                        option.dataset.equipmentId = item.equipmentId;
+
+                        const name = document.createElement('span');
+                        name.className = 'equipment-suggestion-name';
+                        name.textContent = item.name || item.category || 'Equipment';
+                        const id = document.createElement('span');
+                        id.className = 'equipment-suggestion-id';
+                        id.textContent = item.equipmentId;
+                        option.append(name, id);
+                        suggestions.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                if (input.value.trim().toLocaleLowerCase() !== query) return;
+                suggestions.replaceChildren();
+                const errorMessage = document.createElement('p');
+                errorMessage.className = 'px-3 py-2 text-xs text-red-400';
+                errorMessage.textContent = error.message || 'Unable to search equipment.';
+                suggestions.appendChild(errorMessage);
+            }
+        }
+
         async function searchEquipment() {
             const eqId = document.getElementById('equipmentInput').value.trim();
             if (!eqId) return;
+            const requestId = ++equipmentValidationRequest;
+            hideEquipmentSuggestions();
 
             const status = document.getElementById('searchStatus');
             status.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Searching...';
@@ -383,9 +659,10 @@
             try {
                 const res = await fetch(`/api/student/maintenance-context?equipmentId=${encodeURIComponent(eqId)}`);
                 const data = await res.json().catch(() => ({}));
+                if (requestId !== equipmentValidationRequest || document.getElementById('equipmentInput').value.trim() !== eqId) return;
 
                 if (!res.ok || data.error) {
-                    status.innerHTML = '<i class="fas fa-times-circle mr-1"></i>' + (data.error || 'Equipment not found');
+                    status.textContent = data.error || 'Equipment not found';
                     status.className = 'mt-2 text-xs text-red-400';
                     return;
                 }
@@ -398,16 +675,17 @@
                 currentEquipmentId = eqId;
 
                 if (!data.canSubmitReport) {
-                    status.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>' + (data.attendanceMessage || 'Not allowed to report');
+                    status.textContent = data.attendanceMessage || 'Not allowed to report';
                     status.className = 'mt-2 text-xs text-amber-400';
                     return;
                 }
 
-                status.innerHTML = '<i class="fas fa-check-circle mr-1"></i>' + (data.attendanceMessage || 'Attendance verified');
+                status.textContent = data.attendanceMessage || 'Equipment verified';
                 status.className = 'mt-2 text-xs text-emerald-400';
                 document.getElementById('submitBtn').disabled = false;
 
             } catch(err) {
+                if (requestId !== equipmentValidationRequest || document.getElementById('equipmentInput').value.trim() !== eqId) return;
                 status.innerHTML = '<i class="fas fa-wifi mr-1"></i>Connection error';
                 status.className = 'mt-2 text-xs text-red-400';
             }
@@ -417,13 +695,11 @@
             const desc = document.getElementById('issueDescription').value.trim();
             if (!desc) {
                 showStatus('Please describe the issue', 'error');
-                alert('⚠️ Please describe the issue before submitting.');
                 return;
             }
 
             if (!currentEquipmentId) {
                 showStatus('No equipment selected', 'error');
-                alert('⚠️ Please select equipment first.');
                 return;
             }
 
@@ -432,7 +708,10 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
 
             try {
+                const category = document.getElementById('issueCategory').value;
                 const isEntireSet = currentEquipmentId && currentEquipmentId.startsWith('ENTIRE_SET:');
+                let successMessage = 'Your report was submitted. The campus technician can now review it.';
+                let statusType = 'success';
 
                 if (isEntireSet) {
                     let failedCount = 0;
@@ -443,11 +722,10 @@
                             const res = await fetch('/api/maintenance', {
                                 method: 'POST',
                                 headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({ 
+                                body: JSON.stringify({
                                     equipmentId: comp.equipmentId, 
                                     description: desc + ' (Entire PC Station reported)',
-                                    issueTitle: 'Equipment Issue',
-                                    category: 'Equipment Damage'
+                                    category
                                 })
                             });
                             
@@ -467,22 +745,22 @@
                     if (failedCount === pcSetComponents.length) {
                         throw new Error('All components failed to report:\n' + failedItems.join('\n'));
                     } else if (failedCount > 0) {
-                        alert('⚠️ Some components failed:\n\n' + failedItems.join('\n') + '\n\nOther components were reported successfully.');
+                        successMessage = `${pcSetComponents.length - failedCount} of ${pcSetComponents.length} component reports submitted. ${failedCount} failed: ${failedItems.join('; ')}`;
+                        statusType = 'warning';
+                    } else {
+                        successMessage = `${pcSetComponents.length} component reports submitted successfully.`;
                     }
 
-                    showStatus('✓ Report submitted successfully!', 'success');
-                    alert('✅ Report submitted successfully!\n\n' + (pcSetComponents.length - failedCount) + ' out of ' + pcSetComponents.length + ' components reported.');
-                    setTimeout(() => location.reload(), 2000);
+                    submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Reports Submitted';
 
                 } else {
                     const res = await fetch('/api/maintenance', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                             equipmentId: currentEquipmentId, 
                             description: desc,
-                            issueTitle: 'Equipment Issue',
-                            category: 'Equipment Damage'
+                            category
                         })
                     });
                     
@@ -495,16 +773,14 @@
                     const responseData = await res.json().catch(() => ({}));
                     console.log('Submit success:', responseData);
 
-                    showStatus('✓ Report submitted successfully!', 'success');
-                    alert('✅ Report submitted successfully!');
-                    setTimeout(() => location.reload(), 2000);
+                    submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Report Submitted';
                 }
 
+                showStatus(successMessage, statusType);
             } catch(err) {
                 console.error('Submit error:', err);
                 const errorMsg = err.message || 'Unknown error occurred';
                 showStatus(errorMsg, 'error');
-                alert('❌ Failed to submit report:\n\n' + errorMsg + '\n\nPlease check the console for details or contact support.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Report';
             }
@@ -513,13 +789,41 @@
         function showStatus(msg, type) {
             const el = document.getElementById('submitStatus');
             el.textContent = msg;
-            el.className = 'mb-4 p-3 rounded-xl text-sm ' + (type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20');
+            const statusStyles = {
+                success: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+                warning: 'bg-amber-500/10 text-amber-300 border border-amber-500/20',
+                error: 'bg-red-500/10 text-red-400 border border-red-500/20'
+            };
+            el.className = 'mb-4 p-3 rounded-xl text-sm ' + (statusStyles[type] || statusStyles.error);
             el.style.display = '';
         }
 
-        document.getElementById('equipmentInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchEquipment(); });
+        const equipmentInput = document.getElementById('equipmentInput');
+        const equipmentSuggestions = document.getElementById('equipmentSuggestions');
+        equipmentInput.addEventListener('input', showEquipmentSuggestions);
+        equipmentSuggestions.addEventListener('click', event => {
+            const option = event.target.closest('[data-equipment-id]');
+            if (option) selectEquipmentSuggestion(option.dataset.equipmentId);
+        });
+        equipmentInput.addEventListener('keydown', event => {
+            const options = [...equipmentSuggestions.querySelectorAll('[data-equipment-id]')];
+            if (event.key === 'ArrowDown' && options.length) {
+                event.preventDefault();
+                equipmentSuggestionIndex = Math.min(equipmentSuggestionIndex + 1, options.length - 1);
+                options[equipmentSuggestionIndex].focus();
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (equipmentSuggestionIndex >= 0 && options[equipmentSuggestionIndex]) {
+                    selectEquipmentSuggestion(options[equipmentSuggestionIndex].dataset.equipmentId);
+                } else {
+                    searchEquipment();
+                }
+            } else if (event.key === 'Escape') {
+                hideEquipmentSuggestions();
+            }
+        });
     </script>
-    <script src="/js/student-sidebar-config.js?v=5" defer></script>
-    <script src="/js/sidebar-component.js?v=5" defer></script>
+    <script src="/js/student-sidebar-config.js?v=30" defer></script>
+    <script src="/js/sidebar-component.js?v=64" defer></script>
 </body>
 </html>

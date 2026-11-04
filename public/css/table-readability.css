@@ -1,0 +1,196 @@
+body.app-shell main [class~="text-xs"] {
+  font-size: .875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+body.app-shell main :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+  color: #a7f3d0 !important;
+}
+
+body.app-shell main button:not(.menu-toggle):not(#mobileMenuToggle) {
+  font-size: .875rem !important;
+  font-weight: 600 !important;
+}
+
+body.app-shell table thead th {
+  padding: .8rem .9rem !important;
+  background-color: #046a38 !important;
+  border-color: rgba(134, 239, 172, .38) !important;
+  color: #f0fdf4 !important;
+  font-size: .9375rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+}
+
+body.app-shell table tbody td {
+  padding: .8rem .9rem !important;
+  color: #d1fae5 !important;
+  font-size: .9375rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+body.app-shell table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
+  color: #a7f3d0 !important;
+  font-size: .875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+body.app-shell table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+  color: #a7f3d0 !important;
+}
+
+body.app-shell table tbody td :is([class*="bg-slate-"], [class*="bg-gray-"], [class*="bg-blue-"]) {
+  background-color: rgba(4, 106, 56, .2) !important;
+  border-color: rgba(74, 222, 128, .35) !important;
+}
+
+body.app-shell table tbody :is(tr, td)[class*="bg-slate-"],
+body.app-shell table tbody :is(tr, td)[class*="bg-gray-"],
+body.app-shell table tbody :is(tr, td)[class*="bg-blue-"] {
+  background-color: rgba(4, 106, 56, .12) !important;
+}
+
+body.app-shell table tbody td :is([class*="badge"], [class*="status"], [class*="pill"]) {
+  font-size: .875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+body.app-shell table tbody td button,
+body.app-shell [class*="pagination"] button,
+body.app-shell button[class*="pagination"],
+body.app-shell [id*="Pagination"] button,
+body.app-shell [id*="pagination"] button,
+body.app-shell .pagination-nav-btn,
+body.app-shell .pagination-btn,
+body.app-shell .audit-pagination button,
+body.app-shell .requests-pagination button,
+body.app-shell .attendance-pagination button {
+  min-height: 2.5rem;
+  padding-block: .6rem;
+  font-size: .875rem !important;
+  font-weight: 600 !important;
+}
+
+body.app-shell.theme-light table tbody td,
+body.app-shell .main-container.theme-light table tbody td {
+  color: #14532d !important;
+}
+
+body.app-shell.theme-light main :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell .main-container.theme-light main :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+  color: #166534 !important;
+}
+
+body.app-shell.theme-light table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]),
+body.app-shell .main-container.theme-light table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
+  color: #166534 !important;
+}
+
+body.app-shell.theme-light table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell.theme-light table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell .main-container.theme-light table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell .main-container.theme-light table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+  color: #166534 !important;
+}
+
+body.app-shell.theme-light table thead th,
+body.app-shell .main-container.theme-light table thead th {
+  background-color: #046a38 !important;
+  color: #f0fdf4 !important;
+}
+
+body.app-shell .equipment-id-tooltip-trigger {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  color: #6ee7b7 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+  text-decoration: underline dotted;
+  text-underline-offset: .2em;
+  cursor: help;
+}
+
+.equipment-id-tooltip-trigger:focus-visible {
+  border-radius: .2rem;
+  outline: 2px solid #4ade80;
+  outline-offset: 3px;
+}
+
+.equipment-details-tooltip {
+  position: fixed;
+  z-index: 10000;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 1rem));
+  padding: .75rem .9rem;
+  border: 1px solid rgba(74, 222, 128, .48);
+  border-radius: .75rem;
+  background: #046a38;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .42);
+  color: #f0fdf4;
+  font-size: .9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.equipment-details-tooltip[hidden] {
+  display: none;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light main {
+  color: #000 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light main :is(
+  h1, h2, h3, h4, h5, h6, p, label, span, small, strong, td, th, li, a, button,
+  [class*="text-"]
+):not(.system-profile-badge):not(.system-profile-badge *) {
+  color: #000 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light main table thead th {
+  border-color: #d1d5db !important;
+  background: #f3f4f6 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(2),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(2) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(2),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(2) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(3),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(3) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(3),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(3) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(5),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(5) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(5),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(5) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(6),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(6) *,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(6),
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(6) * {
+  color: #000 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light main :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  color: #000 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light main :is(input, textarea)::placeholder {
+  color: #4b5563 !important;
+  opacity: 1;
+}

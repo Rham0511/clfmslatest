@@ -4,10 +4,10 @@
     --accent: #22C55E;
     --hover: #16A34A;
     --success: #4ADE80;
-    --bg: #07150F;
-    --bg-secondary: #0A1D15;
-    --card-bg: rgba(20,45,35,0.78);
-    --card-bg-solid: #0F241B;
+    --bg: #07150f;
+    --bg-secondary: #0a1d15;
+    --card-bg: rgba(20,45,35,0.92);
+    --card-bg-solid: #0f241b;
     --card-hover: #123124;
     --borders: rgba(74,222,128,0.18);
     --glow: rgba(34,197,94,0.12);
@@ -30,8 +30,8 @@ body {
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text);
-    background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 18%),
-                radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.12), transparent 22%),
+    background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.14), transparent 20%),
+                radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.08), transparent 22%),
                 var(--sidebar-bg);
     overflow-x: hidden;
 }
@@ -146,8 +146,10 @@ body.student-portal.sidebar-open {
 
 .sidebar-header {
     position: relative;
-    padding: 1.4rem 1.2rem;
+    padding: 1.2rem 1rem 1rem;
     border-bottom: 1px solid var(--sidebar-border);
+    background: linear-gradient(180deg, rgba(7, 25, 18, 0.7), rgba(6, 20, 14, 0.52));
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.03);
 }
 
 .sidebar-close-btn {
@@ -208,25 +210,50 @@ body.student-portal.sidebar-open {
 .sidebar-logo {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.9rem;
+    gap: 0.8rem;
+    margin: 0;
+    min-height: 3.25rem;
+    padding: 0.3rem 0.15rem;
 }
 
 .sidebar-logo i {
-    font-size: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, rgba(34,197,94,0.16), rgba(16,185,129,0.08));
+    border: 1px solid rgba(74,222,128,0.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px rgba(34,197,94,0.12);
+    font-size: 1.15rem;
     color: var(--accent);
+    flex-shrink: 0;
+}
+
+.sidebar-brand-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .sidebar-logo-text {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--text);
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    color: #f8fafc;
+    text-shadow: 0 0 18px rgba(110,231,183,0.12);
 }
 
 .sidebar-tagline {
-    font-size: 0.75rem;
-    color: #86EFAC;
-    margin-top: 0.25rem;
+    font-size: 0.69rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(134, 239, 172, 0.85);
+    margin-top: 0.22rem;
+    opacity: 0.9;
 }
 
 .sidebar-nav {
@@ -351,18 +378,25 @@ body.student-portal.sidebar-open {
 }
 
 .sidebar .nav-item {
-    padding: 0.85rem 1.2rem !important;
-    font-size: 0.92rem !important;
-    font-weight: 500 !important;
-    line-height: 1.4 !important;
-    letter-spacing: -0.01em !important;
+    padding: 0.75rem 1.2rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.5rem !important;
+    letter-spacing: 0 !important;
     gap: 0.75rem !important;
     border-radius: 0.85rem !important;
 }
 
-body.app-shell .sidebar .nav-item i {
-    font-size: 1.05rem !important;
-    width: 1.3rem !important;
+.sidebar .sidebar-nav-link,
+.sidebar .sidebar-nav-label {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.5rem !important;
+}
+
+body.app-shell .sidebar .nav-item > i {
+    font-size: 1.25rem !important;
+    width: 1.5rem !important;
     color: #4ADE80 !important;
 }
 
@@ -373,12 +407,32 @@ body.app-shell .sidebar .nav-item:hover {
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.03) !important;
 }
 
-body.app-shell .sidebar .nav-item.active {
-    background: var(--sidebar-active-bg) !important;
-    color: #D1FAE5 !important;
-    border-left-color: rgba(74, 222, 128, 0.22) !important;
-    border: 1px solid rgba(74, 222, 128, 0.18) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 20px rgba(6,64,43,0.12) !important;
+body.app-shell .sidebar .nav-item.active,
+body.app-shell .sidebar .nav-item[aria-current="page"] {
+    position: relative;
+    overflow: hidden;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+    font-weight: 600 !important;
+    background: linear-gradient(110deg, rgba(34, 197, 94, 0.24), rgba(16, 68, 46, 0.72) 62%, rgba(8, 39, 29, 0.9)) !important;
+    color: #ecfdf5 !important;
+    border-left-color: #4ade80 !important;
+    border: 1px solid rgba(74, 222, 128, 0.38) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 3px 0 0 #4ade80, 0 0 22px rgba(34,197,94,0.16) !important;
+}
+
+body.app-shell .sidebar .nav-item.active i,
+body.app-shell .sidebar .nav-item[aria-current="page"] i {
+    color: #86efac !important;
+    filter: drop-shadow(0 0 6px rgba(74,222,128,0.65));
+}
+
+body.app-shell .sidebar .nav-item.active .sidebar-nav-label,
+body.app-shell .sidebar .nav-item[aria-current="page"] .sidebar-nav-label {
+    color: #ecfdf5 !important;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+    font-weight: 600 !important;
 }
 
 @media (max-width: 1023px) {
@@ -567,7 +621,7 @@ body.app-shell .page-content i {
 }
 
 .top-header {
-    background: linear-gradient(180deg, rgba(15, 36, 27, 0.96), rgba(10, 29, 21, 0.96));
+    background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(2, 6, 23, 0.96));
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -887,6 +941,290 @@ body.app-shell .page-content .text-gray-600 {
     background: rgba(255, 255, 255, 0.28);
 }
 
+body.student-portal .sidebar-header {
+    isolation: isolate;
+    overflow: hidden;
+    padding: 1.35rem 1.2rem 1.1rem;
+    border-bottom: 1px solid rgba(74, 222, 128, 0.15);
+    background:
+        radial-gradient(140px 100px at 0% 0%, rgba(34, 197, 94, 0.18), transparent 78%),
+        linear-gradient(145deg, rgba(7, 17, 31, 0.98), rgba(2, 6, 23, 0.96));
+}
+
+body.student-portal .sidebar-header::after {
+    position: absolute;
+    z-index: -1;
+    right: -2.5rem;
+    bottom: -4.5rem;
+    width: 9rem;
+    height: 9rem;
+    border: 1px solid rgba(74, 222, 128, 0.08);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1rem rgba(74, 222, 128, 0.025), 0 0 0 2rem rgba(74, 222, 128, 0.02);
+    content: '';
+    pointer-events: none;
+}
+
+body.student-portal .sidebar-logo {
+    position: relative;
+    z-index: 1;
+    gap: 0.8rem;
+    margin: 0;
+}
+
+body.student-portal .sidebar-brand-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+}
+
+body.student-portal .sidebar-logo i {
+    display: inline-flex;
+    width: 2.8rem;
+    height: 2.8rem;
+    flex: 0 0 2.8rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(134, 239, 172, 0.26);
+    border-radius: 0.95rem;
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.25), rgba(16, 85, 55, 0.32));
+    color: #4ade80;
+    font-size: 1.35rem;
+    filter: drop-shadow(0 5px 12px rgba(34, 197, 94, 0.14));
+}
+
+body.student-portal .sidebar-logo-text {
+    color: #ecfdf5 !important;
+    font-size: 1.3rem;
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+}
+
+body.student-portal .sidebar-tagline {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    color: #9ab9a9 !important;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    line-height: 1.2;
+}
+
+body.student-portal .sidebar-tagline::before {
+    width: 0.38rem;
+    height: 0.38rem;
+    flex: 0 0 0.38rem;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 9px rgba(74, 222, 128, 0.7);
+    content: '';
+}
+
+body.student-portal .sidebar-close-btn {
+    border: 1px solid rgba(134, 239, 172, 0.14);
+    background: rgba(5, 20, 14, 0.78);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+body.student-portal .sidebar-close-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(20, 83, 45, 0.75);
+    color: #86efac;
+}
+
+body.student-portal .student-page-header {
+    position: fixed;
+    top: 0.75rem;
+    right: 1rem;
+    left: calc(var(--sidebar-width) + 1rem);
+    z-index: 1100;
+    display: flex;
+    min-height: 4.7rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: auto;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0.55rem 0.7rem;
+    overflow: hidden;
+    border: 1px solid rgba(34, 197, 94, 0.24);
+    border-radius: 1.15rem;
+    background:
+        radial-gradient(180px 90px at 0% 0%, rgba(34, 197, 94, 0.13), transparent 78%),
+        linear-gradient(115deg, rgba(5, 28, 18, 0.98), rgba(4, 20, 15, 0.96));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 28px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(16px);
+}
+
+@media (max-width: 1023px) {
+    body.student-portal .student-page-header {
+        top: 0.5rem;
+        right: 0.75rem;
+        left: 0.75rem;
+        max-width: none;
+        margin: 0;
+    }
+
+    body.student-portal .student-page-menu {
+        display: inline-flex;
+    }
+}
+
+body.student-portal .student-page-header-spacer {
+    flex: 0 0 auto;
+    width: 100%;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+body.student-portal .student-page-heading {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+body.student-portal .student-page-menu {
+    display: none;
+    width: 2.65rem;
+    height: 2.65rem;
+    flex: 0 0 2.65rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(74, 222, 128, 0.17);
+    border-radius: 0.85rem;
+    background: rgba(7, 17, 31, 0.8);
+    color: #86efac;
+    font-size: 1.2rem;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+body.student-portal .student-page-menu:hover {
+    transform: translateY(-1px);
+    border-color: rgba(74, 222, 128, 0.4);
+    background: rgba(7, 17, 31, 0.9);
+}
+
+body.student-portal .student-page-heading-copy {
+    min-width: 0;
+}
+
+body.student-portal .student-page-title {
+    margin: 0;
+    overflow: hidden;
+    color: #e8f5ed;
+    font-size: 1.08rem;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.student-portal .student-page-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.18rem 0 0;
+    overflow: hidden;
+    color: #15976f;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+body.student-portal .student-page-user {
+    display: inline-flex;
+    min-height: 2.2rem;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.55rem 0.2rem 0.25rem;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 999px;
+    background: rgba(3, 39, 28, 0.55);
+    color: #86efac;
+}
+
+
+body.student-portal .student-page-user-initials {
+    display: inline-flex;
+    width: 1.65rem;
+    height: 1.65rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(74, 222, 128, 0.19);
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.1);
+    color: #a7f3d0;
+    font-size: 0.58rem;
+    font-weight: 800;
+}
+
+body.student-portal .student-page-user-role {
+    color: #86c9a5;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+    body.student-portal .sidebar-header {
+        padding: 1.1rem 1rem 1rem;
+    }
+
+    body.student-portal .student-page-header {
+        min-height: 4.4rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 1rem;
+    }
+
+    body.student-portal .student-page-heading {
+        gap: 0.55rem;
+    }
+
+    body.student-portal .student-page-menu {
+        display: inline-flex;
+    }
+
+    body.student-portal .student-page-title {
+        font-size: 1rem;
+    }
+
+    body.student-portal .student-page-user {
+        min-height: 2rem;
+        gap: 0.3rem;
+        padding-right: 0.45rem;
+    }
+
+    body.student-portal .student-page-user-initials {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    body.student-portal .student-page-user-role {
+        font-size: 0.53rem;
+        letter-spacing: 0.1em;
+    }
+}
+
 /* Additional global overrides to ensure Dashboard visual language applies
    across all modules: buttons, secondary controls, modals, lists, pagination */
 
@@ -1023,7 +1361,7 @@ body.app-shell .page-content a:hover {
 /* Reuse Dashboard's exact card component across the app */
 .card,
 .page-content .card {
-    background: rgba(20, 45, 35, 0.78) !important;
+    background: rgba(7, 17, 31, 0.78) !important;
     border-radius: 1.5rem !important;
     padding: 1.2rem !important;
     box-shadow: inset 0 1px rgba(255,255,255,0.03), 0 10px 30px rgba(34, 197, 94, 0.12) !important;
@@ -1104,7 +1442,7 @@ body.app-shell .page-content table tbody tr {
 
 /* Chart and table card variants should match the Dashboard card visuals */
 .chart-card, .table-card {
-    background: rgba(20, 45, 35, 0.78) !important;
+    background: rgba(7, 17, 31, 0.78) !important;
     border-radius: 1.5rem !important;
     padding: 1.2rem !important;
     box-shadow: inset 0 1px rgba(255,255,255,0.03), 0 10px 30px rgba(34, 197, 94, 0.12) !important;
@@ -1153,4 +1491,2585 @@ body, .main-container, .page-content {
 .filter-control select { color: var(--text) !important; }
 .filter-control select:focus { background: var(--card-bg) !important; color: var(--text) !important; }
 
-.details-modal { background: rgba(2,6,6,0.72) !important; }
+.details-modal { background: rgba(2,6,23,0.76) !important; }
+
+/* Shared forest-green theme for authenticated pages and their dashboard widgets. */
+:root {
+    --primary: #06402b !important;
+    --accent: #22c55e !important;
+    --hover: #16a34a !important;
+    --success: #4ade80 !important;
+    --bg: #07150f !important;
+    --bg-secondary: #0a1d15 !important;
+    --card-bg: #0f241b !important;
+    --card-bg-solid: #0f241b !important;
+    --card-hover: #123124 !important;
+    --borders: rgba(74, 222, 128, 0.18) !important;
+    --text: #f8fafc !important;
+    --text-secondary: #b6d7c8 !important;
+    --text-muted: #86efac !important;
+    --sidebar-bg: linear-gradient(180deg, #07150f 0%, #0a1d15 100%) !important;
+    --sidebar-border: rgba(74, 222, 128, 0.18) !important;
+    --sidebar-hover-bg: rgba(11, 42, 30, 0.78) !important;
+    --sidebar-active-bg: linear-gradient(135deg, #0f3726, #0a281c) !important;
+}
+
+html,
+body,
+body.app-shell {
+    background: #07150f !important;
+    color: #f8fafc !important;
+}
+
+body.app-shell .main-container,
+body.app-shell .main-content,
+body.app-shell .page-content {
+    background: transparent !important;
+}
+
+body.app-shell .main-container::before,
+body.app-shell .main-container::after,
+body.app-shell .page-content::before {
+    opacity: 0.35;
+}
+
+body.app-shell .sidebar {
+    background: linear-gradient(180deg, #07150f 0%, #0a1d15 100%) !important;
+    border-right-color: rgba(74, 222, 128, 0.18) !important;
+    box-shadow: 0 20px 70px rgba(34, 197, 94, 0.12) !important;
+}
+
+body.app-shell .sidebar-header,
+body.app-shell .top-header,
+body.app-shell .top-header-card,
+body.app-shell .maintenance-header-card,
+body.app-shell .student-page-header,
+body.app-shell .system-dashboard-heading,
+body.app-shell .page-header-card {
+    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    border-color: rgba(74, 222, 128, 0.18) !important;
+    box-shadow: 0 12px 35px rgba(6, 64, 43, 0.18) !important;
+}
+
+body.app-shell :is(.top-header, .top-header-card, .maintenance-header-card, .student-page-header, .system-dashboard-heading, .page-header-card) {
+    border-radius: 1.5rem;
+}
+
+body.app-shell .card,
+body.app-shell .chart-card,
+body.app-shell .table-card,
+body.app-shell .summary-card,
+body.app-shell .section-shell,
+body.app-shell .glass-card,
+body.app-shell .table-shell,
+body.app-shell .filter-control,
+body.app-shell .details-modal-card,
+body.app-shell .availability-modal-card,
+body.app-shell .availability-summary-item,
+body.app-shell .maintenance-header-user,
+body.app-shell .page-content .panel,
+body.app-shell .page-content .list-group,
+body.app-shell .page-content .bg-white,
+body.app-shell .page-content .bg-gray-50,
+body.app-shell .page-content .bg-gray-100,
+body.app-shell .page-content .bg-slate-50,
+body.app-shell .page-content .bg-slate-100,
+body.app-shell .attendance-page-header,
+body.app-shell .attendance-page-card,
+body.app-shell .attendance-summary-card,
+body.app-shell .attendance-table-wrap,
+body.app-shell .main-content .bg-white,
+body.app-shell .main-content .bg-gray-50,
+body.app-shell .main-content .bg-gray-100,
+body.app-shell .main-content .bg-slate-50,
+body.app-shell .main-content .bg-slate-100 {
+    background: #0f241b !important;
+    border: 1px solid rgba(74, 222, 128, 0.18) !important;
+    border-radius: 1rem !important;
+    color: #f8fafc !important;
+    box-shadow: 0 12px 35px rgba(6, 64, 43, 0.18) !important;
+}
+
+body.app-shell .card,
+body.app-shell .summary-card {
+    padding: 1rem 1.1rem !important;
+}
+
+body.app-shell .card:hover,
+body.app-shell .summary-card:hover,
+body.app-shell .chart-card:hover,
+body.app-shell .table-card:hover {
+    border-color: rgba(74, 222, 128, 0.3) !important;
+    box-shadow: 0 18px 40px rgba(34, 197, 94, 0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+body.app-shell .card-title,
+body.app-shell .chart-summary,
+body.app-shell .summary-card .text-sm,
+body.app-shell .attendance-summary-label,
+body.app-shell .section-header p,
+body.app-shell .breadcrumb,
+body.app-shell .header-subtitle,
+body.app-shell .header-eyebrow,
+body.app-shell .availability-summary-item span,
+body.app-shell .table-title,
+body.app-shell .student-page-subtitle {
+    color: #b6d7c8 !important;
+}
+
+body.app-shell .card-value,
+body.app-shell .summary-card strong,
+body.app-shell .summary-card .text-2xl,
+body.app-shell .summary-card .text-3xl,
+body.app-shell .attendance-summary-value {
+    color: #f8fafc !important;
+}
+
+body.app-shell .card-icon,
+body.app-shell .summary-card .card-icon,
+body.app-shell .attendance-summary-icon {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border: 1px solid rgba(74, 222, 128, 0.16) !important;
+    border-radius: 0.9rem !important;
+    background: rgba(74, 222, 128, 0.12) !important;
+    color: #bbf7d0 !important;
+    font-size: 1.05rem !important;
+    box-shadow: none !important;
+}
+
+body.app-shell .card-icon.blue,
+body.app-shell .card-icon.purple,
+body.app-shell .card-icon.orange,
+body.app-shell .card-icon.red,
+body.app-shell .card-icon.amber {
+    background: rgba(74, 222, 128, 0.12) !important;
+    color: #bbf7d0 !important;
+}
+
+body.app-shell .summary-card.late .card-icon {
+    background: rgba(34, 197, 94, 0.1) !important;
+    color: #86efac !important;
+}
+
+body.app-shell .summary-card.absent .card-icon {
+    background: rgba(22, 163, 74, 0.12) !important;
+    color: #86efac !important;
+}
+
+body.app-shell .summary-card.total .card-icon {
+    background: rgba(74, 222, 128, 0.08) !important;
+    color: #bbf7d0 !important;
+}
+
+body.app-shell .attendance-filter-label {
+    color: #b6d7c8 !important;
+}
+
+body.app-shell table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    color: #e2fbe8 !important;
+}
+
+body.app-shell table thead,
+body.app-shell table thead tr {
+    background: #123124 !important;
+}
+
+body.app-shell table th {
+    border-bottom: 1px solid rgba(74, 222, 128, 0.18) !important;
+    color: #b6d7c8 !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase;
+}
+
+body.app-shell table td {
+    border-bottom: 1px solid rgba(74, 222, 128, 0.12) !important;
+    color: #e2fbe8 !important;
+}
+
+body.app-shell table tbody tr {
+    background: #0f241b !important;
+    box-shadow: none !important;
+    transition: background-color 160ms ease;
+}
+
+body.app-shell table tbody tr:hover {
+    background: #123124 !important;
+}
+
+body.app-shell input:not([type="checkbox"]):not([type="radio"]),
+body.app-shell select,
+body.app-shell textarea {
+    border-color: rgba(74, 222, 128, 0.18) !important;
+    border-radius: 0.75rem !important;
+    background-color: #0a1d15 !important;
+    color: #f8fafc !important;
+}
+
+body.app-shell input::placeholder,
+body.app-shell textarea::placeholder {
+    color: #86a893 !important;
+}
+
+body.app-shell input:focus,
+body.app-shell select:focus,
+body.app-shell textarea:focus {
+    border-color: rgba(74, 222, 128, 0.5) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.14) !important;
+}
+
+body.app-shell .nav-item.active {
+    background: linear-gradient(135deg, #0f3726, #0a281c) !important;
+    border-left-color: #22c55e !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+body.app-shell .nav-item:hover {
+    background: rgba(11, 42, 30, 0.78) !important;
+    border-left-color: rgba(74, 222, 128, 0.4) !important;
+}
+
+body.app-shell .status-filter {
+    border-color: rgba(74, 222, 128, 0.18) !important;
+    background: #0a1d15 !important;
+    color: #d1fae5 !important;
+}
+
+body.app-shell .status-filter.active,
+body.app-shell .status-filter:hover {
+    border-color: rgba(74, 222, 128, 0.3) !important;
+    background: #123124 !important;
+    color: #f8fafc !important;
+}
+
+body.app-shell .btn-secondary,
+body.app-shell .page-content .btn-secondary {
+    border: 1px solid rgba(74, 222, 128, 0.18) !important;
+    background: #0a1d15 !important;
+    color: #d1fae5 !important;
+}
+
+body.app-shell .btn-secondary:hover,
+body.app-shell .page-content .btn-secondary:hover {
+    border-color: rgba(74, 222, 128, 0.3) !important;
+    background: #123124 !important;
+}
+
+body.app-shell .details-modal,
+body.app-shell .modal,
+body.app-shell .dialog {
+    background-color: rgba(5, 12, 8, 0.82) !important;
+}
+
+html body.app-shell {
+    --bg: #07150f;
+    --bg-secondary: #0a1d15;
+    --card-bg: rgba(20, 45, 35, 0.92);
+    --card-bg-solid: #0f241b;
+    --card-hover: #123124;
+    --sidebar-bg: linear-gradient(180deg, #07150f 0%, #0a1d15 100%);
+    --faculty-bg: #07150f;
+    --faculty-panel: rgba(15, 36, 27, 0.94);
+    background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.14), transparent 20%),
+        radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.08), transparent 22%),
+        linear-gradient(180deg, #07150f 0%, #0a1d15 100%) !important;
+}
+
+html body.app-shell .main-container {
+    background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.06), transparent 24%),
+        linear-gradient(180deg, #07150f 0%, #0a1d15 100%) !important;
+}
+
+html body.app-shell .sidebar {
+    background: var(--sidebar-bg) !important;
+}
+
+html body.app-shell .glass-card,
+html body.app-shell .faculty-surface,
+html body.app-shell .tech-card,
+html body.app-shell .tech-card-soft,
+html body.app-shell .glass,
+html body.app-shell .card,
+html body.app-shell .page-content {
+    background: linear-gradient(145deg, rgba(20, 45, 35, 0.96), rgba(10, 29, 21, 0.94)) !important;
+}
+
+html body.app-shell [class*="bg-[#020617]"],
+html body.app-shell [class*="bg-[#07111f]"],
+html body.app-shell [class*="bg-[#0b1728]"] {
+    background-color: var(--bg-secondary) !important;
+}
+
+html body.app-shell [class*="to-[#07111f]"] {
+    --tw-gradient-to: #0f241b var(--tw-gradient-to-position) !important;
+}
+
+body.student-portal .main-container {
+    width: calc(100% - var(--sidebar-width)) !important;
+    max-width: none !important;
+    margin: 0 0 0 var(--sidebar-width) !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+}
+
+html body.student-portal .main-container > header,
+html body.student-portal .main-container > .top-header {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+}
+
+body.student-portal .student-page-header {
+    top: 0.75rem !important;
+    right: 1rem !important;
+    left: calc(var(--sidebar-width) + 1rem) !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 1.5rem !important;
+}
+
+html body.student-portal .main-container > main,
+html body.student-portal .main-container > .page-shell,
+html body.student-portal .main-container > .page-content,
+html body.student-portal .main-container > header > div,
+body.student-portal .page-shell,
+body.student-portal .page-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body.student-portal > .page-shell {
+    width: calc(100% - var(--sidebar-width)) !important;
+    margin-left: var(--sidebar-width) !important;
+}
+
+@media (max-width: 1023px) {
+    body.student-portal .main-container {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    body.student-portal .student-page-header {
+        top: 0.5rem !important;
+        right: 0.75rem !important;
+        left: 0.75rem !important;
+        border-radius: 1rem !important;
+    }
+
+    body.student-portal > .page-shell {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
+body.app-shell .profile-theme-controls {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+body.app-shell .profile-theme-toggle {
+    display: inline-flex;
+    width: 2.65rem;
+    height: 2.65rem;
+    flex: 0 0 2.65rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(74, 222, 128, 0.28);
+    border-radius: 0.85rem;
+    background: rgba(7, 38, 24, 0.84);
+    color: #a7f3d0;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+body.app-shell .profile-theme-toggle:hover {
+    transform: translateY(-1px);
+    border-color: rgba(74, 222, 128, 0.55);
+    background: rgba(15, 55, 38, 0.96);
+}
+
+body.app-shell .profile-theme-toggle:focus-visible {
+    outline: 3px solid rgba(74, 222, 128, 0.55);
+    outline-offset: 2px;
+}
+
+body.app-shell .theme-toggle-header-fallback {
+    justify-content: flex-end;
+}
+
+body.app-shell .theme-toggle-header-fallback .profile-theme-controls {
+    margin-left: auto;
+}
+
+html body.app-shell .main-container.theme-light {
+    --bg: #ffffff;
+    --bg-secondary: #ffffff;
+    --card-bg: #ffffff;
+    --card-bg-solid: #ffffff;
+    --card-hover: #eef6f0;
+    --borders: #d7e3da;
+    --text: #1f2937;
+    --text-secondary: #5b6b61;
+    --faculty-bg: #ffffff;
+    --faculty-panel: #ffffff;
+    color-scheme: light;
+    color: #1f2937 !important;
+    background: #ffffff !important;
+}
+
+html body.app-shell.faculty-dashboard-page .main-container.theme-light::before,
+html body.app-shell.faculty-dashboard-page .main-container.theme-light::after {
+    background: none !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+html body.app-shell .main-container.theme-light .page-content,
+html body.app-shell .main-container.theme-light main,
+html body.app-shell .main-container.theme-light > .page-shell {
+    color: #1f2937 !important;
+    background: transparent !important;
+}
+
+html body.app-shell .main-container.theme-light .page-content {
+    background: #ffffff !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .glass-card,
+    .faculty-surface,
+    .tech-card,
+    .tech-card-soft,
+    .glass,
+    .card,
+    .summary-card,
+    .section-shell,
+    .table-card,
+    .chart-card,
+    .info-card,
+    .equipment-card,
+    .availability-laboratory-section,
+    .system-dashboard-heading,
+    .student-page-header,
+    .page-header-card,
+    .top-header,
+    .page-content,
+    .bg-white,
+    .bg-slate-50,
+    .bg-slate-100,
+    .bg-slate-200,
+    .bg-slate-800,
+    .bg-slate-900,
+    .bg-slate-950
+) {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07) !important;
+}
+
+html body.app-shell .main-container.theme-light .system-dashboard-heading,
+html body.app-shell .main-container.theme-light .student-page-header,
+html body.app-shell .main-container.theme-light .page-header-card,
+html body.app-shell .main-container.theme-light .top-header {
+    background: #ffffff !important;
+}
+
+html body.app-shell .main-container.theme-light :is(h1, h2, h3, h4, h5, h6, p, label, .page-title, .card-title, .table-title) {
+    color: #1f2937 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light :is(
+    h1, h2, h3, h4, h5, h6, p, span, label, small, strong, td, th, div, li, a,
+    .inventory-label, .inventory-value, .stat-label, .stat-value,
+    .page-title, .card-title, .table-title,
+    .text-white, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400,
+    .text-slate-500, .text-slate-600, .text-slate-700, .text-slate-800, .text-slate-900,
+    .text-gray-100, .text-gray-200, .text-gray-300, .text-gray-400, .text-gray-500,
+    .text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900,
+    .text-emerald-50, .text-emerald-100, .text-emerald-200, .text-emerald-300,
+    .text-emerald-400, .text-emerald-500, .text-green-100, .text-green-200,
+    .text-green-300, .text-green-400, .text-green-500
+) {
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection :is(
+    th,
+    td,
+    .text-slate-400,
+    .text-slate-500,
+    .text-slate-300,
+    .text-emerald-50,
+    .text-emerald-100,
+    .text-emerald-200,
+    .text-emerald-300,
+    .text-emerald-400,
+    .text-emerald-800,
+    .text-emerald-900,
+    .text-emerald-950,
+    [class*="text-emerald-"],
+    [class*="text-slate-"]
+) {
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .pc-set-actions-toggle,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .pc-set-actions-toggle i,
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .pc-set-actions-menu button {
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light :is(
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea
+) {
+    color: #111827 !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .text-white,
+    .text-slate-100,
+    .text-slate-200,
+    .text-slate-300,
+    .text-slate-400,
+    .text-slate-500,
+    .text-slate-600,
+    .text-slate-700,
+    .text-slate-800,
+    .text-slate-900,
+    .text-gray-100,
+    .text-gray-200,
+    .text-gray-300,
+    .text-gray-400,
+    .text-gray-500,
+    .text-gray-600,
+    .text-gray-700,
+    .text-gray-800,
+    .text-gray-900,
+    .text-emerald-50,
+    .text-emerald-100,
+    .text-emerald-200,
+    .text-emerald-300,
+    .text-emerald-400,
+    .text-emerald-500,
+    .text-green-100,
+    .text-green-200,
+    .text-green-300,
+    .text-green-400,
+    .text-green-500
+) {
+    color: #34483a !important;
+}
+
+html body.app-shell .main-container.theme-light [class*="to-[#07111f]"] {
+    --tw-gradient-to: #ffffff var(--tw-gradient-to-position) !important;
+}
+
+html body.app-shell .main-container.theme-light table,
+html body.app-shell .main-container.theme-light table tbody {
+    background: #ffffff !important;
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .faculty-dashboard-table-wrap,
+    .attendance-table-wrap,
+    .table-wrapper,
+    .table-wrap,
+    .table-container,
+    .table-responsive,
+    [class*="table-wrap"],
+    [class*="table-container"]
+) {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #26352b !important;
+    box-shadow: none !important;
+}
+
+html body.app-shell .main-container.theme-light table tbody tr,
+html body.app-shell .main-container.theme-light table tbody tr:nth-child(even) {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light table tbody tr:nth-child(even) {
+    background: #f6faf7 !important;
+}
+
+html body.system-layout-page .main-container.theme-light :is(.table-title, caption) {
+    color: #166534 !important;
+}
+
+html body.app-shell .main-container.theme-light table td {
+    background: transparent !important;
+    border-color: #e3ebe5 !important;
+    color: #34483a !important;
+}
+
+html body.app-shell .main-container.theme-light table tbody tr:hover {
+    background: #edf6ef !important;
+}
+
+html body.app-shell .main-container.theme-light table tbody tr:hover td {
+    background: transparent !important;
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light input:not([type="checkbox"]):not([type="radio"]),
+html body.app-shell .main-container.theme-light select,
+html body.app-shell .main-container.theme-light textarea {
+    border-color: #cbd8ce !important;
+    background-color: #ffffff !important;
+    color: #26352b !important;
+    box-shadow: inset 0 1px 2px rgba(31, 41, 55, 0.04) !important;
+}
+
+html body.app-shell .main-container.theme-light input::placeholder,
+html body.app-shell .main-container.theme-light textarea::placeholder {
+    color: #78877c !important;
+}
+
+html body.app-shell .main-container.theme-light select option,
+html body.app-shell .main-container.theme-light select optgroup {
+    background: #ffffff !important;
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light .modal-content,
+html body.app-shell .main-container.theme-light .details-modal,
+html body.app-shell .main-container.theme-light .dialog {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+html body.app-shell .main-container.theme-light .profile-theme-toggle {
+    border-color: #cbd8ce;
+    background: #edf4ef;
+    color: #245c3a;
+}
+
+html body.app-shell .main-container.theme-light .profile-theme-toggle:hover {
+    border-color: #92b79b;
+    background: #e2efe5;
+}
+
+html body.app-shell .main-container.theme-light .profile-theme-toggle:focus-visible {
+    outline-color: rgba(34, 110, 61, 0.45);
+}
+
+@media (max-width: 480px) {
+    body.app-shell .profile-theme-controls {
+        gap: 0.35rem;
+    }
+
+    body.app-shell .profile-theme-toggle {
+        width: 2.4rem;
+        height: 2.4rem;
+        flex-basis: 2.4rem;
+    }
+}
+
+html body.app-shell .main-container .theme-locked-table-header.theme-locked-table-header {
+    background: #0a2e1d !important;
+    color: #ffffff !important;
+}
+
+html body.app-shell .main-container table thead .theme-locked-table-header.theme-locked-table-header {
+    border-bottom-color: rgba(134, 201, 165, 0.2) !important;
+    padding: 0.3rem 0.75rem !important;
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+}
+
+html body.system-layout-page .main-container.theme-dark :is(.table-title, caption) {
+    color: #d1fae5 !important;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+   .main-container.theme-light,
+   .page-shell.theme-light,
+   .audit-page-content.theme-light
+) :is(
+   .status-badge,
+   .status-pill,
+   .faculty-status,
+   .audit-status-badge,
+   .equipment-status-badge,
+   .badge
+):not(.profile-theme-static):not([class*="system-profile-badge"]):not([class*="student-page-user"]) {
+   border-color: rgba(74, 222, 128, 0.28) !important;
+   background: #0a2e1d !important;
+   color: #d1fae5 !important;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+   .main-container.theme-light,
+   .page-shell.theme-light,
+   .audit-page-content.theme-light
+) :is(
+   .status-badge,
+   .status-pill,
+   .faculty-status,
+   .audit-status-badge,
+   .equipment-status-badge,
+   .badge,
+   [class*="badge-"]
+):not(.profile-theme-static):not([class*="system-profile-badge"]):not([class*="student-page-user"]):is(
+   [class*="pending"],
+   [class*="review"],
+   [class*="late"],
+   [class*="repair"],
+   [class*="amber"],
+   [class*="yellow"],
+   [class*="orange"]
+) {
+   border-color: rgba(251, 191, 36, 0.36) !important;
+   background: #3b2a0b !important;
+   color: #fde68a !important;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+   .main-container.theme-light,
+   .page-shell.theme-light,
+   .audit-page-content.theme-light
+) :is(
+   .status-badge,
+   .status-pill,
+   .faculty-status,
+   .audit-status-badge,
+   .equipment-status-badge,
+   .badge,
+   [class*="badge-"]
+):not(.profile-theme-static):not([class*="system-profile-badge"]):not([class*="student-page-user"]):is(
+   [class*="reject"],
+   [class*="unavailable"],
+   [class*="absent"],
+   [class*="overdue"],
+   [class*="rose"],
+   [class*="red"]
+) {
+   border-color: rgba(248, 113, 113, 0.36) !important;
+   background: #3b1717 !important;
+   color: #fecaca !important;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+   .main-container.theme-light,
+   .page-shell.theme-light,
+   .audit-page-content.theme-light
+) :is(
+   .status-badge,
+   .status-pill,
+   .faculty-status,
+   .audit-status-badge,
+   .equipment-status-badge,
+   .badge,
+   [class*="badge-"]
+):not(.profile-theme-static):not([class*="system-profile-badge"]):not([class*="student-page-user"]):is(
+   [class*="blue"],
+   [class*="info"]
+) {
+   border-color: rgba(96, 165, 250, 0.36) !important;
+   background: #172b43 !important;
+   color: #bfdbfe !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .attendance-page-header,
+    .attendance-page-card,
+    .attendance-summary-card
+) {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #26352b !important;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07) !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .attendance-page-title,
+    .attendance-summary-value,
+    .attendance-filter-label,
+    .attendance-pagination-info
+) {
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light .faculty-dashboard-table .table-item-name {
+    color: #26352b !important;
+}
+
+html body.app-shell .main-container.theme-light .faculty-dashboard-table .table-item-meta {
+    color: #66756a !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .attendance-summary-label,
+    .attendance-modal-subtitle,
+    .attendance-modal-close,
+    .attendance-student-name
+) {
+    color: #24613b !important;
+}
+
+html body.app-shell .main-container.theme-light .attendance-table-wrap {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+html body.app-shell .main-container.theme-light .attendance-table td {
+    border-color: #e3ebe5 !important;
+    color: #34483a !important;
+}
+
+html body.app-shell .main-container.theme-light .attendance-table tbody tr:hover {
+    background: #f1f7f2 !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .attendance-action-btn,
+    .attendance-pagination-btn
+) {
+    border-color: #cbd8ce !important;
+    background: #ffffff !important;
+    color: #245c3a !important;
+    box-shadow: 0 2px 6px rgba(31, 41, 55, 0.06) !important;
+}
+
+html body.app-shell .main-container.theme-light :is(
+    .attendance-action-btn,
+    .attendance-pagination-btn
+):hover:not(:disabled) {
+    background: #edf6ef !important;
+}
+
+html body.app-shell .main-container.theme-light #attendanceSessionModal .modal-content,
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-modal-header,
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-modal-body,
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-summary-card,
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-table-wrap {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #26352b !important;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07) !important;
+}
+
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-table-wrap tbody,
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-table-wrap tbody tr {
+    color: #34483a !important;
+}
+
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-modal-controls button {
+    border-color: #b9d9c2 !important;
+    background: #edf6ef !important;
+    color: #245c3a !important;
+}
+
+html body.app-shell .main-container.theme-light #attendanceSessionModal .attendance-detail-table td::before {
+    color: #24613b !important;
+}
+
+html body.app-shell .main-container .profile-theme-controls {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+}
+
+html body.app-shell .main-container .profile-theme-static {
+    border-color: rgba(74, 222, 128, 0.2) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+html body.app-shell .main-container .profile-theme-static :is(
+    .system-profile-badge-name,
+    .student-page-user-name,
+    .system-profile-badge-copy,
+    .student-page-user-copy,
+    .user-profile .user-name
+) {
+    color: #ffffff !important;
+}
+
+html body.app-shell .main-container .profile-theme-static :is(
+    .system-profile-badge-role,
+    .student-page-user-role,
+    .user-profile .user-role
+) {
+    color: #34d399 !important;
+}
+
+html body.app-shell .main-container .profile-theme-static :is(
+    .system-profile-badge-avatar,
+    .student-page-user-initials,
+    .user-profile .user-avatar
+) {
+    border-color: rgba(74, 222, 128, 0.32) !important;
+    background: #06402b !important;
+    color: #6ee7b7 !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light {
+    color-scheme: light;
+    color: #26352b;
+    background: #f4f7f5;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light > .system-dashboard-heading {
+    border-color: #d7e3da !important;
+    background: #ffffff !important;
+    color: #245c3a !important;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, .07) !important;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light > .system-dashboard-heading h1 {
+    color: #17452a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light > .system-dashboard-heading #mobileMenuToggle {
+    border-color: #c5dfcd !important;
+    background: #edf6ef !important;
+    color: #245c3a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell .profile-theme-static {
+    border-color: rgba(74, 222, 128, .2) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell .profile-theme-static :is(
+    .system-profile-badge-name,
+    .student-page-user-name,
+    .system-profile-badge-copy,
+    .student-page-user-copy
+) {
+    color: #ffffff !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell .profile-theme-static :is(
+    .system-profile-badge-role,
+    .student-page-user-role
+) {
+    color: #34d399 !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell .profile-theme-static :is(
+    .system-profile-badge-avatar,
+    .student-page-user-initials
+) {
+    border-color: rgba(74, 222, 128, .32) !important;
+    background: #06402b !important;
+    color: #6ee7b7 !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light > .panel-card,
+html body.faculty-borrow-equipment-page > .page-shell.theme-light > .panel-card > .panel-body {
+    border-color: #d7e3da;
+    background: #ffffff;
+    color: #26352b;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, .07);
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .section-title {
+    border-color: #d7e3da;
+    background: linear-gradient(100deg, #edf6ef, #f7faf8);
+    color: #245c3a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .section-title i {
+    border-color: #c5dfcd;
+    background: #e8f3eb;
+    color: #247044;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field label {
+    color: #34483a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field :is(
+    input:not([type="checkbox"]),
+    select,
+    textarea
+) {
+    border-color: #cbd8ce;
+    background: #ffffff;
+    color: #26352b;
+    box-shadow: inset 0 1px 2px rgba(31, 41, 55, .04);
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field :is(
+    input:not([type="checkbox"]),
+    select,
+    textarea
+):focus {
+    border-color: #4b9b65;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(34, 110, 61, .12);
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field :is(
+    input,
+    textarea
+)::placeholder {
+    color: #78877c;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light #selectedEquipmentCount,
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field > .text-xs {
+    color: #66756a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light #equipmentSelectionList {
+    border-color: #d7e3da !important;
+    background: #f8fbf9 !important;
+    color: #34483a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light #equipmentSelectionList > [role="status"] {
+    color: #66756a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option {
+    border-color: #d7e3da;
+    background: #ffffff;
+    color: #34483a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option:hover {
+    background: #edf6ef;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-details strong {
+    color: #26352b !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-details > span {
+    color: #66756a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-status {
+    color: #247044 !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-status.text-amber-200 {
+    color: #8a5a0a !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-form-field > p.rounded-xl {
+    border-color: #d7e3da !important;
+    background: #f2f8f3 !important;
+    color: #405747 !important;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-qr-scan-button {
+    border-color: #b9d9c2;
+    background: #edf6ef;
+    color: #245c3a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-qr-result,
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-inventory-card {
+    border-color: #d7e3da;
+    background: #f8fbf9;
+    color: #34483a;
+    box-shadow: none;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-inventory-card strong,
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-qr-result-copy {
+    color: #34483a;
+}
+
+html body.faculty-borrow-equipment-page > .page-shell.theme-light .borrow-btn.secondary {
+    border-color: #cbd8ce;
+    background: #ffffff;
+    color: #245c3a;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+    .main-container,
+    .page-shell,
+    .audit-page-content,
+    .page-content
+) :is(
+    [class~="text-xs"],
+    [class*="text-[10px]"],
+    [class*="text-[11px]"],
+    [class*="text-[.7rem]"]
+) {
+    font-size: 0.8125rem !important;
+}
+
+html body:is(.faculty-page, .faculty-portal) :is(
+    .main-container,
+    .page-shell,
+    .audit-page-content,
+    .page-content
+) [class~="text-sm"] {
+    font-size: 0.9375rem !important;
+}
+
+html.theme-light body.app-shell {
+    color-scheme: light;
+    color: #26352b !important;
+    background: #ffffff !important;
+}
+
+html.theme-light body.app-shell .main-container,
+html.theme-light body.app-shell .main-content,
+html.theme-light body.app-shell .page-content {
+    color: #26352b !important;
+    background: #ffffff !important;
+}
+
+html.theme-light body.app-shell :is(.system-profile-badge, .student-page-user, .user-profile, .profile-theme-static) {
+    border-color: rgba(74, 222, 128, 0.24) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell :is(
+    .system-profile-badge-avatar,
+    .student-page-user-initials,
+    .user-avatar
+) {
+    background: #06402b !important;
+    color: #a7f3d0 !important;
+}
+
+html.theme-light body.app-shell :is(
+    .system-profile-badge-name,
+    .student-page-user-name,
+    .user-name,
+    .system-profile-badge-copy,
+    .student-page-user-copy
+) {
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell :is(
+    .system-profile-badge-role,
+    .student-page-user-role,
+    .user-role
+) {
+    color: #34d399 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    *:not(i):not(svg):not(path):not(canvas) {
+    color: #111827 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    color: #111827 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(input, textarea)::placeholder {
+    color: #4b5563 !important;
+    opacity: 1;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(select option, select optgroup) {
+    color: #111827 !important;
+    background: #ffffff !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.system-profile-badge, .student-page-user, .user-profile, .profile-theme-static) {
+    border-color: #bfd5c5 !important;
+    background: #ffffff !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar) {
+    border-color: #bfd5c5 !important;
+    background: #e8f3eb !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.theme-locked-table-header, table thead, table thead tr, table thead th) {
+    border-color: #cbd8ce !important;
+    background: #e8f3eb !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(table, table tbody, table tbody tr) {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    table tbody tr:nth-child(even) {
+    background: #f6faf7 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(table th, table td) {
+    border-color: #e3ebe5 !important;
+    color: #111827 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge) {
+    border-color: #bfd5c5 !important;
+    background: #e8f3eb !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
+        [class*="amber"], [class*="yellow"], [class*="orange"], [class*="pending"], [class*="review"], [class*="late"]
+    ) {
+    border-color: #e7c982 !important;
+    background: #fff7df !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
+        [class*="red"], [class*="rose"], [class*="reject"], [class*="unavailable"], [class*="absent"], [class*="overdue"]
+    ) {
+    border-color: #e7b5b5 !important;
+    background: #fff0f0 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
+        [class*="blue"], [class*="info"]
+    ) {
+    border-color: #b8cee5 !important;
+    background: #eef6ff !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    button:not([class*="danger"]):not([class*="delete"]):not([class*="red"]):not([class*="rose"]),
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    [role="button"]:not([class*="danger"]):not([class*="delete"]):not([class*="red"]):not([class*="rose"]) {
+    border-color: #bfd5c5 !important;
+    background-color: #edf6ef !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(button, [role="button"]):is([class*="danger"], [class*="delete"], [class*="red"], [class*="rose"]) {
+    border-color: #e7b5b5 !important;
+    background-color: #fff0f0 !important;
+}
+
+body.app-shell .student-university-title {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 1023px) {
+    body.app-shell .student-university-title {
+        font-size: clamp(0.9rem, 4.8vw, 1.25rem) !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+    }
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal) {
+    background: #ffffff !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light) {
+    background: #ffffff !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.main-content, .page-content, main) {
+    background: #ffffff !important;
+}
+
+html.theme-light body.app-shell
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    .profile-theme-toggle {
+    border: 1px solid rgba(74, 222, 128, .36) !important;
+    background: #04281b !important;
+    color: #a7f3d0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html.theme-light body.app-shell
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    .profile-theme-toggle:hover {
+    border-color: rgba(74, 222, 128, .65) !important;
+    background: #0b3b27 !important;
+    color: #d1fae5 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal) {
+    background: #eef0ee !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light) {
+    background: #eceeec !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(.main-content, .page-content, main) {
+    background: transparent !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(
+        .glass-card,
+        .faculty-surface,
+        .tech-card,
+        .tech-card-soft,
+        .glass,
+        .card,
+        .summary-card,
+        .section-shell,
+        .table-card,
+        .chart-card,
+        .info-card,
+        .equipment-card,
+        .availability-laboratory-section,
+        .system-dashboard-heading,
+        .student-page-header,
+        .page-header-card,
+        .top-header,
+        .panel-card,
+        .attendance-page-header,
+        .attendance-page-card,
+        .attendance-summary-card,
+        .modal-content,
+        .details-modal,
+        .dialog
+    ) {
+    background-color: #f5f6f5 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(
+        .faculty-dashboard-table-wrap,
+        .attendance-table-wrap,
+        .table-wrapper,
+        .table-wrap,
+        .table-container,
+        .table-responsive,
+        [class*="table-wrap"],
+        [class*="table-container"]
+    ) {
+    background-color: #f2f4f2 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    background-color: #f8f9f8 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    table,
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    table tbody tr,
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    table tbody tr:nth-child(even) {
+    background-color: #f5f6f5 !important;
+}
+
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+    :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
+    table tbody tr:nth-child(even) {
+    background-color: #eef0ee !important;
+}
+
+html.theme-light body.app-shell.system-layout-page #mainContainer .system-dashboard-heading .system-profile-badge.profile-theme-static {
+    border-color: rgba(74, 222, 128, .32) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(4, 40, 27, .18) !important;
+}
+
+html.theme-light body.app-shell.system-layout-page #mainContainer .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-copy,
+html.theme-light body.app-shell.system-layout-page #mainContainer .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-name {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell.system-layout-page #mainContainer .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-role {
+    background: transparent !important;
+    color: #34d399 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page #mainContainer .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-avatar {
+    border-color: rgba(74, 222, 128, .4) !important;
+    background: #06402b !important;
+    color: #a7f3d0 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actions .system-profile-badge.profile-theme-static {
+    border-color: rgba(74, 222, 128, .32) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(4, 40, 27, .18) !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actions .system-profile-badge.profile-theme-static .system-profile-badge-copy,
+html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actions .system-profile-badge.profile-theme-static .system-profile-badge-name {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actions .system-profile-badge.profile-theme-static .system-profile-badge-role {
+    background: transparent !important;
+    color: #34d399 !important;
+}
+
+html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actions .system-profile-badge.profile-theme-static .system-profile-badge-avatar {
+    border-color: rgba(74, 222, 128, .4) !important;
+    background: #06402b !important;
+    color: #a7f3d0 !important;
+}
+
+html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) :is(
+    .student-page-header,
+    .system-dashboard-heading,
+    .summary-card,
+    .card,
+    .section-shell,
+    .filter-control,
+    .table-shell,
+    .glass-card,
+    .panel-card,
+    .profile-card,
+    .profile-shell,
+    .profile-photo-panel,
+    .detail-item,
+    .form-section,
+    .radio-card,
+    .option-card,
+    .section-title,
+    .section-title i,
+    .profile-theme-toggle,
+    .btn-ghost,
+    .borrow-equipment-option,
+    .borrow-inventory-card,
+    .borrow-qr-result,
+    .borrow-qr-scan-button,
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea,
+    table th,
+    table td,
+    [class*="-card"]:not([class*="icon"]):not([class*="badge"]),
+    [class~="border"],
+    [class~="border-2"],
+    [class~="border-4"],
+    [class~="border-8"],
+    [style*="border"],
+    .student-page-user,
+    .student-page-user-initials
+) {
+    border-width: 1.5px !important;
+    border-color: #1f2937 !important;
+}
+
+html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) .student-page-header {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) .student-page-user {
+    border-color: rgba(74, 222, 128, .32) !important;
+    background: #04281b !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) .student-page-user-initials {
+    border-color: rgba(74, 222, 128, .4) !important;
+    background: #06402b !important;
+    color: #a7f3d0 !important;
+}
+
+html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) .student-page-user-role {
+    color: #34d399 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light > header.student-page-header {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.student-portal :is(.student-page-header, .system-dashboard-heading) {
+    background: #ffffff !important;
+    background-image: none !important;
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07) !important;
+}
+
+html.theme-light body.student-portal .student-page-header .student-page-subtitle {
+    color: #000000 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.2 !important;
+}
+
+@media (min-width: 1024px) {
+    html body.app-shell .main-container {
+        box-sizing: border-box;
+        padding-right: 1rem !important;
+        padding-left: 1rem !important;
+    }
+
+    html body.app-shell.technician-portal .main-container {
+        padding-right: 0 !important;
+        padding-left: 0 !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    body.student-portal .student-page-header {
+        display: flex !important;
+        min-height: 3.8rem !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.4rem !important;
+        padding: 0.45rem 0.55rem !important;
+        overflow: hidden !important;
+    }
+
+    body.student-portal .student-page-heading {
+        width: auto !important;
+        min-width: 0 !important;
+        flex: 0 1 auto !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+    }
+
+    body.student-portal .student-page-header #mobileMenuToggle {
+        display: inline-flex !important;
+        width: 2.3rem !important;
+        height: 2.3rem !important;
+        flex: 0 0 2.3rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 1px solid rgba(74, 222, 128, 0.2) !important;
+        border-radius: 0.75rem !important;
+        background: rgba(7, 38, 24, 0.8) !important;
+        color: #a7f3d0 !important;
+        font-size: 1rem !important;
+    }
+
+    body.student-portal .student-page-heading-copy {
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.student-portal .student-page-heading-copy .student-page-title {
+        max-width: 34vw !important;
+        font-size: clamp(0.78rem, 3.8vw, 1rem) !important;
+        line-height: 1.15 !important;
+    }
+
+    body.student-portal .student-page-heading-copy .student-page-title.student-university-title {
+        max-width: min(100%, calc(100vw - 10rem)) !important;
+        font-size: clamp(0.82rem, 3.8vw, 1.1rem) !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.035em !important;
+    }
+
+    body.student-portal .system-dashboard-heading h1.student-university-title {
+        max-width: min(100%, calc(100vw - 10rem)) !important;
+        font-size: clamp(0.82rem, 3.8vw, 1.1rem) !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.035em !important;
+    }
+
+    body.student-portal .student-page-heading-copy .student-page-subtitle {
+        display: block !important;
+        max-width: 34vw !important;
+        margin: 0.12rem 0 0 !important;
+        overflow: hidden !important;
+        color: #86c9a5 !important;
+        font-size: 0.46rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        line-height: 1.15 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    body.student-portal .student-page-header :is(
+        .pc-station-header-actions,
+        .borrow-header-actions,
+        .attendance-header-actions,
+        .report-issue-header-actions,
+        .my-requests-header-actions,
+        .student-profile-header-actions
+    ),
+    body.student-portal .student-page-header > .student-page-user {
+        display: flex !important;
+        min-width: 0 !important;
+        flex: 0 1 auto !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.3rem !important;
+        margin: 0 !important;
+    }
+
+    body.student-portal .student-page-header :is(
+        .pc-station-header-actions,
+        .borrow-header-actions,
+        .attendance-header-actions,
+        .report-issue-header-actions,
+        .my-requests-header-actions,
+        .student-profile-header-actions
+    ) {
+        flex-direction: row-reverse !important;
+    }
+
+    body.student-portal .student-page-header .student-page-user {
+        min-width: 0 !important;
+        min-height: 2.15rem !important;
+        flex: 0 1 auto !important;
+        gap: 0.3rem !important;
+        margin: 0 !important;
+        padding: 0.2rem 0.4rem 0.2rem 0.22rem !important;
+    }
+
+    body.student-portal .student-page-header .student-page-user-initials {
+        width: 1.55rem !important;
+        height: 1.55rem !important;
+        flex: 0 0 1.55rem !important;
+    }
+
+    body.student-portal .student-page-header .student-page-user-copy {
+        min-width: 0 !important;
+        max-width: 27vw !important;
+    }
+
+    body.student-portal .student-page-header .student-page-user-name {
+        max-width: 27vw !important;
+        overflow: hidden !important;
+        font-size: 0.62rem !important;
+        line-height: 1.2 !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    body.student-portal .student-page-header .student-page-user-role {
+        max-width: 18vw !important;
+        overflow: hidden !important;
+        font-size: 0.48rem !important;
+        letter-spacing: 0.06em !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    body.student-portal .student-page-header .profile-theme-controls {
+        display: inline-flex !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    body.student-portal .student-page-header .profile-theme-toggle {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        flex: 0 0 2.25rem !important;
+        border-radius: 0.75rem !important;
+    }
+}
+
+html.theme-light body.app-shell.student-portal .main-container.theme-light .student-university-title {
+    color: #000000 !important;
+}
+
+body.app-shell.student-portal .main-container.theme-light .student-page-header .student-university-title,
+html.theme-light body.app-shell.student-portal .student-page-header .student-university-title {
+    color: #000000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body.app-shell.student-portal .student-page-header .student-university-title {
+    display: block !important;
+    max-width: 100% !important;
+    font-size: clamp(1rem, 2vw, 1.25rem) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.25 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body.student-borrow-equipment-page .borrow-requests-table :is(th, td),
+body.student-my-requests-page .borrow-requests-table :is(th, td),
+body.faculty-my-requests-page .borrow-requests-table :is(th, td),
+body.admin-borrow-equipment-page table :is(th, td) {
+    color: #ffffff !important;
+}
+
+body.student-borrow-equipment-page .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+body.student-my-requests-page .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+body.faculty-my-requests-page .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+body.admin-borrow-equipment-page table tbody td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg) {
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+body.student-borrow-equipment-page .borrow-requests-table th,
+body.student-my-requests-page .borrow-requests-table th,
+body.faculty-my-requests-page .borrow-requests-table th,
+body.admin-borrow-equipment-page table th {
+    font-weight: 700 !important;
+}
+
+html.theme-light body.student-borrow-equipment-page .main-container.theme-light .borrow-requests-table :is(th, td),
+html.theme-light body.student-my-requests-page .main-container.theme-light .borrow-requests-table :is(th, td),
+html.theme-light body.faculty-my-requests-page .main-container.theme-light .borrow-requests-table :is(th, td),
+html.theme-light body.admin-borrow-equipment-page .main-container.theme-light table :is(th, td) {
+    color: #111827 !important;
+}
+
+html.theme-light body.student-borrow-equipment-page .main-container.theme-light .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+html.theme-light body.student-my-requests-page .main-container.theme-light .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+html.theme-light body.faculty-my-requests-page .main-container.theme-light .borrow-requests-table td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg),
+html.theme-light body.admin-borrow-equipment-page .main-container.theme-light table tbody td :not(.borrow-request-status):not(.status-badge):not(button):not(i):not(svg) {
+    color: #111827 !important;
+}
+
+/* Keep page-level titles consistent across every signed-in portal. */
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero):has(h1, .page-title, .header-title, .student-page-title, .page-header-title) {
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.45rem !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .55rem !important;
+    margin: 0 0 .65rem !important;
+    padding: .15rem .8rem !important;
+    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+}
+
+body .top-header > .top-header-card {
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.1rem !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .55rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(h1, .page-title, .header-title, .student-page-title, .page-header-title) {
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    color: #e8f5ed !important;
+    font-size: 1rem !important;
+    font-weight: 750 !important;
+    letter-spacing: -.01em !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.eyebrow, .header-eyebrow, .header-subtitle, .student-page-subtitle, .page-header-subtitle, .dashboard-header-details, .hero-icon, .heading-icon) {
+    display: none !important;
+}
+
+body :is(.hero, .page-heading) :is(.heading-copy, .hero-copy) > p {
+    display: none !important;
+}
+
+body .hero:has(h1) > div > p,
+body .technician-profile-header p,
+body .audit-page-heading .page-description {
+    display: none !important;
+}
+
+body :is(.system-dashboard-heading, .student-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero) > :is(div:first-child, .heading-copy, .student-page-heading, .system-dashboard-heading-main) {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons, .borrow-header-actions, .campus-chip, .technician-profile-identity) {
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    gap: .35rem !important;
+    margin: 0 0 0 auto !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.system-profile-badge, .student-page-user, .technician-profile-identity, .campus-chip) {
+    box-sizing: border-box !important;
+    min-height: 1.9rem !important;
+    gap: .35rem !important;
+    padding: .1rem .45rem .1rem .25rem !important;
+    border-radius: .45rem !important;
+    box-shadow: none !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .technician-profile-identity > span:first-child) {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+    flex-basis: 1.45rem !important;
+    border-radius: .35rem !important;
+    font-size: .62rem !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.system-profile-badge-name, .student-page-user-name, .technician-profile-identity [data-tech-name]) {
+    max-width: min(12rem, 24vw) !important;
+    font-size: .7rem !important;
+    line-height: 1.1 !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.system-profile-badge-role, .student-page-user-role, .technician-profile-identity [data-tech-role]) {
+    font-size: .48rem !important;
+    line-height: 1.1 !important;
+}
+
+body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(.profile-theme-toggle, #mobileMenuToggle, .menu-toggle, .student-page-menu) {
+    width: 1.8rem !important;
+    height: 1.8rem !important;
+    min-height: 1.8rem !important;
+    flex: 0 0 1.8rem !important;
+    padding: 0 !important;
+    border-radius: .4rem !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+body .audit-page-heading {
+    box-sizing: border-box !important;
+    min-height: 2.45rem !important;
+    margin: 0 0 .65rem !important;
+    padding: .4rem .8rem !important;
+    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    box-shadow: none !important;
+}
+
+body .audit-page-heading .comlab-page-heading-title {
+    margin: 0 !important;
+    font-size: 1rem !important;
+    font-weight: 750 !important;
+    line-height: 1.2 !important;
+}
+
+body.student-portal header:has(> .student-page-header) {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body.student-portal .student-page-header {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+}
+
+@media (max-width: 640px) {
+    body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero) {
+        min-height: 2.35rem !important;
+        gap: .35rem !important;
+        padding-right: .5rem !important;
+        padding-left: .5rem !important;
+    }
+
+    body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+        :is(h1, .page-title, .header-title, .student-page-title, .page-header-title) {
+        font-size: .88rem !important;
+    }
+
+    body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+        :is(.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons, .borrow-header-actions) {
+        gap: .2rem !important;
+    }
+}
+
+/* High-specificity layer keeps older page-level styles from restoring thick cards. */
+html body .comlab-slim-page-header:not(#comlab-header-specificity) {
+    box-sizing: border-box !important;
+    display: flex !important;
+    position: fixed !important;
+    inset: 0 0 auto var(--sidebar-width, 280px) !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 2.45rem !important;
+    height: 2.45rem !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .55rem !important;
+    margin: 0 !important;
+    padding: .15rem .8rem !important;
+    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border-radius: 0 !important;
+    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    z-index: 1050 !important;
+    transition: none !important;
+}
+
+html body .comlab-page-header-spacer {
+    display: block !important;
+    width: 100% !important;
+    height: 2.45rem !important;
+    min-height: 2.45rem !important;
+    margin: 0 0 .65rem !important;
+    padding: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity) > .top-header-card {
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.1rem !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .55rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title) {
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    color: #e8f5ed !important;
+    font-size: 1rem !important;
+    font-weight: 750 !important;
+    letter-spacing: -.01em !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.eyebrow, .header-eyebrow, .header-subtitle, .student-page-subtitle, .page-header-subtitle, .dashboard-header-details, .hero-icon, .heading-icon) {
+    display: none !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    > :is(div:first-child, .top-header-card, .heading-copy, .student-page-heading, .system-dashboard-heading-main) {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity):is(.hero, .page-heading) p,
+html body .comlab-slim-page-header:not(#comlab-header-specificity).technician-profile-header p,
+html body .comlab-slim-page-header:not(#comlab-header-specificity).audit-page-heading .page-description {
+    display: none !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons, .borrow-header-actions, .campus-chip, .technician-profile-identity) {
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    gap: .35rem !important;
+    margin: 0 0 0 auto !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge, .student-page-user, .technician-profile-identity, .campus-chip) {
+    min-height: 1.9rem !important;
+    gap: .35rem !important;
+    padding: .1rem .45rem .1rem .25rem !important;
+    border-radius: .45rem !important;
+    box-shadow: none !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .technician-profile-identity > span:first-child) {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+    flex-basis: 1.45rem !important;
+    border-radius: .35rem !important;
+    font-size: .62rem !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-name, .student-page-user-name, .technician-profile-identity [data-tech-name]) {
+    max-width: min(12rem, 24vw) !important;
+    font-size: .7rem !important;
+    line-height: 1.1 !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-role, .student-page-user-role, .technician-profile-identity [data-tech-role]) {
+    font-size: .48rem !important;
+    line-height: 1.1 !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity) .user-profile {
+    box-sizing: border-box !important;
+    min-height: 1.9rem !important;
+    gap: .35rem !important;
+    margin: 0 !important;
+    padding: .1rem .45rem .1rem .25rem !important;
+    border-radius: .45rem !important;
+    box-shadow: none !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity) .user-profile .user-avatar {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+    flex: 0 0 1.45rem !important;
+    font-size: .62rem !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity) .user-profile .user-name {
+    max-width: min(12rem, 24vw) !important;
+    font-size: .7rem !important;
+    line-height: 1.1 !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity) .user-profile .user-role {
+    font-size: .48rem !important;
+    line-height: 1.1 !important;
+}
+
+html body .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.profile-theme-toggle, #mobileMenuToggle, .menu-toggle, .student-page-menu) {
+    width: 1.8rem !important;
+    height: 1.8rem !important;
+    min-height: 1.8rem !important;
+    flex: 0 0 1.8rem !important;
+    padding: 0 !important;
+    border-radius: .4rem !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+html body .comlab-static-header-wrap:not(#comlab-header-wrap-specificity) {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+    html body .comlab-slim-page-header:not(#comlab-header-specificity) {
+        min-height: 2.35rem !important;
+        height: 2.35rem !important;
+        gap: .35rem !important;
+        padding-right: .5rem !important;
+        padding-left: .5rem !important;
+    }
+
+    html body .comlab-slim-page-header:not(#comlab-header-specificity)
+        :is(h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title) {
+        font-size: .88rem !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    html body.student-portal .comlab-slim-page-header:not(#comlab-header-specificity) {
+        inset: 0 0 auto 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    html body:not(.student-portal) .comlab-slim-page-header:not(#comlab-header-specificity) {
+        inset: 0 0 auto 0 !important;
+    }
+}
+
+html body .comlab-notification-button {
+    box-sizing: border-box !important;
+    position: relative !important;
+    display: inline-grid !important;
+    width: 1.95rem !important;
+    min-width: 1.95rem !important;
+    height: 1.95rem !important;
+    min-height: 1.95rem !important;
+    flex: 0 0 1.95rem !important;
+    place-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 1px solid rgba(74, 222, 128, .28) !important;
+    border-radius: 50% !important;
+    background: linear-gradient(145deg, rgba(34, 197, 94, .18), rgba(6, 64, 43, .72)) !important;
+    color: #a7f3d0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 4px 12px rgba(2, 18, 12, .25) !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+
+html body .comlab-notification-button:hover {
+    border-color: rgba(74, 222, 128, .66) !important;
+    background: linear-gradient(145deg, rgba(34, 197, 94, .3), rgba(6, 64, 43, .88)) !important;
+    color: #ecfdf5 !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .1), 0 7px 16px rgba(2, 18, 12, .3) !important;
+    transform: translateY(-1px) !important;
+}
+
+html body .comlab-notification-button:focus-visible {
+    outline: 2px solid #86efac !important;
+    outline-offset: 2px !important;
+}
+
+html body .comlab-notification-button > .fa-bell {
+    color: inherit !important;
+    font-size: .82rem !important;
+    line-height: 1 !important;
+}
+
+html body .comlab-notification-button:hover > .fa-bell {
+    animation: comlab-bell-ring .48s ease-in-out;
+}
+
+html body .comlab-notification-button .comlab-notification-badge:not(.hidden) {
+    box-sizing: border-box !important;
+    position: absolute !important;
+    top: -.28rem !important;
+    right: -.3rem !important;
+    display: inline-flex !important;
+    min-width: 1.05rem !important;
+    width: auto !important;
+    height: 1.05rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 .24rem !important;
+    border: 1px solid #07150f !important;
+    border-radius: 999px !important;
+    background: #fb7185 !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 1px rgba(251, 113, 133, .22) !important;
+    font-size: .56rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+html body .comlab-notification-button .comlab-notification-badge.hidden {
+    display: none !important;
+}
+
+@keyframes comlab-bell-ring {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(-12deg); }
+    40%, 80% { transform: rotate(12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body .comlab-notification-button,
+    html body .comlab-notification-button:hover > .fa-bell {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Refined shared navigation for every authenticated role. */
+html body #sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background:
+        radial-gradient(220px 180px at 0% 0%, rgba(34, 197, 94, .12), transparent 72%),
+        linear-gradient(180deg, #071a12 0%, #06150f 54%, #081a12 100%) !important;
+    border-right: 1px solid rgba(74, 222, 128, .2) !important;
+    box-shadow: 14px 0 38px rgba(1, 10, 7, .22), inset -1px 0 0 rgba(255, 255, 255, .025) !important;
+}
+
+html body #sidebar .sidebar-header {
+    position: relative !important;
+    z-index: 1 !important;
+    display: flex !important;
+    min-height: 5.8rem !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    padding: .95rem 1rem .9rem !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(74, 222, 128, .16) !important;
+    background:
+        radial-gradient(180px 110px at 0% 0%, rgba(34, 197, 94, .13), transparent 78%),
+        linear-gradient(150deg, rgba(12, 39, 27, .96), rgba(6, 22, 15, .98)) !important;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .025) !important;
+}
+
+html body #sidebar .sidebar-logo {
+    position: relative !important;
+    z-index: 1 !important;
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 3.6rem !important;
+    align-items: center !important;
+    gap: .72rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html body #sidebar .sidebar-logo > i {
+    display: inline-grid !important;
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    flex: 0 0 2.45rem !important;
+    place-items: center !important;
+    border: 1px solid rgba(74, 222, 128, .3) !important;
+    border-radius: .78rem !important;
+    background: linear-gradient(145deg, rgba(34, 197, 94, .24), rgba(6, 64, 43, .44)) !important;
+    color: #4ade80 !important;
+    font-size: 1.05rem !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 5px 16px rgba(34, 197, 94, .1) !important;
+}
+
+html body #sidebar .sidebar-brand-copy {
+    display: flex !important;
+    min-width: 0 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: .2rem !important;
+}
+
+html body #sidebar .sidebar-logo-text {
+    display: block !important;
+    color: #e8f5ed !important;
+    font-size: 1.38rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -.045em !important;
+    line-height: 1 !important;
+    text-shadow: 0 2px 14px rgba(74, 222, 128, .1) !important;
+}
+
+html body #sidebar .sidebar-tagline {
+    display: block !important;
+    margin: 0 !important;
+    color: #95b5a4 !important;
+    font-size: .57rem !important;
+    font-weight: 750 !important;
+    letter-spacing: .13em !important;
+    line-height: 1.35 !important;
+    text-transform: uppercase !important;
+}
+
+html body #sidebar .sidebar-nav {
+    display: block !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    padding: .7rem .62rem 1rem !important;
+    scrollbar-color: rgba(74, 222, 128, .25) transparent !important;
+    scrollbar-width: thin !important;
+}
+
+html body #sidebar .sidebar-nav::-webkit-scrollbar {
+    width: 5px !important;
+}
+
+html body #sidebar .sidebar-nav::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+html body #sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(74, 222, 128, .23) !important;
+}
+
+html body #sidebar .nav-item {
+    position: relative !important;
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 2.72rem !important;
+    align-items: center !important;
+    gap: .68rem !important;
+    margin: .18rem 0 !important;
+    padding: .48rem .68rem !important;
+    overflow: visible !important;
+    border: 1px solid transparent !important;
+    border-radius: .72rem !important;
+    background: transparent !important;
+    color: #a9c8b7 !important;
+    font-size: .88rem !important;
+    font-weight: 620 !important;
+    line-height: 1.28rem !important;
+    letter-spacing: 0 !important;
+    text-decoration: none !important;
+    transition: color .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+
+html body #sidebar .nav-item > i {
+    display: inline-grid !important;
+    width: 1.78rem !important;
+    height: 1.78rem !important;
+    flex: 0 0 1.78rem !important;
+    place-items: center !important;
+    border: 1px solid transparent !important;
+    border-radius: .55rem !important;
+    background: rgba(34, 197, 94, .075) !important;
+    color: #4ade80 !important;
+    font-size: .96rem !important;
+    line-height: 1 !important;
+    transition: color .18s ease, border-color .18s ease, background .18s ease, filter .18s ease !important;
+}
+
+html body #sidebar .sidebar-nav-label {
+    display: block !important;
+    min-width: 0 !important;
+    color: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+    overflow-wrap: normal !important;
+}
+
+html body #sidebar .nav-item:hover {
+    border-color: rgba(74, 222, 128, .14) !important;
+    background: linear-gradient(105deg, rgba(34, 197, 94, .1), rgba(12, 42, 29, .5)) !important;
+    color: #e1f5e9 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+    transform: translateX(2px) !important;
+}
+
+html body #sidebar .nav-item:hover > i {
+    border-color: rgba(74, 222, 128, .16) !important;
+    background: rgba(34, 197, 94, .14) !important;
+    color: #86efac !important;
+}
+
+html body #sidebar .nav-item.active,
+html body #sidebar .nav-item[aria-current="page"] {
+    border-color: rgba(74, 222, 128, .34) !important;
+    background: linear-gradient(105deg, rgba(34, 197, 94, .2), rgba(12, 54, 36, .8) 62%, rgba(8, 31, 22, .96)) !important;
+    color: #effcf3 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 5px 16px rgba(1, 16, 10, .18) !important;
+    transform: none !important;
+}
+
+html body #sidebar .nav-item.active::before,
+html body #sidebar .nav-item[aria-current="page"]::before {
+    position: absolute !important;
+    top: .48rem !important;
+    bottom: .48rem !important;
+    left: 0 !important;
+    width: 3px !important;
+    border-radius: 0 999px 999px 0 !important;
+    background: #4ade80 !important;
+    box-shadow: 0 0 10px rgba(74, 222, 128, .6) !important;
+    content: '' !important;
+}
+
+html body #sidebar .nav-item.active > i,
+html body #sidebar .nav-item[aria-current="page"] > i {
+    border-color: rgba(134, 239, 172, .22) !important;
+    background: rgba(34, 197, 94, .19) !important;
+    color: #a7f3d0 !important;
+    filter: drop-shadow(0 0 4px rgba(74, 222, 128, .32)) !important;
+}
+
+html body #sidebar .nav-item:focus-visible {
+    outline: 2px solid #86efac !important;
+    outline-offset: 2px !important;
+    color: #ecfdf5 !important;
+}
+
+html body #sidebar .sidebar-footer {
+    position: relative !important;
+    z-index: 1 !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: .55rem .62rem .75rem !important;
+    border-top: 1px solid rgba(74, 222, 128, .12) !important;
+    background: linear-gradient(180deg, rgba(6, 21, 14, .88), rgba(5, 17, 11, .98)) !important;
+    backdrop-filter: blur(14px) !important;
+}
+
+@media (max-width: 767px) {
+    html body #sidebar .sidebar-header {
+        min-height: 5.45rem !important;
+        padding: .82rem .92rem !important;
+    }
+
+    html body #sidebar .sidebar-nav {
+        padding: .58rem .55rem .85rem !important;
+    }
+
+    html body #sidebar .nav-item {
+        min-height: 2.65rem !important;
+        padding: .44rem .62rem !important;
+        font-size: .86rem !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    html body #sidebar .sidebar-logo {
+        padding-right: 2.65rem !important;
+    }
+
+    html body #sidebar .sidebar-close-btn {
+        position: absolute !important;
+        top: .8rem !important;
+        right: .75rem !important;
+        z-index: 3 !important;
+        display: inline-grid !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        place-items: center !important;
+        border: 1px solid rgba(74, 222, 128, .18) !important;
+        border-radius: .62rem !important;
+        background: rgba(4, 25, 16, .84) !important;
+        color: #b7e5c8 !important;
+        box-shadow: 0 5px 14px rgba(0, 0, 0, .2) !important;
+    }
+
+    html body #sidebar .sidebar-close-btn:hover,
+    html body #sidebar .sidebar-close-btn:focus-visible {
+        border-color: rgba(74, 222, 128, .46) !important;
+        background: rgba(15, 55, 38, .96) !important;
+        color: #ecfdf5 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body #sidebar .nav-item,
+    html body #sidebar .nav-item > i {
+        transition: none !important;
+    }
+}
+
+body.app-shell :is(
+    .system-dashboard-heading,
+    .top-header,
+    .student-page-header,
+    .attendance-page-header,
+    .page-header-card,
+    .technician-profile-header,
+    .page-heading,
+    .hero
+) h1 {
+    display: none !important;
+}
+
+body.app-shell :is(
+    .system-dashboard-heading,
+    .top-header,
+    .student-page-header,
+    .attendance-page-header,
+    .page-header-card,
+    .technician-profile-header,
+    .page-heading,
+    .hero
+) .system-profile-badge-name {
+    display: none !important;
+}
+
+body.app-shell :is(.system-dashboard-heading, .top-header, .student-page-header, .header-actions) .header-pill {
+    font-size: 0 !important;
+}
+
+body.app-shell :is(.system-dashboard-heading, .top-header, .student-page-header, .header-actions) .header-pill > i {
+    font-size: 1rem !important;
+}

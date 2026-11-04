@@ -20,13 +20,14 @@ views/
 - `attendance.html` - Attendance monitoring page
 - `borrow-equipment.html` - Equipment borrowing management
 - `equipment-inventory.html` - Equipment inventory management
+- `archived-records.html` - Admin-only archive listing with restore actions
 - `maintenance-reports.html` - Maintenance reports page
 
 ### Student Views (`student/`)
 - `student-dashboard.html` - Student main dashboard
 - `student-borrow-equipment.html` - Equipment borrowing interface
 - `student-profile.html` - Student profile page
-- `student-my-requests.html` - View borrow requests
+- `student-my-requests.html` - View student issue reports and faculty borrow requests
 - `student-report-equipment.html` - Report equipment issues
 - `student-report-issue.html` - General issue reporting
 - `student-scan-attendance.html` - QR code attendance scanning
@@ -59,6 +60,7 @@ HTML files are served through `routes/index.js` using the `serveHtmlPage` functi
 
 ### Handlebars Templates
 `.xian` files are rendered using the Handlebars engine through controllers (e.g., `authController.js`).
+The root route (`/`) renders `home.xian` for signed-out visitors; its login and registration links go to `/login` and `/register`.
 
 Example:
 ```javascript

@@ -1,0 +1,2 @@
+ALTER TABLE attendance
+  ADD COLUMN IF NOT EXISTS pcStationSetId VARCHAR(50) NULL;

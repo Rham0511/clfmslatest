@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My MR Items | ComLab Faculty</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=5">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <style>
+    :root {
+      color-scheme: dark;
+      --mir-border: rgba(74, 222, 128, .16);
+    }
+
+    body {
+      min-height: 100vh;
+      color: #f8fafc;
+      background:
+        radial-gradient(ellipse at 8% 0%, rgba(16, 185, 129, .15), transparent 34rem),
+        radial-gradient(ellipse at 95% 15%, rgba(20, 83, 45, .12), transparent 30rem),
+        linear-gradient(160deg, #06130e 0%, #06111a 55%, #020617 100%);
+    }
+
+    .main-container {
+      min-height: 100vh;
+      padding: 1.1rem .75rem 2.5rem;
+    }
+
+    .mir-page-content {
+      width: 100%;
+      max-width: 1500px;
+      margin-inline: auto;
+      padding-inline: .25rem;
+    }
+
+    body.system-layout-page .system-dashboard-heading.mir-page-heading {
+      position: relative;
+      overflow: hidden;
+      min-height: 5.25rem;
+      margin-bottom: 0;
+      padding: .75rem 1.1rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 1.35rem;
+      background:
+        radial-gradient(ellipse at 10% 0%, rgba(16, 185, 129, .15), transparent 60%),
+        linear-gradient(130deg, rgba(8, 30, 21, .98), rgba(4, 17, 14, .96) 65%, rgba(5, 23, 19, .98));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 18px 40px rgba(0, 0, 0, .2);
+    }
+
+    .mir-table-panel {
+      overflow: hidden;
+      border: 1px solid var(--mir-border);
+      border-radius: 1.25rem;
+      background: rgba(3, 14, 11, .94);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .2);
+    }
+
+    .mir-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: stretch;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .12);
+      background: linear-gradient(90deg, rgba(9, 34, 24, .8), rgba(5, 19, 15, .74));
+    }
+
+    .mir-filters {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: .65rem;
+    }
+
+    .mir-category-select {
+      box-sizing: border-box;
+      min-height: 2.8rem;
+      min-width: 10.5rem;
+      border: 1px solid rgba(74, 222, 128, .17);
+      border-radius: .85rem;
+      background: rgba(2, 10, 8, .86);
+      padding: .65rem 2rem .65rem .8rem;
+      color: #d1fae5;
+      font-size: .8rem;
+      outline: none;
+    }
+
+    .mir-category-select:focus {
+      border-color: rgba(52, 211, 153, .65);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+    }
+
+    .mir-search {
+      position: relative;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .mir-search input {
+      box-sizing: border-box;
+      min-height: 2.8rem;
+      width: 100%;
+      border: 1px solid rgba(74, 222, 128, .17);
+      border-radius: .85rem;
+      background: rgba(2, 10, 8, .86);
+      padding: .65rem 2.8rem .65rem 2.55rem;
+      color: #ecfdf5;
+      font-size: .83rem;
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .mir-search input::placeholder {
+      color: #71877e;
+    }
+
+    .mir-search input:focus {
+      border-color: rgba(52, 211, 153, .65);
+      background: #06140f;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+    }
+
+    .mir-search-icon {
+      position: absolute;
+      top: 50%;
+      left: .9rem;
+      color: #6ee7b7;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .mir-clear-search {
+      position: absolute;
+      top: 50%;
+      right: .55rem;
+      display: grid;
+      width: 1.8rem;
+      height: 1.8rem;
+      place-items: center;
+      border: 0;
+      border-radius: .55rem;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      transform: translateY(-50%);
+    }
+
+    .mir-clear-search:hover,
+    .mir-clear-search:focus-visible {
+      background: rgba(52, 211, 153, .1);
+      color: #a7f3d0;
+      outline: none;
+    }
+
+    .mir-summary {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      color: #8da99c;
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+
+    .mir-summary i {
+      color: #34d399;
+      font-size: .65rem;
+    }
+
+    .mir-table-scroll {
+      width: 100%;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+
+    .mir-table-scroll::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .mir-table-scroll::-webkit-scrollbar-track {
+      background: rgba(3, 14, 11, .9);
+    }
+
+    .mir-table-scroll::-webkit-scrollbar-thumb {
+      border: 2px solid rgba(3, 14, 11, .9);
+      border-radius: 999px;
+      background: rgba(52, 211, 153, .46);
+    }
+
+    .mir-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .mir-table th:nth-child(1) { width: 20%; }
+    .mir-table th:nth-child(2) { width: 14%; }
+    .mir-table th:nth-child(3) { width: 14%; }
+    .mir-table th:nth-child(4) { width: 17%; }
+    .mir-table th:nth-child(5) { width: 13%; }
+    .mir-table th:nth-child(6) { width: 14%; }
+    .mir-table th:nth-child(7) { width: 8%; }
+
+    .mir-table th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 1px solid rgba(74, 222, 128, .16);
+      background: #0a2118;
+      color: #b7e8d1;
+      padding: 0 .25rem;
+      white-space: normal;
+    }
+
+    .mir-table th + th {
+      border-left: 1px solid rgba(74, 222, 128, .08);
+    }
+
+    .mir-table th[aria-sort="ascending"],
+    .mir-table th[aria-sort="descending"] {
+      background: linear-gradient(180deg, #145438, #0d3a29);
+      box-shadow: inset 0 -2px 0 rgba(110, 231, 183, .7);
+    }
+
+    .mir-table th:last-child {
+      text-align: center;
+    }
+
+    .mir-sort-button {
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      min-height: 2.9rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: .3rem;
+      padding: .55rem .35rem;
+      white-space: normal;
+      color: inherit;
+      font-size: .56rem;
+      font-weight: 800;
+      letter-spacing: .025em;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .mir-table th:last-child {
+      color: #b7e8d1;
+      font-size: .56rem;
+      font-weight: 800;
+      letter-spacing: .025em;
+      text-transform: uppercase;
+    }
+
+    .mir-sort-button:hover,
+    .mir-sort-button:focus-visible {
+      color: #ecfdf5;
+      outline: 2px solid rgba(52, 211, 153, .8);
+      outline-offset: -3px;
+    }
+
+    .mir-table td {
+      border-bottom: 1px solid rgba(74, 222, 128, .1);
+      padding: .7rem .55rem;
+      overflow-wrap: anywhere;
+      color: #e2e8f0;
+      font-size: .76rem;
+      vertical-align: middle;
+    }
+
+    .mir-table tbody tr:nth-child(even) {
+      background: rgba(15, 35, 27, .28);
+    }
+
+    .mir-table tbody tr {
+      transition: background-color .16s ease;
+    }
+
+    .mir-table tbody tr:hover {
+      background: rgba(16, 185, 129, .09);
+    }
+
+    body.app-shell.system-layout-page .mir-table {
+      width: 100% !important;
+      min-width: 0 !important;
+      table-layout: fixed !important;
+    }
+
+    body.app-shell.system-layout-page .mir-table thead th {
+      padding: .35rem .3rem !important;
+      background: linear-gradient(180deg, #0d3324, #09271c) !important;
+      color: #d1fae5 !important;
+      font-size: .6rem !important;
+      line-height: 1.15 !important;
+      letter-spacing: .025em !important;
+      white-space: normal !important;
+    }
+
+    body.app-shell.system-layout-page .mir-table thead th .mir-sort-button {
+      display: flex !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 2.5rem !important;
+      justify-content: space-between !important;
+      gap: .2rem !important;
+      padding: .35rem .2rem !important;
+      color: inherit !important;
+      font-size: .56rem !important;
+      line-height: 1.15 !important;
+      letter-spacing: .02em !important;
+      white-space: normal !important;
+    }
+
+    body.app-shell.system-layout-page .mir-table thead th:last-child {
+      text-align: center !important;
+    }
+
+    body.app-shell.system-layout-page .mir-table tbody td {
+      padding: .65rem .45rem !important;
+      color: #e2e8f0 !important;
+      font-size: .74rem !important;
+      line-height: 1.35 !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    .mir-item-name {
+      display: block;
+      color: #f0fdf4;
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .mir-item-category {
+      display: block;
+      margin-top: .2rem;
+      color: #8da99c;
+      font-size: .68rem;
+      font-weight: 600;
+    }
+
+    .mir-pill {
+      display: inline-flex;
+      max-width: 100%;
+      align-items: center;
+      gap: .38rem;
+      border: 1px solid rgba(74, 222, 128, .15);
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .08);
+      padding: .3rem .58rem;
+      color: #a7f3d0;
+      font-size: .7rem;
+      font-weight: 700;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .mir-pill--status {
+      border-color: rgba(96, 165, 250, .16);
+      background: rgba(59, 130, 246, .08);
+      color: #bfdbfe;
+    }
+
+    .mir-condition-note {
+      display: block;
+      margin-top: .3rem;
+      color: #83988e;
+      font-size: .68rem;
+    }
+
+    .mir-empty {
+      padding: 3rem 1.5rem !important;
+      color: #91a59c !important;
+      text-align: center;
+    }
+
+    .mir-empty-icon {
+      display: grid;
+      width: 3rem;
+      height: 3rem;
+      margin: 0 auto .8rem;
+      place-items: center;
+      border: 1px solid rgba(74, 222, 128, .14);
+      border-radius: 1rem;
+      background: rgba(16, 185, 129, .07);
+      color: #6ee7b7;
+    }
+
+    .mir-actions-cell {
+      position: relative;
+      text-align: center;
+    }
+
+    .mir-action-trigger {
+      display: inline-grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      place-items: center;
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: .7rem;
+      background: rgba(16, 185, 129, .07);
+      color: #a7f3d0;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .mir-action-trigger:hover,
+    .mir-action-trigger[aria-expanded="true"] {
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, .38);
+      background: rgba(16, 185, 129, .16);
+      color: #ecfdf5;
+    }
+
+    .mir-action-trigger:focus-visible {
+      outline: 2px solid #34d399;
+      outline-offset: 2px;
+    }
+
+    .mir-action-menu {
+      position: fixed;
+      z-index: 10001;
+      display: none;
+      width: min(13rem, calc(100vw - 1rem));
+      max-height: calc(100vh - 1rem);
+      overflow-y: auto;
+      padding: .4rem;
+      border: 1px solid rgba(74, 222, 128, .19);
+      border-radius: .9rem;
+      background: #071711;
+      box-shadow: 0 16px 35px rgba(0, 0, 0, .48);
+    }
+
+    .mir-action-menu.is-open {
+      display: grid;
+      gap: .2rem;
+      animation: mirMenuIn .14s ease-out;
+    }
+
+    .mir-action-item {
+      display: flex;
+      min-height: 2.5rem;
+      align-items: center;
+      gap: .7rem;
+      border: 0;
+      border-radius: .6rem;
+      background: transparent;
+      padding: .55rem .7rem;
+      color: #d1fae5;
+      font-size: .79rem;
+      font-weight: 650;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .mir-action-item i {
+      width: 1rem;
+      color: #6ee7b7;
+      text-align: center;
+    }
+
+    .mir-action-item:hover,
+    .mir-action-item:focus-visible {
+      outline: none;
+      background: rgba(16, 185, 129, .15);
+      color: #fff;
+    }
+
+    .mir-action-item--warning {
+      color: #fcd34d;
+    }
+
+    .mir-action-item--warning i {
+      color: #fbbf24;
+    }
+
+    .mir-action-item--warning:hover,
+    .mir-action-item--warning:focus-visible {
+      background: rgba(133, 77, 14, .38);
+    }
+
+    .mir-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      overflow-y: auto;
+      background: rgba(1, 8, 5, .78);
+      padding: 1rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .mir-modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .mir-modal {
+      width: min(100%, 38rem);
+      max-height: min(85vh, 48rem);
+      overflow: auto;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 1.2rem;
+      background: #071711;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+    }
+
+    .mir-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .13);
+      padding: 1.15rem 1.25rem;
+    }
+
+    .mir-modal-close {
+      display: grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      flex: 0 0 2.25rem;
+      place-items: center;
+      border: 1px solid rgba(148, 163, 184, .16);
+      border-radius: .7rem;
+      background: rgba(148, 163, 184, .06);
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+
+    .mir-modal-close:hover {
+      background: rgba(148, 163, 184, .12);
+      color: #fff;
+    }
+
+    .mir-modal-body {
+      padding: 1.25rem;
+    }
+
+    .mir-history-event {
+      border-left: 2px solid rgba(52, 211, 153, .35);
+      padding: .1rem 0 .25rem 1rem;
+    }
+
+    .mir-history-event + .mir-history-event {
+      margin-top: 1rem;
+    }
+
+    .mir-reason-field {
+      box-sizing: border-box;
+      min-height: 7rem;
+      width: 100%;
+      resize: vertical;
+      border: 1px solid rgba(74, 222, 128, .18);
+      border-radius: .85rem;
+      background: #020a08;
+      padding: .8rem;
+      color: #ecfdf5;
+      outline: none;
+    }
+
+    .mir-reason-field:focus {
+      border-color: rgba(52, 211, 153, .65);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+    }
+
+    @keyframes mirMenuIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .mir-toolbar {
+        align-items: stretch;
+        padding: .9rem;
+      }
+
+      .mir-filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .mir-category-select {
+        width: 100%;
+      }
+
+      .mir-search {
+        width: 100%;
+      }
+
+      .mir-table {
+        min-width: 0;
+      }
+
+      .mir-table td {
+        padding: .55rem .25rem;
+        font-size: .64rem;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody td {
+        padding: .45rem .2rem !important;
+        font-size: .6rem !important;
+        line-height: 1.25 !important;
+      }
+
+      .mir-sort-button {
+        min-height: 2.6rem;
+        padding-inline: .2rem;
+        font-size: .48rem;
+        letter-spacing: 0;
+      }
+
+      body.app-shell.system-layout-page .mir-table thead th .mir-sort-button {
+        min-height: 2.4rem !important;
+        padding: .3rem .1rem !important;
+        font-size: .45rem !important;
+        letter-spacing: 0 !important;
+      }
+
+      .mir-pill {
+        max-width: 100%;
+        padding: .22rem .3rem;
+        font-size: .58rem;
+        white-space: normal;
+      }
+
+      .mir-action-trigger {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .mir-table-scroll {
+        overflow: visible;
+      }
+
+      body.app-shell.system-layout-page .mir-table,
+      body.app-shell.system-layout-page .mir-table tbody {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      body.app-shell.system-layout-page .mir-table thead {
+        display: none !important;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 0 .65rem .75rem;
+        overflow: hidden;
+        border: 1px solid rgba(74, 222, 128, .16);
+        border-radius: .9rem;
+        background: linear-gradient(145deg, rgba(11, 42, 29, .9), rgba(5, 24, 17, .96));
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .14);
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row td {
+        display: grid !important;
+        min-width: 0;
+        grid-template-columns: minmax(0, 1fr);
+        align-content: start;
+        gap: .28rem;
+        border-bottom: 1px solid rgba(74, 222, 128, .09);
+        padding: .65rem .7rem !important;
+        text-align: left;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row td::before {
+        content: attr(data-label);
+        color: #80bda0;
+        font-size: .57rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row td:last-child {
+        grid-column: 2;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-empty-row {
+        display: block !important;
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-empty-row td {
+        display: block !important;
+        padding: 2rem 1rem !important;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .main-container {
+        margin-left: 0 !important;
+      }
+
+      .mir-page-content {
+        padding-inline: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal faculty-page faculty-mir-items-page faculty-page-heading-page system-layout-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+
+  <div class="main-container">
+    <main class="mir-page-content mt-3 grid gap-3">
+      <div class="system-dashboard-heading mir-page-heading">
+        <div class="system-dashboard-heading-main min-w-0">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+          <div class="min-w-0">
+          </div>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+          <div class="student-page-user system-profile-badge">
+            <span class="system-profile-badge-avatar" data-user-initials>FC</span>
+            <span class="system-profile-badge-copy">
+              <span class="system-profile-badge-name" data-user-name>Faculty</span>
+              <span class="system-profile-badge-role" data-user-role>Faculty</span>
+            </span>
+          </div>
+          </a>
+        </div>
+      </div>
+
+      <section class="mir-table-panel" aria-label="Items assigned to me through MR">
+        <div class="mir-toolbar">
+            <div class="mir-filters" aria-label="Filter MR items">
+              <select id="mirCategory" class="mir-category-select" aria-label="Category" aria-controls="mirRows">
+                <option value="">All categories</option>
+              </select>
+              <label class="mir-search">
+                <span class="sr-only">Search your MR items</span>
+                <i class="mir-search-icon fas fa-search" aria-hidden="true"></i>
+                <input id="mirSearch" type="search" autocomplete="off" placeholder="Search items, serial, location..."
+                  aria-controls="mirRows">
+                <button id="clearMirSearch" class="mir-clear-search hidden" type="button" aria-label="Clear search">
+                  <i class="fas fa-xmark" aria-hidden="true"></i>
+                </button>
+              </label>
+            </div>
+        </div>
+
+        <div class="mir-table-scroll" role="region" aria-label="Scrollable MR items table" tabindex="0">
+            <table class="mir-table">
+              <thead>
+                <tr>
+                  <th scope="col" aria-sort="none"><button class="mir-sort-button" type="button" data-sort="name">Item <i class="fas fa-sort text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" aria-sort="none"><button class="mir-sort-button" type="button" data-sort="serialNumber">Serial no. <i class="fas fa-sort text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" aria-sort="none"><button class="mir-sort-button" type="button" data-sort="location" aria-label="Sort by location">Location <i class="fas fa-sort text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" aria-sort="none"><button class="mir-sort-button" type="button" data-sort="status" aria-label="Sort by status">Status <i class="fas fa-sort text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" aria-sort="descending"><button class="mir-sort-button" type="button" data-sort="assignedAt">MR date <i class="fas fa-sort-down text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" aria-sort="none"><button class="mir-sort-button" type="button" data-sort="assignedBy">Issued by <i class="fas fa-sort text-[10px]" aria-hidden="true"></i></button></th>
+                  <th scope="col" class="mir-actions-heading">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="mirRows">
+                <tr><td colspan="7" class="py-10 text-center text-slate-400" role="status">Loading your MR items...</td></tr>
+            </tbody>
+            </table>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-emerald-400/10 px-4 py-3">
+          <p id="mirResultCount" class="mir-summary" aria-live="polite"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>Loading your MR items...</p>
+          <span class="text-[.68rem] font-semibold uppercase tracking-[.12em] text-slate-600">MR accountability</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="mirActionModal" class="mir-modal-backdrop" hidden>
+    <section class="mir-modal" role="dialog" aria-modal="true" aria-labelledby="mirModalTitle" aria-describedby="mirModalDescription">
+      <header class="mir-modal-header">
+        <div>
+          <p class="text-[.66rem] font-extrabold uppercase tracking-[.15em] text-emerald-300">MR item action</p>
+          <h2 id="mirModalTitle" class="mt-1 text-lg font-bold text-white">Item details</h2>
+          <p id="mirModalDescription" class="sr-only">Details and actions for the selected MR item.</p>
+        </div>
+        <button id="closeMirModal" class="mir-modal-close" type="button" aria-label="Close dialog">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+      <div id="mirModalBody" class="mir-modal-body"></div>
+    </section>
+  </div>
+
+  <script>
+    const mirState = {
+      items: [],
+      sortKey: 'assignedAt',
+      sortDirection: 'descending',
+      returnFocus: null,
+      activeMenu: null,
+      activeTrigger: null
+    };
+    const mirRows = document.getElementById('mirRows');
+    const mirSearch = document.getElementById('mirSearch');
+    const mirCategory = document.getElementById('mirCategory');
+    const clearMirSearch = document.getElementById('clearMirSearch');
+    const mirResultCount = document.getElementById('mirResultCount');
+    const mirActionModal = document.getElementById('mirActionModal');
+    const mirModalTitle = document.getElementById('mirModalTitle');
+    const mirModalBody = document.getElementById('mirModalBody');
+    const mirSortButtons = [...document.querySelectorAll('[data-sort]')];
+
+    function closeActionMenus() {
+      if (!mirState.activeMenu) return;
+      mirState.activeMenu.classList.remove('is-open');
+      mirState.activeMenu.style.removeProperty('left');
+      mirState.activeMenu.style.removeProperty('top');
+      if (mirState.activeTrigger?.isConnected) {
+        mirState.activeTrigger.setAttribute('aria-expanded', 'false');
+        mirState.activeTrigger.parentElement.append(mirState.activeMenu);
+      }
+      mirState.activeMenu = null;
+      mirState.activeTrigger = null;
+    }
+
+    function openActionMenu(menu, trigger) {
+      closeActionMenus();
+      mirState.activeMenu = menu;
+      mirState.activeTrigger = trigger;
+      document.body.append(menu);
+      menu.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+
+      const menuBounds = menu.getBoundingClientRect();
+      const triggerBounds = trigger.getBoundingClientRect();
+      const edgePadding = 8;
+      const gap = 5;
+      const spaceBelow = window.innerHeight - triggerBounds.bottom - edgePadding;
+      const spaceAbove = triggerBounds.top - edgePadding;
+      const openAbove = spaceBelow < menuBounds.height + gap && spaceAbove > spaceBelow;
+      const top = openAbove
+        ? Math.max(edgePadding, triggerBounds.top - menuBounds.height - gap)
+        : Math.min(triggerBounds.bottom + gap, window.innerHeight - menuBounds.height - edgePadding);
+      const left = Math.min(
+        Math.max(edgePadding, triggerBounds.right - menuBounds.width),
+        window.innerWidth - menuBounds.width - edgePadding
+      );
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    }
+
+    function populateCategoryFilter() {
+      const categories = [...new Map(mirState.items
+        .map((item) => String(item.category || '').trim())
+        .filter(Boolean)
+        .map((category) => [category.toLocaleLowerCase(), category])).values()]
+        .sort((first, second) => first.localeCompare(second, undefined, { sensitivity: 'base' }));
+      mirCategory.replaceChildren(new Option('All categories', ''));
+      categories.forEach((category) => mirCategory.add(new Option(category, category)));
+    }
+
+    function normalizeComLabLocation(value) {
+      const location = String(value || '').trim();
+      const match = location.match(/^lab\s*([12])$/i);
+      return match ? `COMLAB${match[1]}` : location;
+    }
+
+    function itemLocation(item) {
+      return normalizeComLabLocation(item.laboratoryRoom || item.location || item.campus || '');
+    }
+
+    function itemCondition(item) {
+      return item.status || item.condition || '';
+    }
+
+    function displayValue(value) {
+      if (value === null || value === undefined || String(value).trim() === '') return '—';
+      return String(value);
+    }
+
+    function formatMirDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function openMirModal(title, content) {
+      mirState.returnFocus = document.activeElement;
+      mirModalTitle.textContent = title;
+      mirModalBody.replaceChildren(content);
+      mirActionModal.hidden = false;
+      document.getElementById('closeMirModal').focus();
+    }
+
+    function closeMirModal() {
+      mirActionModal.hidden = true;
+      mirModalBody.replaceChildren();
+      if (mirState.returnFocus instanceof HTMLElement && mirState.returnFocus.isConnected) {
+        mirState.returnFocus.focus();
+      }
+    }
+
+    function createStatusMessage(message, isError = false) {
+      const status = document.createElement('p');
+      status.className = isError ? 'text-sm text-rose-300' : 'text-sm text-slate-400';
+      status.textContent = message;
+      return status;
+    }
+
+    function showReportMissing(item) {
+      const form = document.createElement('form');
+      form.className = 'grid gap-4';
+      const intro = document.createElement('p');
+      intro.className = 'text-sm leading-relaxed text-slate-300';
+      intro.textContent = `Report ${item.name || item.equipmentId || 'this item'} as missing? This will update its inventory status.`;
+      const label = document.createElement('label');
+      label.className = 'grid gap-2 text-sm font-semibold text-emerald-100';
+      label.textContent = 'Reason or details';
+      const reason = document.createElement('textarea');
+      reason.className = 'mir-reason-field';
+      reason.required = true;
+      reason.maxLength = 2000;
+      reason.placeholder = 'Describe when and where the item was last seen...';
+      label.append(reason);
+      const error = document.createElement('p');
+      error.className = 'hidden text-sm text-rose-300';
+      error.setAttribute('role', 'alert');
+      const actions = document.createElement('div');
+      actions.className = 'flex justify-end gap-2';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', closeMirModal);
+      const submit = document.createElement('button');
+      submit.type = 'submit';
+      submit.className = 'rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-2 text-sm font-bold text-amber-200 hover:bg-amber-400/15';
+      submit.innerHTML = '<i class="fas fa-triangle-exclamation mr-2" aria-hidden="true"></i>Report missing';
+      actions.append(cancel, submit);
+      form.append(intro, label, error, actions);
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        error.classList.add('hidden');
+        submit.disabled = true;
+        submit.textContent = 'Submitting...';
+        try {
+          const response = await fetch(`/api/equipment/${encodeURIComponent(item.id || item.equipmentId)}/report-missing`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason: reason.value.trim() })
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) {
+            throw new Error(payload?.error || `Could not report item as missing (HTTP ${response.status}).`);
+          }
+          item.status = 'Missing';
+          closeMirModal();
+          renderMirItems();
+        } catch (requestError) {
+          error.textContent = requestError.message || 'Could not report item as missing.';
+          error.classList.remove('hidden');
+        } finally {
+          submit.disabled = false;
+          submit.innerHTML = '<i class="fas fa-triangle-exclamation mr-2" aria-hidden="true"></i>Report missing';
+        }
+      });
+      openMirModal('Report missing equipment', form);
+      reason.focus();
+    }
+
+    async function showEquipmentHistory(item) {
+      const content = document.createElement('div');
+      content.className = 'grid gap-5';
+      content.append(createStatusMessage('Loading equipment history...'));
+      openMirModal(`History · ${item.name || 'Equipment'}`, content);
+      try {
+        const response = await fetch(`/api/equipment/${encodeURIComponent(item.id || item.equipmentId)}/history`, { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error || `Could not load equipment history (HTTP ${response.status}).`);
+        }
+        content.replaceChildren();
+        const events = Array.isArray(payload?.history) ? payload.history : [];
+        if (!events.length) {
+          content.append(createStatusMessage('No equipment history is available yet.'));
+        } else {
+          const eventList = document.createElement('div');
+          eventList.className = 'grid gap-4';
+          events.slice(0, 20).forEach((entry) => {
+            const event = document.createElement('article');
+            event.className = 'mir-history-event';
+            const title = document.createElement('p');
+            title.className = 'text-sm font-bold text-emerald-100';
+            title.textContent = String(entry.eventType || 'Equipment update').replaceAll('_', ' ');
+            const metadata = document.createElement('p');
+            metadata.className = 'mt-1 text-xs text-slate-500';
+            metadata.textContent = [
+              formatMirDate(entry.reportedAt),
+              entry.reportedByDisplayName || ''
+            ].filter(Boolean).join(' · ');
+            event.append(title, metadata);
+            if (entry.reason) {
+              const detail = document.createElement('p');
+              detail.className = 'mt-2 text-sm leading-relaxed text-slate-300';
+              detail.textContent = entry.reason;
+              event.append(detail);
+            }
+            eventList.append(event);
+          });
+          content.append(eventList);
+        }
+      } catch (error) {
+        content.replaceChildren(createStatusMessage(error.message || 'Unable to load equipment history.', true));
+      }
+    }
+
+    function valueForSort(item, key) {
+      if (key === 'location') return itemLocation(item);
+      if (key === 'status') return itemCondition(item);
+      if (key === 'assignedAt') {
+        const timestamp = Date.parse(item.assignedAt || '');
+        return Number.isNaN(timestamp) ? 0 : timestamp;
+      }
+      return item[key] || '';
+    }
+
+    function visibleMirItems() {
+      const query = mirSearch.value.trim().toLocaleLowerCase();
+      const category = mirCategory.value.toLocaleLowerCase();
+      return mirState.items
+        .filter((item) => !category || String(item.category || '').toLocaleLowerCase() === category)
+        .filter((item) => !query || [
+          item.name, item.equipmentId, item.category, item.serialNumber, itemLocation(item),
+          itemCondition(item), item.assignedAt, item.assignedBy
+        ].some((value) => String(value || '').toLocaleLowerCase().includes(query)))
+        .sort((first, second) => {
+          const firstValue = valueForSort(first, mirState.sortKey);
+          const secondValue = valueForSort(second, mirState.sortKey);
+          const comparison = typeof firstValue === 'number' && typeof secondValue === 'number'
+            ? firstValue - secondValue
+            : String(firstValue).localeCompare(String(secondValue), undefined, { numeric: true, sensitivity: 'base' });
+          const direction = mirState.sortDirection === 'ascending' ? 1 : -1;
+          if (comparison) return comparison * direction;
+          if (['location', 'status'].includes(mirState.sortKey)) {
+            return String(first.name || '').localeCompare(String(second.name || ''), undefined, {
+              numeric: true,
+              sensitivity: 'base'
+            }) * direction;
+          }
+          return 0;
+        });
+    }
+
+    function addMirCell(row, value, className = '') {
+      const cell = document.createElement('td');
+      cell.textContent = displayValue(value);
+      if (className) cell.className = className;
+      row.append(cell);
+    }
+
+    function renderMirItems() {
+      closeActionMenus();
+      const items = visibleMirItems();
+      mirRows.replaceChildren();
+
+      if (!items.length) {
+        const row = document.createElement('tr');
+        row.className = 'mir-empty-row';
+        const cell = document.createElement('td');
+        cell.colSpan = 7;
+        cell.className = 'mir-empty';
+        const icon = document.createElement('span');
+        icon.className = 'mir-empty-icon';
+        const iconElement = document.createElement('i');
+        iconElement.className = mirState.items.length ? 'fas fa-magnifying-glass' : 'fas fa-box-open';
+        iconElement.setAttribute('aria-hidden', 'true');
+        icon.append(iconElement);
+        const message = document.createElement('span');
+        message.textContent = mirState.items.length
+          ? 'No MR items match your search.'
+          : 'No items are currently assigned to you through MR.';
+        cell.append(icon, message);
+        row.append(cell);
+        mirRows.append(row);
+      } else {
+        items.forEach((item) => {
+          const row = document.createElement('tr');
+          row.className = 'mir-data-row';
+          const nameCell = document.createElement('td');
+          const name = document.createElement('span');
+          name.className = 'mir-item-name';
+          name.textContent = displayValue(item.name);
+          nameCell.append(name);
+          const itemName = String(item.name || '').trim().toLocaleLowerCase();
+          const categoryName = String(item.category || '').trim();
+          if (categoryName && categoryName.toLocaleLowerCase() !== itemName) {
+            const category = document.createElement('span');
+            category.className = 'mir-item-category';
+            category.textContent = categoryName;
+            nameCell.append(category);
+          }
+          row.append(nameCell);
+          addMirCell(row, item.serialNumber);
+          addMirCell(row, itemLocation(item));
+          const conditionCell = document.createElement('td');
+          const condition = document.createElement('span');
+          condition.className = 'mir-pill mir-pill--status';
+          const conditionIcon = document.createElement('i');
+          conditionIcon.className = 'fas fa-circle-check text-[9px]';
+          conditionIcon.setAttribute('aria-hidden', 'true');
+          condition.append(conditionIcon, document.createTextNode(displayValue(itemCondition(item))));
+          conditionCell.append(condition);
+          if (item.status && item.condition && String(item.status).toLowerCase() !== String(item.condition).toLowerCase()) {
+            const conditionNote = document.createElement('span');
+            conditionNote.className = 'mir-condition-note';
+            conditionNote.textContent = `Condition: ${String(item.condition).charAt(0).toUpperCase()}${String(item.condition).slice(1)}`;
+            conditionCell.append(conditionNote);
+          }
+          row.append(conditionCell);
+          addMirCell(row, formatMirDate(item.assignedAt));
+          const assignerCell = document.createElement('td');
+          const assigner = document.createElement('span');
+          assigner.className = 'mir-pill';
+          assigner.textContent = displayValue(item.assignedBy);
+          assignerCell.append(assigner);
+          row.append(assignerCell);
+
+          const actionCell = document.createElement('td');
+          actionCell.className = 'mir-actions-cell';
+          const actionGroup = document.createElement('div');
+          actionGroup.className = 'mir-action-group';
+          const trigger = document.createElement('button');
+          trigger.type = 'button';
+          trigger.className = 'mir-action-trigger';
+          trigger.setAttribute('aria-label', `Actions for ${displayValue(item.name)}`);
+          trigger.setAttribute('aria-haspopup', 'menu');
+          trigger.setAttribute('aria-expanded', 'false');
+          trigger.innerHTML = '<i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>';
+
+          const menu = document.createElement('div');
+          menu.className = 'mir-action-menu';
+          menu.setAttribute('role', 'menu');
+          const viewHistory = document.createElement('button');
+          viewHistory.type = 'button';
+          viewHistory.className = 'mir-action-item';
+          viewHistory.dataset.action = 'view-history';
+          viewHistory.dataset.equipmentId = String(item.id || item.equipmentId || '');
+          viewHistory.dataset.name = String(item.name || 'Equipment');
+          viewHistory.setAttribute('role', 'menuitem');
+          viewHistory.innerHTML = '<i class="fas fa-clock-rotate-left" aria-hidden="true"></i><span>View History</span>';
+          menu.append(viewHistory);
+
+          if (String(item.status || '').toLowerCase() !== 'missing') {
+            const reportMissing = document.createElement('button');
+            reportMissing.type = 'button';
+            reportMissing.className = 'mir-action-item mir-action-item--warning';
+            reportMissing.dataset.action = 'report-missing';
+            reportMissing.dataset.equipmentId = String(item.id || item.equipmentId || '');
+            reportMissing.dataset.name = String(item.name || 'Equipment');
+            reportMissing.setAttribute('role', 'menuitem');
+            reportMissing.innerHTML = '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span>Report Missing</span>';
+            menu.append(reportMissing);
+          }
+
+          actionGroup.append(trigger, menu);
+          actionCell.append(actionGroup);
+          row.append(actionCell);
+          ['Item / category', 'Serial number', 'Location', 'Status / condition', 'MR date', 'Issued by', 'Actions']
+            .forEach((label, index) => row.cells[index]?.setAttribute('data-label', label));
+          mirRows.append(row);
+        });
+      }
+
+      const total = mirState.items.length;
+      mirResultCount.replaceChildren();
+      const resultIcon = document.createElement('i');
+      resultIcon.className = 'fas fa-circle text-[7px]';
+      resultIcon.setAttribute('aria-hidden', 'true');
+      mirResultCount.append(resultIcon, document.createTextNode(`Showing ${items.length} of ${total} MR item${total === 1 ? '' : 's'}`));
+      clearMirSearch.classList.toggle('hidden', !mirSearch.value);
+    }
+
+    function updateSortIndicators() {
+      mirSortButtons.forEach((button) => {
+        const active = button.dataset.sort === mirState.sortKey;
+        button.closest('th').setAttribute('aria-sort', active ? mirState.sortDirection : 'none');
+        const icon = button.querySelector('i');
+        icon.className = active
+          ? `fas ${mirState.sortDirection === 'ascending' ? 'fa-sort-up' : 'fa-sort-down'} text-[10px]`
+          : 'fas fa-sort text-[10px]';
+        if (button.dataset.sort === 'location' || button.dataset.sort === 'status') {
+          const label = button.dataset.sort === 'location' ? 'location' : 'status';
+          button.title = active
+            ? `Sorted by ${label} ${mirState.sortDirection}; click to reverse`
+            : `Sort by ${label}`;
+          button.setAttribute('aria-label', button.title);
+        }
+      });
+    }
+
+    mirSearch.addEventListener('input', renderMirItems);
+    mirCategory.addEventListener('change', renderMirItems);
+    clearMirSearch.addEventListener('click', () => {
+      mirSearch.value = '';
+      mirSearch.focus();
+      renderMirItems();
+    });
+    mirSortButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.sort;
+        mirState.sortDirection = mirState.sortKey === key
+          ? (mirState.sortDirection === 'ascending' ? 'descending' : 'ascending')
+          : ['location', 'status'].includes(key) ? 'descending' : 'ascending';
+        mirState.sortKey = key;
+        updateSortIndicators();
+        renderMirItems();
+      });
+    });
+
+    document.getElementById('closeMirModal').addEventListener('click', closeMirModal);
+    mirActionModal.addEventListener('click', (event) => {
+      if (event.target === mirActionModal) closeMirModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeActionMenus();
+        if (!mirActionModal.hidden) closeMirModal();
+      }
+    });
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.mir-action-trigger, .mir-action-menu')) closeActionMenus();
+    });
+    window.addEventListener('scroll', closeActionMenus, true);
+    window.addEventListener('resize', closeActionMenus);
+    mirRows.addEventListener('click', (event) => {
+      const trigger = event.target.closest('.mir-action-trigger');
+      if (trigger) {
+        const menu = trigger.nextElementSibling;
+        if (mirState.activeTrigger === trigger) closeActionMenus();
+        else openActionMenu(menu, trigger);
+        return;
+      }
+    });
+    document.addEventListener('click', (event) => {
+      const action = event.target.closest('button[data-action]');
+      if (!action) return;
+      closeActionMenus();
+      const item = mirState.items.find((record) =>
+        String(record.id || record.equipmentId) === action.dataset.equipmentId
+      );
+      if (!item) return;
+      if (action.dataset.action === 'view-history') showEquipmentHistory(item);
+      if (action.dataset.action === 'report-missing') showReportMissing(item);
+    });
+
+    async function loadMirItems() {
+      try {
+        const response = await fetch('/api/faculty/assigned-equipment', { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error || `Could not load your MR items (HTTP ${response.status}).`);
+        }
+        const assignments = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.assignments)
+            ? payload.assignments
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : null;
+        if (!assignments) {
+          throw new Error('Could not load your MR items because the server returned an unexpected response.');
+        }
+        mirState.items = assignments;
+        populateCategoryFilter();
+        updateSortIndicators();
+        renderMirItems();
+      } catch (error) {
+        mirRows.replaceChildren();
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 7;
+        cell.className = 'px-4 py-10 text-center text-rose-300';
+        cell.setAttribute('role', 'alert');
+        cell.textContent = error.message || 'Unable to load your MR items.';
+        row.append(cell);
+        mirRows.append(row);
+        mirResultCount.textContent = 'MR items could not be loaded.';
+        mirResultCount.classList.add('text-rose-300');
+        console.error('Failed to load Faculty MR items:', error);
+      }
+    }
+
+    loadMirItems();
+  </script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+</body>
+</html>

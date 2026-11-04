@@ -40,6 +40,10 @@ export const AttendanceSession = sequelize.define("AttendanceSession", {
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  intendedStudentUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   expiresAt: {
     type: DataTypes.DATE,
     allowNull: false

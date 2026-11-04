@@ -1,4 +1,6 @@
+import { QueryTypes } from "sequelize";
 import { AuditLog } from "../models/auditLogModel.js";
+import { sequelize } from "../models/db.js";
 import { User } from "../models/userModel.js";
 
 const safeStringify = (value) => {
@@ -121,48 +123,99 @@ export const normalizeCampusValue = (value) => {
 };
 
 export const getAuditLogs = async (req, res) => {
-  if (canBypassAuditAccessForDev(req)) {
-    // Development-only bypass for local Audit Logs verification.
-  } else if (!req.session?.userId) {
-    return res.status(403).json({ error: "Forbidden" });
-  } else {
-    const resolvedRole = await resolveUserRoleFromSession(req);
-    if (!isAdminRole(resolvedRole) && !isCentralAdminRole(resolvedRole)) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-  }
+  const { q, userId, dateFrom, dateTo, campus, role, action, station, scope, page = 1, pageSize = 25, exportAll = false } = req.query;
 
   try {
-    const { q, userId, dateFrom, dateTo, campus, page = 1, pageSize = 25, exportAll = false } = req.query;
     const where = {};
     const { Op } = await import("sequelize");
     const shouldExportAll = String(exportAll || "").toLowerCase() === "1" || String(exportAll || "").toLowerCase() === "true";
+    const authenticatedUser = req.session?.userId
+      ? await User.findByPk(req.session.userId, { attributes: ["id", "role", "campus"] })
+      : null;
+    const developmentBypass = canBypassAuditAccessForDev(req);
+    if (!authenticatedUser && !developmentBypass) return res.status(403).json({ error: "Forbidden" });
 
-    // Equipment activity belongs in Equipment Audit Trail. System Logs are
-    // reserved for authentication events only.
-    where[Op.and] = [{
-      module: "Authentication",
-      action: { [Op.in]: ["Login", "Logout"] }
-    }];
+    const authenticatedRole = normalizeRoleName(authenticatedUser?.role);
+    const canViewAllAuditLogs = isAdminRole(authenticatedRole) || isCentralAdminRole(authenticatedRole);
+    const isUserScopedRequest = !canViewAllAuditLogs;
+    const selectedScope = String(scope || "authentication").trim().toLowerCase();
+    if (!["authentication", "pc-station", "system"].includes(selectedScope)) {
+      return res.status(400).json({ error: "Select a valid audit log scope." });
+    }
+    if (selectedScope === "system" && !canViewAllAuditLogs && !developmentBypass) {
+      return res.status(403).json({ error: "System audit logs are only available to administrators." });
+    }
+    const roleGroups = {
+      admin: ["admin", "administrator"],
+      faculty: ["faculty", "faculties", "instructor", "instructors"],
+      student: ["student"]
+    };
+    const selectedRole = String(role || "").trim().toLowerCase();
+    if (selectedRole && !Object.hasOwn(roleGroups, selectedRole)) {
+      return res.status(400).json({ error: "Select a valid role: admin, faculty, or student." });
+    }
+    const selectedAction = String(action || "").trim().toLowerCase();
+    if (selectedScope === "pc-station" && selectedAction && !["login", "logout"].includes(selectedAction)) {
+      return res.status(400).json({ error: "Select a valid PC station action: login or logout." });
+    }
+    const selectedStation = String(station || "").trim();
+    if (selectedScope === "pc-station" && selectedStation.length > 100) {
+      return res.status(400).json({ error: "Select a valid PC station." });
+    }
+    if (isUserScopedRequest && selectedRole) {
+      const ownRole = Object.entries(roleGroups).find(([, aliases]) => aliases.includes(authenticatedRole))?.[0];
+      if (selectedRole !== ownRole) {
+        return res.status(403).json({ error: "You may only view your own authentication audit logs." });
+      }
+    }
+    const requestedUserId = userId == null || userId === "" ? null : Number(userId);
+    if (requestedUserId !== null && (!Number.isInteger(requestedUserId) || requestedUserId < 1)) {
+      return res.status(400).json({ error: "A valid user ID is required." });
+    }
 
-    const authenticatedUser = await User.findByPk(req.session?.userId, { attributes: ["id", "role", "campus"] });
-    if (!authenticatedUser) return res.status(403).json({ error: "Forbidden" });
-    const authenticatedRole = normalizeRoleName(authenticatedUser.role || req.session?.userRole || "");
-    const isGlobalAdmin = isCentralAdminRole(authenticatedRole);
-    const userCampus = authenticatedUser.campus || null;
+    if (isUserScopedRequest && !developmentBypass &&
+        requestedUserId !== null &&
+        requestedUserId !== Number(authenticatedUser.id)) {
+      return res.status(403).json({ error: "You may only view your own authentication audit logs." });
+    }
+
+    // PC station records are identified by their station resource ID. Do not
+    // filter by description text: older login/logout messages use different
+    // wording even though they are valid station events.
+    where[Op.and] = [];
+    if (selectedScope === "authentication" || selectedScope === "pc-station") {
+      where[Op.and].push({
+        module: "Authentication",
+        action: selectedScope === "pc-station" && selectedAction
+          ? selectedAction === "login" ? "Login" : "Logout"
+          : { [Op.in]: ["Login", "Logout"] }
+      });
+      if (selectedScope === "pc-station") {
+        where[Op.and].push({
+          [Op.and]: [
+            { resourceId: { [Op.ne]: null } },
+            { resourceId: { [Op.ne]: "" } }
+          ]
+        });
+        if (selectedStation) where[Op.and].push({ resourceId: selectedStation });
+      }
+      if (selectedRole) {
+        where[Op.and].push({ actorRole: { [Op.in]: roleGroups[selectedRole] } });
+      }
+    } else {
+      where.module = { [Op.ne]: "Authentication" };
+    }
+
+    const userCampus = authenticatedUser?.campus || null;
     const selectedCampus = campus ? String(campus).trim() : "";
     const selectedCampusKey = normalizeCampusValue(selectedCampus);
     const userCampusKey = normalizeCampusValue(userCampus || "");
 
-    if (!isGlobalAdmin && !userCampusKey) {
-      return res.status(403).json({ error: "Unauthorized: User campus not found." });
-    }
-
-    let effectiveCampusKey = selectedCampusKey || userCampusKey;
-    if (!isGlobalAdmin && selectedCampusKey && selectedCampusKey !== userCampusKey) {
+    if (isUserScopedRequest && selectedCampusKey && selectedCampusKey !== userCampusKey) {
       return res.status(403).json({ error: "You do not have permission to view audit logs for another campus." });
     }
 
+    const effectiveCampusKey = isUserScopedRequest ? userCampusKey : selectedCampusKey;
     if (effectiveCampusKey) {
       const campusUsers = await User.findAll({
         where: {
@@ -196,25 +249,12 @@ export const getAuditLogs = async (req, res) => {
 
     const filterConditions = [];
 
-    if (userId) {
-      const resolvedUserId = Number(userId);
-      const userFilterConditions = [];
-      if (!Number.isNaN(resolvedUserId)) {
-        userFilterConditions.push({ userId: resolvedUserId });
-      }
+    if (isUserScopedRequest && !developmentBypass) {
+      filterConditions.push({ userId: Number(authenticatedUser.id) });
+    }
 
-      if (!Number.isNaN(resolvedUserId)) {
-        const selectedUser = await User.findByPk(resolvedUserId, { attributes: ["name"] });
-        if (selectedUser?.name) {
-          userFilterConditions.push({ actorName: { [Op.like]: `%${selectedUser.name}%` } });
-        }
-      }
-
-      if (userFilterConditions.length === 1) {
-        filterConditions.push(userFilterConditions[0]);
-      } else if (userFilterConditions.length > 1) {
-        filterConditions.push({ [Op.or]: userFilterConditions });
-      }
+    if (requestedUserId !== null && Number.isInteger(requestedUserId) && requestedUserId > 0) {
+      filterConditions.push({ userId: requestedUserId });
     }
 
     if (dateFrom || dateTo) {
@@ -224,7 +264,9 @@ export const getAuditLogs = async (req, res) => {
       }
       if (dateTo) {
         const toDate = new Date(dateTo);
-        toDate.setHours(23, 59, 59, 999);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateTo))) {
+          toDate.setHours(23, 59, 59, 999);
+        }
         createdAtRange[Op.lte] = toDate;
       }
       filterConditions.push({ createdAt: createdAtRange });
@@ -251,17 +293,68 @@ export const getAuditLogs = async (req, res) => {
 
     const resolvedPage = Math.max(1, Number(page) || 1);
     const requestedPageSize = Math.max(1, Number(pageSize) || 25);
-    const resolvedPageSize = shouldExportAll ? Math.min(5000, requestedPageSize) : Math.min(100, requestedPageSize);
+    const resolvedPageSize = shouldExportAll
+      ? Math.min(5000, requestedPageSize)
+      : selectedScope === "system"
+        ? 7
+        : Math.min(100, requestedPageSize);
     const offset = (resolvedPage - 1) * resolvedPageSize;
+    const addActorCollege = async (rows) => {
+      const userIds = [...new Set(rows.map((row) => Number(row.userId)).filter(Number.isInteger))];
+      const users = userIds.length
+        ? await User.findAll({ where: { id: { [Op.in]: userIds } }, attributes: ["id", "college"] })
+        : [];
+      const collegeByUserId = new Map(users.map((user) => [Number(user.id), user.college]));
+      return rows.map((row) => ({
+        ...row.toJSON(),
+        actorCollege: collegeByUserId.get(Number(row.userId)) || null
+      }));
+    };
+    const enrichAuditRows = async (rows) => {
+      const enrichedRows = await addActorCollege(rows);
+      if (selectedScope !== "pc-station" || !enrichedRows.length) return enrichedRows;
+
+      const stationIds = [...new Set(enrichedRows.map((row) => String(row.resourceId || "").trim()).filter(Boolean))];
+      if (!stationIds.length) return enrichedRows;
+
+      try {
+        const stations = await sequelize.query(
+          `SELECT station_set.setId,
+                  labs.name AS laboratoryName,
+                  labs.roomNumber,
+                  station_set.location AS stationLocation
+           FROM equipment_sets AS station_set
+           LEFT JOIN computer_labs AS labs ON labs.id = station_set.laboratoryId
+           WHERE station_set.setId IN (:stationIds)`,
+          { replacements: { stationIds }, type: QueryTypes.SELECT }
+        );
+        const locationBySetId = new Map(stations.map((station) => {
+          const laboratoryName = String(station.laboratoryName || "").trim();
+          const roomNumber = String(station.roomNumber || "").trim();
+          const savedLocation = String(station.stationLocation || "").trim();
+          const location = laboratoryName && roomNumber
+            ? `${laboratoryName} — Room ${roomNumber}`
+            : laboratoryName || savedLocation || (roomNumber ? `Room ${roomNumber}` : "");
+          return [String(station.setId), location];
+        }));
+        return enrichedRows.map((row) => ({
+          ...row,
+          stationLocation: locationBySetId.get(String(row.resourceId || "")) || null
+        }));
+      } catch (error) {
+        console.warn("Unable to attach PC station room information to audit logs:", error.message);
+        return enrichedRows;
+      }
+    };
 
     if (shouldExportAll) {
       const rows = await AuditLog.findAll({
         where,
-        order: [["createdAt", "DESC"]]
+        order: [["createdAt", "DESC"], ["id", "DESC"]]
       });
 
       return res.json({
-        data: rows,
+        data: await enrichAuditRows(rows),
         meta: {
           total: rows.length,
           page: 1,
@@ -273,13 +366,13 @@ export const getAuditLogs = async (req, res) => {
 
     const { count, rows } = await AuditLog.findAndCountAll({
       where,
-      order: [["createdAt", "DESC"]],
+      order: [["createdAt", "DESC"], ["id", "DESC"]],
       offset,
       limit: resolvedPageSize
     });
 
     res.json({
-      data: rows,
+      data: await enrichAuditRows(rows),
       meta: {
         total: count,
         page: resolvedPage,

@@ -1,75 +1,784 @@
 {{> head}}
-<body class="min-h-screen relative overflow-hidden bg-[#07150F] text-slate-100">
-  <style>
-    .login-bg {
-      background-image: url('/images/minsu-bg.jpg');
-      background-size: cover;
-      background-position: center;
-      min-height: 100vh;
+<style>
+  :root {
+    color-scheme: dark;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f8fafc;
+    background: #020617;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    color: #f8fafc;
+    background: #020617;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  .login-hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: url('/images/MinSU_Bongabong_enhanced.jpg') center / cover no-repeat;
+    filter: saturate(1.45) contrast(1.12) brightness(0.96);
+    isolation: isolate;
+  }
+
+  .login-hero::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: '';
+    background: linear-gradient(135deg, rgba(5, 15, 25, .72), rgba(2, 6, 23, .8));
+  }
+
+  .login-shell {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+  }
+
+  .login-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding: .7rem 1.75rem;
+    border-bottom: 1px solid rgba(148, 163, 184, .14);
+    background: rgba(7, 17, 31, .72);
+    box-shadow: 0 12px 32px rgba(2, 6, 23, .16);
+    backdrop-filter: blur(18px) saturate(1.2);
+  }
+
+  .login-brand {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .7rem;
+  }
+
+  .login-brand img {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    clip-path: circle(49% at 50% 50%);
+    object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, .24));
+  }
+
+  .login-brand-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: .08rem;
+  }
+
+  .login-brand-name {
+    color: #f8fafc;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .login-brand-subtitle {
+    color: #a7f3d0;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .login-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .login-nav a {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: .5rem .75rem;
+    border: 1px solid transparent;
+    border-radius: .75rem;
+    color: #e2e8f0;
+    font-size: .88rem;
+    font-weight: 650;
+    transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+  }
+
+  .login-nav a:hover,
+  .login-nav a[aria-current="page"],
+  .login-nav a:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(96, 165, 250, .2);
+    outline: none;
+    background: rgba(59, 130, 246, .12);
+    color: #bfdbfe;
+  }
+
+  .login-menu-toggle {
+    display: none;
+    width: 2.65rem;
+    height: 2.65rem;
+    flex: 0 0 2.65rem;
+    place-items: center;
+    border: 1px solid rgba(148, 163, 184, .3);
+    border-radius: .75rem;
+    background: rgba(15, 23, 42, .55);
+    color: #f8fafc;
+    cursor: pointer;
+  }
+
+  .login-menu-toggle:hover,
+  .login-menu-toggle:focus-visible {
+    border-color: rgba(110, 231, 183, .6);
+    outline: none;
+    background: rgba(16, 185, 129, .16);
+  }
+
+  .login-menu-toggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 2;
+  }
+
+  .login-main {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1.5rem 2rem;
+  }
+
+  .login-grid {
+    display: grid;
+    width: min(1200px, 100%);
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 460px);
+    align-items: center;
+    gap: clamp(2rem, 7vw, 7rem);
+  }
+
+  .login-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .login-eyebrow {
+    margin: 0;
+    color: #a7f3d0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: .16em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .login-intro h1 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: clamp(3rem, 5vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -.06em;
+    line-height: 1.02;
+  }
+
+  .login-intro p:last-child {
+    max-width: 40rem;
+    margin: 0;
+    color: rgba(248, 250, 252, .98);
+    font-size: 1.35rem;
+    line-height: 1.65;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 410px;
+    justify-self: end;
+    padding: 1.6rem;
+    border: 1px solid rgba(96, 165, 250, .28);
+    border-radius: 1.5rem;
+    background: linear-gradient(145deg, rgba(7, 17, 31, .92), rgba(2, 6, 23, .9));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 24px 70px rgba(2, 8, 23, .45);
+    backdrop-filter: blur(18px);
+  }
+
+  .login-logo {
+    display: block;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1rem;
+    object-fit: contain;
+    filter: drop-shadow(0 0 18px rgba(34, 197, 94, .35));
+  }
+
+  .login-card-heading {
+    margin-bottom: 1.25rem;
+    text-align: center;
+  }
+
+  .login-card-heading h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.45rem;
+    font-weight: 800;
+  }
+
+  .login-card-heading p {
+    margin: .55rem 0 0;
+    color: #cbd5e1;
+    font-size: .84rem;
+    line-height: 1.5;
+  }
+
+  .login-message {
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    border-radius: .8rem;
+    font-size: .875rem;
+  }
+
+  .login-message.error {
+    border: 1px solid rgba(248, 113, 113, .25);
+    background: rgba(239, 68, 68, .1);
+    color: #fecaca;
+  }
+
+  .login-message.success {
+    border: 1px solid rgba(74, 222, 128, .25);
+    background: rgba(16, 185, 129, .1);
+    color: #d1fae5;
+  }
+
+  .login-form {
+    display: grid;
+    gap: .85rem;
+  }
+
+  .login-field label {
+    display: block;
+    margin-bottom: .35rem;
+    color: #d1d5db;
+    font-size: .84rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .login-field input {
+    width: 100%;
+    min-height: 2.7rem;
+    padding: .6rem .85rem;
+    border: 1px solid rgba(74, 222, 128, .3);
+    border-radius: .8rem;
+    outline: none;
+    background: rgba(2, 20, 35, .72);
+    color: #fff;
+    font: inherit;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+
+  .login-field input::placeholder {
+    color: rgba(167, 243, 208, .5);
+  }
+
+  .login-field input:focus {
+    border-color: #6ee7b7;
+    background: rgba(2, 30, 55, .86);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+  }
+
+  .login-password-control {
+    position: relative;
+  }
+
+  .login-password-control input {
+    padding-right: 3.25rem;
+  }
+
+  .login-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: .65rem;
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    padding: .35rem;
+    transform: translateY(-50%);
+    place-items: center;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #a7f3d0;
+    cursor: pointer;
+  }
+
+  .login-password-toggle:hover,
+  .login-password-toggle:focus-visible {
+    background: rgba(34, 197, 94, .14);
+    outline: none;
+  }
+
+  .login-password-toggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .login-remember {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    color: #d1fae5;
+    font-size: .82rem;
+  }
+
+  .login-remember input {
+    width: 1rem;
+    min-height: 1rem;
+    margin: 0;
+    accent-color: #22c55e;
+  }
+
+  .login-submit {
+    min-height: 2.8rem;
+    margin-top: .2rem;
+    border: 0;
+    border-radius: .85rem;
+    background: #10b981;
+    box-shadow: 0 10px 24px rgba(16, 185, 129, .2);
+    color: #020617;
+    font-size: .94rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  .login-submit:hover {
+    transform: translateY(-1px);
+    background: #34d399;
+    box-shadow: 0 14px 30px rgba(16, 185, 129, .28);
+  }
+
+  .login-links {
+    display: grid;
+    gap: .65rem;
+    margin-top: 1.15rem;
+    color: #cbd5e1;
+    font-size: .82rem;
+    text-align: center;
+  }
+
+  .login-links p {
+    margin: 0;
+  }
+
+  .login-links a {
+    color: #6ee7b7;
+    font-weight: 600;
+    transition: color .2s ease;
+  }
+
+  .login-links a:hover {
+    color: #a7f3d0;
+  }
+
+  @media (max-width: 900px) {
+    .login-header {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
     }
-  </style>
 
-  <header class="fixed left-0 top-0 z-50 w-full border-b border-white/5 bg-slate-950/40 px-8 py-4 backdrop-blur-md">
-    <div class="flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <img src="/images/minsu-logo.png.jpg" alt="Mindoro State University Logo" class="h-14 w-14 rounded-xl border border-white/10 bg-white/5 object-contain p-1" />
-        <div class="flex flex-col leading-tight">
-          <span class="text-lg font-bold text-white">Mindoro State University</span>
-          <span class="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400">College of Computer Studies</span>
+    .login-brand {
+      flex: 1 1 auto;
+    }
+
+    .login-menu-toggle {
+      display: grid;
+    }
+
+    .login-nav {
+      position: absolute;
+      top: calc(100% + .4rem);
+      right: .85rem;
+      display: grid;
+      width: min(18rem, calc(100vw - 1.7rem));
+      gap: .25rem;
+      padding: .5rem;
+      border: 1px solid rgba(148, 163, 184, .2);
+      border-radius: .9rem;
+      background: rgba(7, 17, 31, .96);
+      box-shadow: 0 16px 38px rgba(2, 6, 23, .42);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-.4rem);
+      transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+      visibility: hidden;
+    }
+
+    .login-header.is-menu-open .login-nav {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+      visibility: visible;
+    }
+
+    .login-nav a {
+      justify-content: flex-start;
+      min-height: 2.7rem;
+      padding: .65rem .8rem;
+    }
+
+    .login-menu-toggle:focus-visible,
+    .login-nav a:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .login-grid {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .login-intro {
+      align-items: center;
+    }
+
+    .login-intro h1 {
+      max-width: 700px;
+    }
+
+    .login-card {
+      justify-self: center;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .login-main {
+      align-items: flex-start;
+      padding-top: 2rem;
+    }
+
+    .login-grid {
+      width: min(100%, 520px);
+      gap: 1.5rem;
+    }
+
+    .login-intro {
+      gap: .6rem;
+    }
+
+    .login-intro h1 {
+      font-size: clamp(1.8rem, 7vw, 2.7rem);
+      line-height: 1.08;
+    }
+
+    .login-intro p:last-child {
+      max-width: 38rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .login-header {
+      justify-content: space-between;
+      gap: .65rem;
+      padding: .7rem .85rem;
+    }
+
+    .login-brand {
+      order: 1;
+      width: auto;
+      gap: .55rem;
+    }
+
+    .login-menu-toggle {
+      order: 2;
+    }
+
+    .login-brand img {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+    }
+
+    .login-brand-name {
+      font-size: .88rem;
+    }
+
+    .login-brand-subtitle {
+      font-size: .55rem;
+      letter-spacing: .1em;
+    }
+
+    .login-nav {
+      right: .85rem;
+    }
+
+    .login-main {
+      padding: 1.4rem .9rem 2rem;
+    }
+
+    .login-grid {
+      gap: 1.2rem;
+    }
+
+    .login-intro {
+      gap: .45rem;
+    }
+
+    .login-eyebrow {
+      font-size: .8rem;
+      letter-spacing: .18em;
+    }
+
+    .login-intro h1 {
+      font-size: clamp(1.7rem, 8vw, 2.4rem);
+    }
+
+    .login-intro p:last-child {
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .login-card {
+      max-width: 100%;
+      padding: 1.35rem;
+      border-radius: 1.2rem;
+    }
+
+    .login-logo {
+      width: 3.5rem;
+      height: 3.5rem;
+      margin-bottom: .85rem;
+    }
+
+    .login-card-heading {
+      margin-bottom: 1.25rem;
+    }
+
+    .login-card-heading h2 {
+      font-size: 1.4rem;
+    }
+
+    .login-card-heading p {
+      font-size: .84rem;
+    }
+
+    .login-form {
+      gap: .9rem;
+    }
+
+    .login-links {
+      gap: .65rem;
+      margin-top: 1.1rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .login-brand img {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+    }
+
+    .login-brand-name {
+      font-size: .78rem;
+    }
+
+    .login-brand-subtitle {
+      font-size: .48rem;
+      letter-spacing: .08em;
+    }
+
+    .login-card {
+      padding: 1.1rem;
+    }
+  }
+
+  @media (min-width: 901px) {
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .login-hero,
+    .login-shell {
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .login-main {
+      min-height: 0;
+      padding: clamp(.5rem, 2vh, 1.25rem) 1.5rem;
+    }
+  }
+</style>
+<body>
+  <section class="login-hero">
+    <div class="login-shell">
+      <header class="login-header">
+        <a class="login-brand" href="/" aria-label="Mindoro State University home">
+          <img src="/images/minsu-logo.png.jpg" alt="Mindoro State University Logo" />
+          <span class="login-brand-copy">
+            <span class="login-brand-name">Mindoro State University</span>
+            <span class="login-brand-subtitle">College of Computer Studies</span>
+          </span>
+        </a>
+
+        <nav id="login-nav" class="login-nav" aria-label="Main navigation">
+          <a href="/">Home</a>
+          <a href="/#features">Features</a>
+          <a href="/#about">About</a>
+          <a href="/#contact">Contact</a>
+        </nav>
+
+        <button class="login-menu-toggle" type="button" aria-label="Open navigation menu" aria-controls="login-nav" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+      </header>
+
+      <main class="login-main">
+        <div class="login-grid">
+          <section class="login-intro">
+            <p class="login-eyebrow">Welcome to</p>
+            <h1>Computer Laboratory Facilities Management System</h1>
+            <p>Efficiently manage laboratory schedules, attendance, equipment inventory, and maintenance requests in one centralized platform.</p>
+          </section>
+
+          <section class="login-card" aria-labelledby="loginTitle">
+            <img src="/images/ccs-logo.png" alt="CCS Logo" class="login-logo" />
+            <div class="login-card-heading">
+              <h2 id="loginTitle">Welcome to ComLab</h2>
+              <p>Login to continue to ComLab and access your dashboard.</p>
+              {{#if isEquipmentLogin}}
+                <p class="login-message success" role="status">You scanned an equipment QR. Sign in to continue directly to that item’s borrow request.</p>
+              {{/if}}
+            </div>
+
+            {{#if error_msg}}
+              <div class="login-message error" role="alert">{{error_msg}}</div>
+            {{/if}}
+            {{#if success_msg}}
+              <div class="login-message success" role="status">{{success_msg}}</div>
+            {{/if}}
+
+            <form class="login-form" autocomplete="off" method="POST" action="/login">
+              <div class="login-field">
+                <label for="email">Email Address</label>
+                <input id="email" autocomplete="off" type="email" name="email" placeholder="Enter your email" required />
+              </div>
+
+              <div class="login-field">
+                <label for="password">Password</label>
+                <div class="login-password-control">
+                  <input id="password" autocomplete="off" type="password" name="password" placeholder="Enter your password" required />
+                  <button class="login-password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path class="login-password-eye-slash" d="m4 4 16 16" hidden></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <label class="login-remember">
+                <input type="checkbox" name="rememberMe" value="on" />
+                <span>Remember me</span>
+              </label>
+
+              <button class="login-submit" type="submit">Sign in</button>
+            </form>
+
+            <div class="login-links">
+              <p><a href="/forgot-password">Forgot your password?</a></p>
+              {{#if isEquipmentLogin}}
+                <p>Don't have an account? <a href="/register?role=faculty">Register</a></p>
+              {{else}}
+                <p>Don't have an account? <a href="/register">Register now</a></p>
+              {{/if}}
+              <p><a href="/">Back to landing</a></p>
+            </div>
+          </section>
         </div>
-      </div>
-
-      <nav class="hidden items-center gap-8 md:flex" aria-label="Main navigation">
-        <a href="/" class="text-base font-semibold text-slate-200 transition hover:text-emerald-400">Home</a>
-        <a href="/#features" class="text-base font-semibold text-slate-200 transition hover:text-emerald-400">Features</a>
-        <a href="/#about" class="text-base font-semibold text-slate-200 transition hover:text-emerald-400">About</a>
-        <a href="/#contact" class="text-base font-semibold text-slate-200 transition hover:text-emerald-400">Contact</a>
-      </nav>
+      </main>
     </div>
-  </header>
+  </section>
+<script>
+  const loginHeader = document.querySelector('.login-header');
+  const loginMenuToggle = document.querySelector('.login-menu-toggle');
+  const loginNav = document.getElementById('login-nav');
+  const closeLoginMenu = () => {
+    loginHeader?.classList.remove('is-menu-open');
+    loginMenuToggle?.setAttribute('aria-expanded', 'false');
+    loginMenuToggle?.setAttribute('aria-label', 'Open navigation menu');
+  };
 
-  <div class="login-bg relative flex min-h-screen items-center justify-center pt-24">
-    <div class="absolute inset-0 bg-[linear-gradient(135deg,rgba(6,20,14,0.90),rgba(10,29,21,0.82))]"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.16),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(34,197,94,0.10),transparent_24%)]"></div>
+  loginMenuToggle?.addEventListener('click', () => {
+    const isOpen = loginMenuToggle.getAttribute('aria-expanded') === 'true';
+    loginHeader?.classList.toggle('is-menu-open', !isOpen);
+    loginMenuToggle.setAttribute('aria-expanded', String(!isOpen));
+    loginMenuToggle.setAttribute('aria-label', isOpen ? 'Open navigation menu' : 'Close navigation menu');
+  });
 
-    <div class="relative z-10 w-full max-w-md px-4">
-      <div class="rounded-2xl border-2 border-emerald-400 bg-[#033D2B] p-8 backdrop-blur-xl">
-        <div class="mb-6 flex justify-center">
-          <img src="/images/ccs-logo.png" alt="CCS Logo" class="h-16 w-16 object-contain drop-shadow-[0_0_18px_rgba(34,197,94,0.35)]" />
-        </div>
+  loginNav?.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('a')) closeLoginMenu();
+  });
 
-        <div class="mb-8 text-center">
-          <h1 class="mb-1 text-2xl font-extrabold text-white">Welcome to ComLab</h1>
-          <p class="mt-3 text-sm text-slate-300">Login to continue to ComLab and access your dashboard.</p>
-        </div>
+  document.addEventListener('click', (event) => {
+    if (event.target instanceof Node && !loginHeader?.contains(event.target)) closeLoginMenu();
+  });
 
-        {{#if error_msg}}
-          <div class="mb-5 rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">{{error_msg}}</div>
-        {{/if}}
-        {{#if success_msg}}
-          <div class="mb-5 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{{success_msg}}</div>
-        {{/if}}
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && loginMenuToggle?.getAttribute('aria-expanded') === 'true') {
+      closeLoginMenu();
+      loginMenuToggle.focus();
+    }
+  });
 
-        <form class="space-y-5" autocomplete="off" method="POST" action="/login">
-          <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-300" for="email">Email Address</label>
-            <input id="email" autocomplete="off" type="email" name="email" placeholder="Enter your email" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-3 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-          </div>
+  const passwordInput = document.getElementById('password');
+  const passwordToggle = document.querySelector('.login-password-toggle');
 
-          <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-300" for="password">Password</label>
-            <input id="password" autocomplete="off" type="password" name="password" placeholder="Enter your password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-3 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-          </div>
-
-          <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 px-6 py-3 text-base font-extrabold text-black transition-all hover:bg-emerald-400">Sign in</button>
-        </form>
-
-        <div class="mt-6 space-y-3 text-center text-sm">
-          <p><a href="/forgot-password" class="font-medium text-emerald-400 transition hover:text-emerald-300">Forgot your password?</a></p>
-          <p class="text-slate-300">Don't have an account? <a href="/register" class="font-medium text-emerald-400 transition hover:text-emerald-300">Register now</a></p>
-          <p><a href="/" class="font-medium text-emerald-400 transition hover:text-emerald-300">Back to landing</a></p>
-        </div>
-      </div>
-    </div>
-  </div>
+  passwordToggle?.addEventListener('click', () => {
+    const isVisible = passwordInput.type === 'text';
+    passwordInput.type = isVisible ? 'password' : 'text';
+    passwordToggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+    passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+    passwordToggle.querySelector('.login-password-eye-slash').hidden = !isVisible;
+  });
+</script>
 {{> footer }}

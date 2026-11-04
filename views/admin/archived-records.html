@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archived Records</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+  <style>
+    body.app-shell.archived-records-page {
+      --archive-page: #07130d;
+      --archive-panel: linear-gradient(145deg, #102a1d, #0a1d14);
+      --archive-surface: #0b1c13;
+      --archive-text: #edf8f1;
+      --archive-muted: #a5c4b1;
+      --archive-line: rgba(110, 231, 183, .2);
+      --archive-accent: #4ade80;
+      --archive-danger: #fca5a5;
+      min-height: 100vh;
+      background: var(--archive-page);
+      color: var(--archive-text);
+    }
+    html.theme-light body.app-shell.archived-records-page {
+      --archive-page: #eef4f0;
+      --archive-panel: linear-gradient(145deg, #fff, #f7faf8);
+      --archive-surface: #f6faf7;
+      --archive-text: #17271e;
+      --archive-muted: #5e7567;
+      --archive-line: rgba(22, 101, 52, .17);
+      --archive-accent: #168044;
+      --archive-danger: #b91c1c;
+    }
+    body.archived-records-page .main-container { box-sizing: border-box; margin-left: var(--sidebar-width, 250px); padding: 0; }
+    body.archived-records-page .page-content { padding: 0 1rem 1rem !important; }
+    body.archived-records-page .system-dashboard-heading { position: sticky; top: 0; z-index: 90; box-sizing: border-box; min-height: 3.55rem; margin: 0 -1rem .85rem; padding: .55rem 1rem; border: 0; border-bottom: 1px solid var(--archive-line); border-radius: 0; background: color-mix(in srgb, var(--archive-surface) 94%, transparent); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); backdrop-filter: blur(14px); }
+    body.archived-records-page .system-dashboard-heading h1 { color: var(--archive-text) !important; font-size: 1rem; letter-spacing: -.01em; }
+    body.archived-records-page .system-dashboard-heading p { margin-top: .12rem; color: var(--archive-muted) !important; font-size: .72rem; }
+    .archived-records-content { width: 100%; min-width: 0; }
+    .archive-page-actions { display: flex; justify-content: flex-end; margin: 0 0 .65rem; }
+    .archive-back-link { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; border-radius: .58rem; padding: .45rem .75rem; background: #15803d; color: #fff; font-size: .78rem; font-weight: 750; text-decoration: none; }
+    .archive-back-link:hover { background: #16a34a; }
+    body.archived-records-page .archived-records-panel { width: 100%; min-width: 0; overflow: hidden; border: 1px solid var(--archive-line); border-radius: .95rem; background: var(--archive-panel); box-shadow: 0 12px 32px rgba(0, 0, 0, .1); }
+    .archive-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; padding: .8rem .9rem; border-bottom: 1px solid var(--archive-line); background: color-mix(in srgb, var(--archive-surface) 82%, transparent); }
+    .archive-toolbar-copy { display: grid; min-width: 8rem; gap: .15rem; margin-right: auto; }
+    .archive-toolbar-copy strong { color: var(--archive-text); font-size: .88rem; }
+    .archive-toolbar-copy span { color: var(--archive-muted); font-size: .72rem; }
+    .archive-search-wrap { position: relative; min-width: min(15rem, 100%); flex: 0 1 18rem; }
+    .archive-search-wrap i { position: absolute; top: 50%; left: .7rem; color: var(--archive-accent); transform: translateY(-50%); pointer-events: none; }
+    .archive-search-wrap input { box-sizing: border-box; width: 100%; min-height: 2.35rem; padding: .5rem .7rem .5rem 2rem; border: 1px solid var(--archive-line); border-radius: .62rem; background: var(--archive-surface); color: var(--archive-text); font: inherit; font-size: .77rem; }
+    .archive-search-wrap input:focus { outline: 2px solid color-mix(in srgb, var(--archive-accent) 45%, transparent); outline-offset: 1px; }
+    .archive-select-all { display: inline-flex; align-items: center; gap: .4rem; color: var(--archive-muted); font-size: .76rem; font-weight: 650; white-space: nowrap; }
+    .archive-result-count { color: var(--archive-muted); font-size: .72rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .archive-actions { display: inline-flex; align-items: center; gap: .4rem; }
+    .archive-action-button { display: inline-flex; min-height: 2.35rem; align-items: center; justify-content: center; gap: .4rem; padding: .5rem .68rem; border: 1px solid var(--archive-line); border-radius: .58rem; background: var(--archive-surface); color: var(--archive-text); font-size: .73rem; font-weight: 750; cursor: pointer; }
+    .archive-action-button:hover:not(:disabled) { border-color: var(--archive-accent); background: color-mix(in srgb, var(--archive-surface) 78%, var(--archive-accent)); }
+    .archive-action-button.primary { border-color: #15803d; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
+    .archive-action-button.danger { border-color: color-mix(in srgb, var(--archive-danger) 45%, transparent); color: var(--archive-danger); }
+    .archive-action-button:disabled { opacity: .52; cursor: not-allowed; }
+    .archive-table-wrap { max-width: 100%; overflow: auto; scrollbar-color: rgba(74, 222, 128, .42) transparent; }
+    .archived-records-table { border-collapse: separate; border-spacing: 0; color: var(--archive-text); }
+    .archived-records-table th,
+    .archived-records-table td { padding: .72rem .78rem; border-bottom: 1px solid var(--archive-line); text-align: left; vertical-align: middle; }
+    .archived-records-table th { position: sticky; top: 0; z-index: 1; background: #123a28; color: #e7f8ed; font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .archived-records-table tbody tr { background: var(--archive-surface); transition: background .14s; }
+    .archived-records-table tbody tr.is-search-hidden { display: none; }
+    .archived-records-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--archive-surface) 75%, var(--archive-panel)); }
+    .archived-records-table tbody tr:hover { background: color-mix(in srgb, var(--archive-surface) 82%, var(--archive-accent)); }
+    .archived-records-table tbody td { color: var(--archive-text); font-size: .77rem; line-height: 1.45; }
+    .archived-records-table tbody td:nth-child(4) { min-width: 15rem; overflow-wrap: anywhere; }
+    .archive-record-title { color: var(--archive-text); font-weight: 750; }
+    .archive-type-badge { display: inline-flex; padding: .24rem .48rem; border: 1px solid var(--archive-line); border-radius: 999px; background: color-mix(in srgb, var(--archive-surface) 80%, var(--archive-accent)); color: var(--archive-accent); font-size: .66rem; font-weight: 750; white-space: nowrap; }
+    .archive-empty { display: grid; min-height: 9rem; place-content: center; justify-items: center; gap: .45rem; padding: 1.2rem; color: var(--archive-muted); text-align: center; }
+    .archive-empty i { color: var(--archive-accent); font-size: 1.4rem; }
+    .archive-empty strong { color: var(--archive-text); font-size: .86rem; }
+    .archive-empty span { font-size: .74rem; }
+    .archive-empty[hidden] { display: none; }
+    .archive-toast { box-sizing: border-box; position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 10000; width: min(28rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); overflow-wrap: anywhere; border: 1px solid #34d399; border-radius: .75rem; background: #0b3b28; padding: .75rem 1rem; color: #fff; font-size: .82rem; font-weight: 700; line-height: 1.4; box-shadow: 0 10px 25px rgba(0, 0, 0, .25); }
+    .archive-select { accent-color: #168044; }
+    @media (max-width: 768px) { body.archived-records-page .main-container { margin-left: 0; } }
+    @media (max-width: 640px) {
+      body.archived-records-page .page-content { padding: 0 .65rem .75rem !important; }
+      html body.archived-records-page .comlab-slim-page-header:not(#comlab-header-specificity) {
+        inset: 0 !important;
+        width: 100% !important;
+        min-height: 2.8rem !important;
+        height: 2.8rem !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: .45rem !important;
+        padding: .2rem .55rem !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .system-dashboard-heading-main {
+        min-width: 2rem !important;
+        height: 2.2rem !important;
+        flex: 1 1 auto !important;
+        align-items: center !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header #mobileMenuToggle {
+        position: static !important;
+        inset: auto !important;
+        display: inline-flex !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        min-height: 2rem !important;
+        flex: 0 0 2rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        align-self: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .system-dashboard-heading-main > div { display: none !important; }
+      html body.archived-records-page .comlab-slim-page-header .system-dashboard-heading-actions {
+        height: 2.2rem !important;
+        min-width: max-content !important;
+        flex: 0 0 auto !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: .35rem !important;
+        margin: 0 0 0 auto !important;
+        white-space: nowrap !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .system-dashboard-heading-actions > * {
+        align-self: center !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .profile-theme-controls {
+        display: inline-flex !important;
+        height: 2rem !important;
+        flex: 0 0 2rem !important;
+        align-items: center !important;
+        margin: 0 !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .profile-theme-toggle,
+      html body.archived-records-page .comlab-slim-page-header .comlab-notification-button,
+      html body.archived-records-page .comlab-slim-page-header .system-profile-badge {
+        height: 2rem !important;
+        min-height: 2rem !important;
+        align-self: center !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .profile-theme-toggle {
+        width: 2rem !important;
+        min-width: 2rem !important;
+        flex: 0 0 2rem !important;
+        padding: 0 !important;
+      }
+      html body.archived-records-page .comlab-slim-page-header .system-profile-badge-copy { display: none !important; }
+      html body.archived-records-page .comlab-page-header-spacer { height: 2.8rem !important; min-height: 2.8rem !important; }
+      .archive-page-actions { margin-top: .15rem; }
+      .archive-toolbar-copy, .archive-search-wrap { flex: 1 1 100%; }
+      .archive-select-all { flex: 1 1 auto; }
+      .archive-actions { flex: 1 1 100%; }
+      .archive-actions .archive-action-button { flex: 1 1 0; }
+      .archive-result-count { order: 3; width: 100%; }
+      .archived-records-table th, .archived-records-table td { padding: .6rem .62rem; }
+    }
+  </style>
+</head>
+<body class="app-shell system-layout-page archived-records-page">
+  <div id="shared-sidebar"></div>
+  <div class="main-container">
+    <main class="page-content p-3 md:p-5">
+      <div class="archived-records-content">
+        <header class="system-dashboard-heading">
+          <div class="system-dashboard-heading-main">
+            <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+              <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+            <div>
+              <h1 class="text-2xl font-bold">Archived Records</h1>
+            </div>
+          </div>
+          <div class="system-dashboard-heading-actions">
+          </div>
+        </header>
+        <div class="archive-page-actions">
+          <a href="/equipment-inventory" class="archive-back-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300">Back to Inventory</a>
+        </div>
+        <section class="archived-records-panel w-full min-w-0" aria-label="Archived records">
+          <div class="archive-toolbar">
+            <div class="archive-toolbar-copy"><strong>Archived items</strong><span id="archiveResultCount" aria-live="polite">Loading records…</span></div>
+            <label class="archive-select-all">
+              <input id="selectAllArchived" class="archive-select h-4 w-4" type="checkbox" aria-label="Select all archived records">
+              Select all
+            </label>
+            <div class="archive-search-wrap"><i class="fas fa-search" aria-hidden="true"></i><input id="archiveSearch" type="search" placeholder="Search records…" aria-label="Search archived records"></div>
+            <div class="archive-actions">
+              <button id="refreshArchived" class="archive-action-button" type="button"><i class="fas fa-rotate" aria-hidden="true"></i> Refresh</button>
+              <button id="restoreSelected" class="archive-action-button primary" type="button" disabled><i class="fas fa-rotate-left" aria-hidden="true"></i> Restore selected (<span id="selectedArchiveCount">0</span>)</button>
+              <button id="deleteSelected" class="archive-action-button" type="button" disabled><i class="fas fa-trash-can" aria-hidden="true"></i> Delete selected</button>
+            </div>
+          </div>
+          <div class="archive-table-wrap"><table class="archived-records-table w-full min-w-[760px]">
+            <thead><tr><th><input id="selectAllArchivedHeader" class="archive-select h-4 w-4" type="checkbox" aria-label="Select all archived records"></th><th>Record</th><th>Type</th><th>Details</th><th>Archived</th><th>Action</th></tr></thead>
+            <tbody id="archiveRows"><tr><td colspan="6"><div class="archive-empty"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><strong>Loading archived records</strong><span>Please wait while the archive is loaded.</span></div></td></tr></tbody>
+          </table></div>
+        </section>
+        <p id="archiveError" class="mt-4 hidden text-red-300" role="alert"></p>
+      </div>
+    </main>
+  </div>
+  <script src="/js/comlab-records-sync.js?v=1"></script>
+  <script>
+    const archiveRows = document.getElementById('archiveRows');
+    const archiveError = document.getElementById('archiveError');
+    const selectAllControls = [
+      document.getElementById('selectAllArchived'),
+      document.getElementById('selectAllArchivedHeader')
+    ];
+    const restoreSelectedButton = document.getElementById('restoreSelected');
+    const deleteSelectedButton = document.getElementById('deleteSelected');
+    const selectedArchiveCount = document.getElementById('selectedArchiveCount');
+    const archiveSearch = document.getElementById('archiveSearch');
+    archiveSearch.value = new URLSearchParams(window.location.search).get('search') || '';
+    const archiveResultCount = document.getElementById('archiveResultCount');
+    const refreshArchivedButton = document.getElementById('refreshArchived');
+    const archiveEmpty = (title, message, icon = 'fa-box-open') => `<tr><td colspan="6"><div class="archive-empty"><i class="fas ${icon}" aria-hidden="true"></i><strong>${title}</strong><span>${message}</span></div></td></tr>`;
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+    const typeLabels = {
+      equipment: 'Equipment',
+      'equipment-category': 'Equipment category',
+      'computer-lab': 'Computer lab',
+      'pc-set': 'PC set',
+      'laboratory-schedule': 'Laboratory schedule',
+      'maintenance-report': 'Issue report',
+      'technician-report': 'Technician report',
+      'borrow-record': 'Borrow request',
+      'borrow-request': 'Borrow request'
+    };
+
+    function showArchiveToast(message) {
+      const existingToast = document.querySelector('.archive-toast');
+      existingToast?.remove();
+      const toast = document.createElement('div');
+      toast.className = 'archive-toast';
+      toast.setAttribute('role', 'status');
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      window.setTimeout(() => toast.remove(), 2800);
+    }
+
+    function updateArchiveSelection() {
+      const checkboxes = [...archiveRows.querySelectorAll('[data-select-archive]')];
+      const selectedCount = checkboxes.filter((checkbox) => checkbox.checked).length;
+      const visibleCheckboxes = checkboxes.filter((checkbox) => !checkbox.closest('tr')?.classList.contains('is-search-hidden'));
+      const visibleSelectedCount = visibleCheckboxes.filter((checkbox) => checkbox.checked).length;
+      selectedArchiveCount.textContent = String(selectedCount);
+      restoreSelectedButton.disabled = selectedCount === 0;
+      deleteSelectedButton.disabled = selectedCount === 0;
+      selectAllControls.forEach((checkbox) => {
+        checkbox.checked = visibleCheckboxes.length > 0 && visibleSelectedCount === visibleCheckboxes.length;
+        checkbox.indeterminate = visibleSelectedCount > 0 && visibleSelectedCount < visibleCheckboxes.length;
+        checkbox.disabled = visibleCheckboxes.length === 0;
+      });
+    }
+
+    function applyArchiveSearch() {
+      const query = archiveSearch.value.trim().toLocaleLowerCase();
+      const rows = [...archiveRows.querySelectorAll('tr')].filter((row) => row.querySelector('[data-select-archive]'));
+      let visibleCount = 0;
+      rows.forEach((row) => {
+        const matches = !query || row.textContent.toLocaleLowerCase().includes(query);
+        row.classList.toggle('is-search-hidden', !matches);
+        if (matches) visibleCount += 1;
+      });
+      archiveResultCount.textContent = query
+        ? `Showing ${visibleCount} of ${rows.length} records`
+        : `${rows.length} archived record${rows.length === 1 ? '' : 's'}`;
+      let noMatchesRow = archiveRows.querySelector('#archiveNoMatches');
+      if (query && rows.length && visibleCount === 0) {
+        if (!noMatchesRow) {
+          noMatchesRow = document.createElement('tr');
+          noMatchesRow.id = 'archiveNoMatches';
+          noMatchesRow.innerHTML = '<td colspan="6"><div class="archive-empty"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><strong>No matching records</strong><span>Try another search term.</span></div></td>';
+          archiveRows.appendChild(noMatchesRow);
+        }
+        noMatchesRow.hidden = false;
+      } else if (noMatchesRow) {
+        noMatchesRow.hidden = true;
+      }
+      updateArchiveSelection();
+    }
+
+    async function requestArchiveRestore(archiveId) {
+      const response = await fetch(`/api/archive/${encodeURIComponent(archiveId)}/restore`, {
+        method: 'POST',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || `Unable to restore record (HTTP ${response.status}).`);
+      }
+      return payload;
+    }
+
+    async function requestArchiveDelete(archiveId) {
+      const response = await fetch(`/api/archive/${encodeURIComponent(archiveId)}`, {
+        method: 'DELETE',
+        credentials: 'same-origin'
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || `Unable to permanently delete record (HTTP ${response.status}).`);
+      }
+      return payload;
+    }
+
+    let archiveRevision = null;
+    let archiveLoading = false;
+    async function refreshArchiveRevision() {
+      try {
+        const response = await fetch('/api/archived-records/revision', { cache: 'no-store', credentials: 'same-origin' });
+        const payload = await response.json().catch(() => ({}));
+        if (response.ok && payload.success) archiveRevision = String(payload.revision);
+      } catch { /* Retry at the next interval. */ }
+    }
+
+    async function checkArchiveRevision() {
+      try {
+        const response = await fetch('/api/archived-records/revision', { cache: 'no-store', credentials: 'same-origin' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.success) return;
+        const nextRevision = String(payload.revision);
+        if (archiveRevision !== null && archiveRevision !== nextRevision) {
+          archiveRevision = nextRevision;
+          await loadArchivedRecords({ quiet: true });
+        } else {
+          archiveRevision = nextRevision;
+        }
+      } catch { /* Keep the current list and retry at the next interval. */ }
+    }
+
+    async function loadArchivedRecords({ quiet = false } = {}) {
+      if (archiveLoading) return;
+      archiveLoading = true;
+      archiveError.classList.add('hidden');
+      if (!quiet) {
+        refreshArchivedButton.disabled = true;
+        refreshArchivedButton.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Loading';
+      }
+      try {
+        const response = await fetch('/api/archived-records', { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) throw new Error(payload.error || 'Unable to load archived records.');
+        if (!payload.records.length) {
+          archiveRows.innerHTML = archiveEmpty('No archived records', 'Items archived from active lists will appear here.');
+          archiveResultCount.textContent = '0 archived records';
+          updateArchiveSelection();
+          return;
+        }
+        archiveRows.innerHTML = payload.records.map((record) => `
+          <tr>
+            <td><input class="archive-select h-4 w-4" type="checkbox" data-select-archive="${escapeHtml(record.id)}" data-record-id="${escapeHtml(record.entityId)}" data-record-type="${escapeHtml(record.entityType)}" aria-label="Select ${escapeHtml(record.title)}"></td>
+            <td><span class="archive-record-title">${escapeHtml(record.title)}</span></td>
+            <td><span class="archive-type-badge">${escapeHtml(typeLabels[record.entityType] || record.entityType)}</span></td>
+            <td>${escapeHtml(record.details || 'No additional details')}</td>
+            <td>${escapeHtml(new Date(record.archivedAt).toLocaleString())}</td>
+            <td><div class="archive-actions"><button type="button" data-restore="${escapeHtml(record.id)}" data-record-id="${escapeHtml(record.entityId)}" data-record-type="${escapeHtml(record.entityType)}" class="archive-action-button"><i class="fas fa-rotate-left" aria-hidden="true"></i> Restore</button><button type="button" data-delete="${escapeHtml(record.id)}" data-record-id="${escapeHtml(record.entityId)}" data-record-type="${escapeHtml(record.entityType)}" class="archive-action-button danger"><i class="fas fa-trash-can" aria-hidden="true"></i> Delete</button></div></td>
+          </tr>`).join('');
+        applyArchiveSearch();
+      } catch (error) {
+        archiveRows.innerHTML = archiveEmpty('Unable to load archive', 'Try refreshing the list in a moment.', 'fa-triangle-exclamation');
+        archiveResultCount.textContent = 'Archive unavailable';
+        updateArchiveSelection();
+        archiveError.textContent = error.message || 'Unable to load archived records.';
+        archiveError.classList.remove('hidden');
+      } finally {
+        refreshArchivedButton.disabled = false;
+        if (!quiet) refreshArchivedButton.innerHTML = '<i class="fas fa-rotate" aria-hidden="true"></i> Refresh';
+        archiveLoading = false;
+      }
+    }
+
+    archiveRows.addEventListener('click', async (event) => {
+      const deleteButton = event.target.closest('[data-delete]');
+      if (deleteButton) {
+        const title = deleteButton.closest('tr')?.querySelector('.archive-record-title')?.textContent || `record ${deleteButton.dataset.recordId}`;
+        const confirmed = window.appDialogs?.confirm
+          ? await window.appDialogs.confirm(`Permanently delete ${title}? This cannot be undone.`)
+          : window.confirm(`Permanently delete ${title}? This cannot be undone.`);
+        if (!confirmed) return;
+        deleteButton.disabled = true;
+        archiveError.classList.add('hidden');
+        try {
+          await requestArchiveDelete(deleteButton.dataset.delete);
+          await loadArchivedRecords();
+          await refreshArchiveRevision();
+          window.comlabRecordsSync?.publish(deleteButton.dataset.recordType === 'computer-lab' ? 'lab-deleted' : 'archive-deleted');
+          showArchiveToast(`${title} permanently deleted`);
+        } catch (error) {
+          deleteButton.disabled = false;
+          archiveError.textContent = error.message || 'Unable to permanently delete record.';
+          archiveError.classList.remove('hidden');
+        }
+        return;
+      }
+      const button = event.target.closest('[data-restore]');
+      if (!button) return;
+      button.disabled = true;
+      archiveError.classList.add('hidden');
+      try {
+        await requestArchiveRestore(button.dataset.restore);
+        await loadArchivedRecords();
+        await refreshArchiveRevision();
+        window.comlabRecordsSync?.publish(button.dataset.recordType === 'computer-lab' ? 'lab-restored' : 'archive-restored');
+        showArchiveToast(`Record ${button.dataset.recordId} restored successfully`);
+      } catch (error) {
+        button.disabled = false;
+        archiveError.textContent = error.message || 'Unable to restore record.';
+        archiveError.classList.remove('hidden');
+      }
+    });
+
+    archiveRows.addEventListener('change', (event) => {
+      if (event.target.matches('[data-select-archive]')) updateArchiveSelection();
+    });
+
+    selectAllControls.forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+        archiveRows.querySelectorAll('[data-select-archive]').forEach((rowCheckbox) => {
+          if (!rowCheckbox.closest('tr')?.classList.contains('is-search-hidden')) rowCheckbox.checked = checkbox.checked;
+        });
+        updateArchiveSelection();
+      });
+    });
+
+    archiveSearch.addEventListener('input', applyArchiveSearch);
+    refreshArchivedButton.addEventListener('click', loadArchivedRecords);
+    window.comlabRecordsSync?.subscribe(async (change) => {
+      await loadArchivedRecords({ quiet: true });
+      await refreshArchiveRevision();
+    });
+    window.setInterval(() => { if (!document.hidden) checkArchiveRevision(); }, 10000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkArchiveRevision(); });
+
+    restoreSelectedButton.addEventListener('click', async () => {
+      const selectedCheckboxes = [...archiveRows.querySelectorAll('[data-select-archive]:checked')];
+      if (!selectedCheckboxes.length) return;
+
+      restoreSelectedButton.disabled = true;
+      archiveError.classList.add('hidden');
+      try {
+        const response = await fetch('/api/archived-records/restore-by-id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedCheckboxes.map((checkbox) => checkbox.dataset.selectArchive) })
+        });
+        const responseText = await response.text();
+        let payload = {};
+        try {
+          payload = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          if (response.status !== 404 || !/Cannot POST|Not Found/i.test(responseText)) {
+            throw new Error(`Unable to restore selected records (HTTP ${response.status}).`);
+          }
+        }
+
+        if (response.status === 404 && /Cannot POST|Not Found/i.test(responseText)) {
+          const fallbackResults = await Promise.all(selectedCheckboxes.map(async (checkbox) => {
+            try {
+              await requestArchiveRestore(checkbox.dataset.selectArchive);
+              return { id: checkbox.dataset.selectArchive, success: true };
+            } catch (error) {
+              return {
+                id: checkbox.dataset.selectArchive,
+                success: false,
+                error: error.message || 'Unable to restore record.'
+              };
+            }
+          }));
+          payload = {
+            success: true,
+            restoredIds: fallbackResults.filter((result) => result.success).map((result) => result.id),
+            failures: fallbackResults.filter((result) => !result.success)
+          };
+        } else if (!response.ok || !payload.success) {
+          throw new Error(payload.error || `Unable to restore selected records (HTTP ${response.status}).`);
+        }
+
+        const restoredIds = new Set((payload.restoredIds || []).map(String));
+        archiveRows.querySelectorAll('[data-select-archive]').forEach((checkbox) => {
+          if (restoredIds.has(checkbox.dataset.selectArchive)) checkbox.closest('tr').remove();
+        });
+        if (!archiveRows.querySelector('[data-select-archive]')) {
+          archiveRows.innerHTML = archiveEmpty('No archived records', 'Items archived from active lists will appear here.');
+        }
+        applyArchiveSearch();
+
+        if (payload.failures?.length) {
+          archiveError.textContent = payload.failures.map(({ id, error }) => `${id}: ${error}`).join(' ');
+          archiveError.classList.remove('hidden');
+          showArchiveToast(`${restoredIds.size} restored; ${payload.failures.length} could not be restored.`);
+        } else {
+          showArchiveToast('Records restored successfully');
+        }
+        await loadArchivedRecords();
+        await refreshArchiveRevision();
+        if (restoredIds.size) {
+          const restoredLab = selectedCheckboxes.some((checkbox) => checkbox.dataset.recordType === 'computer-lab');
+          window.comlabRecordsSync?.publish(restoredLab ? 'lab-restored' : 'archive-restored');
+        }
+      } catch (error) {
+        archiveError.textContent = error.message || 'Unable to restore selected records.';
+        archiveError.classList.remove('hidden');
+      } finally {
+        updateArchiveSelection();
+      }
+    });
+
+    deleteSelectedButton.addEventListener('click', async () => {
+      const selectedCheckboxes = [...archiveRows.querySelectorAll('[data-select-archive]:checked')];
+      if (!selectedCheckboxes.length) return;
+      const confirmed = window.appDialogs?.confirm
+        ? await window.appDialogs.confirm(`Permanently delete ${selectedCheckboxes.length} selected record${selectedCheckboxes.length === 1 ? '' : 's'}? This cannot be undone.`)
+        : window.confirm(`Permanently delete ${selectedCheckboxes.length} selected record${selectedCheckboxes.length === 1 ? '' : 's'}? This cannot be undone.`);
+      if (!confirmed) return;
+
+      deleteSelectedButton.disabled = true;
+      archiveError.classList.add('hidden');
+      const failures = [];
+      let deletedCount = 0;
+      for (const checkbox of selectedCheckboxes) {
+        try {
+          await requestArchiveDelete(checkbox.dataset.selectArchive);
+          deletedCount += 1;
+        } catch (error) {
+          failures.push(`${checkbox.dataset.recordId}: ${error.message || 'Unable to permanently delete record.'}`);
+        }
+      }
+      await loadArchivedRecords();
+      await refreshArchiveRevision();
+      if (deletedCount) {
+        const deletedLab = selectedCheckboxes.some((checkbox) => checkbox.dataset.recordType === 'computer-lab');
+        window.comlabRecordsSync?.publish(deletedLab ? 'lab-deleted' : 'archive-deleted');
+        showArchiveToast(`${deletedCount} record${deletedCount === 1 ? '' : 's'} permanently deleted`);
+      }
+      if (failures.length) {
+        archiveError.textContent = failures.join(' ');
+        archiveError.classList.remove('hidden');
+      }
+      updateArchiveSelection();
+    });
+
+    loadArchivedRecords().then(refreshArchiveRevision);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit &amp; History | ComLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=66">
+  <link rel="stylesheet" href="/css/faculty-portal.css?v=5">
+  <style>
+    .audit-page-content {
+      box-sizing: border-box;
+      width: calc(100% - var(--sidebar-width, 280px));
+      min-width: 0;
+      margin-left: var(--sidebar-width, 280px);
+      height: 100vh;
+      overflow: hidden;
+      padding: 1.5rem clamp(1rem, 2.4vw, 2.5rem) 2rem;
+    }
+
+    .audit-page-content main {
+      display: flex;
+      height: calc(100vh - 5rem);
+      min-height: 0;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .audit-page-content .system-dashboard-heading {
+      margin-bottom: 0;
+    }
+
+    .audit-intro {
+      padding: .75rem 1rem;
+    }
+
+    .audit-intro h2 {
+      font-size: clamp(1.35rem, 2vw, 1.75rem);
+      line-height: 1.2;
+    }
+
+    .audit-intro p {
+      font-size: .98rem;
+      line-height: 1.6;
+    }
+
+    .audit-intro > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+    }
+
+    .audit-intro > div > div:first-child {
+      min-width: 0;
+    }
+
+    .audit-intro > div > div:first-child p {
+      margin: 0;
+      font-size: .92rem;
+      line-height: 1.3;
+    }
+
+    .audit-intro > div > div:last-child {
+      display: flex;
+      width: min(24rem, 48%);
+      min-width: 0;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .audit-intro > div > div:last-child > div {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .75rem;
+    }
+
+    .audit-intro label {
+      flex: 0 0 auto;
+      margin: 0;
+      font-size: .9rem;
+    }
+
+    #auditViewType {
+      min-height: 2.5rem;
+      min-width: 0;
+      font-size: .92rem;
+    }
+
+    .audit-history-panel {
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      flex-direction: column;
+    }
+
+    #auditHistoryList {
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      padding: .75rem;
+      scrollbar-color: rgba(74, 222, 128, .55) rgba(7, 17, 31, .8);
+      scrollbar-width: thin;
+    }
+
+    #auditHistoryList::-webkit-scrollbar {
+      width: .65rem;
+    }
+
+    #auditHistoryList::-webkit-scrollbar-track {
+      border-radius: 999px;
+      background: rgba(7, 17, 31, .8);
+    }
+
+    #auditHistoryList::-webkit-scrollbar-thumb {
+      border: 2px solid rgba(7, 17, 31, .8);
+      border-radius: 999px;
+      background: rgba(74, 222, 128, .45);
+    }
+
+    #auditHistoryList::-webkit-scrollbar-thumb:hover {
+      background: rgba(74, 222, 128, .72);
+    }
+
+    #auditSummary > div {
+      padding: .75rem .9rem;
+    }
+
+    #auditSummary > div > p:first-child {
+      font-size: .78rem;
+    }
+
+    #auditSummary > div > p:last-child {
+      font-size: 1rem;
+    }
+
+    .audit-empty-state {
+      display: grid;
+      min-height: clamp(16rem, 38vh, 27rem);
+      align-content: center;
+      justify-items: center;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      text-align: center;
+    }
+
+    .audit-empty-icon {
+      display: grid;
+      width: 4rem;
+      height: 4rem;
+      place-items: center;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 1.25rem;
+      background: linear-gradient(145deg, rgba(34, 197, 94, .15), rgba(6, 78, 59, .16));
+      color: #86efac;
+      font-size: 1.35rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+    }
+
+    .audit-empty-state h3 {
+      margin-top: 1.15rem;
+      color: #f0fdf4;
+      font-size: 1.15rem;
+      font-weight: 750;
+    }
+
+    .audit-empty-state p {
+      max-width: 34rem;
+      margin-top: .45rem;
+      color: #a7b8ae;
+      font-size: .9rem;
+      line-height: 1.65;
+    }
+
+    .audit-table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-color: rgba(74, 222, 128, .45) rgba(7, 17, 31, .8);
+      scrollbar-width: thin;
+    }
+
+    .audit-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    .audit-table th:nth-child(1) { width: 31%; }
+    .audit-table th:nth-child(2) { width: 21%; }
+    .audit-table th:nth-child(3) { width: 25%; }
+    .audit-table th:nth-child(4) { width: 23%; }
+
+    .audit-table th {
+      padding: 1rem 1.05rem;
+      border-bottom: 1px solid rgba(74, 222, 128, .28);
+      background: rgba(16, 56, 37, .72);
+      color: #a7f3d0;
+      font-size: 1.08rem;
+      font-weight: 850;
+      letter-spacing: .08em;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+      text-shadow: 0 0 14px rgba(52, 211, 153, .18);
+    }
+
+    .audit-table td {
+      padding: .85rem 1rem;
+      border-top: 1px solid rgba(74, 222, 128, .09);
+      color: #e2e8f0;
+      font-size: .98rem;
+      line-height: 1.55;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    .audit-table td p.font-semibold {
+      font-size: 1.02rem;
+      line-height: 1.4;
+    }
+
+    .audit-table td p.text-xs {
+      font-size: .88rem;
+      line-height: 1.45;
+    }
+
+    .audit-table td.whitespace-nowrap {
+      font-size: .88rem;
+    }
+
+    .audit-table td span {
+      font-size: .8rem;
+    }
+
+    .audit-table tbody tr {
+      transition: background-color .16s ease;
+    }
+
+    .audit-table tbody tr:hover {
+      background: rgba(34, 197, 94, .055);
+    }
+
+    .audit-status-badge {
+      display: inline-flex;
+      max-width: 100%;
+      align-items: center;
+      border: 1px solid rgba(74, 222, 128, .24);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .1);
+      padding: .3rem .65rem;
+      color: #a7f3d0;
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .audit-details-button {
+      display: inline-flex;
+      min-width: 2.35rem;
+      min-height: 2.35rem;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      border: 1px solid rgba(74, 222, 128, .25);
+      border-radius: .75rem;
+      background: rgba(16, 56, 37, .55);
+      color: #a7f3d0;
+      font-size: .85rem;
+      font-weight: 700;
+      transition: background-color .15s ease, border-color .15s ease;
+    }
+
+    .audit-details-button:hover,
+    .audit-details-button:focus-visible,
+    .audit-details-button[aria-expanded="true"] {
+      border-color: rgba(74, 222, 128, .65);
+      background: rgba(16, 97, 58, .8);
+      outline: none;
+    }
+
+    .audit-details-popover {
+      position: fixed;
+      z-index: 1200;
+      width: min(25rem, calc(100vw - 2rem));
+      max-height: min(20rem, calc(100vh - 2rem));
+      overflow: auto;
+      border: 1px solid rgba(74, 222, 128, .32);
+      border-radius: 1rem;
+      background: linear-gradient(145deg, #0b2117, #06110c);
+      padding: 1rem 1.1rem;
+      color: #d1fae5;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .48);
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      font-size: .9rem;
+      line-height: 1.6;
+    }
+
+    .audit-details-popover strong {
+      display: block;
+      margin-bottom: .4rem;
+      color: #a7f3d0;
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .audit-pagination {
+      display: flex;
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .4rem;
+      border-top: 1px solid rgba(74, 222, 128, .12);
+      padding: .65rem .85rem;
+    }
+
+    .audit-pagination[hidden] {
+      display: none;
+    }
+
+    .audit-pagination button {
+      min-width: 2.35rem;
+      min-height: 2.35rem;
+      border: 1px solid rgba(74, 222, 128, .22);
+      border-radius: .7rem;
+      background: rgba(2, 6, 23, .55);
+      padding: .35rem .65rem;
+      color: #d1fae5;
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    .audit-pagination button[aria-current="page"] {
+      border-color: #34d399;
+      background: #065f46;
+      color: #ecfdf5;
+    }
+
+    .audit-pagination button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+
+    .audit-pagination-status {
+      margin-right: auto;
+      color: #9fb8a8;
+      font-size: .8rem;
+    }
+
+    .audit-mobile-cards {
+      display: none;
+    }
+
+    .audit-mobile-cards article {
+      padding: 1rem;
+    }
+
+    .audit-mobile-cards h3 {
+      font-size: 1.05rem;
+      line-height: 1.4;
+    }
+
+    .audit-mobile-cards time,
+    .audit-mobile-cards p.text-xs,
+    .audit-mobile-cards p.text-\[11px\] {
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .audit-mobile-cards time {
+      max-width: 45%;
+      flex-shrink: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .audit-mobile-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-top: .85rem;
+      border-top: 1px solid rgba(74, 222, 128, .1);
+      padding-top: .75rem;
+    }
+
+    .audit-page-content.theme-light {
+      --bg: #f4f7f5;
+      --bg-secondary: #ffffff;
+      --card-bg: #ffffff;
+      --card-bg-solid: #ffffff;
+      --card-hover: #eef6f0;
+      --borders: #d7e3da;
+      --text: #26352b;
+      --text-secondary: #66756a;
+      color-scheme: light;
+      color: #26352b !important;
+      background: #f4f7f5 !important;
+    }
+
+    .audit-page-content.theme-light .system-dashboard-heading {
+      border-color: #d7e3da;
+      background: #ffffff;
+      color: #245c3a;
+      box-shadow: 0 8px 24px rgba(31, 41, 55, .07);
+    }
+
+    .audit-page-content.theme-light .system-dashboard-heading h1 {
+      color: #17452a;
+    }
+
+    .audit-page-content.theme-light .system-dashboard-heading #mobileMenuToggle {
+      border-color: #c5dfcd;
+      background: #edf6ef;
+      color: #245c3a;
+    }
+
+    .audit-page-content .profile-theme-static {
+      border-color: rgba(74, 222, 128, .2) !important;
+      background: #04281b !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    .audit-page-content .profile-theme-static .system-profile-badge-name,
+    .audit-page-content .profile-theme-static .system-profile-badge-copy {
+      color: #ffffff !important;
+    }
+
+    .audit-page-content .profile-theme-static .system-profile-badge-role {
+      color: #34d399 !important;
+    }
+
+    .audit-page-content .profile-theme-static .system-profile-badge-avatar {
+      border-color: rgba(74, 222, 128, .32) !important;
+      background: #06402b !important;
+      color: #6ee7b7 !important;
+    }
+
+    .audit-page-content.theme-light .audit-intro,
+    .audit-page-content.theme-light .audit-history-panel {
+      border-color: #d7e3da !important;
+      background: #ffffff !important;
+      color: #26352b !important;
+      box-shadow: 0 8px 24px rgba(31, 41, 55, .07) !important;
+    }
+
+    .audit-page-content.theme-light .audit-intro p,
+    .audit-page-content.theme-light .audit-intro label {
+      color: #34483a !important;
+    }
+
+    .audit-page-content.theme-light #auditViewType {
+      border-color: #cbd8ce !important;
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      color: #26352b !important;
+    }
+
+    .audit-page-content.theme-light #auditViewType option {
+      background: #ffffff !important;
+      color: #26352b !important;
+    }
+
+    .audit-page-content.theme-light #auditSummary {
+      border-color: #e3ebe5 !important;
+    }
+
+    .audit-page-content.theme-light #auditSummary > div,
+    .audit-page-content.theme-light .audit-mobile-cards article {
+      border-color: #d7e3da !important;
+      background: #ffffff !important;
+      color: #26352b !important;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .audit-page-content.theme-light #auditSummary > div p,
+    .audit-page-content.theme-light .audit-mobile-cards :is(h3, p, time) {
+      color: #34483a !important;
+    }
+
+    .audit-page-content.theme-light .audit-table-wrap {
+      border-color: #d7e3da !important;
+      background: #ffffff !important;
+      scrollbar-color: #a9cbb2 #f0f5f1;
+    }
+
+    .audit-page-content.theme-light .audit-table thead,
+    .audit-page-content.theme-light .audit-table thead tr,
+    .audit-page-content.theme-light .audit-table th {
+      background: #0a2e1d !important;
+      color: #ffffff !important;
+    }
+
+    .audit-page-content.theme-light .audit-table tbody tr,
+    .audit-page-content.theme-light .audit-table tbody tr:nth-child(even) {
+      background: #ffffff !important;
+      color: #26352b !important;
+      box-shadow: none !important;
+    }
+
+    .audit-page-content.theme-light .audit-table tbody tr:nth-child(even) {
+      background: #f6faf7 !important;
+    }
+
+    .audit-page-content.theme-light .audit-table tbody tr:hover {
+      background: #edf6ef !important;
+    }
+
+    .audit-page-content.theme-light .audit-table td,
+    .audit-page-content.theme-light .audit-table td :is(p, span) {
+      background: transparent !important;
+      border-color: #e3ebe5 !important;
+      color: #34483a !important;
+    }
+
+    .audit-page-content.theme-light .audit-table tbody tr:hover td {
+      background: transparent !important;
+      color: #26352b !important;
+    }
+
+    .audit-page-content.theme-light .audit-status-badge {
+      border-color: rgba(74, 222, 128, .28) !important;
+      background: #0a2e1d !important;
+      color: #d1fae5 !important;
+    }
+
+    .audit-page-content.theme-light .audit-details-button {
+      border-color: #cbd8ce;
+      background: #ffffff;
+      color: #245c3a;
+    }
+
+    .audit-page-content.theme-light .audit-details-button:hover,
+    .audit-page-content.theme-light .audit-details-button:focus-visible,
+    .audit-page-content.theme-light .audit-details-button[aria-expanded="true"] {
+      border-color: #92b79b;
+      background: #edf6ef;
+    }
+
+    .audit-page-content.theme-light .audit-empty-state h3 {
+      color: #26352b;
+    }
+
+    .audit-page-content.theme-light .audit-empty-state p {
+      color: #66756a;
+    }
+
+    .audit-page-content.theme-light .audit-empty-icon {
+      border-color: #c5dfcd;
+      background: #edf6ef;
+      color: #247044;
+      box-shadow: 0 8px 20px rgba(31, 41, 55, .06);
+    }
+
+    .audit-page-content.theme-light .audit-pagination {
+      border-color: #e3ebe5;
+    }
+
+    .audit-page-content.theme-light .audit-pagination button {
+      border-color: #cbd8ce;
+      background: #ffffff;
+      color: #245c3a;
+    }
+
+    .audit-page-content.theme-light .audit-pagination button[aria-current="page"] {
+      border-color: #166534;
+      background: #166534;
+      color: #ffffff;
+    }
+
+    .audit-page-content.theme-light .audit-pagination-status {
+      color: #66756a;
+    }
+
+    .audit-details-popover.theme-light {
+      border-color: #cbd8ce;
+      background: #ffffff;
+      color: #34483a;
+      box-shadow: 0 18px 48px rgba(31, 41, 55, .2);
+    }
+
+    .audit-details-popover.theme-light strong {
+      color: #245c3a;
+    }
+
+    @media (max-width: 639px) {
+      .audit-pagination {
+        justify-content: center;
+        gap: .3rem;
+        padding: .6rem .4rem;
+      }
+
+      .audit-pagination-status {
+        width: 100%;
+        margin: 0 0 .25rem;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 1199px) {
+      .audit-table-wrap {
+        display: none !important;
+      }
+
+      .audit-mobile-cards {
+        display: block;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .audit-page-content {
+        width: 100%;
+        margin-left: 0;
+        padding: .75rem .75rem 1.5rem;
+      }
+
+      .audit-page-content main {
+        height: calc(100vh - 2.25rem);
+        gap: .65rem;
+      }
+
+      .audit-empty-state {
+        min-height: 17rem;
+      }
+    }
+
+    @media (max-width: 639px) {
+      .audit-page-content {
+        padding: .75rem .65rem 1rem;
+      }
+
+      .audit-page-content main {
+        height: calc(100vh - 1.75rem);
+      }
+
+      .audit-intro {
+        padding: .85rem;
+      }
+
+      .audit-intro > div {
+        gap: .75rem;
+      }
+
+      .audit-intro > div > div:last-child {
+        width: min(22rem, 58%);
+      }
+
+      #auditSummary {
+        gap: .5rem;
+        padding: .65rem;
+      }
+
+      #auditHistoryList {
+        padding: .65rem;
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+</head>
+<body class="app-shell student-portal faculty-page faculty-page-heading-page system-layout-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+
+  <div class="audit-page-content min-h-screen">
+    <main class="mx-auto w-full max-w-[1600px]">
+      <div class="system-dashboard-heading">
+        <div class="system-dashboard-heading-main">
+          <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="system-dashboard-heading-actions">
+          <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
+          <div class="student-page-user system-profile-badge">
+            <span class="system-profile-badge-avatar" data-user-initials>FC</span>
+            <span class="system-profile-badge-copy">
+              <span class="system-profile-badge-name" data-user-name>Faculty</span>
+              <span class="system-profile-badge-role" data-user-role>Faculty</span>
+            </span>
+          </div>
+          </a>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2" role="tablist" aria-label="Faculty audit history">
+        <button id="facultyActivityTab" type="button" class="rounded-xl border border-emerald-400/20 bg-[#0d2118] px-4 py-2 text-sm font-bold text-emerald-100" role="tab" aria-selected="true">Account activity</button>
+        <button id="facultyLoginAuditTab" type="button" class="rounded-xl border border-emerald-400/20 bg-[#0d2118] px-4 py-2 text-sm font-bold text-emerald-100" role="tab" aria-selected="false">PC Logs</button>
+      </div>
+
+      <section class="audit-intro rounded-2xl border border-emerald-400/15 bg-[#07111f]/95 shadow-2xl shadow-black/20">
+        <div class="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,auto)] xl:items-end">
+          <div>
+            <p id="facultyAuditIntroTitle" class="font-bold uppercase tracking-[.2em] text-emerald-300">Your account activity</p>
+          </div>
+          <div class="grid min-w-0 gap-2 sm:grid-cols-2 xl:min-w-[26rem]">
+            <div>
+              <label for="auditViewType" class="font-semibold text-emerald-100/80">History type</label>
+              <select id="auditViewType" class="w-full rounded-lg border border-emerald-400/20 bg-[#020617] px-3 text-sm text-white">
+                <option value="borrow">Borrow history</option>
+                <option value="assignment">Equipment assignments</option>
+                <option value="attendance">Student attendance</option>
+                <option value="pc-logs">PC Logs</option>
+                <option value="scan">Equipment scan history</option>
+              </select>
+            </div>
+            <div id="facultyPcLogActionFilterWrap" class="hidden">
+              <label for="facultyPcLogActionFilter" class="font-semibold text-emerald-100/80">Action</label>
+              <select id="facultyPcLogActionFilter" class="w-full rounded-lg border border-emerald-400/20 bg-[#020617] px-3 text-sm text-white">
+                <option value="">All actions</option>
+                <option value="login">Login</option>
+                <option value="logout">Logout</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="audit-history-panel overflow-hidden rounded-2xl border border-emerald-400/15 bg-[#07111f]/95 shadow-2xl shadow-black/20">
+        <div id="auditSummary" class="hidden grid gap-2 border-b border-emerald-400/10 p-3 sm:grid-cols-3 sm:p-4"></div>
+        <div id="auditHistoryList" aria-live="polite" class="p-3 sm:p-4">
+          <p class="text-sm text-slate-400">Loading history…</p>
+        </div>
+        <nav id="auditPagination" class="audit-pagination" aria-label="History pagination" hidden></nav>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const currentUser = window.__CURRENT_USER__ || {};
+    const currentUserId = Number(currentUser.id || currentUser.userId || 0);
+    const viewType = document.getElementById('auditViewType');
+    const facultyAuditIntroTitle = document.getElementById('facultyAuditIntroTitle');
+    const facultyPcLogActionFilterWrap = document.getElementById('facultyPcLogActionFilterWrap');
+    const facultyPcLogActionFilter = document.getElementById('facultyPcLogActionFilter');
+    const summary = document.getElementById('auditSummary');
+    const historyList = document.getElementById('auditHistoryList');
+    const pagination = document.getElementById('auditPagination');
+    const auditDetailsPopover = document.createElement('div');
+    const auditRowsPerPage = 7;
+    let auditCurrentPage = 1;
+    let auditPageCount = 1;
+    let auditPopoverTimer;
+    auditDetailsPopover.className = 'audit-details-popover';
+    auditDetailsPopover.id = 'auditDetailsPopover';
+    auditDetailsPopover.hidden = true;
+    auditDetailsPopover.setAttribute('role', 'tooltip');
+    document.body.append(auditDetailsPopover);
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    if (['assignment', 'attendance'].includes(requestedView)) viewType.value = requestedView;
+    if (['login', 'pc-logs'].includes(requestedView)) viewType.value = 'pc-logs';
+    const facultyActivityTab = document.getElementById('facultyActivityTab');
+    const facultyLoginAuditTab = document.getElementById('facultyLoginAuditTab');
+    const updateFacultyAuditTabs = () => {
+      const isLoginView = viewType.value === 'pc-logs';
+      facultyAuditIntroTitle.textContent = isLoginView ? 'PC station log activity' : 'Your account activity';
+      facultyPcLogActionFilterWrap.classList.toggle('hidden', !isLoginView);
+      facultyLoginAuditTab.setAttribute('aria-selected', String(isLoginView));
+      facultyActivityTab.setAttribute('aria-selected', String(!isLoginView));
+      facultyLoginAuditTab.classList.toggle('bg-emerald-500', isLoginView);
+      facultyLoginAuditTab.classList.toggle('text-black', isLoginView);
+      facultyActivityTab.classList.toggle('bg-emerald-500', !isLoginView);
+      facultyActivityTab.classList.toggle('text-black', !isLoginView);
+    };
+
+    function formatAuditTimestamp(value) {
+      if (!value) return 'Date not recorded';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function setAuditMessage(message, isError = false) {
+      summary.classList.add('hidden');
+      summary.replaceChildren();
+      historyList.replaceChildren();
+      pagination.hidden = true;
+      pagination.replaceChildren();
+      hideAuditDetails();
+      const state = document.createElement('div');
+      state.className = 'audit-empty-state';
+      const icon = document.createElement('span');
+      icon.className = `audit-empty-icon ${isError ? 'border-rose-400/20 bg-rose-950/30 text-rose-200' : ''}`;
+      const iconElement = document.createElement('i');
+      iconElement.className = isError ? 'fas fa-triangle-exclamation' : 'fas fa-spinner animate-spin';
+      iconElement.setAttribute('aria-hidden', 'true');
+      icon.append(iconElement);
+      const title = document.createElement('h3');
+      title.textContent = isError ? 'History could not be loaded' : 'Loading your history';
+      const description = document.createElement('p');
+      description.textContent = message;
+      state.append(icon, title, description);
+      historyList.append(state);
+    }
+
+    function renderEmptyState(message) {
+      historyList.replaceChildren();
+      pagination.hidden = true;
+      pagination.replaceChildren();
+      const state = document.createElement('div');
+      state.className = 'audit-empty-state';
+      const icon = document.createElement('span');
+      icon.className = 'audit-empty-icon';
+      const iconElement = document.createElement('i');
+      iconElement.className = 'fas fa-clock-rotate-left';
+      iconElement.setAttribute('aria-hidden', 'true');
+      icon.append(iconElement);
+      const title = document.createElement('h3');
+      title.textContent = 'No activity yet';
+      const description = document.createElement('p');
+      description.textContent = message;
+      state.append(icon, title, description);
+      historyList.append(state);
+    }
+
+    function renderSummary(cards) {
+      summary.replaceChildren();
+      if (!cards.length) {
+        summary.classList.add('hidden');
+        return;
+      }
+      summary.classList.remove('hidden');
+      cards.forEach(({ label, value }) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-xl border border-emerald-400/10 bg-[#020617]/70 p-3';
+        const labelElement = document.createElement('p');
+        labelElement.className = 'text-[10px] font-semibold uppercase tracking-[.16em] text-emerald-200/70';
+        labelElement.textContent = label;
+        const valueElement = document.createElement('p');
+        valueElement.className = 'mt-1 truncate text-sm font-semibold text-white';
+        valueElement.textContent = value || '—';
+        card.append(labelElement, valueElement);
+        summary.append(card);
+      });
+    }
+
+    function hideAuditDetails() {
+      window.clearTimeout(auditPopoverTimer);
+      auditDetailsPopover.hidden = true;
+      document.querySelectorAll('[data-audit-details][aria-expanded="true"]').forEach((button) => {
+        button.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function showAuditDetails(button) {
+      window.clearTimeout(auditPopoverTimer);
+      document.querySelectorAll('[data-audit-details][aria-expanded="true"]').forEach((openButton) => {
+        if (openButton !== button) openButton.setAttribute('aria-expanded', 'false');
+      });
+      auditDetailsPopover.replaceChildren();
+      const heading = document.createElement('strong');
+      heading.textContent = 'Details';
+      const content = document.createElement('div');
+      content.textContent = button.dataset.auditDetails || 'No additional details.';
+      auditDetailsPopover.append(heading, content);
+      auditDetailsPopover.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+
+      const trigger = button.getBoundingClientRect();
+      const popover = auditDetailsPopover.getBoundingClientRect();
+      const margin = 12;
+      const left = Math.min(
+        Math.max(margin, trigger.left + trigger.width / 2 - popover.width / 2),
+        window.innerWidth - popover.width - margin
+      );
+      const top = trigger.bottom + popover.height + margin <= window.innerHeight
+        ? trigger.bottom + 8
+        : Math.max(margin, trigger.top - popover.height - 8);
+      auditDetailsPopover.style.left = `${left}px`;
+      auditDetailsPopover.style.top = `${top}px`;
+    }
+
+    function createAuditDetailsButton(entry) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'audit-details-button';
+      button.dataset.auditDetails = [
+        entry.subtitle,
+        entry.details,
+        entry.isLastBorrower ? 'You were the last borrower.' : ''
+      ].filter(Boolean).join('\n');
+      button.setAttribute('aria-label', `Show details for ${entry.title || 'this history item'}`);
+      button.setAttribute('aria-controls', auditDetailsPopover.id);
+      button.setAttribute('aria-describedby', auditDetailsPopover.id);
+      button.setAttribute('aria-expanded', 'false');
+      button.innerHTML = '<i class="fas fa-circle-info" aria-hidden="true"></i><span>Info</span>';
+      return button;
+    }
+
+    function renderAuditPagination(totalRecords) {
+      auditPageCount = Math.max(1, Math.ceil(totalRecords / auditRowsPerPage));
+      auditCurrentPage = Math.min(auditCurrentPage, auditPageCount);
+      pagination.replaceChildren();
+      pagination.hidden = auditPageCount <= 1;
+      if (pagination.hidden) return;
+
+      const status = document.createElement('span');
+      status.className = 'audit-pagination-status';
+      const start = (auditCurrentPage - 1) * auditRowsPerPage + 1;
+      const end = Math.min(auditCurrentPage * auditRowsPerPage, totalRecords);
+      status.textContent = `Showing ${start}–${end} of ${totalRecords}`;
+      pagination.append(status);
+
+      const previous = document.createElement('button');
+      previous.type = 'button';
+      previous.dataset.auditPageAction = 'previous';
+      previous.textContent = 'Previous';
+      previous.disabled = auditCurrentPage === 1;
+      pagination.append(previous);
+
+      const maxVisiblePages = 5;
+      let firstPage = Math.max(1, auditCurrentPage - Math.floor(maxVisiblePages / 2));
+      const lastPage = Math.min(auditPageCount, firstPage + maxVisiblePages - 1);
+      firstPage = Math.max(1, lastPage - maxVisiblePages + 1);
+      for (let page = firstPage; page <= lastPage; page += 1) {
+        const pageButton = document.createElement('button');
+        pageButton.type = 'button';
+        pageButton.dataset.auditPage = String(page);
+        pageButton.textContent = String(page);
+        if (page === auditCurrentPage) {
+          pageButton.setAttribute('aria-current', 'page');
+          pageButton.setAttribute('aria-label', `Page ${page}, current page`);
+        } else {
+          pageButton.setAttribute('aria-label', `Page ${page}`);
+        }
+        pagination.append(pageButton);
+      }
+
+      const next = document.createElement('button');
+      next.type = 'button';
+      next.dataset.auditPageAction = 'next';
+      next.textContent = 'Next';
+      next.disabled = auditCurrentPage === auditPageCount;
+      pagination.append(next);
+    }
+
+    function renderEntries(entries, emptyMessage) {
+      currentAuditEntries = entries;
+      currentAuditEmptyMessage = emptyMessage;
+      historyList.replaceChildren();
+      if (!entries.length) {
+        renderEmptyState(emptyMessage);
+        return;
+      }
+      const totalPages = Math.max(1, Math.ceil(entries.length / auditRowsPerPage));
+      auditCurrentPage = Math.min(auditCurrentPage, totalPages);
+      const startIndex = (auditCurrentPage - 1) * auditRowsPerPage;
+      const rows = entries.slice(startIndex, startIndex + auditRowsPerPage);
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'audit-table-wrap hidden rounded-xl border border-emerald-400/10 bg-[#020617]/45 md:block';
+      const table = document.createElement('table');
+      table.className = 'audit-table';
+      const head = document.createElement('thead');
+      head.className = 'bg-emerald-400/[.04]';
+      const headRow = document.createElement('tr');
+      ['History / Item', 'User', 'Date & Time', 'Status'].forEach((label) => {
+        const cell = document.createElement('th');
+        cell.scope = 'col';
+        cell.textContent = label;
+        headRow.append(cell);
+      });
+      head.append(headRow);
+      const body = document.createElement('tbody');
+      rows.forEach((entry) => {
+        const row = document.createElement('tr');
+        const historyCell = document.createElement('td');
+        const title = document.createElement('p');
+        title.className = 'font-semibold text-white';
+        title.textContent = entry.title || 'Activity';
+        historyCell.append(title);
+
+        const userCell = document.createElement('td');
+        userCell.className = 'text-slate-200';
+        userCell.textContent = entry.actor || '—';
+
+        const dateCell = document.createElement('td');
+        dateCell.className = 'text-slate-300';
+        dateCell.textContent = formatAuditTimestamp(entry.time);
+
+        const statusCell = document.createElement('td');
+        const statusLayout = document.createElement('div');
+        statusLayout.className = 'flex flex-wrap items-center justify-between gap-2';
+        const badge = document.createElement('span');
+        badge.className = 'audit-status-badge';
+        badge.textContent = entry.status || entry.subtitle || 'Recorded';
+        statusLayout.append(badge, createAuditDetailsButton(entry));
+        statusCell.append(statusLayout);
+
+        row.append(historyCell, userCell, dateCell, statusCell);
+        body.append(row);
+      });
+      table.append(head, body);
+      tableWrap.append(table);
+
+      const cards = document.createElement('div');
+      cards.className = 'audit-mobile-cards space-y-3';
+      rows.forEach((entry) => {
+        const card = document.createElement('article');
+        card.className = 'rounded-xl border border-emerald-400/10 bg-[#020617]/75 p-4';
+        const top = document.createElement('div');
+        top.className = 'flex min-w-0 items-start justify-between gap-3';
+        const content = document.createElement('div');
+        content.className = 'min-w-0';
+        const title = document.createElement('h3');
+        title.className = 'break-words font-semibold text-white';
+        title.textContent = entry.title || 'Activity';
+        content.append(title);
+        const time = document.createElement('time');
+        time.className = 'shrink-0 text-right text-sm text-slate-400';
+        time.textContent = formatAuditTimestamp(entry.time);
+        top.append(content, time);
+        card.append(top);
+        const user = document.createElement('p');
+        user.className = 'mt-2 text-sm text-slate-300';
+        user.textContent = `User: ${entry.actor || '—'}`;
+        card.append(user);
+        const footer = document.createElement('div');
+        footer.className = 'audit-mobile-card-footer';
+        const badge = document.createElement('span');
+        badge.className = 'audit-status-badge';
+        badge.textContent = entry.status || entry.subtitle || 'Recorded';
+        footer.append(badge, createAuditDetailsButton(entry));
+        card.append(footer);
+        cards.append(card);
+      });
+      historyList.append(tableWrap, cards);
+      renderAuditPagination(entries.length);
+    }
+
+    pagination.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button || button.disabled) return;
+      if (button.dataset.auditPage) auditCurrentPage = Number(button.dataset.auditPage);
+      else if (button.dataset.auditPageAction === 'previous') auditCurrentPage -= 1;
+      else if (button.dataset.auditPageAction === 'next') auditCurrentPage += 1;
+      else return;
+      hideAuditDetails();
+      renderEntries(currentAuditEntries, currentAuditEmptyMessage);
+      historyList.scrollTop = 0;
+    });
+
+    let currentAuditEntries = [];
+    let currentAuditEmptyMessage = '';
+
+    historyList.addEventListener('pointerover', (event) => {
+      const button = event.target.closest('[data-audit-details]');
+      if (button && event.pointerType !== 'touch') showAuditDetails(button);
+    });
+    historyList.addEventListener('pointerout', (event) => {
+      const button = event.target.closest('[data-audit-details]');
+      if (event.pointerType === 'touch') return;
+      if (!button || button.contains(event.relatedTarget) || auditDetailsPopover.contains(event.relatedTarget)) return;
+      auditPopoverTimer = window.setTimeout(hideAuditDetails, 180);
+    });
+    historyList.addEventListener('focusin', (event) => {
+      const button = event.target.closest('[data-audit-details]');
+      if (button) showAuditDetails(button);
+    });
+    historyList.addEventListener('focusout', (event) => {
+      if (event.target.closest('[data-audit-details]')) auditPopoverTimer = window.setTimeout(hideAuditDetails, 180);
+    });
+    historyList.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-audit-details]');
+      if (!button) return;
+      showAuditDetails(button);
+    });
+    auditDetailsPopover.addEventListener('pointerenter', () => window.clearTimeout(auditPopoverTimer));
+    auditDetailsPopover.addEventListener('pointerleave', () => {
+      auditPopoverTimer = window.setTimeout(hideAuditDetails, 180);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !auditDetailsPopover.hidden) hideAuditDetails();
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (auditDetailsPopover.hidden ||
+          event.target.closest('[data-audit-details]') ||
+          auditDetailsPopover.contains(event.target)) return;
+      hideAuditDetails();
+    });
+    historyList.addEventListener('scroll', hideAuditDetails, { passive: true });
+    window.addEventListener('resize', hideAuditDetails, { passive: true });
+
+    async function loadBorrowHistory() {
+      const response = await fetch('/api/borrow-audit', { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Unable to load borrow history.');
+      const records = (Array.isArray(payload) ? payload : []).map((event) => {
+        const lastBorrower = event.lastBorrower?.name || '';
+        return {
+          title: event.equipmentName || event.equipmentId || 'Equipment',
+          subtitle: `${String(event.eventType || 'activity').replaceAll('_', ' ')} · Borrower: ${event.borrowerName || '—'}`,
+          actor: event.borrowerName || '—',
+          time: event.occurredAt,
+          status: String(event.eventType || 'Activity').replaceAll('_', ' '),
+          details: [
+            event.equipmentId ? `Item ID: ${event.equipmentId}` : '',
+            event.borrowerCollege ? `College: ${event.borrowerCollege}` : '',
+            event.currentHolders?.length ? `Current holder: ${event.currentHolders.map((holder) => `${holder.name} (${holder.quantity})`).join(', ')}` : 'Not currently borrowed',
+            lastBorrower ? `Last borrower: ${lastBorrower}` : '',
+            event.processedBy ? `Processed by: ${event.processedBy}` : '',
+            event.purpose || ''
+          ].filter(Boolean).join(' · '),
+          isLastBorrower: Boolean(lastBorrower && (
+            Number(event.lastBorrower?.userId) === currentUserId ||
+            (!event.lastBorrower?.userId && currentUser.name &&
+              lastBorrower.trim().toLowerCase() === String(currentUser.name).trim().toLowerCase())
+          ))
+        };
+      });
+      renderSummary([
+        { label: 'Borrow events', value: String(records.length) },
+        { label: 'Latest item', value: records[0]?.title || '—' },
+        { label: 'Latest activity', value: records[0] ? formatAuditTimestamp(records[0].time) : '—' }
+      ]);
+      renderEntries(records, 'No borrow history is recorded for your account yet.');
+    }
+
+    async function loadLoginHistory() {
+      const params = new URLSearchParams({ scope: 'pc-station', pageSize: '100' });
+      if (facultyPcLogActionFilter.value) params.set('action', facultyPcLogActionFilter.value);
+      const response = await fetch('/api/audit-logs?' + params.toString(), { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Unable to load PC station logs.');
+      const logs = Array.isArray(payload.data) ? payload.data : [];
+      const entries = logs.map((event) => ({
+        title: event.action || 'Authentication event',
+        subtitle: event.module || 'Authentication',
+        status: event.action || 'Recorded',
+        actor: event.actorName || currentUser.name || '—',
+        time: event.createdAt,
+        details: [
+          event.actorCollege ? `College: ${event.actorCollege}` : '',
+          event.description || ''
+        ].filter(Boolean).join(' · ')
+      }));
+      renderSummary([
+        { label: 'PC station events', value: String(entries.length) },
+        { label: 'Latest action', value: entries[0]?.title || '—' },
+        { label: 'Latest event', value: entries[0] ? formatAuditTimestamp(entries[0].time) : '—' }
+      ]);
+      renderEntries(entries, 'No PC station login or logout activity is recorded for your account yet.');
+    }
+
+    async function loadScanHistory() {
+      const response = await fetch('/api/equipment-scan-history', { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Unable to load equipment scan history.');
+      const entries = (Array.isArray(payload.data) ? payload.data : []).map((event) => ({
+          equipmentId: event.equipmentId,
+          title: event.equipmentName || event.equipmentId || 'Equipment',
+          subtitle: `${event.actionType === 'equipment_issue_reported' ? 'Issue report' : 'QR scan'} · ${event.equipmentId || 'No item ID'}`,
+          status: event.actionType === 'equipment_issue_reported' ? 'Reported' : 'Scanned',
+          actor: Number(event.performedBy) === currentUserId
+            ? 'You'
+            : event.scannerRole === 'student'
+              ? `${event.scannerName || event.performedByName || 'Student'}${[event.scannerProgram, event.scannerYear, event.scannerSection].filter(Boolean).length
+                ? ` · ${[event.scannerProgram, event.scannerYear, event.scannerSection].filter(Boolean).join(' · ')}`
+                : ''}`
+              : event.scannerName || event.performedByName || 'Unknown user',
+          time: event.actionTimestamp,
+          details: [
+            event.serialNumber ? `Serial: ${event.serialNumber}` : '',
+            event.actionType === 'equipment_issue_reported'
+              ? `Report${event.reportCategory ? `: ${event.reportCategory}` : ''}${event.maintenanceRequestId ? ` · Request #${event.maintenanceRequestId}` : ''}`
+              : event.scannerRole ? `Scanned by: ${Number(event.performedBy) === currentUserId ? 'You' : event.scannerRole}` : '',
+            event.actionDescription || (event.actionType === 'equipment_issue_reported' ? 'Equipment issue reported.' : 'Equipment QR code scanned.')
+          ].filter(Boolean).join(' · ')
+      }));
+      renderSummary([
+          { label: 'Equipment activity', value: String(payload.meta?.total ?? entries.length) },
+          { label: 'Items involved', value: String(new Set(entries.map((entry) => entry.equipmentId).filter(Boolean)).size) },
+        { label: 'Latest activity', value: entries[0] ? formatAuditTimestamp(entries[0].time) : '—' }
+      ]);
+      renderEntries(entries, 'No equipment scans or reports have been recorded yet.');
+    }
+
+    async function loadAssignmentHistory() {
+      const response = await fetch('/api/faculty/assignment-history', { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.success !== true) {
+        throw new Error(payload.error || 'Unable to load equipment assignment history.');
+      }
+      const entries = (Array.isArray(payload.history) ? payload.history : []).map((event) => ({
+        title: event.equipmentName || event.equipmentCode || 'Equipment',
+        subtitle: event.actionType === 'accountability_removed'
+          ? 'Assignment removed'
+          : 'Assigned to you',
+        status: event.actionType === 'accountability_removed' ? 'Removed' : 'Assigned',
+        actor: event.performedByName || 'Administrator',
+        time: event.actionTimestamp,
+        details: [
+          event.equipmentCode ? `Item ID: ${event.equipmentCode}` : '',
+          event.serialNumber ? `Serial: ${event.serialNumber}` : '',
+          event.performedByCollege ? `Admin college: ${event.performedByCollege}` : '',
+          event.actionDescription || ''
+        ].filter(Boolean).join(' · ')
+      }));
+      renderSummary([
+        { label: 'Assignment events', value: String(entries.length) },
+        { label: 'Latest item', value: entries[0]?.title || '—' },
+        { label: 'Latest activity', value: entries[0] ? formatAuditTimestamp(entries[0].time) : '—' }
+      ]);
+      renderEntries(entries, 'No equipment assignment history is recorded for your account yet.');
+    }
+
+    async function loadAttendanceHistory() {
+      const response = await fetch('/api/faculty/attendance-history', { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.success !== true) {
+        throw new Error(payload.error || 'Unable to load student attendance history.');
+      }
+      const attendance = Array.isArray(payload.attendance) ? payload.attendance : [];
+      const counts = attendance.reduce((result, record) => {
+        const status = String(record.status || 'Absent').toLowerCase();
+        result[status] = (result[status] || 0) + 1;
+        return result;
+      }, {});
+      const entries = attendance.map((record) => ({
+        title: record.studentName || 'Unknown student',
+        subtitle: `${record.subject || 'Class'} · ${record.status || 'Absent'}`,
+        status: record.status || 'Absent',
+        actor: record.studentId || 'Student number not recorded',
+        time: record.recordedAt || record.date,
+        details: [
+          record.courseSection && record.courseSection !== '—' ? `Course/section: ${record.courseSection}` : '',
+          `Class date: ${record.date || '—'}`,
+          record.timeIn && record.timeIn !== 'Not recorded' ? `Time in: ${record.timeIn}` : 'No check-in recorded'
+        ].filter(Boolean).join(' · ')
+      }));
+      renderSummary([
+        { label: 'Attendance records', value: String(entries.length) },
+        { label: 'Present / Late', value: `${counts.present || 0} / ${counts.late || 0}` },
+        { label: 'Absent', value: String(counts.absent || 0) }
+      ]);
+      renderEntries(entries, 'No attendance records are available for your assigned schedules yet.');
+    }
+
+    async function loadAuditView() {
+      const type = viewType.value;
+      auditCurrentPage = 1;
+      setAuditMessage('Loading history…');
+      try {
+        if (type === 'borrow') await loadBorrowHistory();
+        else if (type === 'pc-logs') await loadLoginHistory();
+        else if (type === 'scan') await loadScanHistory();
+        else if (type === 'attendance') await loadAttendanceHistory();
+        else await loadAssignmentHistory();
+      } catch (error) {
+        console.error('Unable to load faculty audit history:', error);
+        setAuditMessage(error.message || 'Unable to load audit history.', true);
+      }
+    }
+
+    facultyActivityTab.addEventListener('click', () => {
+      if (viewType.value === 'pc-logs') viewType.value = 'borrow';
+      updateFacultyAuditTabs();
+      loadAuditView();
+    });
+    facultyLoginAuditTab.addEventListener('click', () => {
+      viewType.value = 'pc-logs';
+      updateFacultyAuditTabs();
+      loadAuditView();
+    });
+    viewType.addEventListener('change', () => {
+      updateFacultyAuditTabs();
+      loadAuditView();
+    });
+    facultyPcLogActionFilter.addEventListener('change', loadAuditView);
+    updateFacultyAuditTabs();
+    loadAuditView();
+  </script>
+
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+</body>
+</html>

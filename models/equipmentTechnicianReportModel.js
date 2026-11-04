@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, QueryTypes } from 'sequelize';
 import { sequelize } from './db.js';
 
 /**
@@ -16,7 +16,7 @@ const EquipmentTechnicianReport = sequelize.define('EquipmentTechnicianReport', 
         type: DataTypes.STRING(50),
         allowNull: false,
         unique: true,
-        comment: 'Unique report identifier (e.g., TECH-2026-W40)'
+        comment: 'Unique report identifier (maintenance format: TM-2026-0001)'
     },
     reportDate: {
         type: DataTypes.DATEONLY,
@@ -148,5 +148,67 @@ const EquipmentTechnicianReport = sequelize.define('EquipmentTechnicianReport', 
         { fields: ['status'] }
     ]
 });
+
+let legacyMaintenanceMigrationPromise = null;
+
+export async function ensureTechnicianReportSequenceTable() {
+    await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS technician_report_sequences (
+            reportYear SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+            lastNumber INT UNSIGNED NOT NULL DEFAULT 0,
+            updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    await sequelize.query(`
+        INSERT INTO technician_report_sequences (reportYear, lastNumber)
+        SELECT CAST(SUBSTRING(reportId, 4, 4) AS UNSIGNED),
+               MAX(CAST(SUBSTRING_INDEX(reportId, '-', -1) AS UNSIGNED))
+        FROM equipment_technician_reports
+        WHERE reportId REGEXP '^TM-[0-9]{4}-[0-9]{4}$'
+        GROUP BY CAST(SUBSTRING(reportId, 4, 4) AS UNSIGNED)
+        ON DUPLICATE KEY UPDATE lastNumber = GREATEST(lastNumber, VALUES(lastNumber))
+    `);
+
+    if (!legacyMaintenanceMigrationPromise) {
+        legacyMaintenanceMigrationPromise = sequelize.transaction(async (transaction) => {
+            const legacyReports = await sequelize.query(`
+                SELECT id, reportDate
+                FROM equipment_technician_reports
+                WHERE reportType = 'maintenance'
+                  AND reportId REGEXP '^TECH-MAINTENANCE-[0-9]+$'
+                ORDER BY reportDate ASC, createdAt ASC, id ASC
+                FOR UPDATE
+            `, { type: QueryTypes.SELECT, transaction });
+
+            for (const report of legacyReports) {
+                const year = Number(String(report.reportDate || '').slice(0, 4));
+                if (!Number.isInteger(year) || year < 1000 || year > 9999) continue;
+                await sequelize.query(
+                    `INSERT INTO technician_report_sequences (reportYear, lastNumber) VALUES (?, 0)
+                     ON DUPLICATE KEY UPDATE reportYear = VALUES(reportYear)`,
+                    { replacements: [year], transaction }
+                );
+                const sequences = await sequelize.query(
+                    'SELECT lastNumber FROM technician_report_sequences WHERE reportYear = ? FOR UPDATE',
+                    { replacements: [year], type: QueryTypes.SELECT, transaction }
+                );
+                const nextNumber = Number(sequences[0]?.lastNumber || 0) + 1;
+                const reportId = `TM-${year}-${String(nextNumber).padStart(4, '0')}`;
+                await sequelize.query(
+                    'UPDATE technician_report_sequences SET lastNumber = ? WHERE reportYear = ?',
+                    { replacements: [nextNumber, year], transaction }
+                );
+                await sequelize.query(
+                    'UPDATE equipment_technician_reports SET reportId = ? WHERE id = ?',
+                    { replacements: [reportId, report.id], transaction }
+                );
+            }
+        }).catch((error) => {
+            legacyMaintenanceMigrationPromise = null;
+            throw error;
+        });
+    }
+    await legacyMaintenanceMigrationPromise;
+}
 
 export default EquipmentTechnicianReport;

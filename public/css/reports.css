@@ -1,0 +1,413 @@
+/* Report workspace: clear the fixed header, tighten the filters, and contain long tables. */
+html body.app-shell.reports-page .reports-page-header > :is(h1, .comlab-page-heading-title, .reports-page-title) {
+  display: none !important;
+}
+
+html body.app-shell.reports-page .main-container > .comlab-page-header-spacer {
+  box-sizing: border-box !important;
+  height: 3.05rem !important;
+  min-height: 3.05rem !important;
+  margin: 0 0 .6rem !important;
+}
+
+html body.app-shell.reports-page .system-dashboard-heading-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .65rem;
+}
+
+html body.app-shell.reports-page .page-content {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
+  min-height: calc(100vh - 4rem);
+  min-height: calc(100dvh - 4rem);
+  flex-direction: column;
+  gap: .85rem;
+  padding-right: clamp(.75rem, 1.5vw, 1.25rem) !important;
+  padding-bottom: 1rem !important;
+  padding-left: clamp(.75rem, 1.5vw, 1.25rem) !important;
+}
+
+html body.app-shell.reports-page .page-content > .report-card-surface {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  padding: clamp(.85rem, 1.2vw, 1.1rem) !important;
+  border: 1px solid rgba(74, 222, 128, .2) !important;
+  border-radius: 1.1rem !important;
+  box-shadow: 0 10px 28px rgba(6, 64, 43, .1) !important;
+}
+
+html body.app-shell.reports-page #reportFiltersForm {
+  min-width: 0;
+}
+
+html body.app-shell.reports-page .report-builder-intro {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .7rem;
+  margin-bottom: .8rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid rgba(74, 222, 128, .16);
+}
+
+html body.app-shell.reports-page .report-builder-icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 2.35rem;
+  place-items: center;
+  border: 1px solid rgba(34, 197, 94, .22);
+  border-radius: .75rem;
+  background: rgba(34, 197, 94, .1);
+  color: #16844a;
+}
+
+html body.app-shell.reports-page .report-builder-intro h2 {
+  margin: 0;
+  color: #17231b;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+html body.app-shell.reports-page .report-builder-intro p {
+  margin: .15rem 0 0;
+  color: #5b7564;
+  font-size: .76rem;
+  line-height: 1.4;
+}
+
+html body.app-shell.reports-page .report-filter-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: .65rem .75rem;
+}
+
+html body.app-shell.reports-page .report-filter-grid > div > label {
+  margin-bottom: .32rem !important;
+  color: #315944;
+  font-size: .73rem;
+  font-weight: 750;
+  letter-spacing: .01em;
+}
+
+html body.app-shell.reports-page .report-filter-grid .report-select {
+  min-height: 2.45rem;
+  padding: .45rem .8rem;
+  border-radius: .72rem;
+  font-size: .84rem;
+}
+
+html body.app-shell.reports-page .report-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: .5rem;
+  min-width: 0;
+  margin: 0;
+  padding-top: .65rem;
+  border-top: 1px solid rgba(74, 222, 128, .16);
+}
+
+html body.app-shell.reports-page .report-filter-actions button {
+  box-sizing: border-box;
+  min-width: 8.5rem;
+  min-height: 2.45rem;
+  padding: .45rem .7rem !important;
+  border-radius: .7rem !important;
+  font-size: .78rem !important;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+html body.app-shell.reports-page #generateReportButton {
+  color: #062417 !important;
+}
+
+html body.app-shell.reports-page .report-card-surface > .flex:first-child {
+  align-items: center;
+  gap: .75rem 1rem;
+}
+
+html body.app-shell.reports-page #previewReportTitle {
+  margin-top: 0 !important;
+  color: #13251a !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+}
+
+html body.app-shell.reports-page #reportCountText,
+html body.app-shell.reports-page #generatedMeta {
+  margin-top: .25rem !important;
+}
+
+html body.app-shell.reports-page .reports-export-notice {
+  max-width: 34rem;
+  padding: .5rem .7rem !important;
+  border: 1px solid rgba(74, 222, 128, .2) !important;
+  border-radius: .7rem !important;
+  background: rgba(74, 222, 128, .07) !important;
+  color: #426451 !important;
+  font-size: .74rem !important;
+  line-height: 1.4;
+}
+
+html body.app-shell.reports-page #summaryCards:empty {
+  display: none !important;
+}
+
+html body.app-shell.reports-page .report-table-shell {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(42vh, 25rem);
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #318451 #e7f0ea;
+  border: 1px solid rgba(74, 222, 128, .2) !important;
+  border-radius: .85rem !important;
+  background: #f8fbf9 !important;
+}
+
+html body.app-shell.reports-page .report-table-shell::-webkit-scrollbar {
+  width: .65rem;
+  height: .65rem;
+}
+
+html body.app-shell.reports-page .report-table-shell::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #e7f0ea;
+}
+
+html body.app-shell.reports-page .report-table-shell::-webkit-scrollbar-thumb {
+  border: 1px solid #e7f0ea;
+  border-radius: 999px;
+  background: #318451;
+}
+
+html body.app-shell.reports-page #reportPreviewTable {
+  min-width: 40rem;
+}
+
+html body.app-shell.reports-page #reportPreviewTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+html body.app-shell.reports-page #reportPreviewTable thead th {
+  padding: .72rem .85rem !important;
+  font-size: .8rem !important;
+}
+
+html body.app-shell.reports-page #reportPreviewTable tbody td {
+  padding: .72rem .85rem !important;
+  font-size: .86rem !important;
+}
+
+html body.app-shell.reports-page #reportEmptyState {
+  min-height: 4rem;
+  margin-top: .75rem !important;
+  padding: 1rem !important;
+  border-radius: .85rem !important;
+}
+
+html body.app-shell.reports-page #reportPagination:empty {
+  display: none !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-light .report-card-surface {
+  border-color: #d3e1d7 !important;
+  background: linear-gradient(180deg, #fff, #f8fbf9) !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-light .report-filter-grid > div > label {
+  color: #315944 !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-light .report-builder-intro h2 {
+  color: #17231b !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-light .report-builder-intro p {
+  color: #5b7564 !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-light #previewReportTitle {
+  color: #17231b !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-dark .report-card-surface {
+  border-color: rgba(74, 222, 128, .2) !important;
+  background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-dark .report-filter-grid > div > label,
+html body.app-shell.reports-page .main-container.theme-dark .report-builder-intro h2,
+html body.app-shell.reports-page .main-container.theme-dark #previewReportTitle {
+  color: #e5f4e9 !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-dark .report-builder-intro p {
+  color: #b6d7c8 !important;
+}
+
+html body.app-shell.reports-page .main-container.theme-dark .reports-export-notice {
+  border-color: rgba(74, 222, 128, .2) !important;
+  background: rgba(74, 222, 128, .08) !important;
+  color: #b6d7c8 !important;
+}
+
+@media (max-width: 1020px) {
+  html body.app-shell.reports-page .report-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html body.app-shell.reports-page .report-filter-actions {
+    grid-column: 1 / -1;
+    justify-content: end;
+    margin-top: .1rem;
+    padding-top: .6rem;
+    border-top: 1px solid rgba(74, 222, 128, .16);
+  }
+}
+
+@media (max-width: 600px) {
+  html body.app-shell.reports-page .reports-page-header:not(#comlab-header-specificity) {
+    width: 100% !important;
+    min-height: 2.8rem !important;
+    height: 2.8rem !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .45rem !important;
+    padding: .2rem .55rem !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .system-dashboard-heading-main {
+    min-width: 2.1rem !important;
+    height: 2.2rem !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header #mobileMenuToggle {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    flex: 0 0 2rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .system-dashboard-heading-actions {
+    height: 2.2rem !important;
+    min-width: max-content !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .35rem !important;
+    margin: 0 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .system-dashboard-heading-actions > * {
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .profile-theme-controls {
+    display: inline-flex !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .comlab-notification-button,
+  html body.app-shell.reports-page .reports-page-header .profile-theme-toggle,
+  html body.app-shell.reports-page .reports-page-header .system-profile-badge {
+    height: 2rem !important;
+    min-height: 2rem !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .profile-theme-toggle {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    flex: 0 0 2rem !important;
+    padding: 0 !important;
+  }
+
+  html body.app-shell.reports-page .reports-page-header .system-profile-badge-copy {
+    display: none !important;
+  }
+
+  html body.app-shell.reports-page .main-container > .comlab-page-header-spacer {
+    height: 3rem !important;
+    min-height: 3rem !important;
+  }
+
+  html body.app-shell.reports-page .page-content {
+    gap: .7rem;
+    padding-right: .6rem !important;
+    padding-left: .6rem !important;
+  }
+
+  html body.app-shell.reports-page .report-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .6rem;
+  }
+
+  html body.app-shell.reports-page .report-filter-actions {
+    grid-column: 1;
+    justify-content: stretch;
+  }
+
+  html body.app-shell.reports-page .report-filter-actions button {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  html body.app-shell.reports-page .report-card-surface > .flex:first-child {
+    align-items: flex-start;
+  }
+
+  html body.app-shell.reports-page .reports-export-notice {
+    max-width: 100%;
+  }
+
+  html body.app-shell.reports-page .report-table-shell {
+    max-height: 46vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.app-shell.reports-page * {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

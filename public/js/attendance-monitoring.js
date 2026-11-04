@@ -1,12 +1,10 @@
 (function(){
   const fmtDate = (d)=>{ if(!d) return '-'; const dt=new Date(d); return dt.toLocaleString(); };
   let allSessions = [];
-  let currentPage = 1;
   let activeSearchText = '';
   let activeCampusFilter = '';
   let activeLabFilter = '';
   let activeDateFilter = '';
-  const rowsPerPage = 4;
 
   // Get today's date in local timezone as YYYY-MM-DD
   function getTodayLocal(){
@@ -18,25 +16,37 @@
   }
 
   async function fetchSessions(){
-    const res = await fetch('/api/attendance-sessions');
-    if(!res.ok) return console.error('Failed to fetch sessions');
-    const data = await res.json();
-    syncCampusFilter(data);
-    renderSessions(data);
+    const tbody = document.getElementById('attendanceMonitorTableBody');
+    try {
+      const res = await fetch('/api/instructor/attendance-dashboard', { cache: 'no-store' });
+      if(!res.ok) throw new Error(`Attendance request failed (${res.status})`);
+      const data = await res.json();
+      const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+      syncCampusFilter(sessions);
+      renderSessions(sessions.map((item) => ({
+        ...item,
+        laboratoryRoom: item.laboratory || item.laboratoryRoom || '',
+        createdAt: item.date || item.createdAt,
+        present: item.studentsPresent ?? item.present ?? 0,
+        late: item.studentsLate ?? item.late ?? 0,
+        absent: item.studentsAbsent ?? item.absent ?? 0
+      })));
+    } catch(error) {
+      console.error('Failed to load attendance sessions', error);
+      if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-rose-300" style="padding:2rem;">Unable to load attendance sessions. Please refresh the page and try again.</td></tr>';
+    }
   }
 
   function syncCampusFilter(items){
     const campusFilter = document.getElementById('attendanceCampusFilter');
     if(!campusFilter) return;
+    const selectedCampus = campusFilter.value;
     const campuses = [...new Set((Array.isArray(items) ? items : [])
       .map((item) => String(item.campus || '').trim())
       .filter(Boolean))];
-    if(campuses.length === 1){
-      campusFilter.innerHTML = `<option value="${escapeHtml(campuses[0])}">${escapeHtml(campuses[0])}</option>`;
-      campusFilter.value = campuses[0];
-      campusFilter.disabled = true;
-      campusFilter.setAttribute('aria-label', `Attendance campus: ${campuses[0]}`);
-    }
+    campusFilter.replaceChildren(new Option('All Campuses', ''));
+    campuses.sort((a, b) => a.localeCompare(b)).forEach((campus) => campusFilter.add(new Option(campus, campus)));
+    campusFilter.value = campuses.includes(selectedCampus) ? selectedCampus : '';
   }
 
   function getFilteredSessions(items){
@@ -68,35 +78,12 @@
     const paginationContainer = document.getElementById('attendancePagination');
     const paginationInfo = document.getElementById('attendancePaginationInfo');
     if(!paginationContainer) return;
-    const totalPages = Math.max(1, Math.ceil((rows?.length || 0) / rowsPerPage));
-    currentPage = Math.min(Math.max(1, currentPage), totalPages);
     if(paginationInfo){
-      const startIndex = rows && rows.length ? (currentPage - 1) * rowsPerPage + 1 : 0;
-      const endIndex = rows && rows.length ? Math.min(currentPage * rowsPerPage, rows.length) : 0;
-      paginationInfo.textContent = rows && rows.length ? `Showing ${startIndex}-${endIndex} of ${rows.length}` : 'Showing 0 of 0';
+      paginationInfo.textContent = rows?.length
+        ? `Showing all ${rows.length} sessions • up to 10 visible at a time`
+        : 'Showing 0 sessions';
     }
     paginationContainer.innerHTML = '';
-    if(totalPages <= 1) return;
-    const createButton = (label, page, isActive, isDisabled, isPageNumber = false) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = label;
-      button.disabled = isDisabled;
-      button.className = isPageNumber ? (isActive ? 'attendance-pagination-btn active' : 'attendance-pagination-btn') : 'attendance-pagination-btn';
-      if(isDisabled){ button.classList.add('disabled'); }
-      if(!isDisabled){
-        button.addEventListener('click', ()=>{
-          currentPage = page;
-          renderSessions(allSessions);
-        });
-      }
-      return button;
-    };
-    paginationContainer.appendChild(createButton('Previous', currentPage - 1, false, currentPage <= 1));
-    for(let i = 1; i <= totalPages; i++){
-      paginationContainer.appendChild(createButton(String(i), i, i === currentPage, false, true));
-    }
-    paginationContainer.appendChild(createButton('Next', currentPage + 1, false, currentPage >= totalPages));
   }
 
   function renderSessions(items){
@@ -109,10 +96,6 @@
 
     allSessions = Array.isArray(items) ? items : [];
     const filtered = getFilteredSessions(allSessions);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
-    currentPage = Math.min(Math.max(1, currentPage), totalPages);
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const pageItems = filtered.slice(startIndex, startIndex + rowsPerPage);
 
     tbody.innerHTML = '';
 
@@ -129,10 +112,10 @@
       }
     });
 
-    if(!pageItems.length){
+    if(!filtered.length){
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400" style="padding:2rem;">No attendance sessions match your filters.</td></tr>';
     } else {
-      pageItems.forEach((it) => {
+      filtered.forEach((it) => {
         const tr = document.createElement('tr');
         const totalCount = (it.present||0) + (it.late||0) + (it.absent||0);
         tr.innerHTML = `
@@ -152,7 +135,7 @@
             </div>
           </td>
           <td class="px-4 py-3">
-            <button class="attendance-action-btn view-attendance" data-id="${it.id}" style="white-space:nowrap;">
+            <button class="attendance-action-btn view-attendance" data-id="${it.scheduleId || it.id}" data-session-id="${it.id}" style="white-space:nowrap;">
               <i class="fas fa-eye" style="margin-right:0.35rem;"></i>View Attendance
             </button>
           </td>
@@ -169,13 +152,13 @@
     renderPaginationControls(filtered);
 
     document.querySelectorAll('.view-attendance').forEach((btn) => {
-      btn.addEventListener('click', () => openAttendanceSessionModal(btn.dataset.id));
+      btn.addEventListener('click', () => openAttendanceSessionModal(btn.dataset.id, btn.dataset.sessionId));
     });
   }
 
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
 
-  async function openAttendanceSessionModal(id){
+  async function openAttendanceSessionModal(id, sessionId){
     const modal   = document.getElementById('attendanceSessionModal');
     const content = document.getElementById('attendanceSessionModalContent');
     const title   = document.getElementById('attendanceSessionModalTitle');
@@ -194,7 +177,8 @@
       </div>`;
 
     try{
-      const res = await fetch('/api/attendance-sessions/' + encodeURIComponent(id));
+      const sessionQuery = sessionId ? '?sessionId=' + encodeURIComponent(sessionId) : '';
+      const res = await fetch('/api/attendance-sessions/' + encodeURIComponent(id) + sessionQuery);
       if(!res.ok) throw new Error('Failed to load');
       const data = await res.json();
       const sched = data.schedule || {};
@@ -226,7 +210,7 @@
 
       // --- Session info bar ---
       const sessionInfo = `
-        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;padding:0.875rem 1rem;border-radius:0.75rem;background:rgba(15,36,27,.6);border:1px solid rgba(74,222,128,.15);margin-bottom:0.25rem;">
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;padding:0.875rem 1rem;border-radius:0.75rem;background:rgba(7,17,31,.6);border:1px solid rgba(74,222,128,.15);margin-bottom:0.25rem;">
           ${infoChip('fa-book-open',        sched.subject    || '—')}
           ${infoChip('fa-chalkboard-teacher', sched.instructor || '—')}
           ${infoChip('fa-flask',             sched.laboratoryRoom || '—')}
@@ -242,7 +226,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">
           <input id="attendanceDetailSearch"
             placeholder="Search student ID or name…"
-            style="flex:1;min-width:12rem;padding:0.5rem 0.875rem;border-radius:0.625rem;background:rgba(15,36,27,.7);border:1px solid rgba(74,222,128,.2);color:#f0fdf4;font-size:0.875rem;outline:none;" />
+            style="flex:1;min-width:12rem;padding:0.5rem 0.875rem;border-radius:0.625rem;background:rgba(7,17,31,.7);border:1px solid rgba(74,222,128,.2);color:#f0fdf4;font-size:0.875rem;outline:none;" />
           <button id="exportExcelBtn"
             style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:0.625rem;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:rgb(74,222,128);font-size:0.875rem;font-weight:600;cursor:pointer;transition:background .2s;">
             <i class="fas fa-file-excel"></i>Excel
@@ -283,7 +267,7 @@
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;">
               <thead>
-                <tr style="background:linear-gradient(180deg,rgba(15,36,27,.98),rgba(10,29,21,.98));border-bottom:1px solid rgba(74,222,128,.2);">
+                <tr style="background:linear-gradient(180deg,rgba(7,17,31,.98),rgba(2,6,23,.98));border-bottom:1px solid rgba(74,222,128,.2);">
                   <th class="px-4 py-3" style="text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(167,243,208,.7);">Student ID</th>
                   <th class="px-4 py-3" style="text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(167,243,208,.7);">Full Name</th>
                   <th class="px-4 py-3" style="text-align:left;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(167,243,208,.7);">Status</th>
@@ -313,7 +297,9 @@
       document.getElementById('exportExcelBtn').addEventListener('click', async () => {
         if(!rows.length) return alert('No records to export.');
         try{
-          const resp = await fetch('/api/attendance-sessions/' + encodeURIComponent(id) + '?format=excel', { credentials:'same-origin' });
+          const params = new URLSearchParams({ format: 'excel' });
+          if(sessionId) params.set('sessionId', sessionId);
+          const resp = await fetch('/api/attendance-sessions/' + encodeURIComponent(id) + '?' + params.toString(), { credentials:'same-origin' });
           if(!resp.ok) throw new Error('Failed');
           const blob = await resp.blob();
           const url  = window.URL.createObjectURL(blob);
@@ -396,7 +382,6 @@
   window.closeAttendanceSessionModal = closeAttendanceSessionModal;
 
   function filterAttendanceTable(){
-    currentPage = 1;
     renderSessions(allSessions);
   }
 

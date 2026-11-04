@@ -27,11 +27,10 @@ import { DataTypes, Op } from "sequelize";
 import { MaintenanceRequest, sequelize } from "../models/maintenanceRequestModel.js";
 import { User } from "../models/userModel.js";
 import { Equipment } from "../models/equipmentModel.js";
-import { Attendance } from "../models/attendanceModel.js";
-import { LaboratorySchedule } from "../models/laboratoryScheduleModel.js";
-import { deriveAttendanceStatusFromRecord } from "./attendanceController.js";
 import { logAuditEntry } from "./auditController.js";
 import { getUserCampusFromSession, canManageRecord } from "./campusAuthController.js";
+import EquipmentAuditTrail from "../models/equipmentAuditTrailModel.js";
+import { getArchivedEntityIds } from "../models/archiveRecords.js";
 
 const normalizeStatus = (status) => {
   const normalized = (status || "").toString().trim();
@@ -107,134 +106,20 @@ const ensureMaintenanceTables = async () => {
   ]);
 };
 
-const normalizeStudentIdentifiers = (student) => {
-  const ids = new Set();
-  [student?.student_number, student?.studentId, student?.student_id, student?.id].forEach((value) => {
-    const normalized = String(value || "").trim();
-    if (normalized) ids.add(normalized);
-  });
-  return Array.from(ids);
-};
-
 const getCampusVariants = (campus) => {
   const normalizedCampus = String(campus || "").trim();
   const campusName = normalizedCampus.replace(/\s*Campus\s*$/i, "").trim();
   return [...new Set([normalizedCampus, campusName, `${campusName} Campus`].filter(Boolean))];
 };
 
-const getDayOfWeekName = (date = new Date()) => {
-  const names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return names[date.getDay()] || "";
-};
-
-// Local canonical room map (kept here to avoid cross-file coupling)
-const CANONICAL_ROOM_MAP = {
-  'room 202': 'Laboratory 1 — Room 202',
-  'room202': 'Laboratory 1 — Room 202',
-  'rm 202': 'Laboratory 1 — Room 202',
-  'rm202': 'Laboratory 1 — Room 202',
-  'laboratory 1': 'Laboratory 1 — Room 202',
-  'lab 1': 'Laboratory 1 — Room 202',
-  'lab1': 'Laboratory 1 — Room 202',
-  'laboratory1': 'Laboratory 1 — Room 202',
-  'room 204': 'Laboratory 2 — Room 204',
-  'room204': 'Laboratory 2 — Room 204',
-  'rm 204': 'Laboratory 2 — Room 204',
-  'rm204': 'Laboratory 2 — Room 204',
-  'laboratory 2': 'Laboratory 2 — Room 204',
-  'lab 2': 'Laboratory 2 — Room 204',
-  'lab2': 'Laboratory 2 — Room 204',
-  'laboratory2': 'Laboratory 2 — Room 204'
-};
-
-const normalizeRoomLocal = (value) => {
-  if (!value && value !== '') return null;
-  const key = String(value || '').trim().toLowerCase();
-  if (CANONICAL_ROOM_MAP[key]) return CANONICAL_ROOM_MAP[key];
-  // If already canonical
-  for (const v of Object.values(CANONICAL_ROOM_MAP)) if (String(v).toLowerCase() === key) return v;
-  return String(value || '').trim();
-};
-
-const parseScheduleClockTime = (value, referenceDate = new Date()) => {
-  if (!value) return null;
-
-  const text = String(value).trim();
-  const match = text.match(/^(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)$/i);
-  if (!match) {
-    const fallback = Number(text);
-    if (!Number.isNaN(fallback)) {
-      const date = new Date(referenceDate);
-      date.setHours(0, fallback, 0, 0);
-      return date;
-    }
-    return null;
-  }
-
-  let hours = Number(match[1]);
-  const minutes = Number(match[2] || 0);
-  const meridiem = match[3].toUpperCase();
-
-  if (meridiem === "AM" && hours === 12) hours = 0;
-  if (meridiem === "PM" && hours !== 12) hours += 12;
-
-  const date = new Date(referenceDate);
-  date.setHours(hours, minutes, 0, 0);
-  return date;
-};
-
-const getScheduleAttendanceWindow = (schedule, referenceDate = new Date()) => {
-  if (!schedule) return null;
-
-  const startTime = parseScheduleClockTime(schedule.startTime, referenceDate);
-  const rawEndTime = parseScheduleClockTime(schedule.endTime, referenceDate);
-  if (!startTime || !rawEndTime) return null;
-
-  const endTime = new Date(rawEndTime);
-  if (endTime.getTime() <= startTime.getTime()) {
-    endTime.setTime(endTime.getTime() + 24 * 60 * 60000);
-  }
-
-  return { startTime, endTime };
-};
-
-const findRelevantScheduleForRoom = async (laboratoryRoom, now = new Date()) => {
-  const today = new Date(now);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const candidateDays = [getDayOfWeekName(today), getDayOfWeekName(yesterday)];
-  const schedules = await LaboratorySchedule.findAll({
-    where: {
-      laboratoryRoom,
-      dayOfWeek: { [Op.in]: candidateDays }
-    },
-    order: [["startTime", "ASC"]]
-  });
-
-  const candidates = schedules
-    .map((schedule) => {
-      const scheduleDay = schedule.dayOfWeek;
-      const scheduleDate = scheduleDay === getDayOfWeekName(yesterday) ? yesterday : today;
-      const window = getScheduleAttendanceWindow(schedule, scheduleDate);
-      return window ? { schedule, window, scheduleDate } : null;
-    })
-    .filter(Boolean);
-
-  if (!candidates.length) return null;
-
-  return candidates.find(({ window }) => now >= window.startTime && now < window.endTime) || null;
-};
-
-const getStudentAttendanceStatusForEquipment = async (student, equipmentId) => {
+const getStudentReportAccessForEquipment = async (student, equipmentId) => {
   const equipmentIdentifier = String(equipmentId || "").trim();
-  const rejectionMessage = "You must be marked PRESENT or LATE for the laboratory session before reporting damaged equipment.";
 
   if (!student) {
     return {
       canSubmitReport: false,
       attendanceStatus: "Invalid",
-      attendanceMessage: rejectionMessage
+      attendanceMessage: "User account could not be verified."
     };
   }
 
@@ -242,7 +127,7 @@ const getStudentAttendanceStatusForEquipment = async (student, equipmentId) => {
     return {
       canSubmitReport: false,
       attendanceStatus: "Invalid",
-      attendanceMessage: "Enter an equipment ID to verify your attendance for this laboratory session."
+      attendanceMessage: "Enter an equipment ID to verify the equipment."
     };
   }
 
@@ -279,121 +164,16 @@ const getStudentAttendanceStatusForEquipment = async (student, equipmentId) => {
     };
   }
 
-  const studentIds = normalizeStudentIdentifiers(student);
-  if (!studentIds.length) {
-    return {
-      canSubmitReport: false,
-      attendanceStatus: "Invalid",
-      attendanceMessage: rejectionMessage
-    };
-  }
-
-  const now = new Date();
-  const todayDate = now.toISOString().slice(0, 10);
-  const scheduleMatches = await LaboratorySchedule.findAll({
-    where: {
-      campus: { [Op.or]: [studentCampus, `${studentCampus} Campus`, equipmentCampus, `${equipmentCampus} Campus`] },
-      dayOfWeek: getDayOfWeekName(now)
-    },
-    order: [["startTime", "ASC"]]
-  });
-
-  const currentSessionMatch = await Promise.all(scheduleMatches.map(async (schedule) => {
-    const window = getScheduleAttendanceWindow(schedule, now);
-    if (!window) return null;
-    if (!(now >= window.startTime && now < window.endTime)) return null;
-
-    const attendanceRecord = await Attendance.findOne({
-      where: {
-        studentId: { [Op.in]: studentIds },
-        date: todayDate,
-        status: { [Op.in]: ["Present", "Late"] },
-        [Op.or]: [
-          { laboratoryScheduleId: schedule.id },
-          { lab: normalizeRoomLocal(schedule.laboratoryRoom) },
-          { lab: schedule.laboratoryRoom }
-        ]
-      },
-      order: [["createdAt", "DESC"], ["id", "DESC"]]
-    });
-
-    if (!attendanceRecord) return null;
-    return { schedule, attendanceRecord };
-  }));
-
-  const activeSession = currentSessionMatch.find(Boolean);
-  if (activeSession) {
-    return {
-      canSubmitReport: true,
-      attendanceStatus: activeSession.attendanceRecord.status,
-      attendanceMessage: `Equipment: ${equipment.name} (${equipment.equipmentId}) | Campus: ${equipment.campus} | Status: ${equipment.status || 'Available'} | Report Status: Allowed`,
-      equipmentMeta: {
-        equipmentId: equipment.equipmentId,
-        name: equipment.name,
-        campus: equipment.campus,
-        status: equipment.status || "Available",
-        reportStatus: "Allowed"
-      }
-    };
-  }
-
-  const sameDayAttendance = await Attendance.findOne({
-    where: {
-      studentId: { [Op.in]: studentIds },
-      date: todayDate,
-      status: { [Op.in]: ["Present", "Late"] }
-    },
-    order: [["createdAt", "DESC"], ["id", "DESC"]]
-  });
-
-  if (sameDayAttendance) {
-    return {
-      canSubmitReport: false,
-      attendanceStatus: "Present",
-      attendanceMessage: "Report Not Allowed: Damage reports can only be submitted during your active laboratory session.",
-      equipmentMeta: {
-        equipmentId: equipment.equipmentId,
-        name: equipment.name,
-        campus: equipment.campus,
-        status: equipment.status || "Available",
-        reportStatus: "Not Allowed"
-      }
-    };
-  }
-
-  const anyAttendance = await Attendance.findOne({
-    where: {
-      studentId: { [Op.in]: studentIds },
-      date: todayDate
-    },
-    order: [["createdAt", "DESC"], ["id", "DESC"]]
-  });
-
-  if (anyAttendance) {
-    return {
-      canSubmitReport: false,
-      attendanceStatus: String(anyAttendance.status || "Absent"),
-      attendanceMessage: rejectionMessage,
-      equipmentMeta: {
-        equipmentId: equipment.equipmentId,
-        name: equipment.name,
-        campus: equipment.campus,
-        status: equipment.status || "Available",
-        reportStatus: "Not Allowed"
-      }
-    };
-  }
-
   return {
-    canSubmitReport: false,
-    attendanceStatus: "Absent",
-    attendanceMessage: `Report Not Allowed: ${rejectionMessage}`,
+    canSubmitReport: true,
+    attendanceStatus: "Not required",
+    attendanceMessage: `Equipment: ${equipment.name} (${equipment.equipmentId}) | Campus: ${equipment.campus} | Status: ${equipment.status || "Available"} | Students may report issues at any time.`,
     equipmentMeta: {
       equipmentId: equipment.equipmentId,
       name: equipment.name,
       campus: equipment.campus,
       status: equipment.status || "Available",
-      reportStatus: "Not Allowed"
+      reportStatus: "Allowed"
     }
   };
 };
@@ -403,37 +183,37 @@ const getStudentMaintenanceContext = async (req, equipmentId = null) => {
 
   await ensureMaintenanceTables();
 
-  let student = null;
-  let equipment = [];
-
-  try {
-    student = await User.findByPk(req.session.userId, {
-      attributes: ["id", "name", "student_number", "campus", "role", "email"]
-    });
-  } catch (error) {
-    console.warn("Unable to load student profile for maintenance context:", error.message);
-  }
-
-  try {
-    const studentCampus = String(student?.campus || "").trim();
-    const equipmentRows = studentCampus
-      ? await Equipment.findAll({
-          where: { campus: { [Op.in]: getCampusVariants(studentCampus) } },
-          attributes: ["equipmentId", "name", "laboratoryRoom"],
-          order: [["name", "ASC"], ["equipmentId", "ASC"]]
-        })
-      : [];
-    equipment = equipmentRows.map((item) => ({
-      equipmentId: item.equipmentId,
-      name: item.name,
-      laboratoryRoom: item.laboratoryRoom || null
-    }));
-  } catch (error) {
-    console.warn("Unable to load equipment list for maintenance context:", error.message);
-  }
+  const student = await User.findByPk(req.session.userId, {
+    attributes: ["id", "name", "student_number", "campus", "role", "email"]
+  });
+  const studentCampus = String(student?.campus || "").trim();
+  const archivedEquipmentIds = await getArchivedEntityIds("equipment");
+  const equipmentRows = studentCampus
+    ? await Equipment.findAll({
+        where: {
+          equipmentId: { [Op.notIn]: archivedEquipmentIds },
+          campus: { [Op.in]: getCampusVariants(studentCampus) }
+        },
+        attributes: ["equipmentId", "name", "laboratoryRoom"],
+        order: [["name", "ASC"], ["equipmentId", "ASC"]]
+      })
+    : [];
+  const equipment = equipmentRows.map((item) => ({
+    equipmentId: item.equipmentId,
+    name: item.name,
+    laboratoryRoom: item.laboratoryRoom || null
+  }));
 
   const studentIdentifier = student?.student_number || String(req.session.userId);
-  const attendanceContext = await getStudentAttendanceStatusForEquipment(student, equipmentId);
+  const role = String(student?.role || "").trim().toLowerCase();
+  const isFaculty = role === "faculty" || role === "instructor";
+  const attendanceContext = isFaculty
+    ? {
+        canSubmitReport: false,
+        attendanceStatus: "Not required",
+        attendanceMessage: "Faculty reports do not require student attendance."
+      }
+    : await getStudentReportAccessForEquipment(student, equipmentId);
 
   return {
     student,
@@ -453,10 +233,30 @@ export const getStudentMaintenanceContextRoute = async (req, res) => {
 
   try {
     const context = await getStudentMaintenanceContext(req, equipmentId);
-    if (String(context?.student?.role || "").trim().toLowerCase() !== "student") {
-      return res.status(403).json({ error: "Student access is required." });
+    const role = String(context?.student?.role || "").trim().toLowerCase();
+    if (!["student", "faculty", "instructor"].includes(role)) {
+      return res.status(403).json({ error: "Student or Faculty access is required." });
     }
-    const equipmentMeta = context?.equipmentMeta || null;
+
+    let equipmentMeta = context?.equipmentMeta || null;
+    let canSubmitReport = context?.canSubmitReport || false;
+    let attendanceStatus = context?.attendanceStatus || "Invalid";
+    let attendanceMessage = context?.attendanceMessage || "Unable to verify equipment report access.";
+
+    if (role === "faculty" || role === "instructor") {
+      const equipment = context?.equipment?.find((item) => String(item.equipmentId) === equipmentId);
+      equipmentMeta = equipment ? {
+        equipmentId: equipment.equipmentId,
+        name: equipment.name,
+        campus: context?.student?.campus || null,
+        reportStatus: "Allowed"
+      } : null;
+      canSubmitReport = Boolean(equipmentMeta);
+      attendanceStatus = "Not required";
+      attendanceMessage = equipmentMeta
+        ? `Faculty access verified | Campus: ${equipmentMeta.campus}`
+        : "Select equipment assigned to your campus.";
+    }
 
     return res.json({
       success: true,
@@ -464,9 +264,9 @@ export const getStudentMaintenanceContextRoute = async (req, res) => {
       studentName: context?.studentName || null,
       equipment: context?.equipment || [],
       equipmentMeta,
-      canSubmitReport: context?.canSubmitReport || false,
-      attendanceStatus: context?.attendanceStatus || "Invalid",
-      attendanceMessage: context?.attendanceMessage || "You must be marked PRESENT or LATE for the laboratory session before reporting damaged equipment."
+      canSubmitReport,
+      attendanceStatus,
+      attendanceMessage
     });
   } catch (error) {
     console.error("Failed to load student maintenance context:", error);
@@ -475,12 +275,22 @@ export const getStudentMaintenanceContextRoute = async (req, res) => {
 };
 
 export const createMaintenanceRequest = async (req, res) => {
-  const { equipmentId, equipment_id, description, damageDescription, issueTitle, category, priority } = req.body;
-  const resolvedEquipmentId = equipmentId || equipment_id;
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { equipmentId, equipment_id, description, damageDescription, category, priority, source } = req.body;
+  const resolvedEquipmentId = String(equipmentId || equipment_id || "").trim();
   const resolvedDescription = (description || damageDescription || "").toString().trim();
 
   if (!resolvedEquipmentId || !resolvedDescription) {
     return res.status(400).json({ error: "Equipment and damage description are required." });
+  }
+  if (resolvedDescription.length > 3000) {
+    return res.status(400).json({ error: "The issue description must be 3,000 characters or fewer." });
+  }
+  if (priority && !["Low", "Medium", "High", "Critical"].includes(priority)) {
+    return res.status(400).json({ error: "Priority must be Low, Medium, High, or Critical." });
   }
 
   try {
@@ -488,18 +298,20 @@ export const createMaintenanceRequest = async (req, res) => {
     await ensureMaintenanceTables();
     await ensureMaintenanceRequestColumns();
 
-    const studentContext = await getStudentMaintenanceContext(req);
-    let student = null;
-
-    try {
-      student = await User.findByPk(req.session?.userId, {
-        attributes: ["id", "name", "student_number", "campus", "role", "email"]
-      });
-    } catch (error) {
-      console.warn("Unable to load student record while creating maintenance request:", error.message);
+    const student = await User.findByPk(req.session.userId, {
+      attributes: ["id", "name", "student_number", "campus", "role", "email"]
+    });
+    if (!student) {
+      return res.status(401).json({ error: "User account could not be verified." });
     }
 
-    const studentCampus = String((student?.campus || studentContext?.student?.campus || "").trim());
+    const role = String(student.role || "").trim().toLowerCase();
+    const isFaculty = role === "faculty" || role === "instructor";
+    if (role !== "student" && !isFaculty) {
+      return res.status(403).json({ error: "Only Students and Faculty may report equipment issues." });
+    }
+
+    const studentCampus = String(student.campus || "").trim();
     if (!studentCampus) {
       return res.status(403).json({ error: "Report Not Allowed: Your account does not have a campus assigned." });
     }
@@ -520,17 +332,23 @@ export const createMaintenanceRequest = async (req, res) => {
       });
     }
 
-    const attendanceCheck = await getStudentAttendanceStatusForEquipment(student || studentContext?.student, resolvedEquipmentId);
-    if (!attendanceCheck.canSubmitReport) {
-      return res.status(403).json({
-        error: attendanceCheck.attendanceMessage || "You must be marked PRESENT or LATE for the laboratory session before reporting damaged equipment."
-      });
+    if (!isFaculty) {
+      const attendanceCheck = await getStudentReportAccessForEquipment(student, resolvedEquipmentId);
+      if (!attendanceCheck.canSubmitReport) {
+        return res.status(403).json({
+          error: attendanceCheck.attendanceMessage || "Unable to verify equipment report access."
+        });
+      }
     }
 
+    const reportCategory = ["Equipment Damage", "Equipment Missing", "Connectivity", "Other"].includes(category)
+      ? category
+      : "Equipment Damage";
+    const reportPriority = ["Low", "Medium", "High", "Critical"].includes(priority) ? priority : "Medium";
     const equipmentCampus = equipment?.campus || "Main";
     const maintenance = await MaintenanceRequest.create({
       student_id: req.session?.userId || null,
-      student_name: student?.name || studentContext?.studentName || null,
+      student_name: student.name || null,
       equipment_id: resolvedEquipmentId,
       serialNumber: equipment.serialNumber || null,
       laboratory_id: null,
@@ -542,13 +360,43 @@ export const createMaintenanceRequest = async (req, res) => {
       equipmentId: resolvedEquipmentId,
       reportedBy: req.session?.userId || null,
       campus: equipmentCampus,
-      issueTitle: (issueTitle && issueTitle.trim()) || `Equipment damage: ${resolvedEquipmentId}`,
+      issueTitle: `${reportCategory}: ${resolvedEquipmentId}`,
       description: resolvedDescription,
-      category: (category && category.trim()) || "Equipment Damage",
-      priority: priority || "Medium",
+      category: reportCategory,
+      priority: reportPriority,
       status: "Pending",
       dateReported: new Date()
     });
+
+    const auditRole = isFaculty ? "faculty" : "student";
+    try {
+      await EquipmentAuditTrail.create({
+        equipmentId: equipment.id,
+        serialNumber: equipment.serialNumber || null,
+        actionType: "equipment_issue_reported",
+        actionDescription: `${reportCategory} reported for ${equipment.name || resolvedEquipmentId} (${resolvedEquipmentId}) by ${student.name || `user #${student.id}`} (${auditRole})${source === "qr_scan" ? " after QR scan" : ""}.`,
+        performedBy: student.id,
+        performedByName: student.name || null,
+        userRole: auditRole,
+        ipAddress: req.ip || null,
+        userAgent: req.get("user-agent") || null,
+        beforeState: null,
+        afterState: {
+          maintenanceRequestId: maintenance.id,
+          equipmentId: resolvedEquipmentId,
+          category: reportCategory,
+          priority: reportPriority,
+          reporterId: student.id,
+          reporterName: student.name || null,
+          reporterRole: auditRole,
+          source: source === "qr_scan" ? "qr_scan" : "report_form",
+          description: resolvedDescription
+        },
+        actionTimestamp: new Date()
+      });
+    } catch (auditError) {
+      console.error("[maintenance] Report was created but its equipment audit event could not be recorded:", auditError);
+    }
 
     try {
       const total = await MaintenanceRequest.count({ where: { equipmentId: resolvedEquipmentId, description: resolvedDescription } });
@@ -614,6 +462,7 @@ export const getMaintenanceHistoryForEquipment = async (req, res) => {
 
     const records = await MaintenanceRequest.findAll({
       where: {
+        id: { [Op.notIn]: await getArchivedEntityIds("maintenance-report") },
         [Op.or]: [
           { equipmentId: equipment.equipmentId },
           ...(equipment.serialNumber ? [{ serialNumber: equipment.serialNumber }] : [])
@@ -639,7 +488,7 @@ export const getMaintenanceHistoryForEquipment = async (req, res) => {
 };
 
 const buildMaintenanceWhereClause = (req, extra = {}) => {
-  const role = req.session?.userRole?.toLowerCase();
+  const role = String(req.session?.userRole || "").toLowerCase();
   const userId = req.session?.userId;
   const userCampus = req.session?.userCampus;
   const whereClause = { ...extra };
@@ -668,7 +517,7 @@ const buildMaintenanceWhereClause = (req, extra = {}) => {
     return whereClause;
   }
 
-  if (role === "student") {
+  if (role === "student" || role === "faculty" || role === "instructor") {
     whereClause[Op.or] = [
       { student_id: userId },
       { reportedBy: userId }
@@ -690,6 +539,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
     await ensureMaintenanceRequestColumns();
 
     const whereClause = buildMaintenanceWhereClause(req);
+    whereClause.id = { [Op.notIn]: await getArchivedEntityIds("maintenance-report") };
 
     if (priority) whereClause.priority = priority;
     if (equipmentId) whereClause.equipmentId = equipmentId;
@@ -702,7 +552,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
         {
           model: User,
           as: "reporter",
-          attributes: ["id", "name", "email"]
+          attributes: ["id", "name", "email", "role", "program", "year", "section", "college"]
         },
         {
           model: User,
@@ -712,7 +562,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
         {
           model: Equipment,
           as: "equipment",
-          attributes: ["equipmentId", "name", "campus", "status"]
+          attributes: ["equipmentId", "name", "campus", "laboratoryRoom", "location", "status"]
         }
       ]
     });
@@ -734,11 +584,37 @@ export const getAllMaintenanceRequests = async (req, res) => {
       return true;
     });
 
+    const fallbackReporterIds = [...new Set(filtered
+      .filter((record) => (
+        !record.reporter?.program ||
+        !record.reporter?.year ||
+        !record.reporter?.section ||
+        !record.reporter?.college
+      ))
+      .flatMap((record) => [record.student_id, record.reportedBy])
+      .map(Number)
+      .filter((id) => Number.isInteger(id) && id > 0))];
+    const fallbackReporters = fallbackReporterIds.length
+      ? await User.findAll({
+          where: { id: { [Op.in]: fallbackReporterIds } },
+          attributes: ["id", "name", "email", "role", "program", "year", "section", "college"]
+        })
+      : [];
+    const fallbackReportersById = new Map(fallbackReporters.map((reporter) => {
+      const data = reporter.toJSON();
+      return [Number(data.id), data];
+    }));
+
     const pendingCount = filtered.filter(r => normalizeStatus(r.status) === 'Pending').length;
     console.log('[maintenance] pending count', pendingCount);
 
     const formatted = filtered.map((record) => {
       const data = record.toJSON();
+      const linkedReporter = data.reporter || null;
+      const studentReporter = fallbackReportersById.get(Number(data.reportedBy)) ||
+        fallbackReportersById.get(Number(data.student_id)) ||
+        null;
+      const reporter = linkedReporter || studentReporter;
       const normalizedStatus = normalizeStatus(data.status);
       const timestamp = data.created_at || data.createdAt || data.dateReported;
       const equipmentStatus = data.equipment?.status || data.equipmentStatus || "Serviceable";
@@ -749,12 +625,20 @@ export const getAllMaintenanceRequests = async (req, res) => {
         status: normalizedStatus,
         campus: recordCampus,
         equipmentStatus,
-        reporterName: data.reporter?.name || data.student_name || "Guest Student",
-        reporterEmail: data.reporter?.email || null,
+        reporter,
+        reporterName: reporter?.name || data.student_name || "Guest Student",
+        reporterEmail: reporter?.email || null,
+        reporterRole: reporter?.role || null,
+        reporterProgram: linkedReporter?.program || studentReporter?.program || null,
+        reporterYear: linkedReporter?.year || studentReporter?.year || null,
+        reporterSection: linkedReporter?.section || studentReporter?.section || null,
+        reporterCollege: linkedReporter?.college || studentReporter?.college || null,
         technicianName: data.technician?.name || null,
         technicianEmail: data.technician?.email || null,
         equipmentName: data.equipment?.name || data.equipment_id || "Unknown Equipment",
         equipmentId: data.equipment_id || data.equipmentId || null,
+        laboratoryRoom: data.equipment?.laboratoryRoom || data.laboratory_room || null,
+        equipmentLocation: data.equipment?.location || null,
         resolvedBy: data.resolvedBy || null,
         resolvedDate: data.dateResolved || null,
         dateReported: data.dateReported || data.created_at || data.createdAt || null,
@@ -772,11 +656,16 @@ export const getAllMaintenanceRequests = async (req, res) => {
 export const getMaintenanceRequestById = async (req, res) => {
   const { id } = req.params;
 
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
     await ensureMaintenanceTables();
     await ensureMaintenanceRequestColumns();
 
-    const maintenance = await MaintenanceRequest.findByPk(id, {
+    const maintenance = await MaintenanceRequest.findOne({
+      where: { id: { [Op.eq]: id, [Op.notIn]: await getArchivedEntityIds("maintenance-report") } },
       include: [
         {
           model: User,
@@ -807,6 +696,14 @@ export const getMaintenanceRequestById = async (req, res) => {
     }
 
     const data = maintenance.toJSON();
+    const role = String(req.session?.userRole || "").toLowerCase();
+    if (
+      !["admin", "technician"].includes(role) &&
+      Number(data.reportedBy || data.student_id) !== Number(req.session.userId)
+    ) {
+      return res.status(403).json({ error: "You do not have permission to view this maintenance request." });
+    }
+
     return res.json({
       ...data,
       status: normalizeStatus(data.status),
@@ -823,6 +720,11 @@ export const getMaintenanceRequestById = async (req, res) => {
 };
 
 export const updateMaintenanceStatus = async (req, res) => {
+  const role = String(req.session?.userRole || "").toLowerCase();
+  if (!req.session?.userId || !["admin", "technician"].includes(role)) {
+    return res.status(403).json({ error: "Only Admin or Technician may update maintenance request status." });
+  }
+
   const { id } = req.params;
   const { status, resolvedBy } = req.body;
 
@@ -840,7 +742,9 @@ export const updateMaintenanceStatus = async (req, res) => {
     await ensureMaintenanceTables();
     await ensureMaintenanceRequestColumns();
 
-    const maintenance = await MaintenanceRequest.findByPk(id);
+    const maintenance = await MaintenanceRequest.findOne({
+      where: { id: { [Op.eq]: id, [Op.notIn]: await getArchivedEntityIds("maintenance-report") } }
+    });
 
     if (!maintenance) {
       return res.status(404).json({ error: "Maintenance request not found." });
@@ -919,7 +823,9 @@ export const assignTechnician = async (req, res) => {
   }
 
   try {
-    const maintenance = await MaintenanceRequest.findByPk(id);
+    const maintenance = await MaintenanceRequest.findOne({
+      where: { id: { [Op.eq]: id, [Op.notIn]: await getArchivedEntityIds("maintenance-report") } }
+    });
 
     if (!maintenance) {
       return res.status(404).json({ error: "Maintenance request not found." });
@@ -955,6 +861,7 @@ export const getMaintenanceSummary = async (req, res) => {
 
   try {
     const whereClause = buildMaintenanceWhereClause(req);
+    whereClause.id = { [Op.notIn]: await getArchivedEntityIds("maintenance-report") };
 
     const allRequests = await MaintenanceRequest.findAll({ where: whereClause, attributes: ["id", "status"] });
     console.log('[maintenance] dashboard query result count', Array.isArray(allRequests) ? allRequests.length : 0);
@@ -997,8 +904,11 @@ export const getTechnicianActivities = async (req, res) => {
 
   try {
     const technicians = await User.findAll({ where: { role: "technician" }, attributes: ["id", "name", "email"] });
+    const archivedRequestIds = await getArchivedEntityIds("maintenance-report");
     const activityData = await Promise.all(technicians.map(async (tech) => {
-      const assignedRequests = await MaintenanceRequest.findAll({ where: { assignedTo: tech.id } });
+      const assignedRequests = await MaintenanceRequest.findAll({
+        where: { assignedTo: tech.id, id: { [Op.notIn]: archivedRequestIds } }
+      });
       const inProgressTasks = assignedRequests.filter((request) => normalizeStatus(request.status) === "In Progress").length;
       const resolvedTasks = assignedRequests.filter((request) => normalizeStatus(request.status) === "Resolved").length;
       const latestRequest = assignedRequests.sort((left, right) => new Date(right.created_at || right.createdAt || right.dateReported) - new Date(left.created_at || left.createdAt || left.dateReported))[0];
@@ -1020,31 +930,5 @@ export const getTechnicianActivities = async (req, res) => {
 };
 
 export const deleteMaintenanceRequest = async (req, res) => {
-  const { id } = req.params;
-
-  if (!req.session?.userId || req.session.userRole?.toLowerCase() !== "technician" && req.session.userRole?.toLowerCase() !== "admin") {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-
-  try {
-    const removed = await MaintenanceRequest.destroy({ where: { id } });
-
-    if (!removed) {
-      return res.status(404).json({ error: "Maintenance request not found." });
-    }
-    await logAuditEntry(req, {
-      action: "Maintenance Request Deleted",
-      module: "Maintenance Monitoring",
-      resourceId: id,
-      description: `Maintenance request ${id} was deleted.`,
-      details: { requestId: id }
-    });
-
-    return res.json({
-      success: true,
-      message: "Maintenance request deleted successfully."
-    });
-  } catch (error) {
-    return res.status(500).json({ error: "Failed to delete maintenance request." });
-  }
+  return res.status(410).json({ error: "Permanent deletion is disabled. Use Archive instead." });
 };

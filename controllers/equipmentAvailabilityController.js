@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { Equipment } from "../models/equipmentModel.js";
 import { BorrowRecord } from "../models/borrowRecordModel.js";
+import { getArchivedEntityIds } from "../models/archiveRecords.js";
 import { User } from "../models/userModel.js";
 import { getUserAuthContext, isAdminRole, isTechnicianRole } from "./campusAuthController.js";
 
@@ -39,6 +40,7 @@ function isCurrentlyBorrowed(record, now = new Date()) {
   if (status !== "approved" && status !== "borrowed") return false;
 
   const start = parseRecordDate(record, "borrowDate", "borrowStartTime", "00:00");
+  if (!record?.expectedReturnDate) return !start || start <= now;
   const end = parseRecordDate(record, "expectedReturnDate", "expectedReturnTime", "23:59");
   if (!start || !end) return status === "borrowed";
   return start <= now && now <= end;
@@ -61,7 +63,7 @@ function buildHistoryResponse(record) {
     expectedReturnDate: toDateValue(item.expectedReturnDate),
     expectedReturnTime: item.expectedReturnTime || null,
     returnDate: toDateValue(item.returnDate),
-    returnTime: null,
+    returnTime: item.returnTime || null,
     status: item.status,
     condition: item.condition || null,
     purpose: item.purpose || null,
@@ -70,7 +72,7 @@ function buildHistoryResponse(record) {
   };
 }
 
-async function getAdminCampusScope(req, res) {
+async function getAdminCampusScope(req, res, { allowFaculty = false } = {}) {
   const context = await getUserAuthContext(req);
   if (!context.userId) {
     res.status(401).json({ error: "Please log in to view equipment availability." });
@@ -84,7 +86,8 @@ async function getAdminCampusScope(req, res) {
   }
 
   const userCampus = String(user.campus || "").trim();
-  if (!isAdminRole(user.role) && !isTechnicianRole(user.role)) {
+  const isFaculty = ["faculty", "instructor"].includes(String(user.role || "").trim().toLowerCase());
+  if (!isAdminRole(user.role) && !isTechnicianRole(user.role) && !(allowFaculty && isFaculty)) {
     res.status(403).json({ error: "Admin or technician access is required." });
     return null;
   }
@@ -100,10 +103,10 @@ async function getAdminCampusScope(req, res) {
 
 export const listEquipmentAvailability = async (req, res) => {
   try {
-    const scope = await getAdminCampusScope(req, res);
+    const scope = await getAdminCampusScope(req, res, { allowFaculty: true });
     if (!scope) return;
 
-    const [equipment, borrowRecords] = await Promise.all([
+    const [equipment, borrowRecords, archivedEquipmentIds] = await Promise.all([
       Equipment.findAll({
         where: { campus: { [Op.in]: scope.campusVariants } },
         order: [["name", "ASC"], ["equipmentId", "ASC"]]
@@ -111,12 +114,14 @@ export const listEquipmentAvailability = async (req, res) => {
       BorrowRecord.findAll({
         where: { campus: { [Op.in]: scope.campusVariants } },
         order: [["borrowDate", "DESC"], ["created_at", "DESC"]]
-      })
+      }),
+      getArchivedEntityIds("equipment")
     ]);
 
     const validRecords = borrowRecords.filter(isValidBorrowRecord);
+    const archivedEquipment = new Set(archivedEquipmentIds);
     const now = new Date();
-    const response = equipment.map((item) => {
+    const response = equipment.filter((item) => !archivedEquipment.has(String(item.equipmentId))).map((item) => {
       const itemRecords = validRecords.filter((record) => isMatchingEquipmentReference(record, item));
       const status = String(item.status || "Serviceable");
       const unavailable = ["unserviceable", "lost", "missing", "under maintenance", "for repair", "for disposal"].includes(status.toLowerCase());
@@ -147,9 +152,10 @@ export const getEquipmentBorrowingHistory = async (req, res) => {
     const scope = await getAdminCampusScope(req, res);
     if (!scope) return;
 
+    const archivedEquipmentIds = await getArchivedEntityIds("equipment");
     const equipment = await Equipment.findOne({
       where: {
-        equipmentId: req.params.equipmentId,
+        equipmentId: { [Op.eq]: req.params.equipmentId, [Op.notIn]: archivedEquipmentIds },
         campus: { [Op.in]: scope.campusVariants }
       }
     });

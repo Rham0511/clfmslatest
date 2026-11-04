@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#062719">
+  <title>ComLab • Offline</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 1.25rem; background: #062719; color: #effff4; font: 16px/1.5 system-ui, sans-serif; }
+    main { width: min(100%, 28rem); padding: 2rem; border: 1px solid #1e6a46; border-radius: 1.25rem; background: #0a3322; text-align: center; box-shadow: 0 24px 70px #0005; }
+    img { width: 4rem; height: 4rem; }
+    h1 { margin: 1rem 0 .35rem; font-size: 1.4rem; }
+    p { margin: .3rem 0 1.2rem; color: #c4e5d1; }
+    button { min-height: 2.75rem; padding: .65rem 1.1rem; border: 0; border-radius: .8rem; background: #22c55e; color: #052719; font: inherit; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/images/comlab-app-192.png" alt="">
+    <h1>You're offline</h1>
+    <p>Reconnect to the internet to use ComLab and load the latest information.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

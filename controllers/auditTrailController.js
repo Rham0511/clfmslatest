@@ -5,7 +5,21 @@
 
 import EquipmentAuditTrail from '../models/equipmentAuditTrailModel.js';
 import { Equipment } from '../models/equipmentModel.js';
+import { User } from '../models/userModel.js';
 import { Op } from 'sequelize';
+
+function getAuditStateObject(state) {
+    if (!state) return {};
+    if (typeof state === 'object') return state;
+    if (typeof state !== 'string') return {};
+    try {
+        const parsed = JSON.parse(state);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+        console.error('Failed to parse equipment audit state:', error);
+        return {};
+    }
+}
 
 /**
  * Get all audit trail entries with filtering
@@ -52,13 +66,32 @@ async function getAuditTrail(req, res) {
                 attributes: ['id', 'equipmentId', 'name']
             })
             : [];
+        const performerIds = [...new Set(rows.map((row) => Number(row.performedBy)).filter(Number.isInteger))];
+        const performers = performerIds.length
+            ? await User.findAll({
+                where: { id: { [Op.in]: performerIds } },
+                attributes: ['id', 'college', 'program', 'year', 'section']
+            })
+            : [];
         const equipmentById = new Map(equipmentRecords.map((equipment) => [equipment.id, equipment]));
+        const performerById = new Map(performers.map((performer) => [Number(performer.id), performer]));
         const trail = rows.map((row) => {
             const equipment = equipmentById.get(row.equipmentId);
+            const performer = performerById.get(Number(row.performedBy));
+            const state = getAuditStateObject(
+                row.actionType === 'accountability_removed' ? row.beforeState : row.afterState
+            );
+            const accountabilityFaculty = state.accountableFaculty || null;
             return {
                 ...row.toJSON(),
                 equipmentCode: equipment?.equipmentId || null,
-                equipmentName: equipment?.name || null
+                equipmentName: equipment?.name || null,
+                accountabilityFacultyName: accountabilityFaculty?.name || null,
+                accountabilityFacultyEmail: accountabilityFaculty?.email || null,
+                performedByCollege: performer?.college || null,
+                performedByProgram: performer?.program || null,
+                performedByYear: performer?.year || null,
+                performedBySection: performer?.section || null
             };
         });
 

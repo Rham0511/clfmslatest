@@ -6,7 +6,24 @@
 import EquipmentInventoryCheck from '../models/equipmentInventoryCheckModel.js';
 import EquipmentInventoryCheckItem from '../models/equipmentInventoryCheckItemModel.js';
 import { Equipment } from '../models/equipmentModel.js';
-import { Op } from 'sequelize';
+import { Op, QueryTypes } from 'sequelize';
+import { sequelize } from '../models/db.js';
+import { formatComputerLabLocation } from '../models/computerLabService.js';
+
+async function addComputerLabNames(checks) {
+    const checkList = Array.isArray(checks) ? checks : [checks];
+    const labIds = [...new Set(checkList.map((check) => Number(check?.computerLabId || 0)).filter(Boolean))];
+    if (!labIds.length) return checkList;
+    const labs = await sequelize.query(
+        'SELECT id, name, roomNumber FROM computer_labs WHERE id IN (:labIds)',
+        { replacements: { labIds }, type: QueryTypes.SELECT }
+    );
+    const names = new Map(labs.map((lab) => [String(lab.id), formatComputerLabLocation(lab)]));
+    return checkList.map((check) => ({
+        ...check.toJSON(),
+        computerLabName: names.get(String(check.computerLabId)) || null
+    }));
+}
 
 /**
  * Generate check ID based on date
@@ -48,7 +65,7 @@ async function getAllChecks(req, res) {
         
         res.json({
             success: true,
-            checks
+            checks: await addComputerLabNames(checks)
         });
         
     } catch (error) {
@@ -90,10 +107,11 @@ async function getCheckById(req, res) {
             order: [['checkedAt', 'ASC']]
         });
         
+        const [enrichedCheck] = await addComputerLabNames([check]);
         res.json({
             success: true,
             check: {
-                ...check.toJSON(),
+                ...enrichedCheck,
                 items
             }
         });

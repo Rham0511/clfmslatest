@@ -62,7 +62,7 @@ export const BorrowRecord = sequelize.define("BorrowRecord", {
   },
   expectedReturnDate: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: true
   },
   expectedReturnTime: {
     type: DataTypes.STRING,

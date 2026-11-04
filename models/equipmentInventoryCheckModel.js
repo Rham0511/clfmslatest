@@ -32,6 +32,11 @@ const EquipmentInventoryCheck = sequelize.define('EquipmentInventoryCheck', {
         allowNull: true,
         comment: 'Specific lab or NULL for entire campus'
     },
+    computerLabId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'computerLabId'
+    },
     performedBy: {
         type: DataTypes.INTEGER,
         allowNull: false,

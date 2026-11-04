@@ -1,4 +1,5 @@
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
+import { randomBytes } from "node:crypto";
 import { sequelize } from "../models/db.js";
 import QRCode from "qrcode";
 import { logAuditEntry } from "./auditController.js";
@@ -7,7 +8,19 @@ import { Attendance } from "../models/attendanceModel.js";
 import { AttendanceSession } from "../models/attendanceSessionModel.js";
 import { LaboratorySchedule } from "../models/laboratoryScheduleModel.js";
 import { ClassListEntry } from "../models/classListEntryModel.js";
+import { getArchivedEntityIds } from "../models/archiveRecords.js";
 import { User } from "../models/userModel.js";
+import XLSX from "xlsx";
+import {
+  Document,
+  HeadingLevel,
+  Packer,
+  Paragraph,
+  Table,
+  TableCell,
+  TableRow,
+  WidthType
+} from "docx";
 
 const getConfiguredBaseUrl = (req = null) => {
   const configuredBaseUrl = process.env.BASE_URL?.trim();
@@ -53,6 +66,56 @@ const escapeHtml = (value) => String(value)
   .replace(/>/g, "&gt;")
   .replace(/\"/g, "&quot;")
   .replace(/'/g, "&#39;");
+
+const normalizeAttendanceYear = (value) => {
+  const normalized = String(value || "").trim().toLocaleLowerCase().replace(/[\s._-]+/g, "");
+  const yearAliases = {
+    "1": "1st Year", "1st": "1st Year", "1styear": "1st Year", "first": "1st Year", "firstyear": "1st Year",
+    "2": "2nd Year", "2nd": "2nd Year", "2ndyear": "2nd Year", "second": "2nd Year", "secondyear": "2nd Year",
+    "3": "3rd Year", "3rd": "3rd Year", "3rdyear": "3rd Year", "third": "3rd Year", "thirdyear": "3rd Year",
+    "4": "4th Year", "4th": "4th Year", "4thyear": "4th Year", "fourth": "4th Year", "fourthyear": "4th Year"
+  };
+  return yearAliases[normalized] || null;
+};
+
+const normalizeAttendanceSection = (value) => String(value || "").trim().replace(/\s+/g, " ").toLocaleUpperCase();
+
+const getAttendanceCohortError = (student, schedule) => {
+  const scheduledYear = normalizeAttendanceYear(schedule?.yearLevel);
+  const scheduledSection = normalizeAttendanceSection(schedule?.section);
+  if (!scheduledYear || !scheduledSection) {
+    return "This schedule does not have a valid year level and section yet. Please contact the administrator before checking in.";
+  }
+
+  const studentYear = normalizeAttendanceYear(student?.year || student?.yearLevel || student?.yearLevelName);
+  const studentSection = normalizeAttendanceSection(student?.section || student?.sectionName);
+  if (!studentYear || !studentSection) {
+    return "Your account is missing a valid year level or section. Please update your student profile before checking in.";
+  }
+
+  if (studentYear !== scheduledYear || studentSection !== scheduledSection) {
+    return `This class is for ${schedule.yearLevel}, Section ${schedule.section}. Your account is registered as ${student.year || student.yearLevel || "unknown year"}, Section ${student.section || student.sectionName || "unknown"}. You cannot attend a different year level or section.`;
+  }
+  return null;
+};
+
+const sendAttendanceCohortError = (req, res, message, status = 403) => {
+  if (req.accepts("html")) {
+    return res.status(status).send(renderAttendancePageHtml({
+      title: "Class Section Mismatch",
+      heading: "You Cannot Attend This Class",
+      message,
+      detailRows: [["Status", "Year level and section do not match"]],
+      statusLabel: "Check-in blocked",
+      primaryLabel: "Return to Student Dashboard",
+      primaryHref: "/student/dashboard",
+      secondaryLabel: "Close",
+      secondaryHref: "#",
+      success: false
+    }));
+  }
+  return res.status(status).json({ success: false, error: message });
+};
 
 const formatDateLabel = (value) => {
   const date = new Date(value);
@@ -181,6 +244,91 @@ const getScheduleAttendanceWindow = (schedule, referenceDate = new Date()) => {
   return { startTime, endTime, presentUntil, lateUntil };
 };
 
+const parseScheduleMinutes = (value) => {
+  const match = String(value || "").trim().match(/^(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  if (minutes > 59 || hours > 24 || (hours === 24 && minutes !== 0)) return null;
+  if (match[3]) {
+    if (hours < 1 || hours > 12) return null;
+    const meridiem = match[3].toUpperCase();
+    if (meridiem === "AM" && hours === 12) hours = 0;
+    if (meridiem === "PM" && hours !== 12) hours += 12;
+  } else if (hours === 24) {
+    hours = 0;
+  }
+  return hours * 60 + minutes;
+};
+
+const getManilaDateTimeParts = (date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    weekday: "long",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date);
+  return Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+};
+
+export const getClassScheduleStatus = (schedule, now = new Date()) => {
+  const dayOrder = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const scheduledDay = dayOrder.find((day) => day.toLowerCase() === String(schedule?.dayOfWeek || "").trim().toLowerCase());
+  const startMinutes = parseScheduleMinutes(schedule?.startTime);
+  const endMinutes = parseScheduleMinutes(schedule?.endTime);
+  if (!scheduledDay || startMinutes === null || endMinutes === null) return "Upcoming";
+
+  const local = getManilaDateTimeParts(now);
+  const today = local.weekday;
+  const currentMinutes = Number(local.hour) * 60 + Number(local.minute);
+  if (today === scheduledDay) {
+    if (endMinutes > startMinutes) {
+      if (currentMinutes >= endMinutes) return "Ended";
+      if (currentMinutes >= startMinutes) return "In Progress";
+      return "Upcoming";
+    }
+    return currentMinutes >= startMinutes ? "In Progress" : "Upcoming";
+  }
+
+  const previousDay = dayOrder[(dayOrder.indexOf(today) + 6) % 7];
+  if (endMinutes <= startMinutes && scheduledDay === previousDay) {
+    return currentMinutes < endMinutes ? "In Progress" : "Ended";
+  }
+  return "Upcoming";
+};
+
+export const getManilaScheduleEndDate = (schedule, now = new Date()) => {
+  const local = getManilaDateTimeParts(now);
+  const dayOrder = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const today = local.weekday;
+  const scheduledDay = dayOrder.find((day) => day.toLowerCase() === String(schedule?.dayOfWeek || "").trim().toLowerCase());
+  const endMinutes = parseScheduleMinutes(schedule?.endTime);
+  const startMinutes = parseScheduleMinutes(schedule?.startTime);
+  if (!scheduledDay || endMinutes === null || startMinutes === null) return null;
+
+  let date = new Date(Date.UTC(Number(local.year), Number(local.month) - 1, Number(local.day)));
+  if (today !== scheduledDay) {
+    const previousDay = dayOrder[(dayOrder.indexOf(today) + 6) % 7];
+    if (endMinutes > startMinutes || previousDay !== scheduledDay) return null;
+  } else if (endMinutes <= startMinutes && Number(local.hour) * 60 + Number(local.minute) < startMinutes) {
+    date.setUTCDate(date.getUTCDate() + 1);
+  }
+
+  const endDayOffset = endMinutes <= startMinutes && today === scheduledDay ? 1 : 0;
+  date.setUTCDate(date.getUTCDate() + endDayOffset);
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    Math.floor(endMinutes / 60) - 8,
+    endMinutes % 60
+  ));
+};
+
 export const getAttendanceStatusForSchedule = (schedule, now = new Date(), referenceDate = now) => {
   const window = getScheduleAttendanceWindow(schedule, referenceDate);
   if (!window) return "Present";
@@ -213,14 +361,143 @@ export const getAttendanceStatusForSchedule = (schedule, now = new Date(), refer
   return "Closed";
 };
 
+export const recordPCStationAttendance = async ({ student, station, transaction, now = new Date() }) => {
+  const studentId = String(student?.student_number || "").trim();
+
+  const getLabNumber = (value) => {
+    const text = String(value || "").trim();
+    const lab = text.match(/(?:computer\s*lab|com\s*lab|laboratory|lab)\s*[-#:]?\s*([12])\b/i)?.[1];
+    if (lab) return lab;
+    const room = text.match(/room\s*(202|204)\b/i)?.[1];
+    return room === "202" ? "1" : room === "204" ? "2" : null;
+  };
+  const stationLabNumber = getLabNumber(station?.location);
+  if (!stationLabNumber) return { recorded: false, reason: "invalid-station-location" };
+
+  const campus = String(student.campus || "").trim().replace(/\s*Campus\s*$/i, "").trim();
+  const candidates = await LaboratorySchedule.findAll({
+    where: {
+      status: { [Op.in]: ["Confirmed", "confirmed", "Active", "active"] },
+      campus: { [Op.in]: [campus, `${campus} Campus`] }
+    },
+    order: [["id", "ASC"]],
+    transaction,
+    lock: transaction?.LOCK?.UPDATE
+  });
+  const archivedScheduleIds = new Set((await getArchivedEntityIds("laboratory-schedule")).map(String));
+  const activeCohortSchedules = candidates.filter((schedule) =>
+    !archivedScheduleIds.has(String(schedule.id)) &&
+    canManageRecord(student.campus, schedule.campus) &&
+    !getAttendanceCohortError(student, schedule) &&
+    getLabNumber(schedule.laboratoryRoom) === stationLabNumber &&
+    getClassScheduleStatus(schedule, now) === "In Progress"
+  );
+
+  if (!activeCohortSchedules.length) return { recorded: false, reason: "no-current-class" };
+  if (activeCohortSchedules.length > 1) return { recorded: false, reason: "multiple-current-classes" };
+
+  const schedule = activeCohortSchedules[0];
+  const classEnd = getManilaScheduleEndDate(schedule, now);
+  const autoLogoutAt = classEnd;
+  if (!studentId) return { recorded: false, reason: "missing-student-id", schedule, autoLogoutAt };
+  const clock = parseScheduleMinutes(schedule.startTime);
+  if (clock === null) return { recorded: false, reason: "invalid-schedule-time", schedule, autoLogoutAt };
+  const local = getManilaDateTimeParts(now);
+  let elapsedMinutes = Number(local.hour) * 60 + Number(local.minute) - clock;
+  if (elapsedMinutes < 0) elapsedMinutes += 24 * 60;
+  const status = elapsedMinutes <= 15 ? "Present" : elapsedMinutes <= 30 ? "Late" : null;
+  if (!status) return { recorded: false, reason: "attendance-window-closed", schedule, autoLogoutAt };
+
+  const date = `${local.year}-${local.month}-${local.day}`;
+  const timeIn = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).format(now);
+  const session = await AttendanceSession.findOne({
+    where: { laboratoryScheduleId: schedule.id },
+    order: [["createdAt", "DESC"]],
+    transaction
+  });
+  const existing = await Attendance.findOne({
+    where: { studentId, laboratoryScheduleId: schedule.id, date },
+    order: [["updatedAt", "DESC"]],
+    transaction,
+    lock: transaction?.LOCK?.UPDATE
+  });
+
+  if (existing && ["Present", "Late"].includes(existing.status)) {
+    if (existing.pcStationSetId !== station.setId) {
+      existing.pcStationSetId = station.setId;
+      await existing.save({ transaction });
+    }
+    return { recorded: true, alreadyRecorded: true, status: existing.status, schedule, stationSetId: station.setId, autoLogoutAt };
+  }
+
+  const attendanceValues = {
+    fullName: student.name || "Student",
+    courseSection: [schedule.yearLevel, schedule.section ? `Section ${schedule.section}` : ""].filter(Boolean).join(" • "),
+    subject: schedule.subject,
+    lab: schedule.laboratoryRoom,
+    instructor: schedule.instructor || "Instructor",
+    timeIn,
+    status,
+    sessionToken: session?.token || null,
+    pcStationSetId: station.setId
+  };
+
+  if (existing) {
+    Object.assign(existing, attendanceValues);
+    await existing.save({ transaction });
+  } else {
+    await Attendance.create({
+      studentId,
+      laboratoryScheduleId: schedule.id,
+      date,
+      ...attendanceValues
+    }, { transaction });
+  }
+
+  return { recorded: true, status, schedule, stationSetId: station.setId, autoLogoutAt };
+};
+
 const getAttendanceStatusForSession = async (session, now = new Date()) => {
   if (!session?.laboratoryScheduleId) return null;
 
   const schedule = await LaboratorySchedule.findByPk(session.laboratoryScheduleId);
   if (!schedule) return null;
 
+  if (session?.intendedStudentUserId) {
+    const classStatus = getClassScheduleStatus(schedule, now);
+    if (classStatus === "Upcoming") return "Not Yet Open";
+    if (classStatus === "Ended") return "Closed";
+    return getAttendanceStatusForSchedule(schedule, now, now);
+  }
+
   const referenceDate = session?.createdAt ? new Date(session.createdAt) : now;
   return getAttendanceStatusForSchedule(schedule, now, referenceDate);
+};
+
+const getNextScheduleEndDate = (schedule, now = new Date()) => {
+  const dayOrder = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const local = getManilaDateTimeParts(now);
+  const currentDay = dayOrder.indexOf(local.weekday);
+  const scheduledDay = dayOrder.findIndex((day) => day.toLowerCase() === String(schedule?.dayOfWeek || "").trim().toLowerCase());
+  const endMinutes = parseScheduleMinutes(schedule?.endTime);
+  if (currentDay < 0 || scheduledDay < 0 || endMinutes === null) return null;
+
+  const daysUntilClass = (scheduledDay - currentDay + 7) % 7;
+  const occurrenceDate = new Date(Date.UTC(Number(local.year), Number(local.month) - 1, Number(local.day) + daysUntilClass));
+  const endDate = new Date(Date.UTC(
+    occurrenceDate.getUTCFullYear(),
+    occurrenceDate.getUTCMonth(),
+    occurrenceDate.getUTCDate(),
+    Math.floor(endMinutes / 60) - 8,
+    endMinutes % 60
+  ));
+
+  return new Date(endDate.getTime() + 15 * 60000);
 };
 
 export const deriveAttendanceStatusFromRecord = (record, schedule, session = null, now = new Date()) => {
@@ -487,10 +764,11 @@ export const createAttendanceSession = async (req, res) => {
     let resolvedTime = time;
     let resolvedRoom = room;
     let resolvedStatus = status;
+    let linkedSchedule = null;
 
     if (resolvedScheduleId) {
-      const schedule = await LaboratorySchedule.findByPk(resolvedScheduleId);
-      if (!schedule) {
+      linkedSchedule = await LaboratorySchedule.findByPk(resolvedScheduleId);
+      if (!linkedSchedule) {
         return res.status(404).json({ error: `Selected schedule ${resolvedScheduleId} was not found.` });
       }
 
@@ -499,15 +777,22 @@ export const createAttendanceSession = async (req, res) => {
       if (!userCampus) {
         return res.status(403).json({ error: "Unauthorized: User campus not found." });
       }
-      if (!canManageRecord(userCampus, schedule.campus)) {
+      if (!canManageRecord(userCampus, linkedSchedule.campus)) {
         return res.status(403).json({ error: "You do not have permission to create attendance sessions for another campus." });
       }
 
-      resolvedTitle = schedule.subject || resolvedTitle;
-      resolvedDay = schedule.dayOfWeek || resolvedDay;
-      resolvedTime = [schedule.startTime, schedule.endTime].filter(Boolean).join(" - ") || resolvedTime;
-      resolvedRoom = schedule.laboratoryRoom || resolvedRoom;
-      resolvedStatus = schedule.status || resolvedStatus;
+      if (getClassScheduleStatus(linkedSchedule, now) === "Ended") {
+        return res.status(409).json({
+          error: "This class has ended. Attendance QR generation is no longer available.",
+          classStatus: "Ended"
+        });
+      }
+
+      resolvedTitle = linkedSchedule.subject || resolvedTitle;
+      resolvedDay = linkedSchedule.dayOfWeek || resolvedDay;
+      resolvedTime = [linkedSchedule.startTime, linkedSchedule.endTime].filter(Boolean).join(" - ") || resolvedTime;
+      resolvedRoom = linkedSchedule.laboratoryRoom || resolvedRoom;
+      resolvedStatus = linkedSchedule.status || resolvedStatus;
     }
 
     if (!resolvedTitle || !resolvedTime || !resolvedRoom) {
@@ -515,8 +800,11 @@ export const createAttendanceSession = async (req, res) => {
     }
 
     const token = `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const expiresAt = new Date(Date.now() + normalizedExpirationMinutes * 60000);
-    const scheduleWindow = resolvedScheduleId ? getScheduleAttendanceWindow(await LaboratorySchedule.findByPk(resolvedScheduleId), now) : null;
+    let expiresAt = new Date(now.getTime() + normalizedExpirationMinutes * 60000);
+    if (linkedSchedule && getClassScheduleStatus(linkedSchedule, now) === "In Progress") {
+      const classEnd = getManilaScheduleEndDate(linkedSchedule, now);
+      if (classEnd && classEnd > now && classEnd < expiresAt) expiresAt = classEnd;
+    }
 
     const session = await AttendanceSession.create({
       token,
@@ -525,7 +813,7 @@ export const createAttendanceSession = async (req, res) => {
       time: resolvedTime,
       room: resolvedRoom,
       status: resolvedStatus,
-      courseSection: req.body.courseSection || null,
+      courseSection: req.body.courseSection || getScheduleCourseSection(linkedSchedule) || null,
       laboratoryScheduleId: resolvedScheduleId || null,
       expiresAt
     });
@@ -540,7 +828,7 @@ export const createAttendanceSession = async (req, res) => {
         const placeholders = classListEntries.filter((entry) => entry.matchStatus === "matched" && entry.studentId).map((entry) => ({
           studentId: entry.studentId,
           fullName: entry.fullName,
-          courseSection: entry.courseSection || "",
+          courseSection: entry.courseSection || getScheduleCourseSection(linkedSchedule) || "",
           subject: session.title,
           lab: session.room,
           instructor: resolvedStatus === "Confirmed" ? "Instructor" : "Instructor",
@@ -603,9 +891,273 @@ export const createAttendanceSession = async (req, res) => {
   }
 };
 
+export const getStudentAttendanceQrRoster = async (req, res) => {
+  try {
+    if (!req.session?.userId) return res.status(401).json({ success: false, error: "Authentication required." });
+    const instructor = await User.findByPk(req.session.userId);
+    if (!instructor || !["faculty", "instructor"].includes(String(instructor.role || "").trim().toLowerCase())) {
+      return res.status(403).json({ success: false, error: "Only faculty instructors can manage student attendance QR codes." });
+    }
+
+    const scheduleId = Number(req.params.scheduleId);
+    if (!Number.isInteger(scheduleId) || scheduleId <= 0) {
+      return res.status(400).json({ success: false, error: "A valid laboratory schedule is required." });
+    }
+    const schedule = await LaboratorySchedule.findByPk(scheduleId);
+    if (!schedule) return res.status(404).json({ success: false, error: "Laboratory schedule not found." });
+    if (Number(schedule.instructorUserId) !== Number(instructor.id)) {
+      return res.status(403).json({ success: false, error: "You can only manage attendance QR codes for your own schedules." });
+    }
+    const instructorCampus = await getUserCampusFromSession(req);
+    if (!instructorCampus || !schedule.campus || !canManageRecord(instructorCampus, schedule.campus)) {
+      return res.status(403).json({ success: false, error: "You do not have permission to manage this schedule." });
+    }
+
+    const roster = await ClassListEntry.findAll({
+      where: { laboratoryScheduleId: schedule.id },
+      order: [["fullName", "ASC"]]
+    });
+    const matchedIds = [...new Set(roster
+      .filter((entry) => String(entry.matchStatus || "").toLowerCase() === "matched" && entry.matchedUserId)
+      .map((entry) => Number(entry.matchedUserId))
+      .filter((id) => Number.isInteger(id) && id > 0))];
+    const students = matchedIds.length
+      ? await User.findAll({ where: { id: { [Op.in]: matchedIds } } })
+      : [];
+    const studentsById = new Map(students
+      .filter((student) =>
+        String(student.role || "").trim().toLowerCase() === "student" &&
+        String(student.student_number || "").trim() &&
+        canManageRecord(student.campus, schedule.campus))
+      .map((student) => [Number(student.id), student]));
+    const eligibleById = new Map();
+    roster.forEach((entry) => {
+      if (String(entry.matchStatus || "").toLowerCase() !== "matched") return;
+      const student = studentsById.get(Number(entry.matchedUserId));
+      if (student && !eligibleById.has(Number(student.id))) {
+        eligibleById.set(Number(student.id), {
+          userId: student.id,
+          studentId: student.student_number,
+          studentName: entry.fullName || student.name
+        });
+      }
+    });
+
+    const eligible = [...eligibleById.values()];
+    if (!eligible.length) {
+      return res.status(409).json({
+        success: false,
+        error: roster.length
+          ? "No class-list students are linked to registered student accounts with Student IDs."
+          : "This schedule has no class list. Add its students to the roster before generating BYOD attendance QR codes."
+      });
+    }
+
+    return res.json({
+      success: true,
+      students: eligible,
+      unmatchedStudentCount: Math.max(0, roster.length - eligible.length)
+    });
+  } catch (error) {
+    return sendJsonError(res, 500, "Unable to load BYOD students for attendance QR codes.", error);
+  }
+};
+
+export const createStudentAttendanceQrs = async (req, res) => {
+  let transaction;
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ success: false, error: "Authentication required." });
+    }
+
+    const instructor = await User.findByPk(req.session.userId);
+    const role = String(instructor?.role || "").trim().toLowerCase();
+    if (!instructor || !["faculty", "instructor"].includes(role)) {
+      return res.status(403).json({ success: false, error: "Only the assigned faculty instructor can generate student attendance QR codes." });
+    }
+
+    const scheduleId = Number(req.params.scheduleId);
+    if (!Number.isInteger(scheduleId) || scheduleId <= 0) {
+      return res.status(400).json({ success: false, error: "A valid laboratory schedule is required." });
+    }
+
+    transaction = await sequelize.transaction();
+    const schedule = await LaboratorySchedule.findByPk(scheduleId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+    if (!schedule) {
+      await transaction.rollback();
+      return res.status(404).json({ success: false, error: "Laboratory schedule not found." });
+    }
+    if (Number(schedule.instructorUserId) !== Number(instructor.id)) {
+      await transaction.rollback();
+      return res.status(403).json({ success: false, error: "You can only generate attendance QR codes for your own schedules." });
+    }
+
+    const instructorCampus = await getUserCampusFromSession(req);
+    if (!instructorCampus || !schedule.campus || !canManageRecord(instructorCampus, schedule.campus)) {
+      await transaction.rollback();
+      return res.status(403).json({ success: false, error: "You do not have permission to manage this schedule." });
+    }
+
+    const now = new Date();
+    if (getClassScheduleStatus(schedule, now) === "Ended") {
+      await transaction.rollback();
+      return res.status(409).json({ success: false, error: "This class has ended. Attendance QR codes can no longer be generated." });
+    }
+
+    const expiresAt = getNextScheduleEndDate(schedule, now);
+    if (!expiresAt || expiresAt <= now) {
+      await transaction.rollback();
+      return res.status(409).json({ success: false, error: "The schedule day or end time is invalid. Ask an administrator to update the schedule." });
+    }
+
+    const roster = await ClassListEntry.findAll({
+      where: { laboratoryScheduleId: schedule.id },
+      order: [["fullName", "ASC"]],
+      transaction
+    });
+    if (!roster.length) {
+      await transaction.rollback();
+      return res.status(409).json({
+        success: false,
+        error: "This schedule has no class list. Add the students to its roster before generating individual attendance QR codes."
+      });
+    }
+
+    const studentUserIds = [...new Set(roster
+      .filter((entry) => String(entry.matchStatus || "").toLowerCase() === "matched" && entry.matchedUserId)
+      .map((entry) => Number(entry.matchedUserId))
+      .filter((id) => Number.isInteger(id) && id > 0))];
+    const registeredStudents = studentUserIds.length
+      ? await User.findAll({ where: { id: { [Op.in]: studentUserIds } }, transaction })
+      : [];
+    const studentsById = new Map(registeredStudents
+      .filter((student) =>
+        String(student.role || "").trim().toLowerCase() === "student" &&
+        String(student.student_number || "").trim() &&
+        canManageRecord(student.campus, schedule.campus))
+      .map((student) => [Number(student.id), student]));
+
+    const eligibleStudents = [...new Map(roster
+      .map((entry) => {
+        if (String(entry.matchStatus || "").toLowerCase() !== "matched") return null;
+        const student = studentsById.get(Number(entry.matchedUserId));
+        return student ? [Number(student.id), { entry, student }] : null;
+      })
+      .filter(Boolean)).values()];
+    if (!eligibleStudents.length) {
+      await transaction.rollback();
+      return res.status(409).json({
+        success: false,
+        error: "No roster students are linked to registered student accounts with Student IDs. Match the class list to student accounts first."
+      });
+    }
+
+    const requestedIds = req.body?.studentUserIds;
+    if (!Array.isArray(requestedIds) || !requestedIds.length) {
+      await transaction.rollback();
+      transaction = null;
+      return res.status(400).json({ success: false, error: "Select at least one BYOD student before generating QR codes." });
+    }
+    const selectedIds = [...new Set(requestedIds.map(Number))];
+    if (selectedIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+      await transaction.rollback();
+      transaction = null;
+      return res.status(400).json({ success: false, error: "The selected student list is invalid." });
+    }
+    const eligibleById = new Map(eligibleStudents.map((item) => [Number(item.student.id), item]));
+    if (selectedIds.some((id) => !eligibleById.has(id))) {
+      await transaction.rollback();
+      transaction = null;
+      return res.status(400).json({ success: false, error: "The selection contains a student who is not on this class roster." });
+    }
+    const selectedStudents = selectedIds.map((id) => eligibleById.get(id));
+
+    const activeSessions = await AttendanceSession.findAll({
+      where: {
+        laboratoryScheduleId: schedule.id,
+        intendedStudentUserId: { [Op.in]: selectedIds },
+        expiresAt: { [Op.gt]: now }
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE
+    });
+    const activeByStudent = new Map(activeSessions.map((session) => [Number(session.intendedStudentUserId), session]));
+    const codes = [];
+    const eligibleStudentIds = new Set(eligibleStudents.map(({ student }) => Number(student.id)));
+    const unmatchedStudentCount = roster.filter((entry) =>
+      String(entry.matchStatus || "").toLowerCase() !== "matched" ||
+      !eligibleStudentIds.has(Number(entry.matchedUserId))
+    ).length;
+
+    for (const { entry, student } of selectedStudents) {
+      let session = activeByStudent.get(Number(student.id));
+      if (!session) {
+        session = await AttendanceSession.create({
+          token: `att-${randomBytes(24).toString("hex")}`,
+          title: schedule.subject,
+          day: schedule.dayOfWeek,
+          time: [schedule.startTime, schedule.endTime].filter(Boolean).join(" - "),
+          room: schedule.laboratoryRoom,
+          courseSection: entry.courseSection || getScheduleCourseSection(schedule),
+          status: schedule.status || "Confirmed",
+          laboratoryScheduleId: schedule.id,
+          intendedStudentUserId: student.id,
+          expiresAt
+        }, { transaction });
+      }
+
+      const scanUrl = buildScanUrl(session.token, req);
+      if (!scanUrl) throw new Error("Unable to construct attendance QR URLs.");
+      const qrCode = await QRCode.toDataURL(scanUrl, {
+        width: 320,
+        margin: 2,
+        errorCorrectionLevel: "H"
+      });
+      codes.push({
+        studentId: student.student_number,
+        studentName: entry.fullName || student.name,
+        qrCode,
+        scanUrl,
+        expiresAt: session.expiresAt
+      });
+    }
+
+    await transaction.commit();
+    transaction = null;
+
+    await logAuditEntry(req, {
+      action: "Student Attendance QR Codes Generated",
+      module: "Attendance Monitoring",
+      resourceId: schedule.id,
+      description: `Generated or reused individual attendance QR codes for ${codes.length} students in schedule ${schedule.id}.`,
+      details: {
+        scheduleId: schedule.id,
+        studentCount: codes.length,
+        unmatchedStudentCount,
+        expiresAt
+      }
+    });
+
+    return res.json({
+      success: true,
+      scheduleId: schedule.id,
+      total: codes.length,
+      unmatchedStudentCount,
+      expiresAt,
+      codes
+    });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    return sendJsonError(res, 500, "Unable to generate individual attendance QR codes.", error);
+  }
+};
+
 const isInstructorRole = (role) => {
-  const normalizedRole = (role || "").toLowerCase();
-  return normalizedRole === "admin" || normalizedRole === "technician" || normalizedRole === "instructor";
+  const normalizedRole = String(role || "").trim().toLowerCase();
+  return ["admin", "technician", "faculty", "instructor"].includes(normalizedRole);
 };
 
 const isAdminRole = (role) => {
@@ -629,9 +1181,15 @@ const getInstructorScheduleScope = async (req) => {
   if (!user) return null;
 
   if (user.role === "student") {
+    const studentIds = [...new Set(
+      [user.student_number, user.id]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    )];
     return {
       kind: "student",
-      studentId: user.student_number || ""
+      userId: user.id,
+      studentIds
     };
   }
 
@@ -639,37 +1197,31 @@ const getInstructorScheduleScope = async (req) => {
     if (!user.campus || !String(user.campus).trim()) {
       return { kind: "instructor", user, schedules: [], scheduleIds: [], sessionTokens: [] };
     }
-    // Admins: by default, treat as owning only schedules they created and also include unowned schedules
-    // Filter by campus
+    // Admins can view attendance sessions for their campus, regardless of who created each schedule.
     const campusFilter = buildAttendanceCampusWhere(user.campus);
+    const archivedScheduleIds = await getArchivedEntityIds("laboratory-schedule");
     
-    const ownedSchedules = await LaboratorySchedule.findAll({
-      where: {
-        ...campusFilter,
-        [Op.or]: [
-          { createdBy: user.id },
-          { createdBy: null }
-        ]
-      },
-      attributes: ["id", "subject", "dayOfWeek", "startTime", "endTime", "laboratoryRoom"]
+    const campusSchedules = await LaboratorySchedule.findAll({
+      where: { ...campusFilter, id: { [Op.notIn]: archivedScheduleIds } },
+      attributes: ["id", "subject", "dayOfWeek", "startTime", "endTime", "laboratoryRoom", "campus", "yearLevel", "section"]
     });
 
-    const ownedScheduleIds = ownedSchedules.map((schedule) => schedule.id);
-    const ownedSessions = await AttendanceSession.findAll({
+    const campusScheduleIds = campusSchedules.map((schedule) => schedule.id);
+    const campusSessions = await AttendanceSession.findAll({
       where: {
-        laboratoryScheduleId: { [Op.in]: ownedScheduleIds }
+        laboratoryScheduleId: { [Op.in]: campusScheduleIds }
       },
       attributes: ["token"]
     });
 
-    const ownedSessionTokens = ownedSessions.map((session) => session.token).filter(Boolean);
+    const campusSessionTokens = campusSessions.map((session) => session.token).filter(Boolean);
 
     return {
       kind: "instructor",
       user,
-      schedules: ownedSchedules,
-      scheduleIds: ownedScheduleIds,
-      sessionTokens: ownedSessionTokens
+      schedules: campusSchedules,
+      scheduleIds: campusScheduleIds,
+      sessionTokens: campusSessionTokens
     };
   }
 
@@ -677,29 +1229,62 @@ const getInstructorScheduleScope = async (req) => {
     return { kind: "other" };
   }
 
-  // For instructors/technicians: use createdBy ownership rather than string matching
-  // Filter by campus
+  const isFaculty = ["faculty", "instructor"].includes(String(user.role || "").trim().toLowerCase());
   if (!user.campus || !String(user.campus).trim()) {
     return { kind: "instructor", user, schedules: [], scheduleIds: [], sessionTokens: [] };
   }
   const campusFilter = buildAttendanceCampusWhere(user.campus);
-  
+  const archivedScheduleIds = await getArchivedEntityIds("laboratory-schedule");
+
   const schedules = await LaboratorySchedule.findAll({
     where: {
-      createdBy: user.id,
-      ...campusFilter
+      ...(isFaculty ? campusFilter : { createdBy: user.id, ...campusFilter }),
+      id: { [Op.notIn]: archivedScheduleIds }
     },
-    attributes: ["id"]
+    attributes: ["id", "subject", "dayOfWeek", "startTime", "endTime", "laboratoryRoom", "campus", "instructor", "instructorUserId", "yearLevel", "section"]
   });
+  const instructorName = String(user.name || "").trim().toLowerCase();
+  const scopedSchedules = isFaculty
+    ? schedules.filter((schedule) =>
+        String(schedule.instructorUserId || "") === String(user.id) ||
+        (!schedule.instructorUserId && instructorName && String(schedule.instructor || "").trim().toLowerCase() === instructorName)
+      )
+    : schedules;
 
-  const scheduleIds = schedules.map((schedule) => schedule.id);
+  const scheduleIds = scopedSchedules.map((schedule) => schedule.id);
   return {
     kind: "instructor",
     user,
-    schedules,
+    schedules: scopedSchedules,
     scheduleIds,
     sessionTokens: []
   };
+};
+
+const getStudentAttendanceIdentityFilter = async (scope) => {
+  const identityConditions = [];
+  if (scope.studentIds?.length) {
+    identityConditions.push({ studentId: { [Op.in]: scope.studentIds } });
+  }
+
+  const linkedAttendance = await sequelize.query(
+    `SELECT DISTINCT attendanceId
+     FROM equipment_usage_logs
+     WHERE userId = :userId
+       AND attendanceId IS NOT NULL`,
+    {
+      replacements: { userId: scope.userId },
+      type: QueryTypes.SELECT
+    }
+  );
+  const linkedAttendanceIds = linkedAttendance
+    .map((record) => Number(record.attendanceId))
+    .filter(Number.isSafeInteger);
+  if (linkedAttendanceIds.length) {
+    identityConditions.push({ id: { [Op.in]: linkedAttendanceIds } });
+  }
+
+  return { [Op.or]: identityConditions };
 };
 
 const getInstructorSessionStatus = (session, records, now = new Date()) => {
@@ -721,6 +1306,14 @@ const getInstructorCourseSection = (session, records) => {
   if (session?.courseSection) return session.courseSection;
   const firstRecord = records[0];
   return firstRecord?.courseSection || "—";
+};
+
+const getScheduleCourseSection = (schedule) => {
+  if (!schedule) return "";
+  return [
+    schedule.yearLevel,
+    schedule.section ? `Section ${schedule.section}` : ""
+  ].filter(Boolean).join(" • ");
 };
 
 const splitCourseSection = (courseSection) => {
@@ -791,7 +1384,7 @@ const getInstructorAttendanceContext = async (req) => {
         day: schedule.dayOfWeek || null,
         time: [schedule.startTime, schedule.endTime].filter(Boolean).join(" - "),
         room: schedule.laboratoryRoom || null,
-        courseSection: null,
+        courseSection: getScheduleCourseSection(schedule) || null,
         status: schedule.status || "Confirmed",
         laboratoryScheduleId: schedule.id,
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year — sessions never auto-expire
@@ -887,7 +1480,8 @@ const getInstructorAttendanceContext = async (req) => {
     const matchedRecords = recordsByToken.get(session.token) || recordsByToken.get(String(session.laboratoryScheduleId || "")) || [];
     const schedule = session.laboratoryScheduleId ? scheduleLookup.get(String(session.laboratoryScheduleId)) : null;
     const roster = rosterBySchedule.get(String(session.laboratoryScheduleId || "")) || [];
-    const courseSection = getInstructorCourseSection(session, matchedRecords);
+    const courseSection = getScheduleCourseSection(schedule) ||
+      getInstructorCourseSection(session, matchedRecords);
     const sectionDetails = splitCourseSection(courseSection);
     const presentCount = matchedRecords.filter((record) => deriveAttendanceStatusFromRecord(record, schedule, session, now) === "Present").length;
     const lateCount = matchedRecords.filter((record) => deriveAttendanceStatusFromRecord(record, schedule, session, now) === "Late").length;
@@ -909,9 +1503,13 @@ const getInstructorAttendanceContext = async (req) => {
       section: sectionDetails.section,
       course: sectionDetails.course,
       laboratory,
+      campus: schedule?.campus || "",
       instructor: session.instructor || schedule?.instructor || matchedRecords[0]?.instructor || "Instructor",
       startTime: schedule?.startTime || null,
       endTime: schedule?.endTime || null,
+      yearLevel: schedule?.yearLevel || null,
+      scheduleSection: schedule?.section || null,
+      classSection: getScheduleCourseSection(schedule) || "—",
       time,
       studentsPresent: presentCount,
       studentsLate: lateCount,
@@ -1033,12 +1631,217 @@ export const getInstructorAttendanceSessionDetails = async (req, res) => {
         course: splitCourseSection(record.courseSection).course,
         section: splitCourseSection(record.courseSection).section,
         timeIn: record.timeIn,
+        pcStationSetId: record.pcStationSetId || null,
         attendanceStatus: deriveAttendanceStatusFromRecord(record, schedule, session, now),
         courseSection: record.courseSection
       }))
     });
   } catch (error) {
     return sendJsonError(res, 500, "Unable to load attendance session details.", error);
+  }
+};
+
+const getFacultyScheduleAttendanceData = async (req, requestedScheduleId = null) => {
+  const scope = await getInstructorScheduleScope(req);
+  if (!scope || scope.kind !== "instructor") {
+    return { status: 403, error: "Faculty access required." };
+  }
+
+  const schedules = requestedScheduleId
+    ? scope.schedules.filter((schedule) => String(schedule.id) === String(requestedScheduleId))
+    : scope.schedules;
+  if (requestedScheduleId && !schedules.length) {
+    return { status: 404, error: "Assigned schedule not found." };
+  }
+
+  const scheduleIds = schedules.map((schedule) => schedule.id);
+  const attendanceQuery = {
+    where: { laboratoryScheduleId: { [Op.in]: scheduleIds } },
+    order: [["date", "DESC"], ["createdAt", "DESC"]]
+  };
+  if (!requestedScheduleId) attendanceQuery.limit = 1000;
+  const records = scheduleIds.length ? await Attendance.findAll(attendanceQuery) : [];
+  const scheduleById = new Map(schedules.map((schedule) => [String(schedule.id), schedule]));
+  const sessions = records.length
+    ? await AttendanceSession.findAll({
+        where: { token: { [Op.in]: [...new Set(records.map((record) => record.sessionToken).filter(Boolean))] } }
+      })
+    : [];
+  const sessionByToken = new Map(sessions.map((session) => [String(session.token), session]));
+  const attendance = records.map((record) => {
+    const schedule = scheduleById.get(String(record.laboratoryScheduleId));
+    return {
+      id: record.id,
+      scheduleId: record.laboratoryScheduleId,
+      subject: record.subject || schedule?.subject || "—",
+      studentId: record.studentId,
+      studentName: record.fullName,
+      courseSection: record.courseSection || getScheduleCourseSection(schedule) || "—",
+      yearLevel: schedule?.yearLevel || null,
+      section: schedule?.section || null,
+      date: record.date,
+      timeIn: record.timeIn,
+      pcStationSetId: record.pcStationSetId || null,
+      status: deriveAttendanceStatusFromRecord(record, schedule, sessionByToken.get(String(record.sessionToken || ""))),
+      recordedAt: record.createdAt
+    };
+  });
+
+  return { schedules, attendance };
+};
+
+export const getFacultyScheduleAttendanceHistory = async (req, res) => {
+  try {
+    const data = await getFacultyScheduleAttendanceData(req, req.params.scheduleId || req.query.scheduleId || null);
+    if (data.error) return res.status(data.status).json({ success: false, error: data.error });
+
+    return res.json({
+      success: true,
+      schedules: data.schedules.map((schedule) => ({
+        id: schedule.id,
+        subject: schedule.subject,
+        dayOfWeek: schedule.dayOfWeek,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        laboratoryRoom: schedule.laboratoryRoom,
+        campus: schedule.campus,
+        yearLevel: schedule.yearLevel,
+        section: schedule.section
+      })),
+      attendance: data.attendance
+    });
+  } catch (error) {
+    return sendJsonError(res, 500, "Unable to load faculty attendance history.", error);
+  }
+};
+
+const formatAttendanceExportDate = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(date);
+};
+
+const countAttendanceStatuses = (attendance) => attendance.reduce((counts, record) => {
+  const status = String(record.status || "").toLowerCase();
+  if (status in counts) counts[status] += 1;
+  return counts;
+}, { present: 0, late: 0, absent: 0 });
+
+export const exportFacultyScheduleAttendanceHistory = async (req, res) => {
+  try {
+    const data = await getFacultyScheduleAttendanceData(req, req.params.scheduleId);
+    if (data.error) return res.status(data.status).json({ success: false, error: data.error });
+    const schedule = data.schedules[0];
+    const attendance = data.attendance;
+    const counts = countAttendanceStatuses(attendance);
+    const format = String(req.query.format || "").toLowerCase();
+    const safeScheduleId = String(schedule.id).replace(/[^a-zA-Z0-9_-]/g, "");
+    const subject = schedule.subject || "Laboratory attendance";
+    const courseSection = [schedule.yearLevel, schedule.section ? `Section ${schedule.section}` : ""]
+      .filter(Boolean)
+      .join(" · ") || "Not set";
+
+    if (format === "xlsx") {
+      const rows = [
+        ["Attendance Report"],
+        ["Subject", subject],
+        ["Instructor", schedule.instructor || ""],
+        ["Campus", schedule.campus || ""],
+        ["Laboratory", schedule.laboratoryRoom || ""],
+        ["Day", schedule.dayOfWeek || ""],
+        ["Scheduled time", [schedule.startTime, schedule.endTime].filter(Boolean).join(" – ")],
+        ["Year level", schedule.yearLevel || ""],
+        ["Section", schedule.section || ""],
+        ["Present", counts.present],
+        ["Late", counts.late],
+        ["Absent", counts.absent],
+        [],
+        ["Attendance ID", "Schedule ID", "Subject", "Campus", "Laboratory", "Day", "Start time", "End time", "Year level", "Section", "Student ID", "Student name", "Course/section", "Class date", "Time in", "PC Set", "Status", "Recorded at"]
+      ];
+      attendance.forEach((record) => rows.push([
+        record.id,
+        record.scheduleId,
+        record.subject,
+        schedule.campus || "",
+        schedule.laboratoryRoom || "",
+        schedule.dayOfWeek || "",
+        schedule.startTime || "",
+        schedule.endTime || "",
+        record.yearLevel || "",
+        record.section || "",
+        record.studentId || "",
+        record.studentName || "",
+        record.courseSection || "",
+        formatAttendanceExportDate(record.date),
+        record.timeIn || "",
+        record.pcStationSetId || "",
+        record.status || "",
+        record.recordedAt ? new Date(record.recordedAt).toISOString() : ""
+      ]));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), "Attendance");
+      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+      res.setHeader("Content-Disposition", `attachment; filename="attendance-${safeScheduleId}.xlsx"`);
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      return res.send(buffer);
+    }
+
+    if (format === "docx") {
+      const headerLabels = ["Student ID", "Student name", "Course / section", "Class date", "Status", "Time in", "PC Set", "Recorded at"];
+      const docRows = [
+        new TableRow({
+          tableHeader: true,
+          children: headerLabels.map((label) => new TableCell({
+            children: [new Paragraph({ text: label, bold: true })],
+            width: { size: 100 / headerLabels.length, type: WidthType.PERCENTAGE }
+          }))
+        }),
+        ...attendance.map((record) => new TableRow({
+          children: [
+            record.studentId,
+            record.studentName,
+            record.courseSection,
+            formatAttendanceExportDate(record.date),
+            record.status,
+            record.timeIn,
+            record.pcStationSetId,
+            record.recordedAt ? new Date(record.recordedAt).toLocaleString("en-PH", { timeZone: "Asia/Manila" }) : ""
+          ].map((value) => new TableCell({
+            children: [new Paragraph({ text: String(value || "—") })],
+            width: { size: 100 / headerLabels.length, type: WidthType.PERCENTAGE }
+          }))
+        }))
+      ];
+      const document = new Document({
+        sections: [{
+          properties: { page: { size: { orientation: "landscape" } } },
+          children: [
+            new Paragraph({ text: "Student Attendance History", heading: HeadingLevel.TITLE }),
+            new Paragraph({ text: [subject, courseSection].filter(Boolean).join(" · ") }),
+            new Paragraph({ text: `${schedule.dayOfWeek || "Day not set"} · ${[schedule.startTime, schedule.endTime].filter(Boolean).join(" – ") || "Time not set"} · ${schedule.laboratoryRoom || "Laboratory not set"}` }),
+            new Paragraph({ text: `Present: ${counts.present}    Late: ${counts.late}    Absent: ${counts.absent}` }),
+            new Paragraph({ text: `Total attendance records: ${attendance.length}` }),
+            new Paragraph({ text: "Attendance records", heading: HeadingLevel.HEADING_2 }),
+            new Table({
+              rows: docRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              columnWidths: Array(headerLabels.length).fill(Math.floor(100 / headerLabels.length))
+            })
+          ]
+        }]
+      });
+      const buffer = await Packer.toBuffer(document);
+      res.setHeader("Content-Disposition", `attachment; filename="attendance-${safeScheduleId}.docx"`);
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      return res.send(buffer);
+    }
+
+    return res.status(400).json({ success: false, error: "Unsupported export format. Use xlsx or docx." });
+  } catch (error) {
+    return sendJsonError(res, 500, "Unable to export faculty attendance history.", error);
   }
 };
 
@@ -1063,19 +1866,19 @@ export const getAttendanceRecords = async (req, res) => {
 
     const scope = await getInstructorScheduleScope(req);
     if (scope?.kind === "student") {
-      where.studentId = scope.studentId;
-      const userCampus = await getUserCampusFromSession(req);
-      if (!userCampus) return res.json([]);
-      const campusSchedules = await LaboratorySchedule.findAll({
-        where: buildAttendanceCampusWhere(userCampus),
-        attributes: ["id"]
-      });
-      where.laboratoryScheduleId = { [Op.in]: campusSchedules.map((schedule) => schedule.id) };
+      const identityFilter = await getStudentAttendanceIdentityFilter(scope);
+      if (!identityFilter[Op.or].length) {
+        return res.status(403).json({ error: "Student ID is not configured for this account." });
+      }
+      where[Op.and] = [...(where[Op.and] || []), identityFilter];
     } else if (scope?.kind === "instructor") {
       const orConditions = [];
       if (scope.scheduleIds?.length) orConditions.push({ laboratoryScheduleId: { [Op.in]: scope.scheduleIds } });
       if (scope.sessionTokens?.length) orConditions.push({ sessionToken: { [Op.in]: scope.sessionTokens } });
-      if (orConditions.length) where[Op.or] = orConditions;
+      if (!orConditions.length) return res.json([]);
+      where[Op.and] = [...(where[Op.and] || []), { [Op.or]: orConditions }];
+    } else {
+      return res.status(scope ? 403 : 401).json({ error: "Not authorized to view attendance records." });
     }
 
     const records = await Attendance.findAll({
@@ -1099,7 +1902,6 @@ export const getAttendanceRecords = async (req, res) => {
 export const getAttendanceStats = async (req, res) => {
   try {
     const scope = await getInstructorScheduleScope(req);
-    const userCampus = await getUserCampusFromSession(req);
     
     // Get TODAY's date range (start and end of day in Manila timezone)
     const now = new Date();
@@ -1108,20 +1910,48 @@ export const getAttendanceStats = async (req, res) => {
     const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
     if (scope?.kind === "student") {
-      const studentId = scope.studentId;
-      if (!userCampus) return res.status(403).json({ error: "Unauthorized: User campus not found." });
-      
-      const campusSchedules = await LaboratorySchedule.findAll({
-        where: buildAttendanceCampusWhere(userCampus),
-        attributes: ["id"]
-      });
+      const period = ["thisWeek", "lastWeek", "thisMonth", "lastMonth"].includes(req.query.period)
+        ? req.query.period
+        : "all";
+      const manilaToday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+      const tomorrow = new Date(manilaToday);
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      const weekStart = new Date(manilaToday);
+      weekStart.setUTCDate(weekStart.getUTCDate() - ((weekStart.getUTCDay() + 6) % 7));
+      const monthStart = new Date(Date.UTC(manilaToday.getUTCFullYear(), manilaToday.getUTCMonth(), 1));
+      const dateKey = (date) => date.toISOString().slice(0, 10);
+      let startDate = null;
+      let endDate = null;
 
-      // Student dashboard cards summarize the same full history shown in attendance records.
+      if (period === "thisWeek") {
+        startDate = dateKey(weekStart);
+        endDate = dateKey(tomorrow);
+      } else if (period === "lastWeek") {
+        const lastWeekStart = new Date(weekStart);
+        lastWeekStart.setUTCDate(lastWeekStart.getUTCDate() - 7);
+        startDate = dateKey(lastWeekStart);
+        endDate = dateKey(weekStart);
+      } else if (period === "thisMonth") {
+        startDate = dateKey(monthStart);
+        endDate = dateKey(tomorrow);
+      } else if (period === "lastMonth") {
+        const lastMonthStart = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() - 1, 1));
+        startDate = dateKey(lastMonthStart);
+        endDate = dateKey(monthStart);
+      }
+
+      // Include the account ID for older records created before attendance
+      // capture consistently used the student's official student number.
+      const identityFilter = await getStudentAttendanceIdentityFilter(scope);
+      if (!identityFilter[Op.or].length) {
+        return res.status(403).json({ error: "Student ID is not configured for this account." });
+      }
+      const attendanceWhere = identityFilter;
+      if (startDate && endDate) {
+        attendanceWhere.date = { [Op.gte]: startDate, [Op.lt]: endDate };
+      }
       const records = await Attendance.findAll({
-        where: {
-          studentId,
-          laboratoryScheduleId: { [Op.in]: campusSchedules.map((schedule) => schedule.id) }
-        },
+        where: attendanceWhere,
         order: [["createdAt", "DESC"]]
       });
 
@@ -1140,20 +1970,14 @@ export const getAttendanceStats = async (req, res) => {
       return res.json({ total, present, late, absent });
     }
 
-    // For instructors: Get TODAY's attendance across all sessions
-    const campusWhere = userCampus ? buildAttendanceCampusWhere(userCampus) : {};
-    
-    const schedules = await LaboratorySchedule.findAll({
-      where: campusWhere,
-      attributes: ["id"]
-    });
-
-    const scheduleIds = schedules.map(s => s.id);
+    if (scope?.kind !== "instructor") {
+      return res.status(scope ? 403 : 401).json({ error: "Not authorized to view attendance statistics." });
+    }
 
     // Count TODAY's attendance records by status
     const todayAttendance = await Attendance.findAll({
       where: {
-        laboratoryScheduleId: { [Op.in]: scheduleIds },
+        laboratoryScheduleId: { [Op.in]: scope.scheduleIds || [] },
         createdAt: {
           [Op.gte]: todayStart,
           [Op.lte]: todayEnd
@@ -1224,21 +2048,67 @@ const buildAttendanceRecordPayload = async (req, session, token) => {
 
 const recordAttendance = async (req, res, token, session) => {
   const payload = await buildAttendanceRecordPayload(req, session, token);
-  if (!payload.student || !payload.studentId) {
+  if (!payload.student || String(payload.student.role || "").trim().toLocaleLowerCase() !== "student" || !payload.studentId) {
     return res.status(403).json({ success: false, error: "Attendance requires a registered student account with an official Student ID." });
+  }
+  if (session?.intendedStudentUserId && Number(session.intendedStudentUserId) !== Number(payload.student.id)) {
+    const message = "This attendance QR code was issued to another student. Please scan the QR code assigned to your name.";
+    if (req.accepts("html")) return res.status(403).send(renderAttendancePageHtml({
+      title: "Student QR Mismatch",
+      heading: "This QR Code Is Not Yours",
+      message,
+      detailRows: [["Status", "Attendance check-in blocked"]],
+      statusLabel: "Wrong student QR",
+      primaryLabel: "Return to Student Dashboard",
+      primaryHref: "/student/dashboard",
+      secondaryLabel: "Close",
+      secondaryHref: "#",
+      success: false
+    }));
+    return res.status(403).json({ success: false, error: message });
+  }
+  if (session?.intendedStudentUserId) {
+    const rosterEntry = await ClassListEntry.findOne({
+      where: {
+        laboratoryScheduleId: session.laboratoryScheduleId,
+        matchedUserId: payload.student.id,
+        matchStatus: "matched"
+      }
+    });
+    if (!rosterEntry) {
+      const message = "You are no longer on this class roster. Contact the instructor if this is a mistake.";
+      if (req.accepts("html")) return res.status(403).send(renderAttendancePageHtml({
+        title: "Not on Class Roster",
+        heading: "Attendance Check-in Blocked",
+        message,
+        detailRows: [["Status", "Student is not on the schedule roster"]],
+        statusLabel: "Roster verification failed",
+        primaryLabel: "Return to Student Dashboard",
+        primaryHref: "/student/dashboard",
+        secondaryLabel: "Close",
+        secondaryHref: "#",
+        success: false
+      }));
+      return res.status(403).json({ success: false, error: message });
+    }
   }
   const now = new Date();
   let schedule = null;
 
-  if (session?.laboratoryScheduleId) {
-    schedule = await LaboratorySchedule.findByPk(session.laboratoryScheduleId);
+  if (session?.laboratoryScheduleId) schedule = await LaboratorySchedule.findByPk(session.laboratoryScheduleId);
+
+  if (!schedule) {
+    return sendAttendanceCohortError(req, res, "This attendance session is not linked to a class schedule, so your class section cannot be verified.", 409);
   }
 
-  if (schedule) {
-    const userCampus = await getUserCampusFromSession(req);
-    if (!userCampus || !schedule.campus || !canManageRecord(userCampus, schedule.campus)) {
-      return res.status(403).json({ success: false, error: "You do not have permission to record attendance for another campus." });
-    }
+  const userCampus = await getUserCampusFromSession(req);
+  if (!userCampus || !schedule.campus || !canManageRecord(userCampus, schedule.campus)) {
+    return res.status(403).json({ success: false, error: "You do not have permission to record attendance for another campus." });
+  }
+  const cohortError = getAttendanceCohortError(payload.student, schedule);
+  if (cohortError) {
+    const hasValidScheduleCohort = normalizeAttendanceYear(schedule.yearLevel) && normalizeAttendanceSection(schedule.section);
+    return sendAttendanceCohortError(req, res, cohortError, hasValidScheduleCohort ? 403 : 409);
   }
 
   const attendanceStatus = schedule ? await getAttendanceStatusForSession(session, now) : (payload.status === "Late" ? "Late" : payload.status === "Absent" ? "Absent" : "Present");
@@ -1303,13 +2173,32 @@ const recordAttendance = async (req, res, token, session) => {
     return res.status(410).json({ success: false, error: absentMessage, status: "Absent" });
   }
 
-  const existing = await Attendance.findOne({
-    where: {
-      studentId: payload.studentId,
-      sessionToken: token,
-      date: payload.dateString
-    }
-  });
+  let existing;
+  if (session?.intendedStudentUserId) {
+    const recordedAttendance = await Attendance.findOne({
+      where: {
+        studentId: payload.studentId,
+        laboratoryScheduleId: session.laboratoryScheduleId,
+        date: payload.dateString,
+        status: { [Op.in]: ["Present", "Late"] }
+      }
+    });
+    existing = recordedAttendance || await Attendance.findOne({
+      where: {
+        studentId: payload.studentId,
+        laboratoryScheduleId: session.laboratoryScheduleId,
+        date: payload.dateString
+      }
+    });
+  } else {
+    existing = await Attendance.findOne({
+      where: {
+        studentId: payload.studentId,
+        sessionToken: token,
+        date: payload.dateString
+      }
+    });
+  }
 
   if (existing) {
     if (existing.status === "Absent") {
@@ -1319,6 +2208,7 @@ const recordAttendance = async (req, res, token, session) => {
       existing.fullName = payload.fullName;
       existing.lab = payload.lab;
       existing.instructor = payload.instructor;
+      if (session?.intendedStudentUserId) existing.sessionToken = token;
       await existing.save();
 
         await logAuditEntry(req, {
@@ -1433,12 +2323,16 @@ const recordAttendance = async (req, res, token, session) => {
     message: `Thank you, ${attendance.fullName}! Your attendance has been successfully recorded.`,
     detailRows: details,
     statusLabel: "✓ Attendance Recorded",
-    primaryLabel: "Select Your PC Station",
-    primaryHref: `/attendance/select-pc?attendanceId=${attendance.id}&scheduleId=${session?.laboratoryScheduleId || ''}`,
-    secondaryLabel: "Skip for Now",
-    secondaryHref: "/student/dashboard",
+    primaryLabel: session?.intendedStudentUserId ? "Return to Student Dashboard" : "Select Your PC Station",
+    primaryHref: session?.intendedStudentUserId
+      ? "/student/dashboard#attendance"
+      : `/attendance/select-pc?attendanceId=${attendance.id}&scheduleId=${session?.laboratoryScheduleId || ''}`,
+    secondaryLabel: session?.intendedStudentUserId ? "Close" : "Skip for Now",
+    secondaryHref: session?.intendedStudentUserId ? "#" : "/student/dashboard",
     successVariant: true,
-    highlightMessage: "Please select your PC station to complete check-in."
+    highlightMessage: session?.intendedStudentUserId
+      ? "Your BYOD attendance is complete. No PC station sign-in is needed."
+      : "Please select your PC station to complete check-in."
   });
 
   if (req.accepts("html")) return res.send(html);
@@ -1446,7 +2340,8 @@ const recordAttendance = async (req, res, token, session) => {
     success: true, 
     attendance, 
     message: "Attendance recorded successfully.",
-    requiresPCSelection: true,
+    attendanceMethod: session?.intendedStudentUserId ? "byod-qr" : "attendance-qr",
+    requiresPCSelection: !session?.intendedStudentUserId,
     attendanceId: attendance.id,
     scheduleId: session?.laboratoryScheduleId
   });
@@ -1475,6 +2370,42 @@ export const scanAttendance = async (req, res) => {
         success: false
       }));
       return res.status(404).json({ error: message });
+    }
+
+    const schedule = session.laboratoryScheduleId
+      ? await LaboratorySchedule.findByPk(session.laboratoryScheduleId)
+      : null;
+    if (schedule && (await getArchivedEntityIds("laboratory-schedule")).includes(String(schedule.id))) {
+      const message = "This laboratory schedule is archived. Attendance can no longer be recorded.";
+      if (req.accepts("html")) return res.status(410).send(renderAttendancePageHtml({
+        title: "Archived Schedule",
+        heading: "Archived Schedule",
+        message,
+        detailRows: [["Status", "Attendance is unavailable"]],
+        statusLabel: "Unable to record",
+        primaryLabel: "Back to Dashboard",
+        primaryHref: "/student/dashboard",
+        secondaryLabel: "Close",
+        secondaryHref: "#",
+        success: false
+      }));
+      return res.status(410).json({ error: message });
+    }
+    if (schedule && getClassScheduleStatus(schedule, new Date()) === "Ended") {
+      const message = "This class has ended. Attendance can no longer be recorded.";
+      if (req.accepts("html")) return res.status(410).send(renderAttendancePageHtml({
+        title: "Class Ended",
+        heading: "Class Ended",
+        message,
+        detailRows: [["Status", "Attendance is closed for this class"]],
+        statusLabel: "Unable to record",
+        primaryLabel: "Back to Dashboard",
+        primaryHref: "/student/dashboard",
+        secondaryLabel: "Close",
+        secondaryHref: "#",
+        success: false
+      }));
+      return res.status(410).json({ success: false, error: message, classStatus: "Ended" });
     }
 
     if (session.expiresAt < new Date()) {
@@ -1508,11 +2439,53 @@ export const scanAttendance = async (req, res) => {
       req.session.redirectTo = `/attendance/scan/${encodeURIComponent(token)}`;
       return res.redirect("/login");
     }
+    if (session.intendedStudentUserId && Number(session.intendedStudentUserId) !== Number(user.id)) {
+      const message = "This attendance QR code was issued to another student. Please scan the QR code assigned to your name.";
+      return res.status(403).send(renderAttendancePageHtml({
+        title: "Student QR Mismatch",
+        heading: "This QR Code Is Not Yours",
+        message,
+        detailRows: [["Status", "Attendance check-in blocked"]],
+        statusLabel: "Wrong student QR",
+        primaryLabel: "Return to Student Dashboard",
+        primaryHref: "/student/dashboard",
+        secondaryLabel: "Close",
+        secondaryHref: "#",
+        success: false
+      }));
+    }
+    if (session.intendedStudentUserId) {
+      const rosterEntry = await ClassListEntry.findOne({
+        where: {
+          laboratoryScheduleId: session.laboratoryScheduleId,
+          matchedUserId: user.id,
+          matchStatus: "matched"
+        }
+      });
+      if (!rosterEntry) {
+        return res.status(403).send(renderAttendancePageHtml({
+          title: "Not on Class Roster",
+          heading: "Attendance Check-in Blocked",
+          message: "You are no longer on this class roster. Contact the instructor if this is a mistake.",
+          detailRows: [["Status", "Student is not on the schedule roster"]],
+          statusLabel: "Roster verification failed",
+          primaryLabel: "Return to Student Dashboard",
+          primaryHref: "/student/dashboard",
+          secondaryLabel: "Close",
+          secondaryHref: "#",
+          success: false
+        }));
+      }
+    }
 
-    const schedule = session?.laboratoryScheduleId ? await LaboratorySchedule.findByPk(session.laboratoryScheduleId) : null;
     const userCampus = await getUserCampusFromSession(req);
     if (schedule && (!userCampus || !schedule.campus || !canManageRecord(userCampus, schedule.campus))) {
       return res.status(403).send("You do not have permission to access attendance for another campus.");
+    }
+    const cohortError = getAttendanceCohortError(user, schedule);
+    if (cohortError) {
+      const hasValidScheduleCohort = normalizeAttendanceYear(schedule?.yearLevel) && normalizeAttendanceSection(schedule?.section);
+      return sendAttendanceCohortError(req, res, cohortError, hasValidScheduleCohort ? 403 : 409);
     }
     const attendanceStatus = schedule ? await getAttendanceStatusForSession(session, new Date()) : null;
 

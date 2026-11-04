@@ -10,16 +10,20 @@
  * the new features without breaking existing code.
  */
 
+import { Op } from 'sequelize';
 import { Equipment } from '../models/equipmentModel.js';
+import EquipmentSet from '../models/equipmentSetModel.js';
+import EquipmentUsageLog from '../models/equipmentUsageLogModel.js';
+import EquipmentAuditTrail from '../models/equipmentAuditTrailModel.js';
 import { generateSerialNumber, generateSetId } from '../utils/serialNumberGenerator.js';
-const {
+import {
     logEquipmentCreated,
     logEquipmentUpdated,
     logEquipmentDeleted,
     logStatusChanged,
     logConditionChanged,
     logLocationChanged
-} = require('../utils/auditLogger');
+} from '../utils/auditLogger.js';
 
 /**
  * Enhanced equipment creation with audit logging and serial number
@@ -178,8 +182,6 @@ async function enhancedDeleteEquipment(equipment, req) {
  */
 async function getEquipmentWithEnhancements(whereClause = {}, options = {}) {
     try {
-        import EquipmentSet from '../models/equipmentSetModel.js';
-        
         const equipment = await Equipment.findAll({
             where: whereClause,
             ...options,
@@ -239,9 +241,6 @@ async function findEquipmentBySerialNumber(serialNumber) {
  */
 async function getEquipmentUsageSummary(equipmentId) {
     try {
-        import EquipmentUsageLog from '../models/equipmentUsageLogModel.js';
-        import { Op } from 'sequelize';
-        
         const usageLogs = await EquipmentUsageLog.findAll({
             where: {
                 equipmentId,
@@ -272,8 +271,6 @@ async function getEquipmentUsageSummary(equipmentId) {
  */
 async function isEquipmentInUse(equipmentId) {
     try {
-        import EquipmentUsageLog from '../models/equipmentUsageLogModel.js';
-        
         const activeSession = await EquipmentUsageLog.findOne({
             where: {
                 equipmentId,
@@ -297,8 +294,6 @@ async function isEquipmentInUse(equipmentId) {
  */
 async function getEquipmentMaintenanceHistory(equipmentId, limit = 10) {
     try {
-        import EquipmentAuditTrail from '../models/equipmentAuditTrailModel.js';
-        
         const maintenanceHistory = await EquipmentAuditTrail.findAll({
             where: {
                 equipmentId,
@@ -321,8 +316,6 @@ async function getEquipmentMaintenanceHistory(equipmentId, limit = 10) {
  */
 async function isSerialNumberAvailable(serialNumber, excludeEquipmentId = null) {
     try {
-        import { Op } from 'sequelize';
-        
         const whereClause = { serialNumber };
         if (excludeEquipmentId) {
             whereClause.id = { [Op.ne]: excludeEquipmentId };

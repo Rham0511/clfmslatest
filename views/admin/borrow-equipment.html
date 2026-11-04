@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Borrow Equipment | ComLab</title>
+  <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=66" />
   <style>
     :root {
       color-scheme: dark;
-      --bg: #07150F;
-      --bg-secondary: #0A1D15;
-      --panel: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
-      --panel-strong: linear-gradient(180deg, rgba(15,36,27,.98), rgba(10,29,21,.98));
+      --bg: #03150d;
+      --bg-secondary: #071f14;
+      --panel: linear-gradient(145deg, rgba(12,37,26,.96), rgba(7,24,17,.94));
+      --panel-strong: linear-gradient(145deg, rgba(14,43,29,.98), rgba(7,27,18,.98));
       --panel-soft: rgba(74,222,128,.06);
       --border: rgba(74,222,128,.15);
       --text: #F8FAFC;
@@ -34,7 +34,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%), radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%), linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+      background: radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%), radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%), linear-gradient(180deg, #03150d 0%, #071f14 100%);
       color: var(--text);
       font-family: Inter, 'Segoe UI', Roboto, sans-serif;
       line-height: 1.55;
@@ -42,11 +42,11 @@
 
     .main-container {
       min-height: 100vh;
-      padding: 1.35rem 1.5rem 2.2rem;
+      padding: 1rem 1.2rem 1.6rem;
       margin-left: 280px;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
     }
 
     .top-header {
@@ -54,12 +54,16 @@
       justify-content: space-between;
       align-items: flex-start;
       gap: 1rem;
-      padding: 1.35rem 1.35rem 1.4rem;
-      border-radius: 24px;
+      padding: 1rem 1.15rem;
+      border-radius: 20px;
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+      background: var(--panel-strong);
       box-shadow: var(--shadow);
       backdrop-filter: blur(16px) saturate(1.04);
+    }
+
+    body.app-shell.system-layout-page .main-container > .top-header > .profile-theme-controls {
+      margin-left: auto;
     }
 
     .header-meta {
@@ -110,8 +114,41 @@
       overflow: hidden;
     }
 
+    #mainContainer.theme-light .page-card,
+    #mainContainer.theme-light .summary-card,
+    #mainContainer.theme-light .table-wrap,
+    #mainContainer.theme-light .modal-card,
+    #mainContainer.theme-light > .top-header {
+      border: 2px solid #9fb8a5;
+      background: #ffffff;
+      color: #111827;
+      box-shadow: 0 8px 24px rgba(31, 41, 55, .07);
+    }
+
+    #mainContainer.theme-light .table-wrap table th,
+    #mainContainer.theme-light .table-wrap table td {
+      border-bottom: 1.5px solid #b8cbbb;
+    }
+
+    #mainContainer.theme-light .system-filter-row input,
+    #mainContainer.theme-light .system-filter-row select {
+      border: 2px solid #9fb8a5;
+    }
+
+    #mainContainer.theme-light .table-wrap {
+      scrollbar-color: #9ab6a1 #f3f7f4;
+    }
+
+    #mainContainer.theme-light .table-wrap::-webkit-scrollbar-track {
+      background: #f3f7f4;
+    }
+
+    #mainContainer.theme-light .table-wrap::-webkit-scrollbar-thumb {
+      border-color: #f3f7f4;
+    }
+
     .page-panel {
-      padding: 1.25rem 1.3rem 1.35rem;
+      padding: 1rem 1.05rem 1.1rem;
     }
 
     .toolbar {
@@ -126,39 +163,52 @@
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.2rem;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
     }
 
     .summary-card {
       position: relative;
+      width: 100%;
+      color: inherit;
+      text-align: left;
+      font: inherit;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 1rem 1.05rem 1rem;
+      border-radius: 15px;
+      padding: 0.85rem 0.9rem;
       background: var(--panel);
       box-shadow: var(--shadow);
-      min-height: 122px;
+      min-height: 104px;
       backdrop-filter: blur(14px) saturate(1.04);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      cursor: pointer;
     }
 
-    .summary-card:hover {
+    .summary-card:hover,
+    .summary-card:focus-visible {
       transform: translateY(-3px);
       box-shadow: var(--shadow-hover);
+      border-color: rgba(74, 222, 128, .65);
+      outline: none;
+    }
+
+    .summary-card[aria-pressed="true"] {
+      border-color: rgba(74, 222, 128, .85);
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, .12), var(--shadow);
     }
 
     .summary-card .summary-icon {
       position: absolute;
-      top: 0.8rem;
-      right: 0.8rem;
+      top: 0.7rem;
+      right: 0.7rem;
       color: #bbf7d0;
-      font-size: 1.7rem;
+      font-size: 1.35rem;
       opacity: 0.95;
       background: rgba(74,222,128,.12);
       border: 1px solid rgba(74,222,128,.16);
-      border-radius: 0.85rem;
-      width: 2.6rem;
-      height: 2.6rem;
+      border-radius: 0.72rem;
+      width: 2.25rem;
+      height: 2.25rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -166,18 +216,29 @@
 
     .summary-card .label {
       color: #bbf7d0;
-      font-size: 0.82rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.1em;
       font-weight: 700;
     }
 
     .summary-card .value {
-      font-size: 2.15rem;
+      font-size: 1.9rem;
       font-weight: 800;
-      margin-top: 0.5rem;
+      margin-top: 0.35rem;
       color: #f8fafc;
       line-height: 1.15;
+    }
+
+    #mainContainer .summary-grid {
+      gap: 0.75rem !important;
+      margin-bottom: 0.9rem;
+    }
+
+    #mainContainer .summary-card {
+      min-height: 104px;
+      padding: 0.85rem 0.9rem;
+      border-radius: 15px;
     }
 
     .summary-pill {
@@ -195,11 +256,91 @@
     .search-row {
       display: grid;
       grid-template-columns: 2.1fr 1fr 1.15fr 1fr;
-      gap: 0.9rem;
+      gap: 0.75rem;
       margin-top: 0.25rem;
-      margin-bottom: 1.1rem;
-      padding-top: 1.15rem;
+      margin-bottom: 0.85rem;
+      padding-top: 0.75rem;
       align-items: start;
+    }
+
+    .system-filter-row .field label {
+      font-size: 0.78rem;
+      letter-spacing: 0.01em;
+    }
+
+    .system-filter-row input,
+    .system-filter-row select {
+      min-height: 44px;
+      height: 44px;
+      padding: 0.65rem 0.8rem;
+      border-radius: 0.72rem;
+      font-size: 0.86rem;
+    }
+
+    #mainContainer #borrowSearchInput,
+    #mainContainer #borrowStatusFilter,
+    #mainContainer #borrowTypeFilter,
+    #mainContainer #borrowDateFilter {
+      border: 1px solid rgba(110,231,183,.24) !important;
+      background: linear-gradient(180deg, rgba(9,32,21,.98), rgba(5,23,15,.98)) !important;
+      color: #e7f5ec !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.2), 0 1px 0 rgba(255,255,255,.025);
+    }
+
+    #mainContainer #borrowSearchInput::placeholder {
+      color: #9ab9a7 !important;
+      opacity: .9;
+    }
+
+    #mainContainer #borrowSearchInput:focus,
+    #mainContainer #borrowStatusFilter:focus,
+    #mainContainer #borrowTypeFilter:focus,
+    #mainContainer #borrowDateFilter:focus {
+      border-color: #4ade80 !important;
+      background: #0a2418 !important;
+      box-shadow: 0 0 0 3px rgba(52,211,153,.16), inset 0 1px 2px rgba(0,0,0,.18);
+    }
+
+    #mainContainer #borrowSearchInput:focus-visible,
+    #mainContainer #borrowStatusFilter:focus-visible,
+    #mainContainer #borrowTypeFilter:focus-visible,
+    #mainContainer #borrowDateFilter:focus-visible {
+      outline: 2px solid rgba(110,231,183,.65);
+      outline-offset: 2px;
+    }
+
+    #mainContainer #borrowStatusFilter option,
+    #mainContainer #borrowTypeFilter option {
+      background: #0b2117;
+      color: #e7f5ec;
+    }
+
+    #mainContainer.theme-light #borrowSearchInput,
+    #mainContainer.theme-light #borrowStatusFilter,
+    #mainContainer.theme-light #borrowTypeFilter,
+    #mainContainer.theme-light #borrowDateFilter {
+      border: 1.5px solid #b8cbbb !important;
+      background: #ffffff !important;
+      color: #111827 !important;
+      box-shadow: inset 0 1px 2px rgba(31, 41, 55, .04);
+    }
+
+    #mainContainer.theme-light #borrowSearchInput::placeholder {
+      color: #64746a !important;
+    }
+
+    #mainContainer.theme-light #borrowSearchInput:focus,
+    #mainContainer.theme-light #borrowStatusFilter:focus,
+    #mainContainer.theme-light #borrowTypeFilter:focus,
+    #mainContainer.theme-light #borrowDateFilter:focus {
+      border-color: #15803d !important;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .16);
+    }
+
+    #mainContainer.theme-light #borrowStatusFilter option,
+    #mainContainer.theme-light #borrowTypeFilter option {
+      background: #ffffff;
+      color: #111827;
     }
 
     .primary-btn {
@@ -225,9 +366,9 @@
 
     .tab-switcher {
       display: inline-flex;
-      gap: 0.7rem;
+      gap: 0.5rem;
       padding: 0;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0.65rem;
       border: none;
       background: transparent;
       box-shadow: none;
@@ -236,11 +377,11 @@
 
     .action-btn {
       border: 1px solid rgba(74,222,128,.16);
-      background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+      background: var(--panel-strong);
       color: var(--text);
       border-radius: 999px;
-      padding: 0.6rem 0.9rem;
-      font-size: 0.92rem;
+      padding: 0.5rem 0.78rem;
+      font-size: 0.84rem;
       font-weight: 700;
       margin-right: 0;
       transition: all 0.2s ease;
@@ -260,12 +401,65 @@
       box-shadow: 0 10px 24px rgba(6,64,43,.16);
     }
 
+    #mainContainer.theme-light .tab-switcher .action-btn {
+      border: 2px solid #9fb8a5 !important;
+      background: #ffffff !important;
+      color: #052e16 !important;
+      box-shadow: 0 2px 6px rgba(31, 41, 55, .08);
+      transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    #mainContainer.theme-light .tab-switcher .action-btn:hover,
+    #mainContainer.theme-light .tab-switcher .action-btn:focus-visible {
+      border-color: #15803d !important;
+      background: #f0fdf4 !important;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .16);
+    }
+
+    #mainContainer.theme-light .tab-switcher .action-btn.primary {
+      border-color: #15803d !important;
+      background: #22c55e !important;
+      color: #052e16 !important;
+      box-shadow: 0 3px 10px rgba(21, 128, 61, .2);
+    }
+
     .table-wrap {
-      overflow-x: auto;
+      max-height: min(58vh, 36rem);
+      min-height: 10rem;
+      overflow: auto;
       border-radius: 16px;
       border: 1px solid rgba(74,222,128,.12);
       background: rgba(74,222,128,.04);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+      overscroll-behavior: contain;
+      scrollbar-color: rgba(74,222,128,.55) rgba(4,20,15,.8);
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: rgba(4,20,15,.8);
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      border: 2px solid rgba(4,20,15,.8);
+      border-radius: 999px;
+      background: rgba(74,222,128,.55);
+    }
+
+    .table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .table-wrap table {
+      min-width: 760px;
     }
 
     .pagination-row {
@@ -281,7 +475,7 @@
       min-width: 2.2rem;
       height: 2.2rem;
       border: 1px solid rgba(74,222,128,.16);
-      background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+      background: var(--panel-strong);
       color: var(--text);
       border-radius: 999px;
       padding: 0 0.8rem;
@@ -321,20 +515,25 @@
 
     th, td {
       text-align: left;
-      padding: 0.95rem 0.9rem;
-      font-size: 0.95rem;
+      padding: 0.52rem 0.65rem;
+      font-size: 0.78rem;
       border-bottom: 1px solid rgba(148, 163, 184, 0.12);
       white-space: nowrap;
-      line-height: 1.5;
+      line-height: 1.35;
     }
 
     th {
       color: #D1FAE5;
-      font-size: 0.8rem;
+      font-size: 0.64rem;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.1em;
       font-weight: 700;
       background: linear-gradient(180deg, rgba(18,49,36,.95), rgba(20,59,42,.95));
+    }
+
+    td .text-xs {
+      font-size: 0.68rem;
+      line-height: 1.25;
     }
 
     tbody tr {
@@ -353,10 +552,10 @@
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 0.42rem 0.78rem;
-      font-size: 0.78rem;
+      padding: 0.28rem 0.58rem;
+      font-size: 0.67rem;
       font-weight: 800;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       border: 1px solid rgba(74,222,128,.16);
     }
@@ -403,16 +602,31 @@
       border-color: rgba(248,113,113,.2);
     }
 
+    .status-lost {
+      background: rgba(127,29,29,.45);
+      color: #fecaca;
+      border-color: rgba(248,113,113,.3);
+    }
+
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(2, 6, 23, 0.78);
+      padding: 1rem 1rem 1rem calc(var(--sidebar-width) + 1rem);
+      background: rgba(1, 13, 8, 0.72);
+      backdrop-filter: blur(7px) saturate(.85);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
-      z-index: 1000;
+      z-index: 1500;
     }
+
+    .modal-overlay[hidden] {
+      display: none !important;
+    }
+
+    .card-item[hidden] {
+        display: none !important;
+      }
 
     .modal-overlay.show {
       display: flex;
@@ -420,11 +634,12 @@
 
     .modal-card {
       width: min(880px, 100%);
-      max-height: calc(100vh - 2rem);
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      box-shadow: 0 24px 70px rgba(6,64,43,.24);
+      max-height: min(calc(100vh - 2rem), 900px);
+      max-height: min(calc(100dvh - 2rem), 900px);
+      border-radius: 24px;
+      border: 1px solid rgba(110,231,183,.24);
+      background: linear-gradient(155deg, rgba(10,34,23,.99), rgba(4,18,12,.99));
+      box-shadow: 0 32px 100px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.045);
       overflow: hidden;
       backdrop-filter: blur(14px) saturate(1.04);
       display: flex;
@@ -437,12 +652,14 @@
       justify-content: space-between;
       gap: 1rem;
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      border-bottom: 1px solid rgba(110,231,183,.14);
     }
 
     .modal-body {
       padding: 1rem 1.25rem 1.25rem;
       overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: rgba(52,211,153,.5) rgba(2,18,11,.55);
     }
 
     .field-grid {
@@ -506,7 +723,7 @@
 
     input, select, textarea {
       width: 100%;
-      background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+      background: var(--panel-strong);
       color: var(--text);
       border: 1px solid rgba(74,222,128,.16);
       border-radius: 0.75rem;
@@ -533,7 +750,26 @@
     input:focus, select:focus, textarea:focus {
       border-color: rgba(74,222,128,.28);
       box-shadow: 0 0 0 3px rgba(34,197,94,.12);
-      background: linear-gradient(180deg, rgba(15,36,27,.98), rgba(10,29,21,.98));
+      background: var(--panel-strong);
+    }
+
+    #borrowerName,
+    #borrowerType,
+    #departmentInfo,
+    #instructorName,
+    #equipmentTypeInput,
+    #equipmentLaboratoryInput,
+    #availableEquipmentInput,
+    #borrowDate,
+    #borrowStartTime,
+    #expectedReturnDate,
+    #expectedReturnTime,
+    #purposeInput {
+      background: linear-gradient(180deg, rgba(9,32,21,.98), rgba(5,23,15,.98)) !important;
+    }
+
+    #quantityDisplay {
+      background: rgba(7,27,18,.82) !important;
     }
 
     .helper-text {
@@ -565,14 +801,14 @@
       color: var(--muted);
       border: 1px dashed rgba(16, 185, 129, 0.24);
       border-radius: 0.95rem;
-      background: rgba(2, 6, 23, 0.5);
+      background: rgba(7, 27, 18, 0.82);
     }
 
     .toast {
       position: fixed;
       right: 1rem;
       bottom: 1rem;
-      background: rgba(15, 23, 42, 0.96);
+      background: rgba(7, 27, 18, 0.98);
       border: 1px solid rgba(52, 211, 153, 0.3);
       color: #d1fae5;
       padding: 0.8rem 1rem;
@@ -592,7 +828,7 @@
     }
 
     .glass-card {
-      background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+      background: var(--panel-strong);
       border: 1px solid rgba(74,222,128,.12);
       border-radius: 16px;
       padding: 0.95rem;
@@ -672,66 +908,404 @@
       flex-direction: column;
     }
 
+    .record-details-modal {
+      width: min(1080px, 100%) !important;
+      max-height: min(88vh, 900px) !important;
+      max-height: min(88dvh, 900px) !important;
+    }
+
+    .record-details-modal .modal-header {
+      flex: 0 0 auto;
+      align-items: center !important;
+      border-bottom: 1px solid rgba(110,231,183,.14) !important;
+      background:
+        radial-gradient(ellipse at 0% 0%, rgba(34,197,94,.1), transparent 55%),
+        rgba(6,22,15,.96);
+    }
+
+    .record-details-modal .modal-header > div:first-child > p {
+      color: #6ee7b7;
+    }
+
+    .record-details-modal #closeDetailsModalBtn {
+      width: 2.65rem;
+      height: 2.65rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(110,231,183,.18);
+      border-radius: 50%;
+      background: rgba(2,18,11,.44);
+      color: #d1fae5;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .record-details-modal #closeDetailsModalBtn:hover {
+      transform: rotate(90deg);
+      border-color: rgba(110,231,183,.42);
+      background: rgba(16,87,55,.5);
+    }
+
+    .record-details-modal #closeDetailsModalBtn:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 3px;
+    }
+
+    .record-details-modal .modal-header {
+      padding: 1.4rem 1.6rem 1.1rem !important;
+    }
+
+    .record-details-modal .modal-header > div:first-child > p {
+      margin-bottom: 0.35rem;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .record-details-modal #detailsModalTitle {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .record-details-modal .modal-body {
+      padding: 1.25rem 1.6rem 1.6rem !important;
+    }
+
+    .record-details-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem !important;
+    }
+
+    .record-details-grid > .glass-card {
+      min-width: 0;
+      padding: 1.35rem;
+      border-color: rgba(110,231,183,.17);
+      background: linear-gradient(145deg, rgba(18,48,34,.72), rgba(8,28,19,.78));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .record-details-grid > .glass-card:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .record-details-grid .card-title {
+      margin-bottom: 1rem;
+      color: #d1fae5;
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 0.045em;
+      text-transform: uppercase;
+    }
+
+    .record-details-grid .card-grid {
+      gap: 1.1rem 1.25rem;
+    }
+
+    .record-details-grid .card-item {
+      min-width: 0;
+      padding: 0.8rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(110,231,183,.07);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .record-details-grid .card-label {
+      margin-bottom: 0.4rem;
+      color: #b7d8c8;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .record-details-grid .card-value {
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: 750;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .record-details-grid .purpose-card {
+      padding: 1rem;
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .record-details-modal .status-large {
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+    }
+
+    #mainContainer.theme-light .record-details-grid > .glass-card {
+      border-color: #a9c4af;
+      background: #f5faf6;
+    }
+
+    #mainContainer.theme-light .record-details-grid .card-title,
+    #mainContainer.theme-light .record-details-grid .card-value {
+      color: #123524;
+    }
+
+    #mainContainer.theme-light .record-details-grid .card-label {
+      color: #355a44;
+    }
+
+    #mainContainer.theme-light .record-details-grid .card-item {
+      background: #ffffff;
+    }
+
+    #mainContainer.theme-light .record-details-grid .purpose-card {
+      background: #eaf5ed;
+    }
+
+    #mainContainer.theme-light .record-details-grid .purpose-value {
+      color: #123524;
+    }
+
     @media (max-width: 820px) {
+      .modal-overlay { padding: 1rem; }
       .card-grid { grid-template-columns: 1fr; }
       .modal-card { width: calc(100% - 32px); }
       .modal-actions { justify-content: center; }
       .modal-actions button { width: 100%; }
     }
 
+    @media (max-width: 760px) {
+      .record-details-modal {
+        width: 100% !important;
+        max-height: calc(100dvh - 1rem) !important;
+        border-radius: 1.1rem;
+      }
+      .record-details-modal .modal-header {
+        padding: 1.1rem !important;
+      }
+      .record-details-modal .modal-body {
+        padding: 1rem !important;
+      }
+      .record-details-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem !important;
+      }
+      .record-details-grid > .glass-card:last-child {
+        grid-column: auto;
+      }
+      .record-details-grid > .glass-card {
+        padding: 1rem;
+      }
+      .record-details-modal #detailsModalTitle {
+        font-size: 1.7rem;
+      }
+    }
+
     @media (max-width: 1024px) {
+      .modal-overlay { padding: 1rem; }
       .main-container { margin-left: 0; padding: 1rem 1rem 1.5rem; }
       .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .search-row { grid-template-columns: 1fr 1fr; }
     }
 
+    body.admin-borrow-equipment-page .main-container:has(.modal-overlay.show) {
+      z-index: 1400;
+    }
+
+    body.admin-borrow-equipment-page.borrow-details-open {
+      overflow: hidden;
+    }
+
     @media (max-width: 720px) {
       .field-grid, .search-row, .summary-grid { grid-template-columns: 1fr; }
-      th, td { font-size: 0.9rem; }
+      .table-wrap { max-height: 52vh; }
+      th, td { padding: 0.52rem 0.6rem; font-size: 0.76rem; }
     }
   </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <style>
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light {
+      color: #183b2b;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light > .page-card {
+      border-color: #c8ddd0;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(27, 74, 48, .08);
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card {
+      border-color: #c8ddd0;
+      background: linear-gradient(145deg, #ffffff, #f1f8f3);
+      color: #183b2b;
+      box-shadow: 0 4px 14px rgba(27, 74, 48, .07);
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card:hover,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card[aria-pressed="true"] {
+      border-color: #16834a;
+      background: #f1f8f3;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card .label {
+      color: #526b5b;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card .value {
+      color: #172b22;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .summary-card .summary-icon {
+      border-color: #c8e4d1;
+      background: #e6f5eb;
+      color: #16834a;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .system-filter-row .field label {
+      color: #355642;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .tab-switcher .action-btn,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .pagination-btn {
+      border-color: #bfd8c7;
+      background: #ffffff;
+      color: #245b3d;
+      box-shadow: 0 2px 6px rgba(27, 74, 48, .06);
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .tab-switcher .action-btn:hover,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .pagination-btn:hover:not(:disabled) {
+      border-color: #16834a;
+      background: #eff8f2;
+      color: #14532d;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .tab-switcher .action-btn.primary,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .pagination-btn.active {
+      border-color: #16834a;
+      background: #16834a;
+      color: #ffffff;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap {
+      border-color: #d2e2d7;
+      background: #ffffff;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr {
+      background: #ffffff;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even) {
+      background: #f4f8f5;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover {
+      background: #e8f5ec;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
+      border-color: #d8e6dc;
+      color: #243b2e !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td .text-xs {
+      color: #526b5b !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn:not(.primary) {
+      border-color: #b9d8c3;
+      background: #eaf5ee;
+      color: #17603c;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn:not(.primary):hover {
+      border-color: #16834a;
+      background: #d9f0e1;
+      color: #104a2e;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn.primary {
+      color: #ffffff;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-borrowed,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-pending {
+      border-color: #e7ca82;
+      background: #fff5d9;
+      color: #80520c;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-returned,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-approved {
+      border-color: #add8ba;
+      background: #e4f4e9;
+      color: #17603c;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-overdue,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-pending-replacement,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-rejected,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .status-badge.status-lost {
+      border-color: #e8b8b8;
+      background: #fff0f0;
+      color: #9f3030;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .empty-state {
+      border-color: #c8ddd0;
+      background: #f5faf6;
+      color: #526b5b;
+    }
+  </style>
+  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=6">
 </head>
-<body class="app-shell">
+<body class="app-shell system-layout-page admin-borrow-equipment-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
   <div id="shared-sidebar"></div>
 
   <div class="main-container" id="mainContainer">
-    <div class="top-header">
-      <div>
-        <h2 class="header-title">Borrow Equipment</h2>
+    <div class="borrow-page-header-spacer" aria-hidden="true"></div>
+    <header class="system-dashboard-heading comlab-slim-page-header borrow-page-header" data-comlab-fixed-page-header="true">
+      <div class="system-dashboard-heading-main">
+        <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" onclick="toggleSidebar()">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+        <h1>Equipment Borrowed</h1>
       </div>
-      <button class="primary-btn" id="openBorrowModalBtn"><i class="fas fa-plus"></i> New Borrow Request</button>
-    </div>
+      <div class="system-dashboard-heading-actions">
+        <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white" aria-label="User profile">
+          <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-user-initials>U</span>
+          <span class="system-profile-badge-copy text-white">
+            <span class="system-profile-badge-name text-white" data-user-name>User</span>
+            <span class="system-profile-badge-role text-emerald-400" data-user-role>User</span>
+          </span>
+        </div>
+      </div>
+    </header>
 
     <div class="page-card">
       <div class="page-panel">
         <div class="summary-grid">
-          <div class="summary-card">
+          <button class="summary-card" type="button" data-summary-filter="all" aria-pressed="false" aria-label="Show all borrow records">
             <div class="summary-icon"><i class="fas fa-file-alt"></i></div>
             <div class="label">Total Borrow Records</div>
             <div class="value" id="summaryTotalRecords">0</div>
-          </div>
-          <div class="summary-card">
+          </button>
+          <button class="summary-card" type="button" data-summary-filter="borrowed" aria-pressed="false" aria-label="Show currently borrowed records">
             <div class="summary-icon"><i class="fas fa-box-open"></i></div>
             <div class="label">Currently Borrowed</div>
             <div class="value" id="summaryBorrowed">0</div>
-          </div>
-          <div class="summary-card">
+          </button>
+          <button class="summary-card" type="button" data-summary-filter="returnedToday" aria-pressed="false" aria-label="Show items returned today">
             <div class="summary-icon"><i class="fas fa-undo-alt"></i></div>
             <div class="label">Returned Today</div>
             <div class="value" id="summaryReturnedToday">0</div>
-          </div>
-          <div class="summary-card">
+          </button>
+          <button class="summary-card" type="button" data-summary-filter="overdue" aria-pressed="false" aria-label="Show overdue records">
             <div class="summary-icon"><i class="fas fa-clock"></i></div>
             <div class="label">Overdue</div>
             <div class="value" id="summaryOverdue">0</div>
-          </div>
+          </button>
         </div>
-        <div class="tab-switcher">
-          <button id="tabCurrent" class="action-btn primary" type="button">Current Borrow Records</button>
-          <button id="tabHistory" class="action-btn" type="button">Borrow History</button>
-        </div>
-        <div class="search-row">
+        <div class="search-row system-filter-row">
           <div class="field" style="margin-bottom: 0;">
             <label for="borrowSearchInput">Search</label>
             <input id="borrowSearchInput" type="text" placeholder="Search borrower or equipment" />
@@ -744,7 +1318,10 @@
               <option value="Approved">Approved</option>
               <option value="Borrowed">Borrowed</option>
               <option value="Returned">Returned</option>
+              <option value="Transferred">Transferred</option>
               <option value="Rejected">Rejected</option>
+              <option value="Lost">Lost</option>
+              <option value="Pending Replacement">Pending Replacement</option>
               <option value="Overdue">Overdue</option>
             </select>
           </div>
@@ -764,20 +1341,27 @@
             <input id="borrowDateFilter" type="date" />
           </div>
         </div>
-        <div class="table-wrap">
+        <div class="tab-switcher" role="tablist" aria-label="Borrow record views">
+          <button id="tabCurrent" class="action-btn primary" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="true">Current Borrow Records</button>
+          <button id="tabHistory" class="action-btn" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="false">Borrow History</button>
+          <button id="tabAudit" class="action-btn" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="false">Borrow Audit</button>
+        </div>
+        <div id="borrowRecordsTablePanel" class="table-wrap" role="tabpanel" aria-labelledby="tabCurrent" tabindex="0">
           <table>
-            <thead>
+            <thead id="borrowRecordsTableHead">
               <tr>
                 <th>Borrower</th>
                 <th>Equipment</th>
                 <th>Borrow Date</th>
+                <th>Taken Over From</th>
                 <th>Status</th>
+                <th>Current Holder</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="borrowRecordsTableBody">
               <tr>
-                <td colspan="5" class="text-center text-slate-400">Loading borrow records...</td>
+                <td colspan="7" class="text-center text-slate-400">Loading borrow records...</td>
               </tr>
             </tbody>
           </table>
@@ -787,7 +1371,7 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="borrowModalOverlay" aria-hidden="true">
+  <div class="modal-overlay" id="borrowModalOverlay" aria-hidden="true" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="borrowModalTitle">
       <div class="modal-header">
         <div>
@@ -849,7 +1433,7 @@
               <div style="display:flex;align-items:center;gap:0.5rem;">
                 <button id="quantityMinus" class="action-btn" type="button">-</button>
                 <input id="quantityInput" type="hidden" value="1" />
-                <div id="quantityDisplay" style="min-width:54px;text-align:center;padding:0.6rem 0.9rem;border-radius:0.6rem;background:rgba(2,6,23,0.6);">1</div>
+                <div id="quantityDisplay" style="min-width:54px;text-align:center;padding:0.6rem 0.9rem;border-radius:0.6rem;background:rgba(6,16,11,0.82);">1</div>
                 <button id="quantityPlus" class="primary-btn" type="button">+</button>
               </div>
             </div>
@@ -960,11 +1544,11 @@
   </div>
 
   <div class="modal-overlay" id="detailsModalOverlay" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle" style="width:min(920px,98%)">
+    <div class="modal-card record-details-modal" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle" style="width:min(1080px,98%)">
       <div class="modal-header" style="align-items:flex-start;gap:1rem;padding:1rem 1.1rem;border-bottom:none;">
         <div style="flex:1">
           <p class="text-sm text-emerald-300">Borrow Details</p>
-          <h3 class="text-2xl font-semibold text-white" id="detailsModalTitle">Record Details</h3>
+          <h3 class="font-semibold text-white" id="detailsModalTitle">Record Details</h3>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
           <div id="detailStatusBadge" class="status-large status-borrowed">Borrowed</div>
@@ -972,13 +1556,14 @@
         </div>
       </div>
       <div class="modal-body" style="padding:1rem 1.25rem;">
-        <div style="display:grid;grid-template-columns:1fr;gap:1rem;">
+        <div class="record-details-grid" style="display:grid;gap:1rem;">
           <div class="glass-card">
             <div class="card-title"><i class="fas fa-user-circle"></i> Borrower Information</div>
             <div class="card-grid">
               <div class="card-item"><div class="card-label">Borrower</div><div id="detailBorrowerName" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Type</div><div id="detailBorrowerType" class="card-value"></div></div>
               <div class="card-item full"><div class="card-label">Department / Office</div><div id="detailDepartment" class="card-value"></div></div>
+              <div class="card-item full" id="detailTakenOverFromCard" hidden><div class="card-label">Taken Over From</div><div id="detailTakenOverFrom" class="card-value"></div></div>
               <div class="card-item full"><div class="card-label">Instructor / Subject Teacher</div><div id="detailInstructorName" class="card-value"></div></div>
             </div>
           </div>
@@ -1006,7 +1591,7 @@
     </div>
   </div>
 
-  <script src="/js/sidebar-component.js" defer></script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
   <script>
     const borrowModal = document.getElementById('borrowModalOverlay');
     const returnModal = document.getElementById('returnModalOverlay');
@@ -1029,10 +1614,12 @@
     const state = {
       inventory: [],
       records: [],
+      audit: [],
       activeRecordId: null,
       activeTab: 'current',
       filters: { search: '', status: 'all', type: 'all', date: '' },
-      currentPage: 1
+      currentPage: 1,
+      summaryFilter: null
     };
 
     let latestBorrowLoadToken = 0;
@@ -1052,6 +1639,17 @@
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
+
+      function getCampusDate(value = new Date()) {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Manila',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).formatToParts(value);
+        const dateParts = Object.fromEntries(parts.map(({ type, value: partValue }) => [type, partValue]));
+        return `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+      }
 
     function getBorrowRecordCreatedAt(record) {
       return record?.created_at || record?.createdAt || record?.borrowDate || record?.expectedReturnDate || 0;
@@ -1127,6 +1725,22 @@
       }
     }
 
+    async function loadBorrowAudit() {
+      try {
+        const response = await fetch('/api/borrow-audit', { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to load borrow audit.');
+        state.audit = Array.isArray(payload) ? payload : [];
+        if (state.activeTab === 'audit') renderAuditRecords();
+      } catch (error) {
+        console.error('Unable to load borrow audit.', error);
+        if (state.activeTab === 'audit') {
+          recordsBody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${escapeHtml(error.message || 'Unable to load borrow audit.')}</div></td></tr>`;
+          renderPagination(0);
+        }
+      }
+    }
+
     async function refreshInventoryFromApi() {
       try {
         const response = await fetch('/api/equipment');
@@ -1151,9 +1765,17 @@
 
     function renderSummary() {
       const totalRecords = state.records.length;
-      const borrowed = state.records.filter(item => item.status === 'Borrowed').length;
-      const returnedToday = state.records.filter(item => item.status === 'Returned' && item.returnDate === new Date().toISOString().split('T')[0]).length;
-      const overdue = state.records.filter(item => item.status === 'Borrowed' && new Date(item.expectedReturnDate) < new Date()).length;
+      const borrowed = state.records.filter(item => String(item.status || '').toLowerCase() === 'borrowed').length;
+      const today = getCampusDate();
+      const returnedToday = state.records.filter(item =>
+        String(item.status || '').toLowerCase() === 'returned' &&
+        !isTransferRecord(item) &&
+        String(item.returnDate || '').slice(0, 10) === today
+      ).length;
+      const overdue = state.records.filter(item =>
+        String(item.effectiveStatus || '').toLowerCase() === 'overdue' ||
+        (String(item.status || '').toLowerCase() === 'borrowed' && getDisplayStatus(item) === 'Overdue')
+      ).length;
 
       summaryTotalRecords.textContent = totalRecords;
       summaryBorrowed.textContent = borrowed;
@@ -1186,7 +1808,9 @@
         const status = String(record.status || '').trim().toLowerCase();
         if (record.equipmentId !== item.equipmentId || !['approved', 'borrowed'].includes(status)) return false;
         const start = new Date(`${String(record.borrowDate).slice(0, 10)}T${String(record.borrowStartTime || '00:00').slice(0, 5)}:00`);
-        const end = new Date(`${String(record.expectedReturnDate || record.borrowDate).slice(0, 10)}T${String(record.expectedReturnTime || '23:59').slice(0, 5)}:00`);
+        const end = record.expectedReturnDate
+          ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T${String(record.expectedReturnTime || '23:59').slice(0, 5)}:00`)
+          : new Date(8640000000000000);
         return !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && start <= now && now <= end;
       });
     }
@@ -1242,14 +1866,21 @@
 
     function getDisplayStatus(record) {
       const normalized = String(record?.status || '').trim();
+      if (normalized.toLowerCase() === 'returned' && isTransferRecord(record)) return 'Transferred';
       if (normalized.toLowerCase() === 'returned') return 'Returned';
       if (normalized.toLowerCase() === 'pending replacement') return 'Pending Replacement';
       if (normalized.toLowerCase() === 'pending') return 'Pending';
       if (normalized.toLowerCase() === 'approved') return 'Approved';
       if (normalized.toLowerCase() === 'rejected') return 'Rejected';
-      const expected = new Date(record.expectedReturnDate);
-      const now = new Date();
-      return expected && expected < now ? 'Overdue' : 'Borrowed';
+      if (normalized.toLowerCase() === 'lost') return 'Lost';
+      if (String(record?.effectiveStatus || '').toLowerCase() === 'overdue') return 'Overdue';
+      if (!record.expectedReturnDate) return record.status || 'Borrowed';
+      const expected = new Date(`${String(record.expectedReturnDate).slice(0, 10)}T${String(record.expectedReturnTime || '23:59').slice(0, 5)}:00+08:00`);
+      return !Number.isNaN(expected.getTime()) && expected < new Date() ? 'Overdue' : 'Borrowed';
+    }
+
+    function isTransferRecord(record) {
+      return /via equipment QR handoff/i.test(String(record?.remarks || ''));
     }
 
     function getStatusBadgeClass(record) {
@@ -1259,9 +1890,8 @@
       if (normalized === 'pending') return 'status-pending';
       if (normalized === 'approved') return 'status-approved';
       if (normalized === 'rejected') return 'status-rejected';
-      const expected = new Date(record.expectedReturnDate);
-      const now = new Date();
-      return expected && expected < now && record.status === 'Borrowed' ? 'status-overdue' : 'status-borrowed';
+      if (normalized === 'lost') return 'status-lost';
+      return getDisplayStatus(record) === 'Overdue' ? 'status-overdue' : 'status-borrowed';
     }
 
     function getEquipmentDisplay(record) {
@@ -1291,7 +1921,72 @@
       });
     }
 
+    function renderAuditRecords() {
+      const search = state.filters.search.toLowerCase();
+      const selectedEvent = state.filters.status.toLowerCase();
+      const selectedDate = state.filters.date;
+      const filtered = state.audit.filter((event) => {
+        const searchable = [
+          event.borrowerName,
+          event.equipmentName,
+          event.equipmentId,
+          event.processedBy,
+          event.remarks,
+          ...(event.currentHolders || []).map((holder) => holder.name),
+          event.lastBorrower?.name
+        ].join(' ').toLowerCase();
+        const eventDate = event.occurredAt ? String(event.occurredAt).slice(0, 10) : '';
+        return (!search || searchable.includes(search)) &&
+          (selectedEvent === 'all' || String(event.eventType || '').toLowerCase() === selectedEvent || String(event.status || '').toLowerCase() === selectedEvent) &&
+          (!selectedDate || eventDate === selectedDate);
+      });
+      const pageSize = 6;
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      state.currentPage = Math.min(state.currentPage, totalPages);
+      const startIndex = (state.currentPage - 1) * pageSize;
+      const pageRecords = filtered.slice(startIndex, startIndex + pageSize);
+      document.getElementById('borrowRecordsTableHead').innerHTML = `<tr>
+        <th>Event Time</th><th>Equipment</th><th>Borrower</th><th>Event</th>
+        <th>Current Holder</th><th>Last Borrower</th><th>Processed By</th><th>Details</th>
+      </tr>`;
+      if (!filtered.length) {
+        recordsBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-clipboard-check" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No audit events match these filters.</div></div></td></tr>';
+        renderPagination(0);
+        return;
+      }
+      recordsBody.innerHTML = pageRecords.map((event) => {
+        const holders = (event.currentHolders || []).map((holder) => `${holder.name} (${holder.quantity})`).join(', ') || 'Not currently borrowed';
+        const eventLabel = String(event.eventType || 'event').replaceAll('_', ' ');
+        return `<tr>
+          <td>${escapeHtml(event.occurredAt ? new Date(event.occurredAt).toLocaleString() : '—')}</td>
+          <td>${escapeHtml(event.equipmentName || '—')}<div class="text-xs text-slate-400">${escapeHtml(event.equipmentId || '—')}${event.serialNumber ? ` · SN ${escapeHtml(event.serialNumber)}` : ''}</div></td>
+          <td>${escapeHtml(event.borrowerName || '—')}<div class="text-xs text-slate-400">${Number(event.quantity || 1)} unit(s)</div></td>
+          <td><span class="status-badge ${getStatusBadgeClass({ status: event.eventType })}">${escapeHtml(eventLabel)}</span></td>
+          <td>${escapeHtml(holders)}</td>
+          <td>${escapeHtml(event.lastBorrower?.name || '—')}${event.lastBorrower?.releasedAt ? `<div class="text-xs text-slate-400">${escapeHtml(new Date(event.lastBorrower.releasedAt).toLocaleString())}</div>` : ''}</td>
+          <td>${escapeHtml(event.processedBy || '—')}</td>
+          <td>${escapeHtml([event.condition, event.remarks].filter(Boolean).join(' · ') || event.purpose || '—')}</td>
+        </tr>`;
+      }).join('');
+      renderPagination(totalPages);
+    }
+
     function getViewRecords(filtered) {
+      if (state.summaryFilter === 'all') return filtered;
+      if (state.summaryFilter === 'borrowed') {
+        return filtered.filter(record => String(record.status || '').toLowerCase() === 'borrowed');
+      }
+      if (state.summaryFilter === 'returnedToday') {
+        const today = getCampusDate();
+        return filtered.filter(record =>
+          String(record.status || '').toLowerCase() === 'returned' &&
+          !isTransferRecord(record) &&
+          String(record.returnDate || '').slice(0, 10) === today
+        );
+      }
+      if (state.summaryFilter === 'overdue') {
+        return filtered.filter(record => getDisplayStatus(record) === 'Overdue');
+      }
       if (state.activeTab === 'current') {
         return filtered.filter(r => {
           const status = String(r.status || '').trim();
@@ -1300,7 +1995,7 @@
       }
       return filtered.filter(r => {
         const status = String(r.status || '').trim();
-        return ['Returned', 'Rejected', 'Pending Replacement'].includes(status) || ['returned', 'rejected', 'pending replacement'].includes(status.toLowerCase());
+        return ['Returned', 'Rejected', 'Pending Replacement', 'Lost'].includes(status) || ['returned', 'rejected', 'pending replacement', 'lost'].includes(status.toLowerCase());
       });
     }
 
@@ -1312,35 +2007,45 @@
       }
 
       const pageButtons = [];
-      pageButtons.push(`<button class="pagination-btn" type="button" data-page="prev" ${state.currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`);
-      for (let page = 1; page <= totalPages; page += 1) {
+      const firstPage = Math.max(1, Math.min(state.currentPage - 1, totalPages - 2));
+      const lastPage = Math.min(totalPages, firstPage + 2);
+      pageButtons.push(`<button class="pagination-btn" type="button" data-page="prev" ${state.currentPage === 1 ? 'disabled' : ''}>PREV</button>`);
+      for (let page = firstPage; page <= lastPage; page += 1) {
         pageButtons.push(`<button class="pagination-btn${page === state.currentPage ? ' active' : ''}" type="button" data-page="${page}">${page}</button>`);
       }
-      pageButtons.push(`<button class="pagination-btn" type="button" data-page="next" ${state.currentPage === totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`);
+      pageButtons.push(`<button class="pagination-btn" type="button" data-page="next" ${state.currentPage === totalPages ? 'disabled' : ''}>NEXT</button>`);
       paginationControls.innerHTML = pageButtons.join('');
     }
 
     function renderRecords() {
+      if (state.activeTab === 'audit') {
+        renderAuditRecords();
+        return;
+      }
+      document.getElementById('borrowRecordsTableHead').innerHTML = `<tr>
+        <th>Borrower</th><th>Equipment</th><th>Borrow Date</th><th>Taken Over From</th><th>Status</th>
+        <th>Current Holder</th><th>Actions</th>
+      </tr>`;
       const filtered = getFilteredRecords();
       const viewRecords = getViewRecords(filtered);
 
       if (!filtered.length) {
-        recordsBody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No borrow records yet.</div></div></td></tr>';
+        recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-inbox" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No borrow records yet.</div></div></td></tr>';
         renderPagination(0);
         return;
       }
 
       if (!viewRecords.length) {
         if (state.activeTab === 'current') {
-          recordsBody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No active borrow records.</div></div></td></tr>';
+          recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-inbox" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No active borrow records.</div></div></td></tr>';
         } else {
-          recordsBody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-archive" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No history records found.</div></div></td></tr>';
+          recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-archive" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No history records found.</div></div></td></tr>';
         }
         renderPagination(0);
         return;
       }
 
-      const pageSize = 3;
+      const pageSize = 6;
       const totalPages = Math.max(1, Math.ceil(viewRecords.length / pageSize));
       if (state.currentPage > totalPages) {
         state.currentPage = totalPages;
@@ -1352,20 +2057,23 @@
         const statusLabel = getDisplayStatus(record);
         const statusClass = getStatusBadgeClass(record);
         const equipmentDisplay = getEquipmentDisplay(record);
-        const canReturn = state.activeTab === 'current' && String(record.status || '').trim().toLowerCase() === 'borrowed';
-      const isPending = String(record.status || '').trim().toLowerCase() === 'pending';
-      const isApproved = String(record.status || '').trim().toLowerCase() === 'approved';
+        const canReturn = state.activeTab !== 'history' && state.activeTab !== 'audit' && String(record.status || '').trim().toLowerCase() === 'borrowed';
+      const isPending = String(record.status || '').trim().toLowerCase() === 'pending' && statusLabel !== 'Overdue';
+      const isApproved = String(record.status || '').trim().toLowerCase() === 'approved' && statusLabel !== 'Overdue';
+      const isBorrowed = String(record.status || '').trim().toLowerCase() === 'borrowed';
       return `
           <tr>
-            <td>${record.borrowerName || '—'}</td>
+            <td>${escapeHtml(record.borrowerName || '—')}</td>
             <td>${equipmentDisplay.name}<div class="text-xs text-slate-400">${record.equipmentReferenceStatus === 'unresolved' ? `Original Equipment ID: ${equipmentDisplay.id}` : equipmentDisplay.id}</div></td>
             <td>${formatDate(record.borrowDate)}</td>
-            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td>${escapeHtml(record.takenOverFrom || '—')}</td>
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span>${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeHtml(record.returnRequestedBy)}` : ''}</div>` : ''}</td>
+            <td>${isBorrowed ? `<div>${escapeHtml(record.borrowerName || '—')}</div>${record.currentAccountableFacultyName ? `<div class="mt-1 text-xs text-emerald-200">Accountable: ${escapeHtml(record.currentAccountableFacultyName)}</div>` : ''}` : '—'}</td>
             <td>
               <button class="action-btn" data-view-id="${record.id}"><i class="fas fa-eye"></i></button>
               ${isPending ? `<button class="action-btn primary" data-approve-id="${record.id}"><i class="fas fa-check"></i></button><button class="action-btn" data-reject-id="${record.id}"><i class="fas fa-xmark"></i></button>` : ''}
-              ${isApproved ? `<button class="action-btn primary" data-return-id="${record.id}"><i class="fas fa-undo-alt"></i></button>` : ''}
-              ${canReturn ? `<button class="action-btn primary" data-return-id="${record.id}"><i class="fas fa-undo-alt"></i></button>` : ''}
+              ${isApproved ? `<button class="action-btn primary" title="Release equipment to borrower" data-release-id="${record.id}"><i class="fas fa-hand-holding"></i> Release</button>` : ''}
+              ${canReturn ? `<button class="action-btn primary" title="${record.returnRequestedAt ? 'Confirm borrower return' : 'Record equipment return'}" data-return-id="${record.id}"><i class="fas fa-undo-alt"></i>${record.returnRequestedAt ? ' Confirm Return' : ' Return'}</button>` : ''}
             </td>
           </tr>`;
       }).join('');
@@ -1452,96 +2160,6 @@
       state.activeRecordId = null;
     }
 
-    async function handleCreateBorrowRequest() {
-      const borrowerName = document.getElementById('borrowerName').value.trim();
-      const borrowerType = document.getElementById('borrowerType').value;
-      const departmentInfo = document.getElementById('departmentInfo').value.trim();
-      const instructorName = document.getElementById('instructorName').value.trim();
-      const equipmentType = equipmentTypeInput.value;
-      const laboratoryRoom = equipmentLaboratoryInput.value;
-      const equipmentId = availableEquipmentInput.value;
-      const quantity = Number(document.getElementById('quantityInput').value || 1);
-      const borrowDate = document.getElementById('borrowDate').value;
-      const borrowStartTime = document.getElementById('borrowStartTime').value;
-      const expectedReturnDate = document.getElementById('expectedReturnDate').value;
-      const expectedReturnTime = document.getElementById('expectedReturnTime').value;
-      const purpose = document.getElementById('purposeInput').value.trim();
-
-      if (!borrowerName || !equipmentType || !laboratoryRoom || !equipmentId || !borrowDate || !borrowStartTime || !expectedReturnDate || !expectedReturnTime) {
-        showToast('Please complete the required borrow request fields.', true);
-        return;
-      }
-
-      const inventoryItem = state.inventory.find(item => String(item.equipmentId).toLowerCase() === equipmentId.toLowerCase());
-      if (!inventoryItem) {
-        showToast('Select an equipment item from the inventory.', true);
-        return;
-      }
-
-      const equipmentStatus = String(inventoryItem.status || '').trim().toLowerCase();
-      if (equipmentStatus === 'lost' || equipmentStatus === 'unserviceable') {
-        showToast(`${inventoryItem.status} equipment is not available for borrowing.`, true);
-        return;
-      }
-
-      if (quantity < 1 || quantity > Number(inventoryItem.availableQuantity || 0)) {
-        showToast('Requested quantity exceeds the available inventory.', true);
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/borrow-records', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            borrowerName,
-            borrowerType,
-            departmentInfo,
-            instructorName,
-            instructor_name: instructorName,
-            equipmentType,
-            laboratoryRoom,
-            equipmentId,
-            equipmentName: inventoryItem.name,
-            quantity,
-            borrowDate,
-            borrowStartTime,
-            expectedReturnDate,
-            expectedReturnTime,
-            purpose,
-            processedBy: window.__CURRENT_USER__?.name || 'Admin'
-          })
-        });
-
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Unable to save borrow request');
-        state.records = sortBorrowRecords([payload, ...state.records]);
-        syncBorrowSidebarBadgeFromRecords(state.records);
-        if (window.syncBorrowSidebarBadge) {
-          await window.syncBorrowSidebarBadge();
-        }
-        renderRecords();
-        renderSummary();
-        await refreshInventoryFromApi();
-        closeBorrowModal();
-        document.getElementById('borrowerName').value = '';
-        document.getElementById('departmentInfo').value = '';
-        document.getElementById('instructorName').value = '';
-        document.getElementById('purposeInput').value = '';
-        equipmentTypeInput.value = '';
-        equipmentLaboratoryInput.value = '';
-        equipmentLaboratoryInput.disabled = true;
-        availableEquipmentInput.value = '';
-        availableEquipmentInput.disabled = true;
-        document.getElementById('quantityInput').value = '1';
-        document.getElementById('borrowerType').value = 'Student';
-        showToast('Borrow request saved successfully.');
-      } catch (error) {
-        console.error(error);
-        showToast(error.message || 'Unable to save borrow request.', true);
-      }
-    }
-
     async function handleApproveRequest(recordId) {
       try {
         const response = await fetch(`/api/borrow-records/${recordId}/approve`, {
@@ -1566,12 +2184,36 @@
       }
     }
 
+    async function handleReleaseRequest(recordId) {
+      if (!await window.appDialogs.confirm('Confirm that this equipment is being handed to the borrower?')) return;
+      try {
+        const response = await fetch(`/api/borrow-records/${encodeURIComponent(recordId)}/release`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to release equipment.');
+        state.records = state.records.map((item) => item.id === recordId ? payload : item);
+        syncBorrowSidebarBadgeFromRecords(state.records);
+        renderRecords();
+        renderSummary();
+        await loadBorrowAudit();
+        showToast('Equipment release recorded. The borrower is now the current holder.');
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Unable to release equipment.', true);
+      }
+    }
+
     async function handleRejectRequest(recordId) {
+      const reason = (await window.appDialogs.prompt('Please provide a reason for rejecting this request:'))?.trim();
+      if (!reason) return;
       try {
         const response = await fetch(`/api/borrow-records/${recordId}/reject`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ processedBy: window.__CURRENT_USER__?.name || 'Admin' })
+          body: JSON.stringify({ reason })
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || 'Unable to reject borrow request');
@@ -1614,6 +2256,7 @@
         renderRecords();
         renderSummary();
         await refreshInventoryFromApi();
+        await loadBorrowAudit();
         closeReturnModal();
         showToast('Equipment return processed successfully.');
       } catch (error) {
@@ -1640,10 +2283,8 @@
       }
     }
 
-    document.getElementById('openBorrowModalBtn').addEventListener('click', openBorrowModal);
     document.getElementById('closeBorrowModalBtn').addEventListener('click', closeBorrowModal);
     document.getElementById('cancelBorrowBtn').addEventListener('click', closeBorrowModal);
-    document.getElementById('submitBorrowBtn').addEventListener('click', handleCreateBorrowRequest);
     document.getElementById('closeReturnModalBtn').addEventListener('click', closeReturnModal);
     document.getElementById('cancelReturnBtn').addEventListener('click', closeReturnModal);
     document.getElementById('confirmReturnBtn').addEventListener('click', handleConfirmReturn);
@@ -1662,6 +2303,7 @@
       const returnButton = event.target.closest('[data-return-id]');
       const approveButton = event.target.closest('[data-approve-id]');
       const rejectButton = event.target.closest('[data-reject-id]');
+      const releaseButton = event.target.closest('[data-release-id]');
       if (viewButton) {
         openDetailsModal(viewButton.dataset.viewId);
       }
@@ -1673,6 +2315,9 @@
       }
       if (rejectButton) {
         handleRejectRequest(rejectButton.dataset.rejectId);
+      }
+      if (releaseButton) {
+        handleReleaseRequest(releaseButton.dataset.releaseId);
       }
     });
 
@@ -1695,31 +2340,80 @@
       document.getElementById('quantityDisplay').textContent = String(val);
     });
 
+    function clearSummarySelection() {
+      state.summaryFilter = null;
+      document.querySelectorAll('[data-summary-filter]').forEach((card) => {
+        card.setAttribute('aria-pressed', 'false');
+      });
+    }
+
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+      const selectedTab = tab === 'history' ? 'history' : tab === 'audit' ? 'audit' : 'current';
+      const tabIds = { current: 'tabCurrent', history: 'tabHistory', audit: 'tabAudit' };
+      Object.entries(tabIds).forEach(([key, id]) => {
+        const button = document.getElementById(id);
+        const isSelected = key === selectedTab;
+        button.classList.toggle('primary', isSelected);
+        button.setAttribute('aria-selected', String(isSelected));
+      });
+      document.getElementById('borrowRecordsTablePanel')?.setAttribute('aria-labelledby', tabIds[selectedTab]);
+    }
+
+    document.querySelectorAll('[data-summary-filter]').forEach((card) => {
+      card.addEventListener('click', () => {
+        state.summaryFilter = card.dataset.summaryFilter;
+        setActiveTab(state.summaryFilter === 'returnedToday' ? 'history' : state.summaryFilter === 'all' ? 'all' : 'current');
+        document.querySelectorAll('[data-summary-filter]').forEach((item) => {
+          item.setAttribute('aria-pressed', String(item === card));
+        });
+        state.filters = { search: '', status: 'all', type: 'all', date: '' };
+        searchInput.value = '';
+        statusFilter.value = 'all';
+        typeFilter.value = 'all';
+        dateFilter.value = '';
+        state.currentPage = 1;
+        renderRecords();
+        document.querySelector('.table-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
     // Tabs
     document.getElementById('tabCurrent').addEventListener('click', () => {
-      state.activeTab = 'current';
+      clearSummarySelection();
+      setActiveTab('current');
       state.currentPage = 1;
-      document.getElementById('tabCurrent').classList.add('primary');
-      document.getElementById('tabHistory').classList.remove('primary');
       renderRecords();
     });
     document.getElementById('tabHistory').addEventListener('click', () => {
-      state.activeTab = 'history';
+      clearSummarySelection();
+      setActiveTab('history');
       state.currentPage = 1;
-      document.getElementById('tabHistory').classList.add('primary');
-      document.getElementById('tabCurrent').classList.remove('primary');
+      renderRecords();
+    });
+    document.getElementById('tabAudit').addEventListener('click', async () => {
+      clearSummarySelection();
+      setActiveTab('audit');
+      state.currentPage = 1;
+      await loadBorrowAudit();
       renderRecords();
     });
 
     // Details modal
     const detailsModal = document.getElementById('detailsModalOverlay');
+    let detailsModalTrigger = null;
     function openDetailsModal(recordId) {
       const record = state.records.find(r => r.id === recordId);
       if (!record) return;
+      detailsModalTrigger = document.activeElement;
       document.getElementById('detailBorrowerName').textContent = record.borrowerName || '—';
       document.getElementById('detailBorrowerType').textContent = record.borrowerType || '—';
       document.getElementById('detailDepartment').textContent = record.departmentInfo || '—';
       document.getElementById('detailInstructorName').textContent = record.instructorName || record.instructor_name || '—';
+      const takenOverFrom = document.getElementById('detailTakenOverFrom');
+      const takenOverFromCard = document.getElementById('detailTakenOverFromCard');
+      if (takenOverFrom) takenOverFrom.textContent = record.takenOverFrom || '—';
+      if (takenOverFromCard) takenOverFromCard.hidden = !record.takenOverFrom;
       document.getElementById('detailEquipmentLabel').textContent = getEquipmentDisplay(record).text;
       const qty = Number(record.quantity || 1);
       document.getElementById('detailQuantity').textContent = `${qty} Unit${qty === 1 ? '' : 's'}`;
@@ -1737,15 +2431,23 @@
 
       detailsModal.classList.add('show');
       detailsModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('borrow-details-open');
+      document.getElementById('closeDetailsModalBtn')?.focus();
     }
 
     // Condition selection UI removed — hidden select remains for compatibility
     function closeDetailsModal() {
       detailsModal.classList.remove('show');
       detailsModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('borrow-details-open');
+      detailsModalTrigger?.focus?.();
+      detailsModalTrigger = null;
     }
     document.getElementById('closeDetailsModalBtn').addEventListener('click', closeDetailsModal);
     detailsModal.addEventListener('click', (e) => { if (e.target === detailsModal) closeDetailsModal(); });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && detailsModal.classList.contains('show')) closeDetailsModal();
+    });
 
     equipmentTypeInput.addEventListener('input', () => {
       equipmentLaboratoryInput.value = '';
@@ -1781,15 +2483,12 @@
 
     paginationControls?.addEventListener('click', (event) => {
       const target = event.target.closest('[data-page]');
-      if (!target) return;
+      if (!target || target.disabled) return;
       const pageValue = target.dataset.page;
       if (pageValue === 'prev') {
         if (state.currentPage > 1) state.currentPage -= 1;
       } else if (pageValue === 'next') {
-        const filtered = getFilteredRecords();
-        const viewRecords = getViewRecords(filtered);
-        const totalPages = Math.max(1, Math.ceil(viewRecords.length / 3));
-        if (state.currentPage < totalPages) state.currentPage += 1;
+        state.currentPage += 1;
       } else {
         state.currentPage = Number(pageValue);
       }
@@ -1810,6 +2509,7 @@
       // Initialize tabs
       document.getElementById('tabCurrent').classList.add('primary');
       document.getElementById('tabHistory').classList.remove('primary');
+      document.getElementById('tabAudit').classList.remove('primary');
 
       window.__BORROW_REFRESH_INTERVAL__ = window.setInterval(async () => {
         await loadRecords();

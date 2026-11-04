@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ComLab Admin Dashboard</title>
+    <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -16,16 +16,16 @@
         }
 
         :root {
-            --primary: #06402B;
-            --accent: #22C55E;
-            --hover: #16A34A;
-            --success: #4ADE80;
-            --bg: #07150F;
-            --bg-secondary: #0A1D15;
-            --card-bg: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
-            --card-bg-solid: #0F241B;
-            --card-hover: #123124;
-            --borders: rgba(74,222,128,.15);
+            --primary: #052e1d;
+            --accent: #34d399;
+            --hover: #22c55e;
+            --success: #86efac;
+            --bg: #020617;
+            --bg-secondary: #07111f;
+            --card-bg: linear-gradient(145deg, rgba(12,37,26,.94), rgba(7,24,17,.92));
+            --card-bg-solid: #07111f;
+            --card-hover: #0b1728;
+            --borders: rgba(74,222,128,.18);
             --glow: rgba(34,197,94,.12);
             --card-glow: rgba(34,197,94,.08);
             --border-glow: rgba(34,197,94,.20);
@@ -33,9 +33,9 @@
             --text-secondary: #B6D7C8;
             --text-muted: #86EFAC;
             --primary-soft: rgba(34,197,94,.12);
-            --primary-hover: rgba(22,163,74,.24);
+            --primary-hover: rgba(34,197,94,.24);
             --primary-light: #BBF7D0;
-            --sidebar-bg: linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+            --sidebar-bg: linear-gradient(180deg, #020617 0%, #07111f 100%);
             --sidebar-shadow: 0 20px 70px rgba(6,64,43,.18);
             --primary-border: rgba(74,222,128,.15);
         }
@@ -47,13 +47,13 @@
             background:
                 radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%),
                 radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 28%),
-                linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+                linear-gradient(180deg, #020617 0%, #07111f 100%);
             overflow-x: hidden;
         }
 
         /* Sidebar */
         .sidebar {
-            background: linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+            background: linear-gradient(180deg, #020617 0%, #07111f 100%);
             height: 100vh;
             position: fixed;
             left: 0;
@@ -122,6 +122,24 @@
             font-weight: 500;
         }
 
+        body.app-shell .sidebar .nav-item[href="/maintenance-monitoring"] {
+            padding-right: 0.85rem !important;
+            padding-left: 0.85rem !important;
+        }
+
+        body.app-shell .sidebar .nav-item[href="/maintenance-monitoring"] .sidebar-nav-label {
+            white-space: nowrap;
+        }
+
+        body.app-shell .sidebar .nav-item[href="/equipment-assignment"] {
+            padding-right: 0.85rem !important;
+            padding-left: 0.85rem !important;
+        }
+
+        body.app-shell .sidebar .nav-item[href="/equipment-assignment"] .sidebar-nav-label {
+            white-space: nowrap;
+        }
+
         .nav-item i {
             width: 1.25rem;
             margin-right: 0.75rem;
@@ -157,13 +175,15 @@
 
         /* Top header */
         .top-header {
-            background: linear-gradient(180deg, #0b1f13 0%, #0d1712 100%);
+            background:
+                radial-gradient(180px 90px at 0% 0%, rgba(34,197,94,.13), transparent 78%),
+                linear-gradient(115deg, rgba(5,28,18,.98), rgba(4,20,15,.96));
             padding: 0.95rem 1.2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: inset 0 0 25px rgba(16, 185, 129, 0.14), 0 14px 40px rgba(5, 80, 48, 0.24);
-            border: 1px solid rgba(16, 185, 129, 0.26);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 10px 28px rgba(0,0,0,.2);
+            border: 1px solid rgba(74,222,128,.24);
             border-radius: 24px;
             position: sticky;
             top: 0;
@@ -344,7 +364,8 @@
 
         /* Main content area */
         .main-content {
-            padding: 0.9rem 1rem 1rem;
+            padding: 0.9rem 1rem 1.4rem;
+            min-height: calc(100vh - 70px);
             background: var(--card-bg-solid);
         }
 
@@ -360,40 +381,6 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text);
-        }
-
-        .maintenance-header-card {
-            background: var(--card-bg-solid);
-            border: 2px solid rgba(74, 222, 128, 0.15);
-            border-radius: 24px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            backdrop-filter: blur(16px) saturate(1.04);
-        }
-
-        .maintenance-header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            min-width: 240px;
-        }
-
-        .maintenance-header-left h1 {
-            margin: 0;
-        }
-
-        .maintenance-header-user {
-            background: rgba(8, 22, 14, 0.85);
-            border: 1px solid rgba(34, 197, 94, 0.24);
-            padding: 0.6rem 0.85rem;
-            border-radius: 999px;
         }
 
         .breadcrumb {
@@ -467,18 +454,18 @@
         }
 
         .card-icon.blue {
-            background: rgba(34, 211, 238, 0.12);
-            color: #38bdf8;
+            background: var(--primary-soft);
+            color: var(--primary-light);
         }
 
         .card-icon.purple {
-            background: rgba(168, 85, 247, 0.12);
-            color: #c084fc;
+            background: var(--primary-soft);
+            color: var(--primary-light);
         }
 
         .card-icon.orange {
-            background: rgba(249, 115, 22, 0.14);
-            color: #fbbf24;
+            background: var(--primary-soft);
+            color: var(--primary-light);
         }
 
         .card-value {
@@ -518,7 +505,6 @@
             border-radius: 20px;
             padding: 1.2rem 1.2rem 1.25rem;
             min-height: 430px;
-            height: 100%;
             box-shadow: 0 12px 35px rgba(6,64,43,.18);
             border: 1px solid var(--primary-border);
             color: var(--text);
@@ -544,9 +530,9 @@
 
         .chart-container {
             position: relative;
-            flex: 1;
+            flex: 0 0 390px;
             min-height: 280px;
-            height: 100%;
+            height: 390px;
             width: 100%;
         }
 
@@ -667,31 +653,141 @@
 
         .maintenance-monitoring-page {
             margin-top: 1.2rem;
+            border: 1px solid rgba(74, 222, 128, .16);
         }
 
-        .maintenance-monitoring-page th {
-            font-size: 0.9rem;
-            padding: 0.9rem 0.85rem;
+        .maintenance-report-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
         }
 
-        .maintenance-monitoring-page td {
-            font-size: 1rem;
-            padding: 0.9rem 0.85rem;
+        .maintenance-report-tab {
+            min-height: 2.75rem;
+            padding: 0.65rem 1.1rem;
+            border: 1px solid rgba(74, 222, 128, .2);
+            border-radius: 999px;
+            background: rgba(4, 40, 27, .72);
+            color: #d1fae5;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+
+        .maintenance-report-tab:hover,
+        .maintenance-report-tab.active {
+            border-color: #046a38;
+            background: #046a38;
+            color: #fff;
+        }
+
+        .system-dashboard-heading-actions [data-theme-toggle-anchor] {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+        }
+
+        .system-dashboard-heading-actions .profile-theme-controls {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .system-dashboard-heading-actions .profile-theme-toggle {
+            width: 2.5rem;
+            height: 2.5rem;
+            flex-basis: 2.5rem;
+            border-radius: 9999px;
+        }
+
+        body.app-shell #maintenance-monitoring.maintenance-monitoring-page table {
+            border: 0 !important;
+            border-collapse: collapse !important;
+        }
+
+        body.app-shell #maintenance-monitoring.maintenance-monitoring-page th,
+        body.app-shell #maintenance-monitoring.maintenance-monitoring-page td {
+            border: 0 !important;
+            border-bottom: 1px solid rgba(6, 78, 59, .4) !important;
+        }
+
+        body.app-shell #maintenance-monitoring.maintenance-monitoring-page th {
+            font-size: 0.95rem;
+            padding: 1rem 0.95rem;
+            background: rgba(4, 40, 27, .94) !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+            text-align: left;
+        }
+
+        body.app-shell #maintenance-monitoring.maintenance-monitoring-page td {
+            color: #fff !important;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 1rem 0.95rem;
+        }
+
+        #maintenance-monitoring .maintenance-report-row:hover {
+            background: rgba(4, 106, 56, .18) !important;
         }
 
         .maintenance-monitoring-page .status-badge {
-            font-size: 0.8rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .maintenance-monitoring-page .status-badge.status-in-progress {
+            border-color: rgba(74, 222, 128, .3) !important;
+            background: rgba(4, 106, 56, .28) !important;
+            color: #bbf7d0 !important;
+        }
+
+        .maintenance-monitoring-page .status-badge.status-resolved {
+            border-color: rgba(74, 222, 128, .3) !important;
+            background: rgba(4, 106, 56, .22) !important;
+            color: #dcfce7 !important;
+        }
+
+        .maintenance-monitoring-page .status-badge.status-pending {
+            border-color: rgba(250, 204, 21, .3) !important;
+            background: rgba(113, 63, 18, .28) !important;
+            color: #fef3c7 !important;
+        }
+
+        .maintenance-monitoring-page .maintenance-equipment-name {
+            color: #fff;
+            font-weight: 600;
+            text-decoration: underline dotted rgba(74, 222, 128, .55);
+            text-underline-offset: 0.2em;
         }
 
         .maintenance-monitoring-page .status-filter,
         .maintenance-monitoring-page .filter-select,
         .maintenance-monitoring-page .search-box input {
-            font-size: 0.95rem;
+            border-color: rgba(74, 222, 128, .24);
+            background: linear-gradient(180deg, rgba(7, 35, 23, .96), rgba(4, 24, 16, .96));
+            color: #fff;
+            font-size: 1.05rem;
+            border-width: 2px;
+        }
+
+        .maintenance-monitoring-page .search-box input::placeholder {
+            color: #a7f3d0;
+            opacity: 1;
+        }
+
+        .maintenance-monitoring-page .status-filter.active,
+        .maintenance-monitoring-page .status-filter:hover {
+            border-color: #046a38;
+            background: #046a38;
+            color: #fff;
         }
 
         .maintenance-monitoring-page #maintenancePaginationInfo,
         .maintenance-monitoring-page #maintenancePagination button {
-            font-size: 0.9rem;
+            color: #fff !important;
+            font-size: 1.05rem;
+            font-weight: 600;
         }
 
         .equipment-availability-page {
@@ -709,7 +805,7 @@
         .availability-toolbar select {
             width: 100%;
             border: 1px solid rgba(74,222,128,.16);
-            background: rgba(6,16,11,.72);
+            background: rgba(2, 6, 23,.72);
             color: #f8fafc;
             padding: 0.75rem 0.85rem;
             border-radius: 0.75rem;
@@ -737,7 +833,7 @@
             border: 1px solid rgba(74,222,128,.16);
             border-radius: 14px;
             overflow: hidden;
-            background: rgba(6,16,11,.28);
+            background: rgba(2, 6, 23,.28);
         }
 
         .availability-laboratory-section:first-child { margin-top: 0; }
@@ -745,7 +841,7 @@
         .availability-laboratory-heading {
             padding: 0.9rem 1rem;
             color: #dcfce7;
-            background: linear-gradient(135deg, rgba(22,163,74,.2), rgba(6,16,11,.68));
+            background: linear-gradient(135deg, rgba(22,163,74,.2), rgba(2, 6, 23,.68));
             border-bottom: 1px solid rgba(74,222,128,.14);
             font-size: 1rem;
             font-weight: 800;
@@ -768,7 +864,7 @@
             padding: 0.85rem 1rem;
             border: 0;
             color: #d1fae5;
-            background: rgba(15,36,27,.72);
+            background: rgba(7, 17, 31,.72);
             cursor: pointer;
             text-align: left;
             font-size: 0.92rem;
@@ -779,12 +875,12 @@
 
         .availability-category-toggle:hover { background: rgba(34,197,94,.12); }
 
-        .availability-category-toggle i {
+        .availability-category-toggle .availability-category-chevron {
             color: #86efac;
             transition: transform 0.2s ease;
         }
 
-        .availability-category-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+        .availability-category-toggle[aria-expanded="true"] .availability-category-chevron { transform: rotate(180deg); }
 
         .availability-category-content {
             display: none;
@@ -912,7 +1008,7 @@
             overflow: auto;
         }
 
-        .availability-history-table { min-width: 850px; }
+        .availability-history-table { min-width: 680px; }
 
         @media (max-width: 900px) {
             .availability-toolbar { grid-template-columns: 1fr 1fr; }
@@ -1194,7 +1290,7 @@
 
         .status-filter {
             border: 1px solid rgba(74,222,128,.16);
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             color: #d9f5e0;
             padding: 0.6rem 1rem;
             border-radius: 999px;
@@ -1221,9 +1317,15 @@
             width: 100%;
         }
 
+        .maintenance-monitoring-page .filter-toolbar .search-box {
+            box-sizing: border-box;
+            width: min(100%, 14rem);
+            min-width: 0;
+        }
+
         .filter-select {
             border: 1px solid rgba(74,222,128,.16);
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             color: #f8fafc;
             padding: 0.6rem 0.8rem;
             border-radius: 999px;
@@ -1331,17 +1433,17 @@
 
         /* Premium dashboard presentation */
         .top-header {
-            min-height: 92px;
-            padding: 1.15rem 1.35rem;
+            min-height: 116px;
+            padding: 1.45rem 1.6rem;
             background:
                 radial-gradient(circle at 8% 0%, rgba(74, 222, 128, .14), transparent 34%),
-                linear-gradient(135deg, rgba(9, 34, 23, .98), rgba(7, 21, 15, .98));
+                linear-gradient(135deg, rgba(9, 34, 23, .98), rgba(7, 17, 31, .98));
             border-color: rgba(110, 231, 183, .28);
             box-shadow: 0 18px 48px rgba(2, 15, 9, .35), inset 0 1px 0 rgba(255,255,255,.05);
         }
 
         .top-header .header-title {
-            font-size: clamp(1.55rem, 2.4vw, 2.15rem);
+            font-size: clamp(1.8rem, 2.8vw, 2.5rem);
             letter-spacing: -.035em;
             text-shadow: 0 0 24px rgba(134, 239, 172, .12);
         }
@@ -1349,9 +1451,9 @@
         .top-header .header-meta::after {
             content: 'Laboratory operations command center';
             display: block;
-            margin-top: .28rem;
+            margin-top: .38rem;
             color: rgba(187, 247, 208, .64);
-            font-size: .78rem;
+            font-size: .88rem;
             letter-spacing: .04em;
         }
 
@@ -1363,20 +1465,60 @@
         }
 
         .dashboard-cards {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: .9rem;
-            margin-bottom: 1.15rem;
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(9.5rem, 1fr)) !important;
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+            overflow-x: auto;
         }
 
-        .dashboard-cards .card {
+        #dashboard-view .dashboard-cards .card {
             position: relative;
-            min-height: 154px;
+            min-height: 158px;
             overflow: hidden;
-            padding: 1.1rem;
-            border-radius: 19px;
+            padding: 0.9rem 1rem;
+            border-radius: 18px;
             background:
                 linear-gradient(145deg, rgba(17, 48, 34, .96), rgba(8, 27, 18, .98));
             border-color: rgba(110, 231, 183, .15);
+        }
+
+        #dashboard-view .dashboard-cards .card-header {
+            margin-bottom: .55rem;
+        }
+
+        #dashboard-view .dashboard-cards .card-header > div:first-child {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        #dashboard-view .dashboard-cards .card-title {
+            font-size: .72rem;
+            letter-spacing: .12em;
+            line-height: 1.35;
+        }
+
+        #dashboard-view .dashboard-cards .card-value,
+        #dashboard-view .dashboard-cards .text-4xl {
+            font-size: 2.2rem;
+        }
+
+        #dashboard-view .dashboard-cards .card-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 1rem;
+        }
+
+        .dashboard-cards .dashboard-summary-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .dashboard-cards .dashboard-summary-link:focus-visible {
+            outline: 3px solid #6ee7b7;
+            outline-offset: 3px;
         }
 
         .dashboard-cards .card::after {
@@ -1401,13 +1543,25 @@
         .dashboard-cards .card-header {
             position: relative;
             z-index: 1;
-            margin-bottom: 1.2rem;
+            align-items: flex-start;
+            margin-bottom: .85rem;
+        }
+
+        .dashboard-cards .card-header > div:first-child {
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
         .dashboard-cards .card-title {
             color: rgba(167, 243, 208, .7);
-            font-size: .67rem;
-            letter-spacing: .16em;
+            font-size: .9rem;
+            letter-spacing: .14em;
+        }
+
+        .dashboard-cards .card-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
         }
 
         .dashboard-cards .card h3 {
@@ -1418,26 +1572,26 @@
         .dashboard-cards .text-4xl {
             position: relative;
             z-index: 1;
-            font-size: 2.1rem;
+            font-size: 3.2rem;
             letter-spacing: -.045em;
         }
 
         .dashboard-cards .card-icon {
-            width: 43px;
-            height: 43px;
+            width: 54px;
+            height: 54px;
             border-radius: 13px;
-            font-size: 1.05rem;
+            font-size: 1.35rem;
         }
 
         .charts-section {
             grid-template-columns: 1.08fr 1fr 1fr;
-            gap: .95rem;
+            gap: 1rem;
         }
 
         .chart-card {
-            min-height: 390px;
-            padding: 1.25rem;
-            border-radius: 22px;
+            min-height: 410px;
+            padding: 1.15rem;
+            border-radius: 18px;
             background:
                 linear-gradient(145deg, rgba(15, 43, 30, .96), rgba(7, 24, 16, .98));
             border-color: rgba(110, 231, 183, .16);
@@ -1445,17 +1599,54 @@
         }
 
         .chart-title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             letter-spacing: -.01em;
+            margin-bottom: .4rem;
         }
 
         .chart-summary {
             color: rgba(209, 250, 229, .64);
-            font-size: .78rem;
+            font-size: .88rem;
+            line-height: 1.4;
+            min-height: 1.4rem;
+            margin-bottom: .65rem;
         }
 
         .chart-container {
-            min-height: 245px;
+            min-height: 0;
+            flex-basis: 280px;
+            height: 280px;
+        }
+
+        #mainContainer :is(
+            #dashboard-view .card,
+            #dashboard-view .chart-card,
+            #dashboard-view .chart-container,
+            #maintenance-view .table-card,
+            .equipment-availability-page
+        ) {
+            border: 1px solid rgba(110, 231, 183, .22);
+        }
+
+        #mainContainer #dashboard-view .chart-container {
+            box-sizing: border-box;
+            border-radius: 14px;
+            padding: .55rem;
+            background: rgba(2, 18, 11, .16);
+        }
+
+        #mainContainer.theme-light :is(
+            #dashboard-view .card,
+            #dashboard-view .chart-card,
+            #dashboard-view .chart-container,
+            #maintenance-view .table-card,
+            .equipment-availability-page
+        ) {
+            border-color: #bfd5c5 !important;
+        }
+
+        #mainContainer.theme-light #dashboard-view .chart-container {
+            background: #f8fbf8;
         }
 
         @media (max-width: 1180px) {
@@ -1465,202 +1656,2159 @@
         }
 
         @media (max-width: 768px) {
-            .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .dashboard-cards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
             .charts-section { grid-template-columns: 1fr; }
             .charts-section .chart-card:first-child { grid-column: auto; }
+            .top-header { min-height: 100px; padding: 1.2rem; }
+            .chart-card { min-height: 390px; }
+            .chart-container { flex-basis: 270px; height: 270px; min-height: 0; }
         }
 
         @media (max-width: 480px) {
-            .dashboard-cards { grid-template-columns: 1fr; }
+            .dashboard-cards { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+            .dashboard-cards .card { min-height: 8rem; padding: .7rem; }
+            .dashboard-cards .card-icon { width: 2rem; height: 2rem; font-size: .85rem; }
+            .dashboard-cards .card-title { font-size: .55rem; }
+            .dashboard-cards .card h3 { font-size: .7rem; }
+            .dashboard-cards .card-value,
+            .dashboard-cards .text-4xl { font-size: 1.45rem; }
+            .chart-card { min-height: 360px; padding: .9rem; }
+            .chart-container { flex-basis: 240px; height: 240px; min-height: 0; }
         }
     </style>
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <style>
+    @media (max-width: 767px) {
+      body.admin-dashboard-page .system-dashboard-heading {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: .5rem;
+      }
+
+      body.admin-dashboard-page .system-dashboard-heading-main {
+        flex: 0 0 auto !important;
+        justify-content: flex-start;
+      }
+
+      body.admin-dashboard-page .system-dashboard-heading #mobileMenuToggle {
+        position: static !important;
+        display: inline-flex !important;
+        width: 2.5rem;
+        height: 2.5rem;
+        flex: 0 0 2.5rem;
+        align-items: center;
+        justify-content: center;
+      }
+
+      body.admin-dashboard-page .system-dashboard-heading-actions {
+        width: auto;
+        flex: 0 1 auto;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: .35rem;
+        margin-left: auto;
+      }
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring {
+      border-color: #c8ddd0 !important;
+      background: #ffffff !important;
+      box-shadow: 0 5px 18px rgba(27, 74, 48, .07) !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-report-tab {
+      border-color: #c7ddcf !important;
+      background: #eff8f2 !important;
+      color: #245b3d !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-report-tab.active,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-report-tab:hover {
+      border-color: #16834a !important;
+      background: #16834a !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .search-box {
+      border-color: #cbded2 !important;
+      background: #ffffff !important;
+      color: #16834a !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .search-box input,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .filter-select {
+      border-color: #cbded2 !important;
+      background: #ffffff !important;
+      color: #183b2b !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .search-box input::placeholder {
+      color: #71867a !important;
+      opacity: 1;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-filter {
+      border-color: #c7ddcf !important;
+      background: #f3f9f5 !important;
+      color: #285b40 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-filter.active,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-filter:hover {
+      border-color: #16834a !important;
+      background: #16834a !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-filter[aria-pressed="true"] {
+      border-color: #075c35 !important;
+      background: #075c35 !important;
+      box-shadow: 0 3px 10px rgba(16, 42, 28, .2) !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring table thead th {
+      border-color: #c8dfd0 !important;
+      background: #e7f3eb !important;
+      color: #285b40 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring table tbody tr {
+      border-color: #dce9e0 !important;
+      background: #f7fbf8 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring table tbody tr:hover {
+      background: #eaf6ee !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring table tbody td {
+      border-color: #dce9e0 !important;
+      color: #203d2e !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-equipment-name {
+      color: #087443 !important;
+      text-decoration-color: #57a876 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-badge.status-in-progress {
+      border-color: #b6dcc2 !important;
+      background: #e4f4e9 !important;
+      color: #17603c !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-badge.status-resolved {
+      border-color: #a9d8bb !important;
+      background: #dff3e5 !important;
+      color: #14532d !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-badge.status-pending {
+      border-color: #ead08a !important;
+      background: #fff5d9 !important;
+      color: #80520c !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring #maintenancePaginationInfo,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring #maintenancePagination button {
+      color: #345a43 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring #maintenancePagination button[aria-current="page"],
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring #maintenancePagination button.bg-emerald-600 {
+      border-color: #16834a !important;
+      background: #16834a !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #dashboard-view .chart-card {
+      border-color: #c8ddd0 !important;
+      background: linear-gradient(145deg, #ffffff, #f1f8f3) !important;
+      color: #173b2b !important;
+      box-shadow: 0 8px 24px rgba(27, 74, 48, .09) !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #dashboard-view .chart-title {
+      color: #183b2b !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #dashboard-view .chart-summary {
+      color: #526b5b !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #dashboard-view .chart-container {
+      border-color: #d5e5da !important;
+      background: #f8fcf9 !important;
+    }
+
+    /* Admin dashboard overview refinement */
+    #mainContainer #dashboard-view {
+      --dashboard-card: linear-gradient(145deg, #10251a, #0a1b12);
+      --dashboard-card-border: rgba(110, 231, 183, .18);
+      --dashboard-card-text: #f2fbf5;
+      --dashboard-card-muted: #a7c2b2;
+      --dashboard-surface: rgba(4, 18, 11, .42);
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #mainContainer #dashboard-view.active:not([hidden]) {
+      display: flex;
+    }
+
+    #mainContainer .page-view[hidden] {
+      display: none !important;
+    }
+
+    #mainContainer.theme-light #dashboard-view {
+      --dashboard-card: linear-gradient(145deg, #ffffff, #f3f8f5);
+      --dashboard-card-border: #c9ddd0;
+      --dashboard-card-text: #14251b;
+      --dashboard-card-muted: #526b5b;
+      --dashboard-surface: #f8fbf9;
+    }
+
+    #mainContainer #dashboard-view .dashboard-section-heading {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .15rem .1rem 0;
+    }
+
+    #mainContainer #dashboard-view .dashboard-section-heading h2 {
+      margin: .1rem 0 0;
+      color: var(--dashboard-card-text);
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -.025em;
+    }
+
+    #mainContainer #dashboard-view .dashboard-section-kicker,
+    #mainContainer #dashboard-view .chart-kicker {
+      margin: 0;
+      color: #4ade80;
+      font-size: .62rem;
+      font-weight: 850;
+      letter-spacing: .15em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    #mainContainer #dashboard-view .dashboard-section-kicker {
+      font-size: .82rem;
+      font-weight: 900;
+      letter-spacing: .15em;
+    }
+
+    #mainContainer #dashboard-view .dashboard-refresh-note {
+      display: inline-flex;
+      align-items: center;
+      gap: .48rem;
+      color: var(--dashboard-card-muted);
+      font-size: .75rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    #mainContainer #dashboard-view .dashboard-refresh-copy {
+      display: grid;
+      gap: .12rem;
+    }
+
+    #mainContainer #dashboard-view .dashboard-refresh-time {
+      color: var(--dashboard-card-muted);
+      font-size: .68rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 550;
+    }
+
+    #mainContainer #dashboard-view .dashboard-live-dot {
+      width: .48rem;
+      height: .48rem;
+      flex: 0 0 .48rem;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .12), 0 0 12px rgba(34, 197, 94, .42);
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)) !important;
+      gap: .8rem !important;
+      margin: 0 !important;
+      overflow: visible;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card {
+      display: flex;
+      min-width: 0;
+      min-height: 8.35rem;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: .6rem;
+      padding: 1rem 1.05rem;
+      border: 1px solid var(--dashboard-card-border);
+      border-radius: 1rem;
+      background: var(--dashboard-card);
+      color: var(--dashboard-card-text);
+      box-shadow: 0 8px 22px rgba(3, 24, 13, .1), inset 0 1px 0 rgba(255, 255, 255, .035);
+      text-decoration: none;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(34, 197, 94, .52);
+      box-shadow: 0 14px 28px rgba(3, 24, 13, .15), 0 0 0 3px rgba(34, 197, 94, .06);
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card:focus-visible {
+      outline: 3px solid #22c55e;
+      outline-offset: 3px;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card-header {
+      min-width: 0;
+      align-items: flex-start;
+      gap: .5rem;
+      margin: 0;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card-title {
+      max-width: calc(100% - 3.15rem);
+      color: var(--dashboard-card-muted) !important;
+      font-size: .64rem;
+      font-weight: 850;
+      letter-spacing: .14em;
+      line-height: 1.3;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card h3 {
+      max-width: 100%;
+      margin: .24rem 0 0;
+      color: var(--dashboard-card-text) !important;
+      font-size: .82rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card-icon {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 2.55rem;
+      height: 2.55rem;
+      flex: 0 0 2.55rem;
+      border: 1px solid rgba(34, 197, 94, .2);
+      border-radius: .85rem;
+      background: rgba(34, 197, 94, .11);
+      color: #86efac;
+      font-size: 1rem;
+      box-shadow: none;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card-icon.orange { color: #fdba74; background: rgba(245, 158, 11, .12); border-color: rgba(245, 158, 11, .22); }
+    #mainContainer #dashboard-view .dashboard-cards .card-icon.purple { color: #fca5a5; background: rgba(239, 68, 68, .1); border-color: rgba(239, 68, 68, .2); }
+    #mainContainer #dashboard-view .dashboard-cards .card-icon.blue { color: #7dd3fc; background: rgba(14, 165, 233, .11); border-color: rgba(14, 165, 233, .22); }
+
+    #mainContainer #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert {
+      border-color: rgba(245, 158, 11, .42);
+      background: linear-gradient(145deg, rgba(65, 43, 17, .62), rgba(21, 30, 20, .96));
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert .dashboard-kpi-warning-icon {
+      border-color: rgba(245, 158, 11, .38);
+      background: rgba(245, 158, 11, .17);
+      color: #fbbf24;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert .dashboard-kpi-value {
+      color: #fbbf24 !important;
+    }
+
+    #mainContainer.theme-light #dashboard-view .dashboard-section-kicker,
+    #mainContainer.theme-light #dashboard-view .chart-kicker { color: #16834a; }
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .card-icon { color: #16834a; }
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .card-icon.orange { color: #b45309; }
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .card-icon.purple { color: #c2414b; }
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .card-icon.blue { color: #08779d; }
+
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert {
+      border-color: #e7b75c;
+      background: linear-gradient(145deg, #fffaf0, #fff4dd);
+    }
+
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert .dashboard-kpi-warning-icon {
+      border-color: #efc875;
+      background: #fff0ca;
+      color: #a85c0a;
+    }
+
+    #mainContainer.theme-light #dashboard-view .dashboard-cards .dashboard-kpi-warning.has-alert .dashboard-kpi-value {
+      color: #a85c0a !important;
+    }
+
+    #mainContainer #dashboard-view .dashboard-cards .card-value,
+    #mainContainer #dashboard-view .dashboard-cards .text-4xl {
+      margin: 0;
+      color: var(--dashboard-card-text) !important;
+      font-size: clamp(1.7rem, 2.2vw, 2.15rem);
+      font-variant-numeric: tabular-nums;
+      font-weight: 850;
+      letter-spacing: -.045em;
+      line-height: 1;
+    }
+
+    #mainContainer #dashboard-view .charts-section {
+      grid-template-columns: minmax(0, 1.08fr) repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+      gap: .9rem;
+      margin: 0;
+    }
+
+    #mainContainer #dashboard-view .chart-card {
+      min-width: 0;
+      min-height: 22.5rem;
+      gap: .65rem;
+      padding: 1.1rem;
+      border: 1px solid var(--dashboard-card-border);
+      border-radius: 1.05rem;
+      background: var(--dashboard-card);
+      color: var(--dashboard-card-text);
+      box-shadow: 0 9px 26px rgba(3, 24, 13, .1), inset 0 1px 0 rgba(255, 255, 255, .04);
+      backdrop-filter: blur(12px);
+    }
+
+    #mainContainer #dashboard-view .chart-heading {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .72rem;
+    }
+
+    #mainContainer #dashboard-view .chart-icon {
+      display: grid;
+      width: 2.45rem;
+      height: 2.45rem;
+      flex: 0 0 2.45rem;
+      place-items: center;
+      border: 1px solid rgba(34, 197, 94, .18);
+      border-radius: .82rem;
+      background: rgba(34, 197, 94, .1);
+      color: #86efac;
+      font-size: .92rem;
+    }
+
+    #mainContainer #dashboard-view .borrow-chart-icon { color: #6ee7b7; background: rgba(16, 185, 129, .12); }
+    #mainContainer #dashboard-view .equipment-chart-icon { color: #5eead4; background: rgba(20, 184, 166, .12); }
+    #mainContainer #dashboard-view .maintenance-chart-icon { color: #fcd34d; background: rgba(245, 158, 11, .13); }
+
+    #mainContainer.theme-light #dashboard-view .borrow-chart-icon { color: #138a50; }
+    #mainContainer.theme-light #dashboard-view .equipment-chart-icon { color: #0e8b64; }
+    #mainContainer.theme-light #dashboard-view .maintenance-chart-icon { color: #b7791f; }
+
+    #mainContainer #dashboard-view .chart-title {
+      margin: .12rem 0 0;
+      color: var(--dashboard-card-text);
+      font-size: .98rem;
+      font-weight: 800;
+      letter-spacing: -.018em;
+      line-height: 1.25;
+    }
+
+    #mainContainer #dashboard-view .chart-summary {
+      min-height: 2.25rem;
+      margin: 0;
+      color: var(--dashboard-card-muted);
+      font-size: .76rem;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    #mainContainer #dashboard-view .chart-summary.doughnut-summary {
+      display: none;
+    }
+
+    #mainContainer #dashboard-view .chart-container {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 0;
+      height: 15.5rem;
+      flex: 0 0 15.5rem;
+      padding: .5rem;
+      border: 1px solid var(--dashboard-card-border);
+      border-radius: .9rem;
+      background: var(--dashboard-surface);
+    }
+
+    #mainContainer #dashboard-view .chart-container canvas {
+      max-width: 100%;
+    }
+
+    @media (max-width: 1180px) {
+      #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)) !important; }
+      #mainContainer #dashboard-view .charts-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #mainContainer #dashboard-view .chart-card:first-child { grid-column: 1 / -1; }
+      #mainContainer #dashboard-view .chart-container { height: 16.5rem; flex-basis: 16.5rem; }
+    }
+
+    @media (max-width: 768px) {
+      #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      #mainContainer #dashboard-view .charts-section { grid-template-columns: minmax(0, 1fr); }
+      #mainContainer #dashboard-view .chart-card:first-child { grid-column: auto; }
+      #mainContainer #dashboard-view .chart-card { min-height: 21rem; }
+      #mainContainer #dashboard-view .chart-container { height: 14.5rem; flex-basis: 14.5rem; }
+    }
+
+    @media (max-width: 520px) {
+      #mainContainer #dashboard-view { gap: .8rem; }
+      #mainContainer #dashboard-view .dashboard-section-heading { align-items: flex-start; }
+      #mainContainer #dashboard-view .dashboard-section-heading h2 { font-size: 1rem; }
+      #mainContainer #dashboard-view .dashboard-refresh-note { max-width: 9rem; white-space: normal; font-size: .68rem; }
+      #mainContainer #dashboard-view .dashboard-refresh-time { font-size: .62rem; }
+      #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .65rem !important; }
+      #mainContainer #dashboard-view .dashboard-cards .card { min-height: 7.6rem; padding: .8rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card-icon { top: .85rem; right: .85rem; width: 2.25rem; height: 2.25rem; flex-basis: 2.25rem; font-size: .82rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card-title { font-size: .58rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card h3 { font-size: .73rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card-value,
+      #mainContainer #dashboard-view .dashboard-cards .text-4xl { font-size: 1.7rem; }
+      #mainContainer #dashboard-view .chart-card { min-height: 20rem; padding: .9rem; }
+      #mainContainer #dashboard-view .chart-container { height: 13.5rem; flex-basis: 13.5rem; padding: .35rem; }
+    }
+
+    @media (max-width: 360px) {
+      #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: minmax(0, 1fr) !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #mainContainer #dashboard-view .dashboard-cards .card { transition: none; }
+    }
+
+    /* Maintenance monitoring workspace */
+    #mainContainer #maintenance-monitoring {
+      --maintenance-ink: #f2fbf5;
+      --maintenance-muted: #9eb8a8;
+      --maintenance-border: rgba(110, 231, 183, .2);
+      margin-top: .9rem;
+      padding: clamp(1rem, 2vw, 1.6rem);
+      border: 1px solid var(--maintenance-border);
+      border-radius: 1.2rem;
+      background: linear-gradient(145deg, rgba(12, 37, 26, .96), rgba(7, 24, 17, .96));
+      box-shadow: 0 18px 44px rgba(0, 0, 0, .13);
+    }
+
+    #mainContainer.theme-light #maintenance-monitoring {
+      --maintenance-ink: #183b2b;
+      --maintenance-muted: #617668;
+      --maintenance-border: #c8ddd0;
+      background: linear-gradient(145deg, #ffffff, #f5faf6);
+      box-shadow: 0 16px 38px rgba(27, 74, 48, .07);
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.25rem;
+      padding: .1rem 0 1.1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--maintenance-border);
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-kicker {
+      margin: 0 0 .25rem;
+      color: #22c55e;
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .16em;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-heading h1 {
+      margin: 0;
+      color: var(--maintenance-ink);
+      font-size: clamp(1.2rem, 2vw, 1.55rem);
+      font-weight: 850;
+      letter-spacing: -.035em;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-heading p:last-child {
+      margin: .35rem 0 0;
+      color: var(--maintenance-muted);
+      font-size: .88rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-actions {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: .45rem;
+      padding-top: .2rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-updated-label {
+      color: var(--maintenance-muted);
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-refresh-button {
+      display: inline-flex;
+      width: 2.45rem;
+      min-height: 2.45rem;
+      align-items: center;
+      justify-content: center;
+      padding: .45rem;
+      border: 1px solid var(--maintenance-border);
+      border-radius: .75rem;
+      background: rgba(34, 197, 94, .11);
+      color: var(--maintenance-ink);
+      font-size: .82rem;
+      font-weight: 750;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-refresh-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, .2);
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-refresh-button:disabled {
+      cursor: wait;
+      opacity: .72;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-refresh-button:focus-visible,
+    #mainContainer #maintenance-monitoring .maintenance-report-tab:focus-visible,
+    #mainContainer #maintenance-monitoring .status-filter:focus-visible {
+      outline: 3px solid rgba(34, 197, 94, .45);
+      outline-offset: 2px;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-report-tabs {
+      gap: .55rem;
+      margin-bottom: 1.1rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-report-tab {
+      display: inline-flex;
+      min-height: 2.65rem;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      padding: .55rem .85rem .55rem 1rem;
+      border-color: var(--maintenance-border);
+      background: rgba(34, 197, 94, .06);
+      color: var(--maintenance-ink);
+      font-size: .84rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-report-tab:hover,
+    #mainContainer #maintenance-monitoring .maintenance-report-tab.active {
+      border-color: #16834a;
+      background: #16834a;
+      color: #fff;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-tab-count,
+    #mainContainer #maintenance-monitoring .maintenance-filter-count {
+      display: inline-flex;
+      min-width: 1.3rem;
+      min-height: 1.3rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0 .35rem;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .13);
+      color: inherit;
+      font-size: .68rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-report-tab.active .maintenance-tab-count {
+      background: rgba(255, 255, 255, .2);
+    }
+
+    #mainContainer #maintenance-monitoring .table-header {
+      margin-bottom: .85rem;
+    }
+
+    #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+      width: 100%;
+      grid-template-columns: minmax(14rem, 1fr) minmax(25rem, 2fr) minmax(9rem, .65fr);
+      align-items: center;
+      gap: .75rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-controls,
+    #mainContainer #maintenance-monitoring .maintenance-search-controls .search-box {
+      width: 100%;
+    }
+
+    #mainContainer #maintenance-monitoring .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter {
+      display: inline-flex;
+      min-height: 2.45rem;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: .45rem .65rem;
+      border: 1px solid var(--maintenance-border);
+      border-width: 1px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--maintenance-muted);
+      font-size: .78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter.active,
+    #mainContainer #maintenance-monitoring .status-filter:hover {
+      border-color: #16834a;
+      background: #16834a;
+      color: #fff;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-filter {
+      display: grid;
+      gap: .25rem;
+      color: var(--maintenance-muted);
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select {
+      width: 100%;
+      min-height: 2.5rem;
+      padding: .45rem .7rem;
+      border: 1px solid var(--maintenance-border);
+      border-radius: .7rem;
+      background: rgba(4, 18, 11, .35);
+      color: var(--maintenance-ink);
+      font-size: .82rem;
+    }
+
+    #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter .filter-select {
+      background: #fff;
+    }
+
+    #mainContainer #maintenance-monitoring .overflow-x-auto {
+      overflow-x: auto;
+      border: 1px solid var(--maintenance-border);
+      border-radius: .85rem;
+    }
+
+    #mainContainer #maintenance-monitoring table {
+      width: 100%;
+      min-width: 900px;
+      table-layout: auto;
+    }
+
+    #mainContainer #maintenance-monitoring table thead th {
+      padding: .8rem .9rem !important;
+      background: rgba(18, 73, 47, .92) !important;
+      font-size: .72rem !important;
+      letter-spacing: .07em !important;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody td {
+      padding: .85rem .9rem !important;
+      font-size: .84rem !important;
+      vertical-align: middle;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-report-row {
+      cursor: pointer;
+      transition: background-color 140ms ease;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-name {
+      color: #bbf7d0;
+      font-size: .92rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-cell {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .4rem;
+      min-width: 10rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-id {
+      display: inline-flex;
+      padding: .2rem .42rem;
+      border: 1px solid var(--maintenance-border);
+      border-radius: .5rem;
+      background: rgba(34, 197, 94, .08);
+      color: var(--maintenance-ink);
+      font-size: .7rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-location {
+      display: block;
+      margin-top: .28rem;
+      color: var(--maintenance-muted);
+      font-size: .72rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-name,
+    #mainContainer #maintenance-monitoring .maintenance-reporter-email {
+      display: block;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-name {
+      color: var(--maintenance-ink);
+      font-weight: 700;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-email {
+      margin-top: .2rem;
+      color: var(--maintenance-muted);
+      font-size: .72rem;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-rejected {
+      border-color: rgba(248, 113, 113, .3) !important;
+      background: rgba(248, 113, 113, .14) !important;
+      color: #fecaca !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-issue-title {
+      display: block;
+      max-width: 19rem;
+      overflow: hidden;
+      color: var(--maintenance-ink);
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-issue-description {
+      display: -webkit-box;
+      max-width: 23rem;
+      margin-top: .2rem;
+      overflow: hidden;
+      color: var(--maintenance-muted);
+      font-size: .75rem;
+      line-height: 1.4;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reported-date {
+      display: block;
+      min-width: 10.5rem;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reported-date time {
+      color: var(--maintenance-ink);
+      font-size: .76rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reported-date span {
+      color: var(--maintenance-muted);
+      font-size: .73rem;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-loading-row,
+    #mainContainer #maintenance-monitoring .maintenance-empty-row {
+      padding: 2.5rem 1rem !important;
+      color: var(--maintenance-muted) !important;
+      text-align: center;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box { position: relative; }
+    #mainContainer #maintenance-monitoring #maintenanceSearchInput { padding-right: 2.7rem !important; }
+    #mainContainer #maintenance-monitoring #maintenanceSearchInput::-webkit-search-cancel-button { display: none; }
+    #mainContainer #maintenance-monitoring .maintenance-search-clear {
+      position: absolute;
+      top: 50%;
+      right: .48rem;
+      display: inline-grid;
+      width: 1.75rem;
+      height: 1.75rem;
+      place-items: center;
+      transform: translateY(-50%);
+      border: 0;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .1);
+      color: var(--maintenance-muted);
+      cursor: pointer;
+    }
+    #mainContainer #maintenance-monitoring .maintenance-search-clear:hover { background: rgba(34, 197, 94, .2); color: var(--maintenance-ink); }
+    #mainContainer #maintenance-monitoring .maintenance-search-clear[hidden] { display: none; }
+    #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"] {
+      border-color: #075c35;
+      background: #075c35;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255,255,255,.12);
+      font-weight: 800;
+    }
+    #mainContainer #maintenance-monitoring .maintenance-details-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      min-height: 2.15rem;
+      padding: .42rem .62rem;
+      border: 1px solid rgba(52, 211, 153, .38);
+      border-radius: .62rem;
+      background: rgba(34, 197, 94, .12);
+      color: var(--maintenance-ink);
+      font: inherit;
+      font-size: .74rem;
+      font-weight: 750;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+    #mainContainer #maintenance-monitoring .maintenance-details-button:hover {
+      transform: translateY(-1px);
+      border-color: #22c55e;
+      background: #16834a;
+      color: #fff;
+    }
+    #mainContainer #maintenance-monitoring .maintenance-details-button:focus-visible,
+    #mainContainer #maintenance-monitoring .maintenance-search-clear:focus-visible {
+      outline: 3px solid rgba(34, 197, 94, .45);
+      outline-offset: 2px;
+    }
+    #mainContainer #maintenanceDetailsModal {
+      z-index: 2300;
+      padding: 1rem;
+      background: rgba(1, 18, 11, .72);
+      backdrop-filter: blur(8px);
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-card {
+      box-sizing: border-box;
+      width: min(720px, calc(100vw - 2rem));
+      max-height: min(86vh, 48rem);
+      border: 1px solid rgba(110, 231, 183, .26);
+      border-radius: 1rem;
+      background: linear-gradient(145deg, #0e2b1f, #071a12);
+      color: #eaf7ef;
+      box-shadow: 0 26px 75px rgba(0, 0, 0, .3);
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-header { align-items: center; padding: 1rem 1.2rem; border-bottom-color: rgba(110, 231, 183, .18); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-kicker {
+      margin: 0 0 .25rem;
+      color: #6ee7b7;
+      font-size: .65rem;
+      font-weight: 850;
+      letter-spacing: .14em;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2 { margin: 0; color: #f0fdf4; font-size: 1.15rem; font-weight: 850; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-body { padding: 1rem 1.2rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item { min-width: 0; padding: .7rem .75rem; border: 1px solid rgba(110, 231, 183, .14); border-radius: .7rem; background: rgba(3, 23, 15, .7); }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item span {
+      display: block;
+      margin-bottom: .24rem;
+      color: #9eb8a8;
+      font-size: .68rem;
+      font-weight: 750;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong { display: block; overflow-wrap: anywhere; color: #eaf7ef; font-size: .86rem; font-weight: 650; line-height: 1.5; white-space: pre-wrap; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: 1 / -1; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { display: flex; justify-content: flex-end; padding: .75rem 1.2rem 1rem; border-top: 1px solid rgba(110, 231, 183, .18); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-close-button {
+      min-height: 2.35rem;
+      padding: .5rem .9rem;
+      border: 1px solid #16834a;
+      border-radius: .65rem;
+      background: #16834a;
+      color: #fff;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    body.maintenance-details-open { overflow: hidden; }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-details-card {
+      border-color: #b9d8c4;
+      background: #f7fbf8;
+      color: #193b2a;
+    }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-details-header { border-bottom-color: #d8e8dd; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-details-kicker { color: #16834a; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-details-title-row h2 { color: #183b2b; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-detail-item { border-color: #dce9e0; background: #fff; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-detail-item span { color: #607566; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-detail-item strong { color: #193b2a; }
+    html.theme-light body.app-shell .main-container.theme-light #maintenanceDetailsModal .maintenance-details-footer { border-top-color: #d8e8dd; }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring table thead th {
+      background: #075c35 !important;
+      color: #f0fdf4 !important;
+      font-weight: 800 !important;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, .24);
+    }
+
+    #mainContainer.theme-light #maintenance-monitoring table thead th,
+    #mainContainer #maintenance-monitoring table thead th {
+      background: #075c35 !important;
+      color: #f0fdf4 !important;
+      font-weight: 800 !important;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, .24);
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-equipment-name {
+      color: #087443 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-equipment-location {
+      color: #617668 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-details-button {
+      border-color: #b9d8c4;
+      background: #edf7f0;
+      color: #1c5036;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-details-button:hover {
+      border-color: #16834a;
+      background: #16834a;
+      color: #fff;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-issue-title,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-reported-date time {
+      color: #203d2e !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-issue-description,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-reported-date span {
+      color: #617668 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-reporter-name,
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-equipment-id {
+      color: #203d2e !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .maintenance-reporter-email {
+      color: #617668 !important;
+    }
+
+    html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .status-badge.status-rejected {
+      border-color: #efc1bd !important;
+      background: #fff0ee !important;
+      color: #9f3428 !important;
+    }
+
+    @media (max-width: 1100px) {
+      #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+        grid-template-columns: minmax(13rem, 1fr) minmax(0, 2fr);
+      }
+      #mainContainer #maintenance-monitoring .maintenance-date-filter {
+        grid-column: 1 / -1;
+        grid-template-columns: auto minmax(10rem, 14rem);
+        align-items: center;
+        justify-content: end;
+      }
+    }
+
+    @media (max-width: 700px) {
+      #mainContainer #maintenance-monitoring .maintenance-list-heading {
+        flex-direction: column;
+        gap: .8rem;
+      }
+      #mainContainer #maintenance-monitoring .maintenance-list-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      #mainContainer #maintenance-monitoring .maintenance-date-filter {
+        grid-column: auto;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+      }
+      #mainContainer #maintenanceDetailsModal .maintenance-details-grid { grid-template-columns: minmax(0, 1fr); }
+      #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: auto; }
+    }
+
+    /* Compact, complete workspace for the Equipment Availability view. */
+    #mainContainer:has(#equipment-availability-view.active) > .main-content {
+      padding: .25rem .7rem .7rem;
+    }
+
+    #mainContainer:has(#equipment-availability-view.active) .comlab-page-header-spacer {
+      margin-bottom: .2rem !important;
+    }
+
+    #mainContainer #equipment-availability-view {
+      margin-top: .5rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-header {
+      display: grid;
+      grid-template-columns: minmax(14rem, 1.15fr) auto auto;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .6rem;
+      padding: .7rem .85rem;
+      border: 1px solid rgba(110, 231, 183, .24);
+      border-radius: .9rem;
+      background: linear-gradient(115deg, rgba(9, 50, 32, .96), rgba(9, 30, 22, .94));
+      box-shadow: 0 8px 22px rgba(2, 15, 9, .14), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-copy {
+      min-width: 0;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-kicker {
+      margin: 0 0 .12rem;
+      color: #6ee7b7;
+      font-size: .58rem;
+      font-weight: 850;
+      letter-spacing: .14em;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-copy h2 {
+      margin: 0;
+      color: #ecfdf5;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.25;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-copy > p:last-child {
+      margin: .18rem 0 0;
+      color: #a7cdb9;
+      font-size: .7rem;
+      line-height: 1.3;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(3.7rem, 1fr));
+      gap: .32rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-stat {
+      display: grid;
+      min-width: 0;
+      gap: .08rem;
+      padding: .34rem .45rem;
+      border: 1px solid rgba(110, 231, 183, .18);
+      border-radius: .6rem;
+      background: rgba(2, 18, 11, .32);
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-stat span {
+      overflow: hidden;
+      color: #a7cdb9;
+      font-size: .56rem;
+      font-weight: 750;
+      letter-spacing: .04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-stat strong {
+      color: #ecfdf5;
+      font-size: .88rem;
+      line-height: 1.15;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .35rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-link {
+      display: inline-flex;
+      min-height: 2.1rem;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      padding: .35rem .55rem;
+      border: 1px solid rgba(110, 231, 183, .22);
+      border-radius: .6rem;
+      background: rgba(2, 18, 11, .28);
+      color: #d1fae5;
+      font-size: .68rem;
+      font-weight: 750;
+      line-height: 1.15;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-link:hover {
+      transform: translateY(-1px);
+      border-color: rgba(110, 231, 183, .48);
+      background: rgba(34, 197, 94, .16);
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-link:focus-visible,
+    #mainContainer #equipment-availability-view .availability-clear-filters:focus-visible,
+    #mainContainer #equipment-availability-view .availability-category-toggle:focus-visible {
+      outline: 3px solid rgba(74, 222, 128, .55);
+      outline-offset: 2px;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-link-primary {
+      border-color: #16834a;
+      background: #16834a;
+      color: #fff;
+    }
+
+    #mainContainer #equipment-availability-view .availability-overview-link-primary:hover {
+      border-color: #129257;
+      background: #129257;
+    }
+
+    #mainContainer #equipment-availability-view .availability-borrow-count {
+      display: inline-grid;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      place-items: center;
+      padding: 0 .25rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      font-size: .65rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-refresh-button {
+      cursor: pointer;
+    }
+
+    #mainContainer #equipment-availability-view .availability-refresh-button:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    #mainContainer #equipment-availability-view .table-card.equipment-availability-page {
+      min-width: 0;
+      margin-top: 0;
+      padding: .72rem .8rem;
+      border-radius: .95rem;
+      background: linear-gradient(145deg, rgba(12, 37, 26, .96), rgba(7, 24, 17, .96));
+      box-shadow: 0 10px 26px rgba(2, 15, 9, .13);
+    }
+
+    #mainContainer #equipment-availability-view .availability-toolbar {
+      grid-template-columns: minmax(12rem, 1.45fr) repeat(3, minmax(8rem, 1fr)) auto;
+      gap: .45rem;
+      margin-bottom: .55rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-toolbar input,
+    #mainContainer #equipment-availability-view .availability-toolbar select {
+      box-sizing: border-box;
+      min-width: 0;
+      min-height: 2.35rem;
+      padding: .4rem .62rem;
+      border-color: rgba(110, 231, 183, .2);
+      border-radius: .62rem;
+      background: rgba(2, 18, 11, .62);
+      color: #eaf7ef;
+      font-size: .76rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-toolbar input::placeholder {
+      color: #9bb7a6;
+    }
+
+    #mainContainer #equipment-availability-view .availability-clear-filters {
+      display: inline-flex;
+      min-height: 2.35rem;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      padding: .35rem .55rem;
+      border: 1px solid rgba(110, 231, 183, .2);
+      border-radius: .62rem;
+      background: rgba(34, 197, 94, .08);
+      color: #c9ead7;
+      cursor: pointer;
+      font-size: .68rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    #mainContainer #equipment-availability-view .availability-clear-filters:hover {
+      border-color: rgba(110, 231, 183, .42);
+      background: rgba(34, 197, 94, .16);
+    }
+
+    #mainContainer #equipment-availability-view .availability-laboratory-section {
+      margin-top: .65rem;
+      border-color: rgba(110, 231, 183, .18);
+      border-radius: .8rem;
+      background: rgba(2, 18, 11, .2);
+    }
+
+    #mainContainer #equipment-availability-view .availability-laboratory-heading {
+      padding: .65rem .8rem;
+      background: linear-gradient(100deg, rgba(22, 163, 74, .2), rgba(7, 24, 17, .72));
+      font-size: .78rem;
+      letter-spacing: .07em;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-toggle {
+      min-height: 2.35rem;
+      padding: .52rem .75rem;
+      background: rgba(7, 28, 19, .68);
+      font-size: .76rem;
+      letter-spacing: .025em;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-toggle:hover {
+      background: rgba(34, 197, 94, .11);
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-title {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-icon {
+      color: #6ee7b7;
+      font-size: .78rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-count {
+      padding: .12rem .4rem;
+      border: 1px solid rgba(110, 231, 183, .18);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .08);
+      color: #a7cdb9;
+      font-size: .64rem;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-chevron {
+      flex: 0 0 auto;
+      color: #6ee7b7;
+      font-size: .72rem;
+      transition: transform .18s ease;
+    }
+
+    #mainContainer #equipment-availability-view .availability-category-content .availability-table {
+      min-width: 700px;
+    }
+
+    #mainContainer #equipment-availability-view .availability-table th,
+    #mainContainer #equipment-availability-view .availability-table td {
+      padding: .5rem .62rem;
+      font-size: .76rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-state {
+      padding: .22rem .5rem;
+      font-size: .66rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-history-button {
+      min-height: 2rem;
+      padding: .3rem .5rem;
+      border-radius: .55rem;
+      font-size: .7rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-results-count {
+      margin-top: .45rem;
+      color: #a4bdad;
+      font-size: .7rem;
+    }
+
+    #mainContainer #equipment-availability-view .availability-empty-state {
+      padding: 1rem .65rem;
+      border: 1px dashed rgba(110, 231, 183, .2);
+      border-radius: .7rem;
+      font-size: .82rem;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-header {
+      border-color: #c8ddd0;
+      background: linear-gradient(115deg, #ffffff, #f2f8f4);
+      box-shadow: 0 4px 14px rgba(27, 74, 48, .07);
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-copy h2,
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat strong {
+      color: #183b2b;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-kicker {
+      color: #16834a;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-copy > p:last-child,
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat span {
+      color: #617668;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat {
+      border-color: #d4e4d9;
+      background: #f8fcf9;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-link:not(.availability-overview-link-primary) {
+      border-color: #c8ddd0;
+      background: #ffffff;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-overview-link-primary {
+      border-color: #16834a;
+      background: #16834a;
+      color: #ffffff;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .table-card.equipment-availability-page {
+      border-color: #cbded2;
+      background: linear-gradient(145deg, #ffffff, #f7fbf8);
+      color: #183b2b;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-toolbar input,
+    html.theme-light #mainContainer #equipment-availability-view .availability-toolbar select {
+      border-color: #cbded2;
+      background: #ffffff;
+      color: #183b2b;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-toolbar input::placeholder {
+      color: #71867a;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-clear-filters {
+      border-color: #cbded2;
+      background: #f3faf5;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-laboratory-section {
+      border-color: #d4e4d9;
+      background: #ffffff;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-laboratory-heading {
+      border-color: #d4e4d9;
+      background: linear-gradient(100deg, #e8f5ec, #f8fcf9);
+      color: #24563a;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-category {
+      border-color: #e2ece5;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-category-toggle {
+      background: #f7fbf8;
+      color: #243c2e;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-category-toggle:hover {
+      background: #eaf6ee;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-category-count {
+      border-color: #d4e4d9;
+      background: #eff8f2;
+      color: #547263;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-table th {
+      background: #e7f3eb;
+      color: #285b40;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-table td {
+      border-color: #e2ece5;
+      color: #243c2e;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-state.available {
+      background: #e3f6e9;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-state.borrowed {
+      background: #fff3d6;
+      color: #80520c;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-state.unavailable {
+      background: #ffebeb;
+      color: #9f3428;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-history-button {
+      border-color: #c8ddd0;
+      background: #f2faf5;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #equipment-availability-view .availability-results-count {
+      color: #617668;
+    }
+
+    @media (max-width: 1100px) {
+      #mainContainer #equipment-availability-view .availability-overview-header {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-stats,
+      #mainContainer #equipment-availability-view .availability-overview-actions {
+        grid-column: 1 / -1;
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-actions {
+        justify-content: flex-start;
+      }
+
+      #mainContainer #equipment-availability-view .availability-toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #mainContainer #equipment-availability-view .availability-toolbar input {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      #mainContainer:has(#equipment-availability-view.active) > .main-content {
+        padding: .2rem .45rem .55rem;
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-header {
+        grid-template-columns: minmax(0, 1fr);
+        gap: .55rem;
+        padding: .65rem;
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-link {
+        min-width: 0;
+        padding-inline: .35rem;
+        font-size: .62rem;
+      }
+
+      #mainContainer #equipment-availability-view .availability-overview-link span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #mainContainer #equipment-availability-view .table-card.equipment-availability-page {
+        padding: .55rem;
+      }
+
+      #mainContainer #equipment-availability-view .availability-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      #mainContainer #equipment-availability-view .availability-toolbar input {
+        grid-column: auto;
+      }
+
+      #mainContainer #equipment-availability-view .availability-clear-filters {
+        justify-self: start;
+      }
+
+      #mainContainer #equipment-availability-view .availability-laboratory-heading {
+        padding: .6rem .65rem;
+        font-size: .72rem;
+      }
+
+      #mainContainer #equipment-availability-view .availability-category-toggle {
+        padding: .5rem .6rem;
+      }
+    }
+
+    #availabilityHistoryModal {
+      z-index: 2100;
+      background: rgba(3, 15, 10, .76);
+      backdrop-filter: blur(8px);
+    }
+
+    #availabilityHistoryModal .availability-modal-card {
+      box-sizing: border-box;
+      width: min(900px, calc(100vw - 2rem));
+      max-width: min(900px, calc(100vw - 2rem));
+      max-height: min(84vh, 48rem);
+      gap: .8rem;
+      padding: clamp(.85rem, 2vw, 1.25rem);
+      border: 1px solid rgba(110, 231, 183, .26) !important;
+      border-radius: 1rem !important;
+      background: linear-gradient(145deg, #0e2b1f, #071a12) !important;
+      color: #eaf7ef !important;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .46), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    }
+
+    #availabilityHistoryModal .availability-modal-header {
+      flex: 0 0 auto;
+      align-items: flex-start;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid rgba(110, 231, 183, .16);
+    }
+
+    #availabilityHistoryModal .availability-modal-heading {
+      display: flex;
+      min-width: 0;
+      align-items: flex-start;
+      gap: .7rem;
+    }
+
+    #availabilityHistoryModal .availability-modal-heading-icon {
+      display: grid;
+      width: 2.45rem;
+      height: 2.45rem;
+      flex: 0 0 2.45rem;
+      place-items: center;
+      border: 1px solid rgba(110, 231, 183, .24);
+      border-radius: .75rem;
+      background: rgba(34, 197, 94, .12);
+      color: #6ee7b7;
+    }
+
+    #availabilityHistoryModal .availability-modal-heading-copy {
+      min-width: 0;
+    }
+
+    #availabilityHistoryModal .availability-modal-kicker {
+      margin: 0 0 .12rem !important;
+      color: #6ee7b7 !important;
+      font-size: .58rem !important;
+      font-weight: 850 !important;
+      letter-spacing: .14em;
+      line-height: 1.2;
+    }
+
+    #availabilityHistoryModal .availability-modal-title {
+      margin: 0 !important;
+      color: #f0fdf4 !important;
+      font-size: 1.15rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -.02em;
+      line-height: 1.25;
+    }
+
+    #availabilityHistoryModal .availability-modal-subtitle {
+      margin: .18rem 0 0 !important;
+      color: #a7cdb9 !important;
+      font-size: .74rem !important;
+      line-height: 1.4;
+    }
+
+    #availabilityHistoryModal .availability-modal-close {
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1px solid rgba(110, 231, 183, .2);
+      background: rgba(34, 197, 94, .1);
+      color: #d1fae5;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    #availabilityHistoryModal .availability-modal-close:hover {
+      transform: rotate(90deg);
+      border-color: rgba(110, 231, 183, .48);
+      background: rgba(34, 197, 94, .2);
+    }
+
+    #availabilityHistoryModal .availability-modal-close:focus-visible {
+      outline: 3px solid rgba(74, 222, 128, .55);
+      outline-offset: 2px;
+    }
+
+    #availabilityHistoryModal .availability-modal-summary {
+      flex: 0 0 auto;
+      gap: .5rem;
+      margin: 0;
+    }
+
+    #availabilityHistoryModal .availability-summary-item {
+      padding: .58rem .68rem;
+      border: 1px solid rgba(110, 231, 183, .18) !important;
+      border-radius: .7rem !important;
+      background: rgba(34, 197, 94, .065) !important;
+      box-shadow: none !important;
+      color: #eaf7ef !important;
+    }
+
+    #availabilityHistoryModal .availability-summary-item span {
+      color: #a7cdb9 !important;
+      font-size: .66rem !important;
+      font-weight: 650;
+    }
+
+    #availabilityHistoryModal .availability-summary-item strong {
+      margin-top: .12rem;
+      color: #f0fdf4 !important;
+      font-size: 1.08rem;
+      line-height: 1.2;
+    }
+
+    #availabilityHistoryModal .overflow-x-auto {
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow: auto;
+      border: 1px solid rgba(110, 231, 183, .16);
+      border-radius: .72rem;
+      background: rgba(2, 18, 11, .3);
+      scrollbar-color: rgba(74, 222, 128, .58) rgba(2, 18, 11, .35);
+    }
+
+    #availabilityHistoryModal .availability-history-table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: separate;
+      border-spacing: 0;
+      color: #eaf7ef !important;
+    }
+
+    #availabilityHistoryModal .availability-history-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: .62rem .7rem;
+      border-bottom: 1px solid rgba(110, 231, 183, .2);
+      background: #123a28 !important;
+      color: #d1fae5 !important;
+      font-size: .66rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #availabilityHistoryModal .availability-history-table td {
+      padding: .65rem .7rem;
+      border-bottom: 1px solid rgba(110, 231, 183, .1);
+      background: transparent !important;
+      color: #eaf7ef !important;
+      font-size: .76rem;
+      line-height: 1.35;
+      vertical-align: middle;
+    }
+
+    #availabilityHistoryModal .availability-history-table tbody tr:nth-child(even) {
+      background: rgba(110, 231, 183, .045) !important;
+    }
+
+    #availabilityHistoryModal .availability-history-table tbody tr:hover {
+      background: rgba(34, 197, 94, .1) !important;
+    }
+
+    #availabilityHistoryModal .availability-history-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    #availabilityHistoryModal .availability-history-message {
+      padding: 1.2rem .8rem !important;
+      color: #a7cdb9 !important;
+      text-align: center;
+    }
+
+    #availabilityHistoryModal .availability-history-message.is-error {
+      color: #fca5a5 !important;
+    }
+
+    #availabilityHistoryModal .availability-history-status {
+      display: inline-flex;
+      align-items: center;
+      padding: .23rem .52rem;
+      border: 1px solid rgba(110, 231, 183, .2);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .1);
+      color: #bbf7d0;
+      font-size: .65rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    #availabilityHistoryModal .availability-history-status.status-cancelled,
+    #availabilityHistoryModal .availability-history-status.status-rejected,
+    #availabilityHistoryModal .availability-history-status.status-lost {
+      border-color: rgba(248, 113, 113, .25);
+      background: rgba(248, 113, 113, .12);
+      color: #fecaca;
+    }
+
+    #availabilityHistoryModal .availability-history-status.status-borrowed,
+    #availabilityHistoryModal .availability-history-status.status-overdue,
+    #availabilityHistoryModal .availability-history-status.status-pending {
+      border-color: rgba(251, 191, 36, .25);
+      background: rgba(245, 158, 11, .12);
+      color: #fde68a;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-card {
+      border-color: #c8ddd0 !important;
+      background: linear-gradient(145deg, #ffffff, #f5faf6) !important;
+      color: #183b2b !important;
+      box-shadow: 0 24px 70px rgba(13, 39, 24, .28), inset 0 1px 0 #ffffff !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-header {
+      border-color: #dce9e0;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-heading-icon {
+      border-color: #c8e2d1;
+      background: #e7f5eb;
+      color: #16834a;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-kicker {
+      color: #16834a !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-title {
+      color: #183b2b !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-subtitle {
+      color: #617668 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-modal-close {
+      border-color: #c8ddd0;
+      background: #eff8f2;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-summary-item {
+      border-color: #d4e4d9 !important;
+      background: #f8fcf9 !important;
+      color: #183b2b !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-summary-item span {
+      color: #617668 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-summary-item strong {
+      color: #183b2b !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .overflow-x-auto {
+      border-color: #d4e4d9;
+      background: #ffffff;
+      scrollbar-color: #9dbdaa #eef5f0;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-table {
+      color: #243c2e !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-table th {
+      border-color: #c8dfd0;
+      background: #e7f3eb !important;
+      color: #285b40 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-table td {
+      border-color: #e2ece5;
+      color: #243c2e !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-table tbody tr:nth-child(even) {
+      background: #f6faf7 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-table tbody tr:hover {
+      background: #eaf6ee !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-message {
+      color: #617668 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-message.is-error {
+      color: #9f3428 !important;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status {
+      border-color: #cbe2d2;
+      background: #e4f6ea;
+      color: #17603c;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-cancelled,
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-rejected,
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-lost {
+      border-color: #efc4c4;
+      background: #ffeded;
+      color: #9f3428;
+    }
+
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-borrowed,
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-overdue,
+    html.theme-light #mainContainer #availabilityHistoryModal .availability-history-status.status-pending {
+      border-color: #ead08a;
+      background: #fff4d7;
+      color: #80520c;
+    }
+
+    @media (max-width: 700px) {
+      #availabilityHistoryModal {
+        align-items: center;
+        padding: .6rem;
+      }
+
+      #availabilityHistoryModal .availability-modal-card {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        gap: .65rem;
+        padding: .75rem;
+        border-radius: .9rem !important;
+      }
+
+      #availabilityHistoryModal .availability-modal-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #availabilityHistoryModal .availability-summary-item {
+        padding: .48rem .55rem;
+      }
+
+      #availabilityHistoryModal .availability-history-table th,
+      #availabilityHistoryModal .availability-history-table td {
+        padding: .55rem .58rem;
+      }
+    }
+  </style>
 </head>
-<body class="app-shell">
+<body class="app-shell system-layout-page admin-dashboard-page">
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
     <div id="shared-sidebar"></div>
 
     <!-- Main Container -->
     <div class="main-container" id="mainContainer">
-        <!-- Top Header -->
-        <div class="top-header">
-            <div class="header-left flex items-center space-x-3 pl-14 lg:pl-0">
-                <button id="mobileMenuToggle" class="menu-toggle fixed left-4 top-4 z-50 block lg:hidden" onclick="toggleSidebar()" aria-label="Open navigation">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="header-meta ml-3">
-                    <h2 class="header-title" id="pageHeaderTitle">Dashboard Overview</h2>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="system-dashboard-heading">
+                <div class="system-dashboard-heading-main">
+                    <button id="mobileMenuToggle" class="menu-toggle" onclick="toggleSidebar()" aria-label="Open navigation">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
-            </div>
-
-            <div class="header-right">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-
-                <div class="relative">
+                <div class="system-dashboard-heading-actions">
                     <button id="adminBorrowNotificationsButton" type="button" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-200 transition hover:bg-emerald-500/20" aria-label="Borrow notifications">
                         <i class="fas fa-bell"></i>
                         <span id="adminBorrowNotificationBadge" class="hidden absolute -right-1 -top-1 min-w-[1.1rem] rounded-full bg-red-500 px-1.5 py-0.5 text-[0.65rem] font-bold text-white">0</span>
                     </button>
-                </div>
-
-                <div class="ml-auto flex items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.12)]">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" id="adminAvatar">AD</div>
-                    <div class="min-w-0">
-                        <div class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-200" id="adminUserRole">Admin</div>
-                        <div class="text-sm font-semibold text-white" id="adminUserName">Admin User</div>
+                    <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+                    <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white">
+                        <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" id="adminAvatar">AD</span>
+                        <span class="system-profile-badge-copy text-white">
+                            <span class="system-profile-badge-name text-white" id="adminUserName">Supply Office</span>
+                            <span class="system-profile-badge-role text-emerald-400" id="adminUserRole">Super Admin</span>
+                        </span>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Page Header -->
-            <div class="page-header">
-                <div>
-                </div>
-            </div>
-
             <div id="dashboard-view" class="page-view active">
+                <div class="dashboard-section-heading">
+                    <div>
+                        <p class="dashboard-section-kicker">Campus snapshot</p>
+                        <h2>Operations overview</h2>
+                    </div>
+                    <span class="dashboard-refresh-note">
+                        <span class="dashboard-live-dot" aria-hidden="true"></span>
+                        <span class="dashboard-refresh-copy">
+                            <span>Data refreshes automatically</span>
+                            <time id="dashboardLastUpdated" class="dashboard-refresh-time">Last updated: waiting for refresh</time>
+                        </span>
+                    </span>
+                </div>
                 <!-- Dashboard Cards -->
-                <div class="dashboard-cards">
+                <div class="dashboard-cards dashboard-kpi-grid">
                     <!-- Equipment Statistics Cards -->
-                    <div class="card">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all">
                         <div class="card-header">
                             <div>
-                                <p class="card-title text-emerald-300">Total</p>
-                                <h3 class="text-slate-100 text-sm font-semibold mb-1">Total Equipment</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Total</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Total Equipment</h3>
                             </div>
-                            <div class="card-icon blue">
+                            <div class="card-icon blue dashboard-kpi-icon">
                                 <i class="fas fa-box"></i>
                             </div>
                         </div>
-                        <p id="dashboardTotalCount" class="text-4xl font-bold text-white">0</p>
-                    </div>
+                        <p id="dashboardTotalCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                    </a>
 
-                    <div class="card">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all&amp;status=Serviceable">
                         <div class="card-header">
                             <div>
-                                <p class="card-title text-emerald-300">Available</p>
-                                <h3 class="text-slate-100 text-sm font-semibold mb-1">Serviceable</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Available</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Serviceable</h3>
                             </div>
-                            <div class="card-icon green">
+                            <div class="card-icon green dashboard-kpi-icon">
                                 <i class="fas fa-check-circle"></i>
                             </div>
                         </div>
-                        <p id="dashboardServiceableCount" class="text-4xl font-bold text-white">0</p>
-                    </div>
+                        <p id="dashboardServiceableCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                    </a>
 
-                    <div class="card">
+                    <a class="card dashboard-summary-link dashboard-kpi-card dashboard-kpi-warning" href="/equipment-inventory?view=all&amp;status=Unserviceable">
                         <div class="card-header">
                             <div>
-                                <p class="card-title text-emerald-300">Inactive</p>
-                                <h3 class="text-slate-100 text-sm font-semibold mb-1">Unserviceable</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Inactive</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Unserviceable</h3>
                             </div>
-                            <div class="card-icon orange">
+                            <div class="card-icon dashboard-kpi-icon dashboard-kpi-warning-icon">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                         </div>
-                        <p id="dashboardUnserviceableCount" class="text-4xl font-bold text-white">0</p>
-                    </div>
+                        <p id="dashboardUnserviceableCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                    </a>
 
-                    <div class="card">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all&amp;status=Lost">
                         <div class="card-header">
                             <div>
-                                <p class="card-title text-emerald-300">Unavailable</p>
-                                <h3 class="text-slate-100 text-sm font-semibold mb-1">Lost</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Unavailable</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Lost</h3>
                             </div>
-                            <div class="card-icon purple">
+                            <div class="card-icon purple dashboard-kpi-icon">
                                 <i class="fas fa-times-circle"></i>
                             </div>
                         </div>
-                        <p id="dashboardLostCount" class="text-4xl font-bold text-white">0</p>
-                    </div>
+                        <p id="dashboardLostCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                    </a>
 
-                    <div class="card">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/page/laboratory-schedules">
                         <div class="card-header">
-                            <h3 class="card-title">Total Laboratory Sessions</h3>
-                            <div class="card-icon green">
+                            <div>
+                                <p class="card-title dashboard-kpi-overline">Total</p>
+                                <h3 class="dashboard-kpi-label">Laboratory Sessions</h3>
+                            </div>
+                            <div class="card-icon green dashboard-kpi-icon">
                                 <i class="fas fa-flask"></i>
                             </div>
                         </div>
-                        <div class="card-value" id="totalLaboratorySessionsCount">0</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Attendance Sessions Conducted</h3>
-                            <div class="card-icon blue">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                        </div>
-                        <div class="card-value" id="attendanceSessionsConductedCount">0</div>
-                    </div>
+                        <div class="card-value dashboard-kpi-value" id="totalLaboratorySessionsCount">—</div>
+                    </a>
                 </div>
 
                 <div class="charts-section">
-                    <div class="chart-card">
-                        <div class="chart-title">Borrow Equipment Overview</div>
-                        <div class="chart-summary" id="borrowEquipmentSummary">Borrowed: 0 • Returned: 0 • Overdue: 0</div>
+                    <section class="chart-card" aria-labelledby="borrowChartTitle">
+                        <div class="chart-heading"><span class="chart-icon borrow-chart-icon" aria-hidden="true"><i class="fas fa-arrow-right-arrow-left"></i></span><div><p class="chart-kicker">LOAN ACTIVITY</p><h2 class="chart-title" id="borrowChartTitle">Borrow Equipment</h2></div></div>
+                        <div class="chart-summary" id="borrowEquipmentSummary">Borrowed: 0 • Returned: 0 • Taken Over: 0</div>
                         <div class="chart-container">
-                            <canvas id="borrowEquipmentChart" width="800" height="400"></canvas>
+                            <canvas id="borrowEquipmentChart" role="img" aria-label="Bar chart showing borrowed, returned, and taken over equipment. Current totals are shown above."></canvas>
                         </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Equipment Status</div>
-                        <div class="chart-summary" id="equipmentStatusSummary">Serviceable: 0 • Unserviceable: 0 • Lost: 0</div>
+                    </section>
+                    <section class="chart-card" aria-labelledby="equipmentChartTitle">
+                        <div class="chart-heading"><span class="chart-icon equipment-chart-icon" aria-hidden="true"><i class="fas fa-boxes-stacked"></i></span><div><p class="chart-kicker">INVENTORY HEALTH</p><h2 class="chart-title" id="equipmentChartTitle">Equipment Status</h2></div></div>
+                        <div class="chart-summary doughnut-summary" id="equipmentStatusSummary" aria-hidden="true">Serviceable: 0 • Unserviceable: 0 • Lost: 0</div>
                         <div class="chart-container">
-                            <canvas id="equipmentStatusChart" width="800" height="400"></canvas>
+                            <canvas id="equipmentStatusChart" role="img" aria-label="Doughnut chart showing serviceable, unserviceable, and lost equipment. Current totals are shown above."></canvas>
                         </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Maintenance Reports</div>
-                        <div class="chart-summary" id="maintenanceStatusSummary">Pending: 0 • In Progress: 0 • Resolved: 0</div>
+                    </section>
+                    <section class="chart-card" aria-labelledby="maintenanceChartTitle">
+                        <div class="chart-heading"><span class="chart-icon maintenance-chart-icon" aria-hidden="true"><i class="fas fa-screwdriver-wrench"></i></span><div><p class="chart-kicker">SERVICE QUEUE</p><h2 class="chart-title" id="maintenanceChartTitle">Maintenance Reports</h2></div></div>
+                        <div class="chart-summary doughnut-summary" id="maintenanceStatusSummary" aria-hidden="true">Pending: 0 • In Progress: 0 • Resolved: 0</div>
                         <div class="chart-container">
-                            <canvas id="maintenanceStatusChart" width="800" height="400"></canvas>
+                            <canvas id="maintenanceStatusChart" role="img" aria-label="Doughnut chart showing pending, in progress, and resolved maintenance reports. Current totals are shown above."></canvas>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 
             <!-- Maintenance Monitoring -->
             <div id="maintenance-view" class="page-view">
-                <div class="maintenance-header-card">
-                    <div class="maintenance-header-left">
-                        <h1 class="text-white text-2xl font-bold">Maintenance Monitoring</h1>
-                    </div>
-                    <div class="maintenance-header-right">
-                        <div class="flex items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2 shadow-[0_0_20px_rgba(34,197,94,0.12)]">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" id="maintenanceHeaderAvatar">NC</div>
-                            <div class="min-w-0">
-                                <div class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-emerald-200" id="maintenanceHeaderUserRole">Admin</div>
-                                <div class="text-sm font-semibold text-white" id="maintenanceHeaderUserName">NIA CORDERO</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="table-card maintenance-monitoring-page" id="maintenance-monitoring" data-maintenance-section>
-                    <div class="table-header" style="align-items: flex-start; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
-                        <div></div>
-                        <div class="filter-toolbar">
-                            <div class="search-box" style="min-width: 240px; flex: 1 1 240px;">
-                                <i class="fas fa-search"></i>
-                                <input id="maintenanceSearchInput" type="text" placeholder="Search..." style="width: 100%;">
-                            </div>
-                            <div class="filter-group">
-                            <button type="button" class="status-filter active" data-filter="All">All</button>
-                            <button type="button" class="status-filter" data-filter="Pending">Pending</button>
-                            <button type="button" class="status-filter" data-filter="In Progress">In Progress</button>
-                            <button type="button" class="status-filter" data-filter="Resolved">Resolved</button>
+                    <div class="maintenance-list-heading">
+                        <div>
+                            <p class="maintenance-list-kicker">SERVICE DESK</p>
                         </div>
-                        <select id="dateFilter" class="filter-select">
-                            <option value="All">Date: All</option>
-                            <option value="Today">Today</option>
-                            <option value="This Week">This Week</option>
-                            <option value="This Month">This Month</option>
-                        </select>
+                        <div class="maintenance-list-actions">
+                            <span id="maintenanceLastUpdated" class="maintenance-updated-label" aria-live="polite">Last updated: waiting for refresh</span>
+                            <button type="button" id="refreshMaintenanceData" class="maintenance-refresh-button" aria-label="Refresh reports" title="Refresh reports">
+                                <i class="fas fa-rotate" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="maintenance-report-tabs" role="tablist" aria-label="Maintenance reports by reporter">
+                        <button type="button" id="maintenanceStudentReportsTab" class="maintenance-report-tab active" role="tab" aria-selected="true" data-reporter-role="student">
+                            <span>Student Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="student">0</span>
+                        </button>
+                        <button type="button" id="maintenanceFacultyReportsTab" class="maintenance-report-tab" role="tab" aria-selected="false" data-reporter-role="faculty">
+                            <span>Faculty Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="faculty">0</span>
+                        </button>
+                    </div>
+                    <div class="table-header" style="align-items: flex-start; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <div class="filter-toolbar system-filter-row">
+                            <div class="maintenance-search-controls">
+                                <div class="search-box maintenance-search-box">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <input id="maintenanceSearchInput" type="search" placeholder="Search equipment, reporter, issue" aria-label="Search equipment, reporter, or issue" autocomplete="off" style="width: 100%;">
+                                    <button type="button" id="maintenanceSearchClear" class="maintenance-search-clear" aria-label="Clear search" title="Clear search" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="filter-group" role="group" aria-label="Filter reports by status">
+                                <button type="button" class="status-filter active" data-filter="All" aria-pressed="true"><span>All</span><span class="maintenance-filter-count" data-maintenance-count="All">0</span></button>
+                                <button type="button" class="status-filter" data-filter="Pending" aria-pressed="false"><span>Pending</span><span class="maintenance-filter-count" data-maintenance-count="Pending">0</span></button>
+                                <button type="button" class="status-filter" data-filter="In Progress" aria-pressed="false"><span>In Progress</span><span class="maintenance-filter-count" data-maintenance-count="In Progress">0</span></button>
+                                <button type="button" class="status-filter" data-filter="Resolved" aria-pressed="false"><span>Resolved</span><span class="maintenance-filter-count" data-maintenance-count="Resolved">0</span></button>
+                                <button type="button" class="status-filter" data-filter="Rejected" aria-pressed="false"><span>Rejected</span><span class="maintenance-filter-count" data-maintenance-count="Rejected">0</span></button>
+                            </div>
+                            <label class="maintenance-date-filter">
+                                <span>Date range</span>
+                                <select id="dateFilter" class="filter-select" aria-label="Filter reports by date">
+                                    <option value="All">Any time</option>
+                                    <option value="Today">Today</option>
+                                    <option value="Last 7 Days">Last 7 days</option>
+                                    <option value="This Week">This week</option>
+                                    <option value="This Month">This month</option>
+                                </select>
+                            </label>
                     </div>
                 </div>
 
@@ -1668,15 +3816,16 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Equipment ID</th>
-                                <th>Equipment Name</th>
-                                <th>Student Name</th>
-                                <th>Current Status</th>
-                                <th>Date Reported</th>
+                                <th>Equipment</th>
+                                <th>Issue</th>
+                                <th>Reported by</th>
+                                <th>Status</th>
+                                <th>Date reported</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="maintenanceTableBody">
-                            <!-- populated by /js/admin-maintenance.js -->
+                            <tr><td colspan="6" class="maintenance-loading-row">Loading maintenance reports…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1687,23 +3836,54 @@
             </div>
         </div>
 
-        <div id="equipment-availability-view" class="page-view">
-            <div class="flex flex-row items-center justify-between w-full mb-6 p-4 rounded-xl bg-[#022814]/40 border border-emerald-500/20 backdrop-blur-md">
-                <h1 class="text-3xl font-bold text-white tracking-tight">Equipment Availability</h1>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 rounded-lg">
-                        <i class="fas fa-bell" aria-hidden="true"></i>
-                        <span>Pending Reports</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 rounded-lg">
-                        <i class="fas fa-hand-holding" aria-hidden="true"></i>
-                        <span>Borrow Requests</span>
-                        <strong id="equipmentAvailabilityBorrowCount" class="font-bold">0</strong>
-                    </span>
+        <div id="maintenanceDetailsModal" class="details-modal maintenance-details-modal" role="dialog" aria-modal="true" aria-labelledby="maintenanceDetailsTitle" aria-hidden="true">
+            <section class="details-modal-card maintenance-details-card">
+                <header class="details-modal-header maintenance-details-header">
+                    <div>
+                        <p class="maintenance-details-kicker">SERVICE DESK</p>
+                        <div class="maintenance-details-title-row">
+                            <h2 id="maintenanceDetailsTitle">Report details</h2>
+                            <span class="status-badge status-secondary" data-maintenance-modal-status>Pending</span>
+                        </div>
+                    </div>
+                    <button type="button" class="details-modal-close" data-close-maintenance-details aria-label="Close report details"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+                </header>
+                <div class="details-modal-body maintenance-details-body">
+                    <div id="maintenanceDetailsBody" class="maintenance-details-grid"></div>
                 </div>
-            </div>
+                <footer class="maintenance-details-footer">
+                    <button type="button" class="maintenance-details-close-button" data-close-maintenance-details>Close</button>
+                </footer>
+            </section>
+        </div>
+
+        <div id="equipment-availability-view" class="page-view">
+            <section class="availability-overview-header" aria-label="Equipment availability overview">
+                <div class="availability-overview-copy">
+                    <p class="availability-overview-kicker">CAMPUS INVENTORY</p>
+                    <h2>Equipment across laboratories</h2>
+                </div>
+                <div class="availability-overview-stats" aria-label="Availability summary">
+                    <div class="availability-overview-stat"><span>Matching</span><strong id="availabilityMatchingCount" aria-live="polite">—</strong></div>
+                    <div class="availability-overview-stat"><span>Available</span><strong id="availabilityAvailableCount" aria-live="polite">—</strong></div>
+                    <div class="availability-overview-stat"><span>Borrowed</span><strong id="availabilityBorrowedCount" aria-live="polite">—</strong></div>
+                    <div class="availability-overview-stat"><span>Unavailable</span><strong id="availabilityUnavailableCount" aria-live="polite">—</strong></div>
+                </div>
+                <div class="availability-overview-actions">
+                    <a class="availability-overview-link" href="/maintenance-monitoring" title="Open maintenance reports">
+                        <i class="fas fa-screwdriver-wrench" aria-hidden="true"></i><span>Maintenance</span>
+                    </a>
+                    <a class="availability-overview-link availability-overview-link-primary" href="/borrow-equipment" title="Review borrow requests">
+                        <i class="fas fa-hand-holding" aria-hidden="true"></i><span>Borrow requests</span>
+                        <strong id="equipmentAvailabilityBorrowCount" class="availability-borrow-count">0</strong>
+                    </a>
+                    <button id="refreshEquipmentAvailability" class="availability-overview-link availability-refresh-button" type="button" aria-label="Refresh equipment availability">
+                        <i class="fas fa-rotate-right" aria-hidden="true"></i><span>Refresh</span>
+                    </button>
+                </div>
+            </section>
             <div class="table-card equipment-availability-page">
-                <div class="availability-toolbar">
+                <div class="availability-toolbar system-filter-row">
                     <input id="availabilitySearch" type="search" placeholder="Search equipment name or ID" aria-label="Search equipment">
                     <select id="availabilityLaboratory" aria-label="Filter by laboratory">
                         <option value="">All Laboratories</option>
@@ -1720,20 +3900,27 @@
                         <option value="BORROWED">Borrowed</option>
                         <option value="UNAVAILABLE">Unavailable</option>
                     </select>
+                    <button id="clearAvailabilityFilters" class="availability-clear-filters" type="button">
+                        <i class="fas fa-arrow-rotate-left" aria-hidden="true"></i><span>Reset filters</span>
+                    </button>
                 </div>
                 <div id="equipmentAvailabilityBody">
                     <div class="availability-empty-state">Loading equipment availability...</div>
                 </div>
-                <div id="equipmentAvailabilityCount" class="mt-4 text-sm text-slate-400">Loading equipment availability...</div>
+                <div id="equipmentAvailabilityCount" class="availability-results-count" role="status" aria-live="polite">Loading equipment availability...</div>
             </div>
         </div>
 
         <div id="availabilityHistoryModal" class="availability-modal fixed inset-0 z-50 items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm" aria-hidden="true">
-            <div class="availability-modal-card relative mx-auto my-auto w-full max-w-4xl rounded-2xl shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="availabilityHistoryTitle">
+            <div class="availability-modal-card relative mx-auto my-auto w-full max-w-4xl rounded-2xl shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="availabilityHistoryTitle" aria-describedby="availabilityHistorySubtitle">
                 <div class="availability-modal-header">
-                    <div>
-                        <h2 id="availabilityHistoryTitle" class="text-xl font-bold text-white">Borrowing History</h2>
-                        <p id="availabilityHistorySubtitle" class="mt-1 text-sm text-emerald-100/70"></p>
+                    <div class="availability-modal-heading">
+                        <span class="availability-modal-heading-icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+                        <div class="availability-modal-heading-copy">
+                            <p class="availability-modal-kicker">EQUIPMENT RECORD</p>
+                            <h2 id="availabilityHistoryTitle" class="availability-modal-title">Borrowing History</h2>
+                            <p id="availabilityHistorySubtitle" class="availability-modal-subtitle"></p>
+                        </div>
                     </div>
                     <button id="closeAvailabilityHistory" type="button" class="availability-modal-close" aria-label="Close borrowing history"><i class="fas fa-times"></i></button>
                 </div>
@@ -1745,7 +3932,6 @@
                                 <th>Borrower</th>
                                 <th>Type</th>
                                 <th>Borrow Date</th>
-                                <th>Expected Return</th>
                                 <th>Actual Return</th>
                                 <th>Status</th>
                             </tr>
@@ -1765,6 +3951,7 @@
         const maintenanceSummaryEndpoint = '/api/maintenance-summary';
 
         const dashboardState = {
+            laboratoryScheduleCount: null,
             summary: {
                 totalSessions: 0,
                 attendanceSessionsConducted: 0,
@@ -1788,7 +3975,7 @@
                 totalBorrowed: 0,
                 borrowed: 0,
                 returned: 0,
-                overdue: 0,
+                takenOver: 0,
                 pendingReplacement: 0
             },
             maintenance: {
@@ -1860,11 +4047,25 @@
                         <h3 id="availability-laboratory-${laboratoryIndex}" class="availability-laboratory-heading">${escapeHtml(laboratoryName)}</h3>
                         ${[...categories.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([categoryName, rows], categoryIndex) => {
                             const categoryId = `availability-category-${laboratoryIndex}-${categoryIndex}`;
+                            const sortedRows = [...rows].sort((left, right) => {
+                                const leftHistory = Math.max(0, Number(left.timesBorrowed) || 0);
+                                const rightHistory = Math.max(0, Number(right.timesBorrowed) || 0);
+                                if (rightHistory !== leftHistory) return rightHistory - leftHistory;
+                                return String(left.equipmentId || '').localeCompare(
+                                    String(right.equipmentId || ''),
+                                    undefined,
+                                    { numeric: true, sensitivity: 'base' }
+                                );
+                            });
                             return `
                                 <div class="availability-category">
                                     <button type="button" class="availability-category-toggle" aria-expanded="false" aria-controls="${categoryId}" data-availability-category-toggle="${categoryId}">
-                                        <span><i class="fas fa-box-open mr-2"></i>${escapeHtml(categoryName)} <span class="text-xs text-emerald-200/60">(${rows.length})</span></span>
-                                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                        <span class="availability-category-title">
+                                            <i class="fas fa-box-open availability-category-icon" aria-hidden="true"></i>
+                                            <span class="availability-category-name">${escapeHtml(categoryName)}</span>
+                                            <span class="availability-category-count">${rows.length}</span>
+                                        </span>
+                                        <i class="fas fa-chevron-down availability-category-chevron" aria-hidden="true"></i>
                                     </button>
                                     <div id="${categoryId}" class="availability-category-content">
                                         <table class="availability-table">
@@ -1879,14 +4080,14 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                ${rows.map((row) => `
+                                                ${sortedRows.map((row) => `
                                                     <tr>
                                                         <td>${escapeHtml(row.equipmentId)}</td>
                                                         <td>${escapeHtml(row.name)}</td>
                                                         <td>${escapeHtml(row.status)}</td>
                                                         <td><span class="availability-state ${getAvailabilityStateClass(row.availability)}">${escapeHtml(row.availability)}</span></td>
                                                         <td>${escapeHtml(row.timesBorrowed)}</td>
-                                                        <td><button type="button" class="availability-history-button" data-availability-history="${escapeHtml(row.equipmentId)}"><i class="fas fa-clock-rotate-left"></i> View History</button></td>
+                                                        <td><button type="button" class="availability-history-button" data-availability-history="${escapeHtml(row.equipmentId)}" aria-label="View borrowing history for ${escapeHtml(row.equipmentId)}"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> View history</button></td>
                                                     </tr>
                                                 `).join('')}
                                             </tbody>
@@ -1898,6 +4099,18 @@
                     </section>
                 `).join('');
             }
+            const availabilityCounts = filteredRows.reduce((summary, row) => {
+                const state = String(row.availability || '').trim().toUpperCase();
+                if (state === 'AVAILABLE') summary.available += 1;
+                else if (state === 'BORROWED') summary.borrowed += 1;
+                else if (state === 'UNAVAILABLE') summary.unavailable += 1;
+                return summary;
+            }, { available: 0, borrowed: 0, unavailable: 0 });
+
+            document.getElementById('availabilityMatchingCount').textContent = String(filteredRows.length);
+            document.getElementById('availabilityAvailableCount').textContent = String(availabilityCounts.available);
+            document.getElementById('availabilityBorrowedCount').textContent = String(availabilityCounts.borrowed);
+            document.getElementById('availabilityUnavailableCount').textContent = String(availabilityCounts.unavailable);
             count.textContent = `Showing ${filteredRows.length} of ${equipmentAvailabilityRows.length} equipment`;
         }
 
@@ -1913,16 +4126,37 @@
         async function loadEquipmentAvailability() {
             const body = document.getElementById('equipmentAvailabilityBody');
             if (!body) return;
+            const count = document.getElementById('equipmentAvailabilityCount');
+            const refreshButton = document.getElementById('refreshEquipmentAvailability');
+            const refreshIcon = refreshButton?.querySelector('i');
             body.innerHTML = '<div class="availability-empty-state">Loading equipment availability...</div>';
+            if (count) count.textContent = 'Loading equipment availability...';
+            if (refreshButton) {
+                refreshButton.disabled = true;
+                refreshButton.setAttribute('aria-busy', 'true');
+            }
+            refreshIcon?.classList.add('fa-spin');
             try {
                 const response = await fetch('/api/equipment-availability', { cache: 'no-store' });
                 if (!response.ok) throw new Error('Unable to load equipment availability.');
-                equipmentAvailabilityRows = await response.json();
+                const payload = await response.json();
+                equipmentAvailabilityRows = Array.isArray(payload) ? payload : [];
                 populateAvailabilityLaboratories();
                 renderEquipmentAvailability();
             } catch (error) {
                 console.error(error);
-                body.innerHTML = '<div class="availability-empty-state text-red-300">Unable to load equipment availability.</div>';
+                body.innerHTML = '<div class="availability-empty-state text-red-300">Unable to load equipment availability. Select Refresh to try again.</div>';
+                if (count) count.textContent = 'Unable to load equipment availability.';
+                ['availabilityMatchingCount', 'availabilityAvailableCount', 'availabilityBorrowedCount', 'availabilityUnavailableCount'].forEach((id) => {
+                    const metric = document.getElementById(id);
+                    if (metric) metric.textContent = '—';
+                });
+            } finally {
+                if (refreshButton) {
+                    refreshButton.disabled = false;
+                    refreshButton.removeAttribute('aria-busy');
+                }
+                refreshIcon?.classList.remove('fa-spin');
             }
         }
 
@@ -1941,7 +4175,7 @@
             if (!modal || !body || !summary || !subtitle) return;
             modal.classList.add('show');
             modal.setAttribute('aria-hidden', 'false');
-            body.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400">Loading borrowing history...</td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="availability-history-message">Loading borrowing history…</td></tr>';
             summary.innerHTML = '';
             try {
                 const response = await fetch(`/api/equipment-availability/${encodeURIComponent(equipmentId)}/history`, { cache: 'no-store' });
@@ -1950,7 +4184,7 @@
                 subtitle.textContent = `${payload.equipment.name} | ${payload.equipment.equipmentId} | ${payload.equipment.laboratoryRoom || 'Laboratory not specified'}`;
                 summary.innerHTML = ['totalBorrowed', 'returned', 'overdue', 'lost'].map((key) => `<div class="availability-summary-item"><span>${key === 'totalBorrowed' ? 'Total Borrowed' : key.charAt(0).toUpperCase() + key.slice(1)}</span><strong>${escapeHtml(payload.summary[key] ?? 0)}</strong></div>`).join('');
                 if (!payload.history.length) {
-                    body.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400">No borrowing history for this equipment.</td></tr>';
+                    body.innerHTML = '<tr><td colspan="5" class="availability-history-message">No borrowing history for this equipment.</td></tr>';
                     return;
                 }
                 body.innerHTML = payload.history.map((record) => `
@@ -1958,14 +4192,13 @@
                         <td>${escapeHtml(record.borrowerName)}</td>
                         <td>${escapeHtml(record.borrowerType || '—')}</td>
                         <td>${escapeHtml(record.borrowDate || '—')} ${escapeHtml(record.borrowStartTime || '')}</td>
-                        <td>${escapeHtml(record.expectedReturnDate || '—')} ${escapeHtml(record.expectedReturnTime || '')}</td>
                         <td>${escapeHtml(record.returnDate || '—')} ${escapeHtml(record.returnTime || '')}</td>
-                        <td>${escapeHtml(record.status || '—')}</td>
+                        <td><span class="availability-history-status status-${getAvailabilityStateClass(record.status)}">${escapeHtml(record.status || '—')}</span></td>
                     </tr>
                 `).join('');
             } catch (error) {
                 console.error(error);
-                body.innerHTML = '<tr><td colspan="6" class="text-center text-red-300">Unable to load borrowing history.</td></tr>';
+                body.innerHTML = '<tr><td colspan="5" class="availability-history-message is-error">Unable to load borrowing history.</td></tr>';
             }
         }
 
@@ -2037,15 +4270,16 @@
             const badge = document.getElementById('adminBorrowNotificationBadge');
             const button = document.getElementById('adminBorrowNotificationsButton');
             const availabilityCount = document.getElementById('equipmentAvailabilityBorrowCount');
-            if (!badge || !button) return;
 
             try {
                 const response = await fetch('/api/borrow-records', { cache: 'no-store' });
                 if (!response.ok) {
-                    badge.classList.add('hidden');
-                    badge.textContent = '0';
+                    if (badge) {
+                        badge.classList.add('hidden');
+                        badge.textContent = '0';
+                    }
                     if (availabilityCount) availabilityCount.textContent = '0';
-                    button.title = 'No new borrow requests';
+                    if (button) button.title = 'No new borrow requests';
                     return;
                 }
 
@@ -2054,16 +4288,22 @@
                     ? records.filter((record) => String(record?.status || '').trim().toLowerCase() === 'pending').length
                     : 0;
 
-                badge.textContent = String(count);
+                if (badge) {
+                    badge.textContent = String(count);
+                    badge.classList.toggle('hidden', count <= 0);
+                }
                 if (availabilityCount) availabilityCount.textContent = String(count);
-                badge.classList.toggle('hidden', count <= 0);
-                button.title = count ? `${count} new borrow request${count === 1 ? '' : 's'}` : 'No new borrow requests';
+                if (button) {
+                    button.title = count ? `${count} new borrow request${count === 1 ? '' : 's'}` : 'No new borrow requests';
+                }
             } catch (error) {
                 console.warn('Unable to load borrow notifications.', error);
-                badge.classList.add('hidden');
-                badge.textContent = '0';
+                if (badge) {
+                    badge.classList.add('hidden');
+                    badge.textContent = '0';
+                }
                 if (availabilityCount) availabilityCount.textContent = '0';
-                button.title = 'No new borrow requests';
+                if (button) button.title = 'No new borrow requests';
             }
         }
 
@@ -2074,43 +4314,11 @@
             }
         }
 
-        function formatRole(role) {
-            const value = String(role || 'Instructor').trim();
-            return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-        }
-
-        function getInitials(name, email) {
-            const value = (name || '').trim() || (email || '').split('@')[0].trim();
-            if (!value) return 'AD';
-            return value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'AD';
-        }
-
         function getStatusBadgeClass(status) {
             const value = String(status || '').toLowerCase();
             if (value === 'completed') return 'status-completed';
             if (value === 'active') return 'status-active';
             return 'status-no-records';
-        }
-
-        function hydrateInstructorProfile() {
-            const user = window.__CURRENT_USER__ || {};
-            const displayName = user.name || 'Administrator';
-            const initials = user.initials || getInitials(displayName, user.email || '');
-            const roleText = 'Admin';
-
-            const adminNameElement = document.getElementById('adminUserName');
-            const adminRoleElement = document.getElementById('adminUserRole');
-            const adminAvatarElement = document.getElementById('adminAvatar');
-            const maintenanceNameElement = document.getElementById('maintenanceHeaderUserName');
-            const maintenanceRoleElement = document.getElementById('maintenanceHeaderUserRole');
-            const maintenanceAvatarElement = document.getElementById('maintenanceHeaderAvatar');
-
-            if (adminNameElement) adminNameElement.textContent = displayName;
-            if (adminRoleElement) adminRoleElement.textContent = roleText;
-            if (adminAvatarElement) adminAvatarElement.textContent = initials;
-            if (maintenanceNameElement) maintenanceNameElement.textContent = displayName;
-            if (maintenanceRoleElement) maintenanceRoleElement.textContent = roleText;
-            if (maintenanceAvatarElement) maintenanceAvatarElement.textContent = initials;
         }
 
         function setSummaryValue(id, value) {
@@ -2120,18 +4328,33 @@
             }
         }
 
+        function updateDashboardLastUpdated() {
+            const timestamp = document.getElementById('dashboardLastUpdated');
+            if (!timestamp) return;
+
+            const updatedAt = new Date();
+            timestamp.dateTime = updatedAt.toISOString();
+            timestamp.textContent = `Last updated: ${new Intl.DateTimeFormat(undefined, {
+                hour: 'numeric',
+                minute: '2-digit'
+            }).format(updatedAt)}`;
+        }
+
         function renderSummary(summary) {
-            setSummaryValue('totalLaboratorySessionsCount', summary.totalLaboratorySessions ?? summary.totalSessions ?? 0);
+            setSummaryValue('totalLaboratorySessionsCount', dashboardState.laboratoryScheduleCount ?? '—');
             setSummaryValue('attendanceSessionsConductedCount', summary.attendanceSessionsConducted ?? 0);
-            
+
             // Update equipment stats cards on dashboard
-            const equipmentTotal = (dashboardState.equipment.serviceableCount || 0) + 
-                                   (dashboardState.equipment.unserviceableCount || 0) + 
+            const equipmentTotal = (dashboardState.equipment.serviceableCount || 0) +
+                                   (dashboardState.equipment.unserviceableCount || 0) +
                                    (dashboardState.equipment.lostCount || 0);
             setSummaryValue('dashboardTotalCount', equipmentTotal);
             setSummaryValue('dashboardServiceableCount', dashboardState.equipment.serviceableCount || 0);
             setSummaryValue('dashboardUnserviceableCount', dashboardState.equipment.unserviceableCount || 0);
             setSummaryValue('dashboardLostCount', dashboardState.equipment.lostCount || 0);
+
+            const unserviceableCount = Number(dashboardState.equipment.unserviceableCount) || 0;
+            document.querySelector('#dashboard-view .dashboard-kpi-warning')?.classList.toggle('has-alert', unserviceableCount > 0);
         }
 
         function renderAnalyticsSummary() {
@@ -2140,7 +4363,7 @@
             const maintenanceSummary = document.getElementById('maintenanceStatusSummary');
 
             if (borrowSummary) {
-                borrowSummary.textContent = `Borrowed: ${dashboardState.borrow.borrowed} • Returned: ${dashboardState.borrow.returned} • Overdue: ${dashboardState.borrow.overdue}`;
+                borrowSummary.textContent = `Borrowed: ${dashboardState.borrow.borrowed} • Returned: ${dashboardState.borrow.returned} • Taken Over: ${dashboardState.borrow.takenOver}`;
             }
 
             if (equipmentSummary) {
@@ -2156,8 +4379,6 @@
             const dashboardView = document.getElementById('dashboard-view');
             const maintenanceView = document.getElementById('maintenance-view');
             const availabilityView = document.getElementById('equipment-availability-view');
-            const headerTitle = document.getElementById('pageHeaderTitle');
-            const topHeader = document.querySelector('.top-header');
             const trimmedPath = window.location.pathname.replace(/\/+$/, '');
             const isMaintenanceView = trimmedPath === '/maintenance-monitoring' || window.location.hash === '#maintenance-monitoring';
             const isAvailabilityView = window.location.hash === '#equipment-availability';
@@ -2177,14 +4398,6 @@
                 availabilityView.hidden = !isAvailabilityView;
             }
 
-            if (headerTitle) {
-                headerTitle.textContent = isMaintenanceView ? 'Maintenance Monitoring' : isAvailabilityView ? 'Equipment Availability' : 'Dashboard Overview';
-            }
-
-            if (topHeader) {
-                topHeader.hidden = isMaintenanceView || isAvailabilityView;
-            }
-
             if (isAvailabilityView) loadEquipmentAvailability();
         }
 
@@ -2194,24 +4407,82 @@
             const maintenanceCanvas = document.getElementById('maintenanceStatusChart');
             if (!borrowCanvas || !equipmentCanvas || !maintenanceCanvas) return;
 
-            // Get container dimensions and set canvas attributes
-            const setCanvasDimensions = (canvas) => {
-                const container = canvas.parentElement;
-                if (container) {
-                    const rect = container.getBoundingClientRect();
-                    // Use the displayed dimensions for the canvas internal resolution
-                    canvas.width = Math.max(300, Math.floor(rect.width));
-                    canvas.height = Math.max(150, Math.floor(rect.height));
-                }
-            };
-
-            setCanvasDimensions(borrowCanvas);
-            setCanvasDimensions(equipmentCanvas);
-            setCanvasDimensions(maintenanceCanvas);
-
             const borrowContext = borrowCanvas.getContext('2d');
             const equipmentContext = equipmentCanvas.getContext('2d');
             const maintenanceContext = maintenanceCanvas.getContext('2d');
+            const isLightTheme = document.documentElement.classList.contains('theme-light') ||
+                document.getElementById('mainContainer')?.classList.contains('theme-light');
+            const axisTextColor = isLightTheme ? '#43594b' : '#B6D7C8';
+            const labelTextColor = isLightTheme ? '#355642' : '#c7f9d6';
+            const legendTextColor = isLightTheme ? '#33483a' : '#d3e3d9';
+            const gridColor = isLightTheme ? 'rgba(31, 41, 55, .12)' : 'rgba(255, 255, 255, 0.08)';
+            const doughnutBorderColor = isLightTheme ? '#f8fbf8' : 'rgba(7, 21, 15, 0.9)';
+            const legendLabelsWithValues = (chart) => Chart.defaults.plugins.legend.labels.generateLabels(chart).map((item) => {
+                const value = chart.data.datasets[item.datasetIndex]?.data?.[item.index] ?? 0;
+                return { ...item, text: `${item.text} (${value})` };
+            });
+            const doughnutCenterTotalPlugin = {
+                id: 'doughnutCenterTotal',
+                afterDraw(chart) {
+                    if (chart.config.type !== 'doughnut' || !chart.chartArea) return;
+
+                    const values = chart.data.datasets[0]?.data || [];
+                    const total = values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+                    const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                    const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                    const { ctx } = chart;
+
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = isLightTheme ? '#173b2b' : '#f2fbf5';
+                    ctx.font = '800 23px system-ui, sans-serif';
+                    ctx.fillText(String(total), centerX, centerY - 5);
+                    ctx.fillStyle = isLightTheme ? '#617668' : '#a7c2b2';
+                    ctx.font = '700 9px system-ui, sans-serif';
+                    ctx.letterSpacing = '1px';
+                    ctx.fillText('TOTAL', centerX, centerY + 15);
+                    ctx.restore();
+                }
+            };
+            const barValueLabelsPlugin = {
+                id: 'barValueLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((bar, index) => {
+                            const value = Number(dataset.data[index]) || 0;
+                            const y = value === 0 ? bar.base - 4 : bar.y - 5;
+                            ctx.save();
+                            ctx.fillStyle = axisTextColor;
+                            ctx.font = '700 11px system-ui, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(String(value), bar.x, y);
+                            ctx.restore();
+                        });
+                    });
+                }
+            };
+            const borrowValues = [
+                Number(dashboardState.borrow.borrowed) || 0,
+                Number(dashboardState.borrow.returned) || 0,
+                Number(dashboardState.borrow.takenOver) || 0
+            ];
+            const equipmentValues = [
+                Number(dashboardState.equipment.serviceableCount) || 0,
+                Number(dashboardState.equipment.unserviceableCount) || 0,
+                Number(dashboardState.equipment.lostCount) || 0
+            ];
+            const maintenanceValues = [
+                Number(dashboardState.maintenance.pendingRequests) || 0,
+                Number(dashboardState.maintenance.inProgressRequests) || 0,
+                Number(dashboardState.maintenance.resolvedRequests) || 0
+            ];
+            borrowCanvas.setAttribute('aria-label', `Loan activity. Borrowed: ${borrowValues[0]}; Returned: ${borrowValues[1]}; Taken over: ${borrowValues[2]}.`);
+            equipmentCanvas.setAttribute('aria-label', `Inventory health. Total: ${equipmentValues.reduce((sum, value) => sum + value, 0)}. Serviceable: ${equipmentValues[0]}; Unserviceable: ${equipmentValues[1]}; Lost: ${equipmentValues[2]}.`);
+            maintenanceCanvas.setAttribute('aria-label', `Service queue. Total: ${maintenanceValues.reduce((sum, value) => sum + value, 0)}. Pending: ${maintenanceValues[0]}; In progress: ${maintenanceValues[1]}; Resolved: ${maintenanceValues[2]}.`);
 
             try { if (borrowEquipmentChart) borrowEquipmentChart.destroy(); } catch (e) {}
             try { if (equipmentStatusChart) equipmentStatusChart.destroy(); } catch (e) {}
@@ -2220,12 +4491,12 @@
             borrowEquipmentChart = new Chart(borrowContext, {
                 type: 'bar',
                 data: {
-                    labels: ['Borrowed', 'Returned', 'Overdue'],
+                    labels: ['Borrowed', 'Returned', 'Taken Over'],
                     datasets: [{
                         label: 'Borrow Equipment',
-                        data: [dashboardState.borrow.borrowed, dashboardState.borrow.returned, dashboardState.borrow.overdue],
-                        backgroundColor: ['rgba(34, 197, 94, 0.38)', 'rgba(59, 130, 246, 0.35)', 'rgba(249, 115, 22, 0.36)'],
-                        borderColor: ['#22C55E', '#60A5FA', '#F59E0B'],
+                        data: borrowValues,
+                        backgroundColor: ['rgba(34, 197, 94, 0.3)', 'rgba(74, 222, 128, 0.22)', 'rgba(22, 163, 74, 0.24)'],
+                        borderColor: ['#22C55E', '#4ADE80', '#16A34A'],
                         borderWidth: 2,
                         borderRadius: 12,
                         maxBarThickness: 34,
@@ -2236,29 +4507,35 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 520, easing: 'easeOutQuart' },
+                    interaction: { mode: 'index', intersect: false },
+                    layout: { padding: { top: 18, right: 8, left: 4, bottom: 0 } },
                     plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: { size: 11, weight: 600 },
-                                color: '#B6D7C8',
-                                usePointStyle: true,
-                                padding: 12
-                            }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isLightTheme ? '#10251a' : '#f2fbf5',
+                            titleColor: isLightTheme ? '#f2fbf5' : '#10251a',
+                            bodyColor: isLightTheme ? '#dcebe1' : '#355642',
+                            borderColor: isLightTheme ? 'rgba(255,255,255,.12)' : 'rgba(16,37,26,.14)',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 9,
+                            displayColors: true
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.08)', drawBorder: false },
-                            ticks: { color: '#B6D7C8', font: { size: 10 } }
+                            grid: { color: gridColor, drawBorder: false },
+                            ticks: { color: axisTextColor, font: { size: 10 } }
                         },
                         x: {
                             grid: { display: false, drawBorder: false },
-                            ticks: { color: '#c7f9d6', font: { size: 10 } }
+                            ticks: { color: labelTextColor, font: { size: 10 } }
                         }
                     }
-                }
+                },
+                plugins: [barValueLabelsPlugin]
             });
 
             equipmentStatusChart = new Chart(equipmentContext, {
@@ -2266,9 +4543,9 @@
                 data: {
                     labels: ['Serviceable', 'Unserviceable', 'Lost'],
                     datasets: [{
-                        data: [dashboardState.equipment.serviceableCount, dashboardState.equipment.unserviceableCount, dashboardState.equipment.lostCount],
-                        backgroundColor: ['#22C55E', '#F59E0B', '#EF4444'],
-                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        data: equipmentValues,
+                        backgroundColor: ['#22C55E', '#D97706', '#86A893'],
+                        borderColor: doughnutBorderColor,
                         borderWidth: 2,
                         hoverOffset: 10
                     }]
@@ -2276,18 +4553,37 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '70%',
+                    radius: '88%',
+                    rotation: -90,
+                    animation: { duration: 520, easing: 'easeOutQuart' },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
-                                font: { size: 11, weight: 600 },
-                                color: '#94f9b3',
+                                font: { size: 10, weight: 650 },
+                                color: legendTextColor,
                                 usePointStyle: true,
-                                padding: 12
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                padding: 10,
+                                generateLabels: legendLabelsWithValues
                             }
+                        },
+                        tooltip: {
+                            backgroundColor: isLightTheme ? '#10251a' : '#f2fbf5',
+                            titleColor: isLightTheme ? '#f2fbf5' : '#10251a',
+                            bodyColor: isLightTheme ? '#dcebe1' : '#355642',
+                            borderColor: isLightTheme ? 'rgba(255,255,255,.12)' : 'rgba(16,37,26,.14)',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 9,
+                            displayColors: true
                         }
                     }
-                }
+                },
+                plugins: [doughnutCenterTotalPlugin]
             });
 
             maintenanceStatusChart = new Chart(maintenanceContext, {
@@ -2295,9 +4591,9 @@
                 data: {
                     labels: ['Pending', 'In Progress', 'Resolved'],
                     datasets: [{
-                        data: [dashboardState.maintenance.pendingRequests, dashboardState.maintenance.inProgressRequests, dashboardState.maintenance.resolvedRequests],
-                        backgroundColor: ['#f59e0b', '#22c55e', '#60a5fa'],
-                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                        data: maintenanceValues,
+                        backgroundColor: [isLightTheme ? '#D97706' : '#F59E0B', '#22C55E', '#4D765A'],
+                        borderColor: doughnutBorderColor,
                         borderWidth: 2,
                         hoverOffset: 10
                     }]
@@ -2305,18 +4601,37 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '70%',
+                    radius: '88%',
+                    rotation: -90,
+                    animation: { duration: 520, easing: 'easeOutQuart' },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
-                                font: { size: 11, weight: 600 },
-                                color: '#94f9b3',
+                                font: { size: 10, weight: 650 },
+                                color: legendTextColor,
                                 usePointStyle: true,
-                                padding: 12
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                padding: 10,
+                                generateLabels: legendLabelsWithValues
                             }
+                        },
+                        tooltip: {
+                            backgroundColor: isLightTheme ? '#10251a' : '#f2fbf5',
+                            titleColor: isLightTheme ? '#f2fbf5' : '#10251a',
+                            bodyColor: isLightTheme ? '#dcebe1' : '#355642',
+                            borderColor: isLightTheme ? 'rgba(255,255,255,.12)' : 'rgba(16,37,26,.14)',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 9,
+                            displayColors: true
                         }
                     }
-                }
+                },
+                plugins: [doughnutCenterTotalPlugin]
             });
         }
 
@@ -2331,22 +4646,37 @@
             dashboardState.summary = payload.summary || dashboardState.summary;
             dashboardState.recent.attendance = findLatestAttendanceSession(payload.sessions || []);
 
-            renderSummary(payload.summary || {});
             await loadAdditionalAnalytics(payload);
+            renderSummary(payload.summary || {});
             renderCharts();
         }
 
         async function loadAdditionalAnalytics(attendancePayload = {}) {
             try {
-                const [equipmentResponse, maintenanceResponse, maintenanceListResponse, equipmentListResponse, borrowResponse] = await Promise.all([
+                const results = await Promise.allSettled([
                     fetch(equipmentSummaryEndpoint, { cache: 'no-store' }),
                     fetch(maintenanceSummaryEndpoint, { cache: 'no-store' }),
                     fetch('/api/maintenance', { cache: 'no-store' }),
                     fetch('/api/equipment', { cache: 'no-store' }),
-                    fetch('/api/borrow-records', { cache: 'no-store' })
+                    fetch('/api/borrow-records', { cache: 'no-store' }),
+                    fetch('/api/laboratory-schedules', { cache: 'no-store' })
                 ]);
+                const [equipmentResult, maintenanceResult, maintenanceListResult, equipmentListResult, borrowResult, schedulesResult] = results;
+                const getResponse = (result, endpoint) => {
+                    if (result.status === 'rejected') {
+                        console.error(`Unable to fetch ${endpoint}.`, result.reason);
+                        return null;
+                    }
+                    return result.value;
+                };
+                const equipmentResponse = getResponse(equipmentResult, equipmentSummaryEndpoint);
+                const maintenanceResponse = getResponse(maintenanceResult, maintenanceSummaryEndpoint);
+                const maintenanceListResponse = getResponse(maintenanceListResult, '/api/maintenance');
+                const equipmentListResponse = getResponse(equipmentListResult, '/api/equipment');
+                const borrowResponse = getResponse(borrowResult, '/api/borrow-records');
+                const schedulesResponse = getResponse(schedulesResult, '/api/laboratory-schedules');
 
-                if (equipmentResponse.ok) {
+                if (equipmentResponse?.ok) {
                     const equipmentData = await equipmentResponse.json();
                     dashboardState.equipment.equipmentTotal = equipmentData.equipmentTotal || 0;
                     dashboardState.equipment.serviceableCount = equipmentData.serviceableCount || 0;
@@ -2354,7 +4684,7 @@
                     dashboardState.equipment.lostCount = equipmentData.lostCount || 0;
                 }
 
-                if (maintenanceResponse.ok) {
+                if (maintenanceResponse?.ok) {
                     const maintenanceData = await maintenanceResponse.json();
                     dashboardState.maintenance.pendingRequests = maintenanceData.pendingRequests || 0;
                     dashboardState.maintenance.inProgressRequests = maintenanceData.inProgressRequests || 0;
@@ -2365,39 +4695,43 @@
                 let equipmentRecords = [];
                 let borrowRecords = [];
 
-                if (maintenanceListResponse.ok) {
+                if (maintenanceListResponse?.ok) {
                     maintenanceRequests = await maintenanceListResponse.json();
                 }
 
-                if (equipmentListResponse.ok) {
+                if (equipmentListResponse?.ok) {
                     equipmentRecords = await equipmentListResponse.json();
                 }
 
-                if (borrowResponse.ok) {
+                if (borrowResponse?.ok) {
                     borrowRecords = await borrowResponse.json();
                 }
 
-                const today = new Date();
-                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                let schedules = [];
+                if (schedulesResponse?.ok) {
+                    const schedulesPayload = await schedulesResponse.json();
+                    if (!Array.isArray(schedulesPayload)) {
+                        throw new Error('Laboratory schedules returned an invalid response.');
+                    }
+                    schedules = schedulesPayload;
+                    dashboardState.laboratoryScheduleCount = schedules.length;
+                } else if (schedulesResponse) {
+                    throw new Error(`Unable to fetch laboratory schedules (${schedulesResponse.status}).`);
+                }
+
                 const activeBorrowRecords = Array.isArray(borrowRecords) ? borrowRecords : [];
                 dashboardState.borrow.totalBorrowed = activeBorrowRecords.length;
                 dashboardState.borrow.borrowed = activeBorrowRecords.filter((record) => String(record.status || '').toLowerCase() === 'borrowed').length;
                 dashboardState.borrow.returned = activeBorrowRecords.filter((record) => String(record.status || '').toLowerCase() === 'returned').length;
+                dashboardState.borrow.takenOver = activeBorrowRecords.filter((record) =>
+                    String(record.status || '').toLowerCase() === 'borrowed' && record.wasTakenOver
+                ).length;
                 dashboardState.borrow.pendingReplacement = 0;
-                dashboardState.borrow.overdue = activeBorrowRecords.filter((record) => {
-                    const status = String(record.status || '').toLowerCase();
-                    if (status === 'returned' || status === 'pending replacement') return false;
-                    const expectedDateValue = record.expectedReturnDate || record.expected_return_date;
-                    if (!expectedDateValue) return false;
-                    const expectedDate = new Date(expectedDateValue);
-                    if (Number.isNaN(expectedDate.getTime())) return false;
-                    return expectedDate < todayStart;
-                }).length;
 
                 dashboardState.recent.maintenance = findLatestMaintenanceRequest(maintenanceRequests);
                 dashboardState.recent.equipment = findLatestEquipmentActivity(equipmentRecords);
                 dashboardState.recent.equipmentNeedsAttention = findEquipmentNeedsAttention(equipmentRecords);
-                dashboardState.recent.schedule = findLatestSchedule([]);
+                dashboardState.recent.schedule = findLatestSchedule(Array.isArray(schedules) ? schedules : []);
 
                 renderAnalyticsSummary();
                 renderCharts();
@@ -2414,21 +4748,47 @@
             if (window.syncBorrowSidebarBadge) {
                 window.syncBorrowSidebarBadge();
             }
+            updateDashboardLastUpdated();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            hydrateInstructorProfile();
             updateMaintenanceMonitoringVisibility();
+            const mainContainer = document.getElementById('mainContainer');
+            let chartThemeIsLight = document.documentElement.classList.contains('theme-light') || mainContainer?.classList.contains('theme-light');
+            const chartThemeObserver = new MutationObserver(() => {
+                const nextThemeIsLight = document.documentElement.classList.contains('theme-light') || mainContainer?.classList.contains('theme-light');
+                if (nextThemeIsLight === chartThemeIsLight) return;
+                chartThemeIsLight = nextThemeIsLight;
+                if (document.getElementById('dashboard-view')?.classList.contains('active')) renderCharts();
+            });
+            chartThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            if (mainContainer) chartThemeObserver.observe(mainContainer, { attributes: true, attributeFilter: ['class'] });
             ['availabilitySearch', 'availabilityLaboratory', 'availabilityStatus', 'availabilityState'].forEach((id) => {
                 document.getElementById(id)?.addEventListener('input', renderEquipmentAvailability);
                 document.getElementById(id)?.addEventListener('change', renderEquipmentAvailability);
             });
+            document.getElementById('clearAvailabilityFilters')?.addEventListener('click', () => {
+                ['availabilitySearch', 'availabilityLaboratory', 'availabilityStatus', 'availabilityState'].forEach((id) => {
+                    const filter = document.getElementById(id);
+                    if (filter) filter.value = '';
+                });
+                renderEquipmentAvailability();
+                document.getElementById('availabilitySearch')?.focus();
+            });
+            document.getElementById('refreshEquipmentAvailability')?.addEventListener('click', loadEquipmentAvailability);
             document.getElementById('equipmentAvailabilityBody')?.addEventListener('click', (event) => {
                 const categoryToggle = event.target.closest('[data-availability-category-toggle]');
                 if (categoryToggle) {
                     const categoryContent = document.getElementById(categoryToggle.dataset.availabilityCategoryToggle);
                     if (categoryContent) {
                         const expanded = categoryToggle.getAttribute('aria-expanded') === 'true';
+                        if (!expanded) {
+                            document.querySelectorAll('#equipmentAvailabilityBody [data-availability-category-toggle][aria-expanded="true"]').forEach((openToggle) => {
+                                if (openToggle === categoryToggle) return;
+                                openToggle.setAttribute('aria-expanded', 'false');
+                                document.getElementById(openToggle.dataset.availabilityCategoryToggle)?.classList.remove('expanded');
+                            });
+                        }
                         categoryToggle.setAttribute('aria-expanded', String(!expanded));
                         categoryContent.classList.toggle('expanded', !expanded);
                     }
@@ -2445,7 +4805,6 @@
             document.getElementById('adminBorrowNotificationsButton')?.addEventListener('click', () => {
                 window.location.href = '/borrow-equipment';
             });
-
             if (window.__DASHBOARD_POLL_INTERVAL__) {
                 window.clearInterval(window.__DASHBOARD_POLL_INTERVAL__);
             }
@@ -2479,7 +4838,7 @@
             }
         });
     </script>
-    <script src="/js/sidebar-component.js" defer></script>
-    <script src="/js/admin-maintenance.js" defer></script>
+    <script src="/js/sidebar-component.js?v=66" defer></script>
+    <script src="/js/admin-maintenance.js?v=7" defer></script>
 </body>
 </html>

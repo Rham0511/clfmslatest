@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technician Accomplishments | ComLab</title>
+  <link rel="stylesheet" href="/css/sidebar.css?v=66"><link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body.app-shell {
+      --page: #07130d;
+      --panel: #0d2117;
+      --surface: #091a11;
+      --text: #edf8f1;
+      --muted: #a5c4b1;
+      --line: rgba(110, 231, 183, .2);
+      --accent: #4ade80;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .1), transparent 38%), var(--page);
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+    html.theme-light body.app-shell {
+      --page: #eef4f0;
+      --panel: #fff;
+      --surface: #f7faf8;
+      --text: #17271e;
+      --muted: #5e7567;
+      --line: rgba(22, 101, 52, .17);
+      --accent: #168044;
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page);
+    }
+    .main-container { box-sizing: border-box; min-height: 100vh; margin-left: var(--sidebar-width, 250px); padding: clamp(.85rem, 2vw, 1.4rem); }
+    .wrap { width: 100%; max-width: 1480px; margin: 0 auto; }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .65rem; padding: .7rem 1rem; }
+    .eyebrow { margin: 0 0 .1rem; color: var(--accent); font-size: .62rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .hero h1 { margin: 0 0 .12rem; color: var(--text); font-size: 1.25rem; line-height: 1.25; letter-spacing: -.03em; }
+    .hero p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .8rem; }
+    .hero-icon { display: grid; width: 2.25rem; height: 2.25rem; flex: none; place-items: center; border: 1px solid var(--line); border-radius: .7rem; background: rgba(34, 197, 94, .12); color: var(--accent); }
+    .panel { min-width: 0; padding: clamp(.85rem, 1.5vw, 1.15rem); border: 1px solid var(--line); border-radius: .9rem; background: linear-gradient(145deg, color-mix(in srgb, var(--panel) 97%, var(--accent)), var(--panel)); box-shadow: 0 10px 28px rgba(0, 0, 0, .1); }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; margin-bottom: .75rem; }
+    .toolbar > div:first-child strong { color: var(--text); font-size: .95rem; }
+    .filters { display: flex; min-width: min(100%, 28rem); flex: 1 1 38rem; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: .45rem; }
+    .search-field { position: relative; display: block; min-width: min(14rem, 100%); flex: 1 1 14rem; }
+    .search-field > i { position: absolute; top: 50%; left: .75rem; color: var(--accent); transform: translateY(-50%); pointer-events: none; }
+    .filters .search-field input { width: 100%; min-width: 0; padding-left: 2.2rem; }
+    .filter-field { display: grid; min-width: 8.5rem; gap: .18rem; color: var(--muted); font-size: .63rem; font-weight: 800; letter-spacing: .04em; }
+    .filter-field > span { text-transform: uppercase; }
+    .filter-field select { width: 100%; min-width: 0; }
+    .refresh-button { display: inline-grid; width: 2.35rem; height: 2.35rem; flex: 0 0 2.35rem; place-items: center; padding: 0; }
+    .panel input, .panel select, .panel textarea { box-sizing: border-box; border: 1px solid var(--line); border-radius: .62rem; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; padding: .58rem .7rem; }
+    .panel input:focus, .panel select:focus, .panel textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 1px; }
+    .panel select option { background: var(--panel); color: var(--text); }
+    .count { margin-top: .2rem; color: var(--muted); font-size: .78rem; }
+    .reports { display: grid; gap: .55rem; }
+    .report { min-width: 0; padding: .78rem .85rem; border: 1px solid var(--line); border-radius: .75rem; background: color-mix(in srgb, var(--surface) 90%, var(--panel)); transition: border-color .16s, box-shadow .16s; }
+    .report:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 6px 16px rgba(0, 0, 0, .08); }
+    .report-row { display: grid; grid-template-columns: minmax(170px, .78fr) minmax(220px, 1.35fr) auto; align-items: center; gap: .4rem 1rem; }
+    .name { overflow: hidden; color: var(--text); font-size: .9rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .sub { margin-top: .16rem; color: var(--muted); font-size: .74rem; line-height: 1.45; }
+    .preview { display: flex; min-width: 0; align-items: center; gap: .4rem .6rem; overflow: hidden; color: var(--muted); font-size: .76rem; }
+    .preview-equipment { flex: 0 1 auto; overflow: hidden; color: var(--text); font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .preview-issue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .report-badges { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .3rem; }
+    .badge { display: inline-flex; align-items: center; padding: .3rem .55rem; border: 1px solid rgba(56, 189, 248, .3); border-radius: 999px; background: rgba(56, 189, 248, .09); color: #38bdf8; font-size: .65rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+    .badge.approved { border-color: rgba(74, 222, 128, .3); background: rgba(74, 222, 128, .1); color: #4ade80; }
+    .badge.reviewed { border-color: rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .1); color: #d97706; }
+    .badge.draft { border-color: var(--line); background: var(--surface); color: var(--muted); }
+    .badge.report-type { border-color: var(--line); background: var(--surface); color: var(--muted); text-transform: none; }
+    html:not(.theme-light) .badge.reviewed { color: #fcd34d; }
+    .details { margin-top: .55rem; padding-top: .45rem; border-top: 1px solid var(--line); }
+    .details summary { display: flex; width: max-content; max-width: 100%; align-items: center; gap: .42rem; cursor: pointer; color: var(--accent); font-size: .76rem; font-weight: 750; list-style: none; }
+    .details summary::-webkit-details-marker { display: none; }
+    .details summary i { font-size: .65rem; transition: transform .16s; }
+    .details[open] summary i { transform: rotate(90deg); }
+    .details summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+    .detail-body { padding: .65rem .1rem .1rem; }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+    .detail-field { min-width: 0; padding: .62rem .7rem; border: 1px solid var(--line); border-radius: .62rem; background: color-mix(in srgb, var(--surface) 74%, var(--panel)); }
+    .detail-field.full-width { grid-column: 1 / -1; }
+    .detail-label { display: block; margin: 0 0 .22rem; color: var(--muted); font-size: .62rem; font-weight: 850; letter-spacing: .07em; line-height: 1.35; text-transform: uppercase; }
+    .detail-value { margin: 0; color: var(--text); font-size: .81rem; font-weight: 500; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .recommendation { margin: .55rem 0 0; }
+    .detail-stats { margin-top: .55rem; }
+    .empty[hidden] { display: none; }
+    .time-details { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .55rem; }
+    .time-details span { padding: .32rem .48rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--panel); color: var(--muted); font-size: .7rem; }
+    .time-details strong { color: var(--text); }
+    .stats { display: flex; flex-wrap: wrap; gap: .35rem; color: var(--muted); font-size: .72rem; }
+    .stats span { padding: .3rem .45rem; border: 1px solid var(--line); border-radius: .48rem; background: var(--panel); }
+    .stats i { margin-right: .15rem; color: var(--accent); }
+    .review-help { margin-top: .65rem; color: var(--muted); font-size: .78rem; }
+    .review { display: grid; grid-template-columns: minmax(180px, 1fr) auto auto; align-items: center; gap: .5rem; margin-top: .45rem; padding-top: .65rem; border-top: 1px solid var(--line); }
+    .review textarea { grid-column: 1 / -1; min-height: 3.5rem; resize: vertical; }
+    .btn { min-height: 2.25rem; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: .55rem; font: inherit; font-size: .76rem; font-weight: 750; cursor: pointer; transition: background .15s, transform .15s; }
+    .btn:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 48%, transparent); outline-offset: 2px; }
+    .approve { border-color: #16a34a; background: #16a34a; color: #fff; }
+    .approve:hover:not(:disabled) { transform: translateY(-1px); background: #15803d; }
+    .feedback { background: var(--panel); color: var(--text); }
+    .feedback:hover:not(:disabled) { background: var(--surface); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem; margin-top: .75rem; padding-top: .7rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; }
+    .pagination[hidden] { display: none; }
+    .page-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+    .page-controls label { color: var(--muted); font-size: .74rem; }
+    .page-controls select { min-width: 3.7rem; }
+    .page-controls .btn { min-height: 2rem; padding: .4rem .6rem; }
+    .notice { min-height: 1.1rem; margin: .45rem 0 0; color: var(--muted); font-size: .8rem; }
+    .empty { display: grid; min-height: 7rem; place-content: center; padding: 1rem; border: 1px dashed var(--line); border-radius: .7rem; color: var(--muted); font-size: .82rem; text-align: center; }
+    @media (max-width: 900px) { .filters { justify-content: flex-start; } .report-row { grid-template-columns: minmax(0, 1fr) auto; } .preview { grid-column: 1 / -1; grid-row: 2; } .report-badges { grid-column: 2; grid-row: 1; } }
+    @media (max-width: 768px) { .main-container { margin-left: 0; padding: .8rem; } .filters { flex-basis: 100%; } .filters input { min-width: 10rem; } .pagination { align-items: flex-start; } }
+    @media (max-width: 520px) { .report { padding: .68rem; } .page-controls { justify-content: flex-start; } .toolbar { align-items: flex-start; } .page-controls .btn { font-size: .68rem; } .report-row { grid-template-columns: minmax(0, 1fr); } .preview, .report-badges { grid-column: 1; } .preview { grid-row: 2; } .report-badges { grid-row: 3; justify-content: flex-start; } .detail-grid { grid-template-columns: minmax(0, 1fr); } .detail-field.full-width { grid-column: auto; } }
+    @media (max-width: 1023px) {
+      html body.app-shell.technician-accomplishments-page .comlab-slim-page-header #mobileMenuToggle {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        display: inline-flex !important;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-height: 2.25rem !important;
+        flex: 0 0 2.25rem !important;
+        align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      html body.app-shell.technician-accomplishments-page .comlab-slim-page-header > #mobileMenuToggle + div {
+        min-width: 0;
+        flex: 1 1 auto !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) { .report, .btn { transition-duration: .01ms; } }
+  </style>
+</head>
+<body class="app-shell system-layout-page technician-accomplishments-page">
+  <div id="shared-sidebar"></div>
+  <main class="main-container"><div class="wrap">
+    <header class="hero"><div><p class="eyebrow">Read-only workspace</p><h1>Technician Accomplishments</h1><p>Review and verify completed tasks submitted by technicians at your campus.</p></div><span class="hero-icon"><i class="fas fa-eye" aria-hidden="true"></i></span></header>
+    <section class="panel" aria-label="Technician accomplishment reports">
+      <div class="toolbar"><div><strong>Submitted reports</strong><div class="count" id="reportCount">Loading reports…</div></div><div class="filters">
+        <label class="search-field" for="searchReports"><i class="fas fa-search" aria-hidden="true"></i><input id="searchReports" type="search" placeholder="Search technician or work" aria-label="Search technician or work"></label>
+        <label class="filter-field"><span>Report type</span><select id="reportTypeFilter" aria-label="Filter by report type"><option value="all">All report types</option><option value="maintenance">Maintenance / repair</option><option value="weekly">Weekly report</option><option value="incident">Incident</option><option value="audit">Audit</option></select></label>
+        <label class="filter-field"><span>Status</span><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="submitted">Submitted</option><option value="approved">Approved</option><option value="reviewed">Reviewed</option><option value="draft">Draft</option></select></label>
+        <button class="btn feedback refresh-button" id="refreshReports" type="button" aria-label="Refresh reports" title="Refresh reports"><i class="fas fa-rotate" aria-hidden="true"></i></button>
+      </div></div>
+      <div id="reportList" class="reports" aria-live="polite"><div class="empty">Loading reports…</div></div>
+      <div id="pagination" class="pagination" hidden><span id="pageSummary"></span><div class="page-controls"><label for="pageSize">Show</label><select id="pageSize" aria-label="Reports per page"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select><button class="btn feedback" id="previousPage" type="button">Previous</button><span id="pageNumber"></span><button class="btn feedback" id="nextPage" type="button">Next</button></div></div>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </section>
+  </div></main>
+  <script>
+    (() => {
+      const list = document.getElementById('reportList');
+      const notice = document.getElementById('notice');
+      const search = document.getElementById('searchReports');
+      const filter = document.getElementById('statusFilter');
+      const typeFilter = document.getElementById('reportTypeFilter');
+      const pageSizeSelect = document.getElementById('pageSize');
+      const detailFields = [
+        ['equipmentArea', 'Equipment / area'],
+        ['reportedIssue', 'Reported issue or assigned task'],
+        ['inspectionFindings', 'Inspection findings'],
+        ['partsMaterialsUsed', 'Parts or materials used'],
+        ['workPerformed', 'Work performed'],
+        ['outcomeVerification', 'Outcome and verification']
+      ];
+      const timeFields = [['timeStarted', 'Started'], ['timeCompleted', 'Completed']];
+      const labelToKey = new Map([
+        ...detailFields.map(([key, label]) => [label.toLowerCase(), key]),
+        ...timeFields.map(([key, label]) => [(key === 'timeStarted' ? 'time started' : 'time completed'), key])
+      ]);
+      let reports = [];
+      let currentPage = 1;
+      const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+      const msg = (text) => { notice.textContent = text; };
+
+      function parseSummary(summary) {
+        const parsed = Object.fromEntries([...detailFields, ...timeFields].map(([key]) => [key, '']));
+        const looseLines = [];
+        let activeKey = '';
+        for (const line of String(summary || '').split(/\r\n|\r|\n/)) {
+          const inline = line.match(/^\s*([^:]+?)\s*:\s*(.*)$/);
+          const heading = line.match(/^\s*([^:]+?)\s*:?\s*$/);
+          const key = labelToKey.get((inline?.[1] || heading?.[1] || '').trim().toLowerCase());
+          if (key) {
+            activeKey = key;
+            if (inline?.[2]) parsed[key] += `${parsed[key] ? '\n' : ''}${inline[2]}`;
+          } else if (activeKey) {
+            parsed[activeKey] += `${parsed[activeKey] ? '\n' : ''}${line}`;
+          } else if (line.trim()) {
+            looseLines.push(line);
+          }
+        }
+        if (!parsed.workPerformed.trim() && looseLines.length) parsed.workPerformed = looseLines.join('\n').trim();
+        return parsed;
+      }
+
+      function getDetails(report) {
+        const parsed = parseSummary(report.summary);
+        return Object.fromEntries([...detailFields, ...timeFields].map(([key]) => {
+          const value = String(report[key] ?? '').trim() || String(parsed[key] ?? '').trim();
+          return [key, value];
+        }));
+      }
+
+      function hasValue(value) {
+        const normalized = String(value ?? '').trim();
+        return Boolean(normalized) && normalized.toLowerCase() !== 'n/a' && normalized.toLowerCase() !== 'na';
+      }
+
+      function typeLabel(value) {
+        return ({ maintenance: 'Maintenance / repair', weekly: 'Weekly report', incident: 'Incident', audit: 'Audit' })[String(value || '').toLowerCase()] || 'Work report';
+      }
+
+      function formatTime(value) {
+        const text = String(value || '').trim();
+        const match = text.match(/^(\d{1,2}):(\d{2})(?:\s*([ap]m))?$/i);
+        if (!match) return text;
+        let hour = Number(match[1]);
+        const minute = match[2];
+        const suffix = match[3]?.toUpperCase();
+        if (suffix) return `${hour}:${minute} ${suffix}`;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${minute} ${ampm}`;
+      }
+
+      function render() {
+        const query = search.value.trim().toLowerCase();
+        const selectedStatus = filter.value;
+        const selectedType = typeFilter.value;
+        const filteredReports = reports.filter((report) => {
+          const reportStatus = String(report.status || 'draft').toLowerCase();
+          const matchesStatus = selectedStatus === 'all' || reportStatus === selectedStatus;
+          const reportType = String(report.reportType || 'weekly').toLowerCase();
+          const matchesType = selectedType === 'all' || reportType === selectedType;
+          const text = `${report.technicianName || ''} ${report.campusId || ''} ${report.summary || ''} ${report.reportId || ''} ${reportType}`.toLowerCase();
+          return matchesStatus && matchesType && (!query || text.includes(query));
+        });
+        const pageSize = Number(pageSizeSelect.value) || 10;
+        const pageCount = Math.max(1, Math.ceil(filteredReports.length / pageSize));
+        currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+        const startIndex = (currentPage - 1) * pageSize;
+        const rows = filteredReports.slice(startIndex, startIndex + pageSize);
+        document.getElementById('reportCount').textContent = `${filteredReports.length} report${filteredReports.length === 1 ? '' : 's'} available to view`;
+        const pagination = document.getElementById('pagination');
+        pagination.hidden = filteredReports.length <= pageSize;
+        document.getElementById('pageSummary').textContent = filteredReports.length
+          ? `Showing ${startIndex + 1}–${Math.min(startIndex + rows.length, filteredReports.length)} of ${filteredReports.length} reports`
+          : 'No reports';
+        document.getElementById('pageNumber').textContent = `Page ${currentPage} of ${pageCount}`;
+        document.getElementById('previousPage').disabled = currentPage <= 1;
+        document.getElementById('nextPage').disabled = currentPage >= pageCount;
+        if (!rows.length) {
+          list.innerHTML = `<div class="empty">${selectedStatus === 'all' && selectedType === 'all' && !query ? 'No technician accomplishments have been submitted yet.' : 'No reports match these filters.'}</div>`;
+          return;
+        }
+
+        list.innerHTML = rows.map((report) => {
+          const date = report.reportDate
+            ? new Date(`${String(report.reportDate).slice(0, 10)}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'Date not set';
+          const status = String(report.status || 'draft').toLowerCase();
+          const statusClass = ['approved', 'reviewed'].includes(status) ? status : '';
+          const summary = String(report.summary || 'No work summary provided.').replace(/\s+/g, ' ').trim();
+          const reportType = String(report.reportType || 'weekly').toLowerCase();
+          const details = getDetails(report);
+          const equipment = details.equipmentArea;
+          const issue = details.reportedIssue;
+          const hasEquipment = hasValue(equipment);
+          const hasIssue = hasValue(issue);
+          const previewText = hasEquipment || hasIssue ? '' : summary;
+          const preview = previewText.length > 150 ? `${previewText.slice(0, 147)}…` : previewText;
+          const previewContent = hasEquipment || hasIssue
+            ? `${hasEquipment ? `<span class="preview-equipment" title="${esc(equipment)}">${esc(equipment)}</span>` : ''}${hasIssue ? `<span class="preview-issue" title="${esc(issue)}">${esc(issue)}</span>` : ''}`
+            : esc(preview);
+          const detailMarkup = detailFields.map(([key, label]) => {
+            if (!hasValue(details[key])) return '';
+            const spanClass = key === 'workPerformed' ? ' full-width' : '';
+            return `<div class="detail-field${spanClass}"><span class="detail-label">${esc(label)}</span><p class="detail-value">${esc(details[key])}</p></div>`;
+          }).join('');
+          const timeMarkup = timeFields.filter(([key]) => hasValue(details[key])).map(([key, label]) => `<span><strong>${esc(label)}:</strong> ${esc(formatTime(details[key]))}</span>`).join('');
+          const metrics = reportType === 'maintenance' ? '' : `<div class="stats detail-stats"><span><i class="fas fa-screwdriver-wrench"></i> Maintenance: <strong>${Number(report.maintenancePerformed || 0)}</strong></span><span><i class="fas fa-triangle-exclamation"></i> Issues handled: <strong>${Number(report.equipmentIssuesCount || 0)}</strong></span><span><i class="fas fa-boxes-stacked"></i> Equipment added: <strong>${Number(report.newEquipmentAdded || 0)}</strong></span><span><i class="fas fa-box-open"></i> Equipment retired: <strong>${Number(report.equipmentRetired || 0)}</strong></span><span><i class="fas fa-clipboard-check"></i> Inventory: <strong>${report.inventoryCheckCompleted ? 'Complete' : 'Not completed'}</strong></span></div>`;
+          return `<article class="report">
+            <div class="report-row"><div><div class="name" title="${esc(report.technicianName || 'Technician')}">${esc(report.technicianName || 'Technician')}</div><div class="sub">${esc(report.campusId || 'Campus not set')} · ${esc(date)}</div></div><div class="preview" title="${esc(hasEquipment || hasIssue ? `${equipment || ''} ${issue || ''}`.trim() : preview)}">${previewContent || '<span class="preview-issue">Work details available</span>'}</div><div class="report-badges"><span class="badge report-type">${esc(typeLabel(reportType))}</span><span class="badge ${statusClass}">${esc(status)}</span></div></div>
+            <details class="details"><summary><i class="fas fa-chevron-right" aria-hidden="true"></i> View accomplishment</summary><div class="detail-body">
+              <div class="stats"><span><i class="fas fa-hashtag"></i> Report: <strong>${esc(report.reportId || 'Not assigned')}</strong></span></div>
+              ${detailMarkup ? `<div class="detail-grid">${detailMarkup}</div>` : '<div class="empty">No work details provided.</div>'}
+              ${timeMarkup ? `<div class="time-details" aria-label="Work times">${timeMarkup}</div>` : ''}
+              ${metrics}
+              ${report.recommendations ? `<div class="detail-field recommendation"><span class="detail-label">Technician recommendations</span><p class="detail-value">${esc(report.recommendations)}</p></div>` : ''}${report.reviewComments ? `<div class="detail-field recommendation"><span class="detail-label">Administrator notes</span><p class="detail-value">${esc(report.reviewComments)}</p></div>` : ''}
+            </div></details>
+          </article>`;
+        }).join('');
+      }
+
+      async function load() {
+        msg('');
+        list.innerHTML = '<div class="empty">Loading reports…</div>';
+        try {
+          const response = await fetch('/api/equipment-enhancements/reports', { credentials: 'same-origin', cache: 'no-store' });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.message || 'Unable to load reports.');
+          reports = Array.isArray(payload.reports) ? payload.reports : [];
+          render();
+        } catch (error) {
+          list.innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+        }
+      }
+
+      search.addEventListener('input', () => { currentPage = 1; render(); });
+      filter.addEventListener('change', () => { currentPage = 1; render(); });
+      typeFilter.addEventListener('change', () => { currentPage = 1; render(); });
+      pageSizeSelect.addEventListener('change', () => { currentPage = 1; render(); });
+      document.getElementById('previousPage').addEventListener('click', () => { currentPage -= 1; render(); });
+      document.getElementById('nextPage').addEventListener('click', () => { currentPage += 1; render(); });
+      document.getElementById('refreshReports').addEventListener('click', load);
+      load();
+    })();
+  </script>
+  <script src="/js/sidebar-component.js?v=66" defer></script>
+</body>
+</html>

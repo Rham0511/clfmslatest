@@ -15,9 +15,25 @@ export const LaboratorySchedule = sequelize.define("LaboratorySchedule", {
     type: DataTypes.STRING,
     allowNull: true
   },
+  instructorUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  yearLevel: {
+    type: DataTypes.STRING(30),
+    allowNull: true
+  },
+  section: {
+    type: DataTypes.STRING(30),
+    allowNull: true
+  },
   laboratoryRoom: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  computerLabId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   campus: {
     type: DataTypes.STRING,
@@ -48,6 +64,11 @@ export const LaboratorySchedule = sequelize.define("LaboratorySchedule", {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
+  },
+  scheduleColor: {
+    type: DataTypes.STRING(7),
+    allowNull: false,
+    defaultValue: "#16a34a"
   }
 }, {
   tableName: "laboratory_schedules",

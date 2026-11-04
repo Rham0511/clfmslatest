@@ -7,17 +7,17 @@
     <!-- v2.0-radio-buttons-pc-set-1790972900 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=4">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         :root {
-            --bg: #07150F;
-            --bg-secondary: #0A1D15;
+            --bg: #020617;
+            --bg-secondary: #07111f;
             --border: rgba(74,222,128,.16);
-            --card-bg: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            --card-bg: linear-gradient(180deg, rgba(7,17,31,.96), rgba(2,6,23,.96));
             --shadow: 0 12px 35px rgba(6,64,43,.18);
         }
         body {
-            background: radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 28%), linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+            background: radial-gradient(circle at top left, rgba(34,197,94,.12), transparent 28%), linear-gradient(180deg, #020617 0%, #07111f 100%);
             color: #f8fafc;
             min-height: 100vh;
             overflow-x: hidden;
@@ -58,10 +58,10 @@
         /* Option cards */
         .option-card {
             border-radius: 1rem; padding: 1.1rem 1.2rem; border: 1.5px solid rgba(74,222,128,.15);
-            background: rgba(10,30,20,.6); cursor: pointer; transition: all .2s ease;
+            background: rgba(7, 17, 31,.6); cursor: pointer; transition: all .2s ease;
             display: flex; align-items: flex-start; gap: 1rem;
         }
-        .option-card:hover { border-color: rgba(74,222,128,.35); background: rgba(15,45,30,.7); transform: translateY(-1px); }
+        .option-card:hover { border-color: rgba(74,222,128,.35); background: rgba(7, 17, 31,.7); transform: translateY(-1px); }
         .option-card.selected { border-color: #22c55e; background: rgba(34,197,94,.08); box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
         .option-icon {
             width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
@@ -82,7 +82,7 @@
         /* Form elements */
         .form-input, .form-textarea {
             width: 100%; border-radius: 0.875rem;
-            border: 1px solid rgba(74,222,128,.18); background: rgba(5,15,10,.8);
+            border: 1px solid rgba(74,222,128,.18); background: rgba(2, 6, 23,.8);
             color: #f8fafc; padding: 0.875rem 1rem; outline: none;
             font-size: 0.9rem; transition: border-color .15s, box-shadow .15s;
             box-sizing: border-box;
@@ -122,6 +122,64 @@
         .eq-badge {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+        }
+
+        .equipment-search-wrap {
+            position: relative;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+        .equipment-search-wrap .form-input { height: 100%; }
+        .equipment-suggestions {
+            position: absolute;
+            z-index: 40;
+            top: calc(100% + 0.45rem);
+            left: 0;
+            right: 0;
+            max-height: 16rem;
+            overflow-y: auto;
+            padding: 0.35rem;
+            border: 1px solid rgba(74,222,128,.24);
+            border-radius: 0.9rem;
+            background: rgba(5,18,12,.98);
+            box-shadow: 0 16px 36px rgba(0,0,0,.42);
+            backdrop-filter: blur(16px);
+        }
+        .equipment-suggestion {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.65rem 0.7rem;
+            border: 0;
+            border-radius: 0.65rem;
+            background: transparent;
+            color: #e2f5e9;
+            text-align: left;
+            cursor: pointer;
+        }
+        .equipment-suggestion:hover,
+        .equipment-suggestion[aria-selected="true"] {
+            background: rgba(34,197,94,.12);
+        }
+        .equipment-suggestion-id {
+            color: #a7f3d0;
+            font-family: monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+        .equipment-suggestion-name {
+            flex: 0 1 auto;
+            color: #819b8c;
+            font-size: 0.72rem;
+            text-align: right;
+        }
+        .equipment-suggestion-message {
+            padding: 0.65rem 0.7rem;
+            color: #94a3b8;
+            font-size: 0.78rem;
         }
 
         @media (max-width: 1023px) {
@@ -207,28 +265,30 @@
             }
         }
     </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page student-report-issue-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
         <!-- Header -->
         <header class="sticky top-0 z-30 pt-2 pb-0">
             <div class="page-shell">
-                <div class="page-header-card">
-                    <div class="flex items-center gap-3 min-w-0 flex-1">
-                        <button id="mobileMenuToggle" type="button" onclick="toggleSidebar()"
-                            class="menu-toggle block lg:hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-slate-200">
-                            <i class="fas fa-bars text-lg"></i>
+                <div class="student-page-header">
+                    <div class="student-page-heading">
+                        <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+                            <i class="fas fa-bars" aria-hidden="true"></i>
                         </button>
-                        <div>
-                            <h1 class="text-xl font-bold text-white">Report an Issue</h1>
-                            <p class="text-xs text-emerald-400/70 mt-0.5">Report damaged equipment during your lab session</p>
+                        <div class="student-page-heading-copy">
+                            <h1 class="student-page-title student-university-title">MINDORO STATE UNIVERSITY</h1>
                         </div>
                     </div>
-                    <div class="flex shrink-0 items-center gap-2 rounded-full border border-emerald-800/60 bg-[#06100b] px-3 py-2">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[0.8rem] font-semibold text-emerald-200" data-user-initials>VS</div>
-                        <span class="text-xs font-semibold uppercase tracking-[.18em] text-emerald-200" data-user-role>Student</span>
+                    <div class="report-issue-header-actions" data-theme-toggle-anchor>
+                        <div class="student-page-user">
+                            <span class="student-page-user-initials" data-user-initials>ST</span>
+                            <span class="student-page-user-role" data-user-role>Student</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -263,7 +323,10 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <input id="equipmentInput" class="form-input flex-1" placeholder="e.g. KBD-PC-001" autocomplete="off" />
+                    <div class="equipment-search-wrap">
+                        <input id="equipmentInput" class="form-input" placeholder="e.g. KBD-PC-001" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="equipmentSuggestions" />
+                        <div id="equipmentSuggestions" class="equipment-suggestions" role="listbox" aria-label="Matching equipment IDs" style="display:none;"></div>
+                    </div>
                     <button type="button" onclick="lookupEquipment()" class="btn-primary" style="border-radius:0.875rem;padding:0.875rem 1.2rem;">
                         <i class="fas fa-search"></i>
                     </button>
@@ -282,7 +345,7 @@
                         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">What do you want to report?</p>
                         <div class="space-y-2">
                             <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all" 
-                                style="border-color:rgba(74,222,128,.15);background:rgba(10,30,20,.4);"
+                                style="border-color:rgba(74,222,128,.15);background:rgba(7, 17, 31,.4);"
                                 id="radioLabelComponent">
                                 <input type="radio" name="reportScope" value="component" onchange="onReportScopeChange()" 
                                     class="mt-0.5" style="accent-color:#22c55e;">
@@ -292,7 +355,7 @@
                                 </div>
                             </label>
                             <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all"
-                                style="border-color:rgba(74,222,128,.15);background:rgba(10,30,20,.4);"
+                                style="border-color:rgba(74,222,128,.15);background:rgba(7, 17, 31,.4);"
                                 id="radioLabelSet">
                                 <input type="radio" name="reportScope" value="set" onchange="onReportScopeChange()" 
                                     class="mt-0.5" style="accent-color:#22c55e;">
@@ -519,28 +582,175 @@
         }
 
         // ---- STEP 1: LOOKUP ----
-        let lookupTimer = null;
-        document.getElementById('equipmentInput').addEventListener('input', e => {
-            clearTimeout(lookupTimer);
-            const val = e.target.value.trim();
-            if (!val) {
-                hideStatus('lookupStatus');
-                document.getElementById('equipmentInfoCard').style.display = 'none';
-                document.getElementById('attendanceStatus').style.display = 'none';
-                document.getElementById('proceedBtn').disabled = true;
-                currentEquipmentId = null;
+        const equipmentInput = document.getElementById('equipmentInput');
+        const equipmentSuggestions = document.getElementById('equipmentSuggestions');
+        let studentEquipmentPromise = null;
+        let visibleEquipmentMatches = [];
+        let highlightedEquipmentIndex = -1;
+        let lookupRequestId = 0;
+
+        function closeEquipmentSuggestions() {
+            equipmentSuggestions.style.display = 'none';
+            equipmentSuggestions.replaceChildren();
+            equipmentInput.setAttribute('aria-expanded', 'false');
+            equipmentInput.removeAttribute('aria-activedescendant');
+            visibleEquipmentMatches = [];
+            highlightedEquipmentIndex = -1;
+        }
+
+        function renderEquipmentSuggestions(matches, message = '') {
+            equipmentSuggestions.replaceChildren();
+            visibleEquipmentMatches = matches;
+            highlightedEquipmentIndex = -1;
+
+            if (message) {
+                const status = document.createElement('div');
+                status.className = 'equipment-suggestion-message';
+                status.textContent = message;
+                equipmentSuggestions.appendChild(status);
+            } else {
+                matches.forEach((equipment, index) => {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.id = `equipmentSuggestion${index}`;
+                    option.className = 'equipment-suggestion';
+                    option.setAttribute('role', 'option');
+                    option.setAttribute('aria-selected', 'false');
+
+                    const id = document.createElement('span');
+                    id.className = 'equipment-suggestion-id';
+                    id.textContent = equipment.equipmentId || '';
+
+                    const name = document.createElement('span');
+                    name.className = 'equipment-suggestion-name';
+                    name.textContent = equipment.name || equipment.category || '';
+
+                    option.append(id, name);
+                    option.addEventListener('mousedown', event => event.preventDefault());
+                    option.addEventListener('click', () => {
+                        equipmentInput.value = equipment.equipmentId || '';
+                        closeEquipmentSuggestions();
+                        lookupEquipment();
+                    });
+                    equipmentSuggestions.appendChild(option);
+                });
+            }
+
+            equipmentSuggestions.style.display = '';
+            equipmentInput.setAttribute('aria-expanded', 'true');
+        }
+
+        async function getStudentEquipment() {
+            if (!studentEquipmentPromise) {
+                studentEquipmentPromise = fetch('/api/student/equipment', { cache: 'no-store' })
+                    .then(async response => {
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(payload.error || 'Unable to load equipment inventory.');
+                        }
+                        if (!Array.isArray(payload)) {
+                            throw new Error('The equipment search returned an invalid response.');
+                        }
+                        return payload;
+                    })
+                    .catch(error => {
+                        studentEquipmentPromise = null;
+                        throw error;
+                    });
+            }
+            return studentEquipmentPromise;
+        }
+
+        async function showEquipmentMatches(query) {
+            const normalizedQuery = query.trim().toLowerCase();
+            if (!normalizedQuery) {
+                closeEquipmentSuggestions();
                 return;
             }
-            lookupTimer = setTimeout(() => lookupEquipment(), 600);
+
+            renderEquipmentSuggestions([], 'Searching equipment IDs...');
+            try {
+                const equipment = await getStudentEquipment();
+                if (equipmentInput.value.trim().toLowerCase() !== normalizedQuery) return;
+
+                const matches = equipment
+                    .filter(item => String(item.equipmentId || '').toLowerCase().includes(normalizedQuery))
+                    .slice(0, 8);
+                renderEquipmentSuggestions(
+                    matches,
+                    matches.length ? '' : 'No equipment IDs match that text.'
+                );
+            } catch (error) {
+                if (equipmentInput.value.trim().toLowerCase() !== normalizedQuery) return;
+                console.error('Unable to search student equipment:', error);
+                closeEquipmentSuggestions();
+                showStatus('lookupStatus', '<i class="fas fa-triangle-exclamation mr-2"></i>Unable to search equipment right now. Please try again.', 'error');
+            }
+        }
+
+        function highlightEquipmentSuggestion(index) {
+            const options = equipmentSuggestions.querySelectorAll('[role="option"]');
+            if (!options.length) return false;
+            highlightedEquipmentIndex = (index + options.length) % options.length;
+            options.forEach((option, optionIndex) => {
+                const selected = optionIndex === highlightedEquipmentIndex;
+                option.setAttribute('aria-selected', String(selected));
+                if (selected) {
+                    equipmentInput.setAttribute('aria-activedescendant', option.id);
+                    option.scrollIntoView({ block: 'nearest' });
+                }
+            });
+            return true;
+        }
+
+        equipmentInput.addEventListener('input', () => {
+            lookupRequestId += 1;
+            hideStatus('lookupStatus');
+            document.getElementById('equipmentInfoCard').style.display = 'none';
+            document.getElementById('attendanceStatus').style.display = 'none';
+            document.getElementById('pcSetPickerWrapper').style.display = 'none';
+            document.getElementById('proceedBtn').disabled = true;
+            currentEquipmentId = null;
+            showEquipmentMatches(equipmentInput.value);
         });
 
-        document.getElementById('equipmentInput').addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); lookupEquipment(); }
+        equipmentInput.addEventListener('keydown', event => {
+            if (event.key === 'ArrowDown' && equipmentSuggestions.style.display !== 'none') {
+                if (highlightEquipmentSuggestion(highlightedEquipmentIndex + 1)) event.preventDefault();
+                return;
+            }
+            if (event.key === 'ArrowUp' && equipmentSuggestions.style.display !== 'none') {
+                if (highlightEquipmentSuggestion(highlightedEquipmentIndex - 1)) event.preventDefault();
+                return;
+            }
+            if (event.key === 'Escape') {
+                closeEquipmentSuggestions();
+                return;
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const selected = equipmentSuggestions.querySelector('[aria-selected="true"]');
+                if (selected) {
+                    selected.click();
+                } else if (visibleEquipmentMatches.length === 1) {
+                    equipmentInput.value = visibleEquipmentMatches[0].equipmentId || '';
+                    closeEquipmentSuggestions();
+                    lookupEquipment();
+                } else {
+                    lookupEquipment();
+                }
+            }
+        });
+
+        document.addEventListener('click', event => {
+            if (!event.target.closest('.equipment-search-wrap')) closeEquipmentSuggestions();
         });
 
         async function lookupEquipment() {
             const val = document.getElementById('equipmentInput').value.trim();
             if (!val) return;
+            closeEquipmentSuggestions();
+            const requestId = ++lookupRequestId;
             showStatus('lookupStatus', '<i class="fas fa-spinner fa-spin mr-2"></i>Looking up equipment...', 'info');
             document.getElementById('equipmentInfoCard').style.display = 'none';
             document.getElementById('attendanceStatus').style.display = 'none';
@@ -551,6 +761,7 @@
             try {
                 const res = await fetch(`/api/student/maintenance-context?equipmentId=${encodeURIComponent(val)}`);
                 const payload = await res.json().catch(() => ({}));
+                if (requestId !== lookupRequestId || equipmentInput.value.trim() !== val) return;
 
                 if (!res.ok || payload.error) {
                     showStatus('lookupStatus', `<i class="fas fa-times-circle mr-2"></i>${payload.error || 'Equipment not found.'}`, 'error');
@@ -564,6 +775,7 @@
                     // If belongs to a PC Set → load all components for picker
                     if (eq.setId) {
                         await loadPCSetPicker(eq.setId, eq.equipmentId);
+                        if (requestId !== lookupRequestId || equipmentInput.value.trim() !== val) return;
                     }
                 }
 
@@ -584,6 +796,8 @@
                 }
 
             } catch(err) {
+                if (requestId !== lookupRequestId || equipmentInput.value.trim() !== val) return;
+                console.error('Unable to look up equipment:', err);
                 showStatus('lookupStatus', '<i class="fas fa-wifi mr-2"></i>Could not connect. Please try again.', 'error');
             }
         }
@@ -659,9 +873,9 @@
 
             // Update label styles
             document.getElementById('radioLabelComponent').style.borderColor = scope === 'component' ? '#22c55e' : 'rgba(74,222,128,.15)';
-            document.getElementById('radioLabelComponent').style.background = scope === 'component' ? 'rgba(34,197,94,.08)' : 'rgba(10,30,20,.4)';
+            document.getElementById('radioLabelComponent').style.background = scope === 'component' ? 'rgba(34,197,94,.08)' : 'rgba(7, 17, 31,.4)';
             document.getElementById('radioLabelSet').style.borderColor = scope === 'set' ? '#22c55e' : 'rgba(74,222,128,.15)';
-            document.getElementById('radioLabelSet').style.background = scope === 'set' ? 'rgba(34,197,94,.08)' : 'rgba(10,30,20,.4)';
+            document.getElementById('radioLabelSet').style.background = scope === 'set' ? 'rgba(34,197,94,.08)' : 'rgba(7, 17, 31,.4)';
 
             if (scope === 'component') {
                 document.getElementById('pcSetComponentPanel').style.display = '';
@@ -843,9 +1057,9 @@
             document.getElementById('pcSetComponentPicker').innerHTML = '<option value="">— Choose component —</option>';
             document.querySelectorAll('input[name="reportScope"]').forEach(r => r.checked = false);
             document.getElementById('radioLabelComponent').style.borderColor = 'rgba(74,222,128,.15)';
-            document.getElementById('radioLabelComponent').style.background = 'rgba(10,30,20,.4)';
+            document.getElementById('radioLabelComponent').style.background = 'rgba(7, 17, 31,.4)';
             document.getElementById('radioLabelSet').style.borderColor = 'rgba(74,222,128,.15)';
-            document.getElementById('radioLabelSet').style.background = 'rgba(10,30,20,.4)';
+            document.getElementById('radioLabelSet').style.background = 'rgba(7, 17, 31,.4)';
             document.getElementById('proceedBtn').disabled = true;
             document.querySelectorAll('.issue-type-btn').forEach(b => b.classList.remove('selected'));
             hideStatus('lookupStatus');
@@ -856,8 +1070,8 @@
         // Init
         setStep(1);
     </script>
-    <script src="/js/student-sidebar-config.js?v=5" defer></script>
-    <script src="/js/sidebar-component.js?v=5" defer></script>
+    <script src="/js/student-sidebar-config.js?v=30" defer></script>
+    <script src="/js/sidebar-component.js?v=64" defer></script>
     <script src="/js/qr-scanner-button.js?v=1" defer></script>
 </body>
 </html>

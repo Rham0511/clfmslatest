@@ -26,11 +26,8 @@
     import path from "path";
 
 export const homePage = (req, res) => {
-  // Redirect to login page (using HBS template)
   if (req.session?.userId) {
-    // If user is logged in, redirect to their dashboard
     return res.redirect("/dashboard");
   }
-  // If not logged in, redirect to login page
-  res.redirect("/login");
+  return res.render("home", { title: "ComLab | Computer Laboratory Facilities Management System" });
 };

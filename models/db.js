@@ -24,13 +24,14 @@
     SOFTWARE.
     */
     
+import "dotenv/config";
 import { Sequelize } from "sequelize";
 
 const {
   DATABASE_URL,
   DB_NAME = "comlab",
-  DB_USER = "root",
-  DB_PASSWORD = "",
+  DB_USER = "comlab",
+  DB_PASSWORD = "comlab123",
   DB_HOST = "localhost",
   DB_PORT = "3306",
   DB_DIALECT = "mysql"

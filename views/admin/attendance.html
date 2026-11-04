@@ -6,7 +6,7 @@
     <title>Attendance | ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         :root {
             --accent: #22C55E;
@@ -21,7 +21,7 @@
             background:
                 radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%),
                 radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%),
-                linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+                linear-gradient(180deg, #020617 0%, #07111f 100%);
             color: #f8fafc;
             font-family: Inter, 'Segoe UI', Roboto, sans-serif;
         }
@@ -45,7 +45,7 @@
         }
 
         .glass-card {
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             backdrop-filter: blur(16px) saturate(1.04);
@@ -57,7 +57,7 @@
         }
 
         .btn-secondary {
-            background: rgba(10,29,21,.96);
+            background: rgba(2, 6, 23,.96);
             border: 1px solid rgba(74,222,128,.16);
         }
 
@@ -91,7 +91,7 @@
             padding: 1.25rem 1.5rem;
             border-radius: 2rem;
             border: 1px solid rgba(15, 79, 60, 0.35);
-            background: rgba(13, 23, 18, 0.92);
+            background: rgba(7, 17, 31, 0.92);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
             backdrop-filter: blur(20px) saturate(1.08);
             overflow: hidden;
@@ -121,6 +121,7 @@
             gap: 0.75rem !important;
             flex-wrap: wrap !important;
             width: auto;
+            margin-left: auto;
         }
 
         @media (max-width: 767px) {
@@ -134,6 +135,22 @@
             }
             .top-header-card .header-actions > * {
                 width: 100%;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .top-header-card .header-actions > .profile-theme-controls {
+                width: auto;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .top-header-card .header-actions {
+                justify-content: flex-end !important;
+            }
+
+            .top-header-card .header-actions > .header-pill {
+                width: auto;
             }
         }
 
@@ -167,7 +184,7 @@
             padding: 0.72rem 0.9rem !important;
             border-radius: 999px !important;
             border: 1px solid rgba(74,222,128,.16) !important;
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96)) !important;
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96)) !important;
             color: #f8fafc !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
         }
@@ -208,7 +225,7 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             padding: 1rem 1rem 1.05rem;
             border-radius: 1.15rem;
             box-shadow: var(--shadow);
@@ -266,7 +283,7 @@
         .section-shell {
             border-radius: 1.5rem;
             border: 1px solid rgba(74,222,128,.15);
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             padding: 0.8rem 0.9rem 0.85rem;
             box-shadow: 0 12px 35px rgba(6,64,43,.18);
         }
@@ -308,7 +325,7 @@
             padding: 0.7rem 0.85rem;
             border-radius: 9999px;
             border: 1px solid rgba(74,222,128,.16);
-            background: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.96), rgba(2, 6, 23,.96));
             box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
         }
 
@@ -396,7 +413,7 @@
             padding: 2rem 1.25rem;
             border-radius: 1.25rem;
             border: 1px dashed rgba(74,222,128,.2);
-            background: rgba(10,29,21,.95);
+            background: rgba(2, 6, 23,.95);
             color: #bbf7d0;
         }
 
@@ -451,7 +468,7 @@
             max-height: 90vh;
             overflow-y: auto;
             border-radius: 1.5rem;
-            background: linear-gradient(180deg, rgba(15,36,27,.98), rgba(10,29,21,.98));
+            background: linear-gradient(180deg, rgba(7, 17, 31,.98), rgba(2, 6, 23,.98));
             border: 1px solid rgba(74, 222, 128, 0.3);
             box-shadow: 0 30px 80px rgba(2, 8, 23, 0.6);
             animation: slideUp 0.3s ease;
@@ -481,7 +498,7 @@
             justify-content: center;
             border-radius: 0.75rem;
             border: 1px solid rgba(74, 222, 128, 0.2);
-            background: rgba(10, 29, 21, 0.8);
+            background: rgba(2, 6, 23, 0.8);
             color: #bbf7d0;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -533,7 +550,7 @@
             margin-bottom: 1.5rem;
             padding: 1rem;
             border-radius: 1rem;
-            background: rgba(15, 36, 27, 0.5);
+            background: rgba(7, 17, 31, 0.5);
             border: 1px solid rgba(74, 222, 128, 0.1);
         }
 
@@ -590,7 +607,7 @@
             gap: 0.25rem;
             border-radius: 0.75rem;
             border: 2px solid;
-            background: rgba(15, 36, 27, 0.6);
+            background: rgba(7, 17, 31, 0.6);
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
@@ -721,21 +738,26 @@
             text-align: center;
         }
     </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page">
     <div id="shared-sidebar"></div>
 
     <div class="main-container">
         <header class="top-header">
             <div class="top-header-card">
                 <div class="header-actions">
-                    <div class="header-search">
-                        <i class="fas fa-search"></i>
-                        <input id="attendanceSearch" type="text" placeholder="Search attendance records..." />
-                    </div>
                     <div class="header-pill">
                         <i class="fas fa-chart-line"></i>
                         Live tracking
+                    </div>
+                    <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white" aria-label="User profile">
+                        <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-user-initials>U</span>
+                        <span class="system-profile-badge-copy text-white">
+                            <span class="system-profile-badge-name text-white" data-user-name>Student</span>
+                            <span class="system-profile-badge-role text-emerald-400" data-user-role>Student</span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -747,7 +769,7 @@
                     <h2 class="text-2xl font-semibold text-white">Attendance Summary</h2>
                 </div>
 
-                <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4 summary-grid">
                     <div class="summary-card total">
                         <div class="card-icon"><i class="fas fa-calendar-check"></i></div>
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total Classes</p>
@@ -768,12 +790,18 @@
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Absent</p>
                         <h4 class="mt-2 text-2xl font-semibold text-white" data-absent-count>0</h4>
                     </div>
-                    <div class="summary-card percentage">
-                        <div class="card-icon"><i class="fas fa-percent"></i></div>
-                        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Attendance Percentage</p>
-                        <h4 class="mt-2 text-2xl font-semibold text-white" data-attendance-percentage>0%</h4>
-                    </div>
                 </div>
+                <div class="attendance-rate-summary">
+                    <p class="text-sm font-semibold text-slate-300">Attendance Percentage</p>
+                    <p class="text-white" data-attendance-percentage>0%</p>
+                </div>
+            </section>
+
+            <section class="system-filter-row attendance-filters" aria-label="Attendance filters">
+                <label class="attendance-search-field flex min-h-11 items-center gap-3 rounded-xl border border-emerald-400/20 bg-slate-950/70 px-4 py-2 text-slate-100" for="attendanceSearch">
+                    <i class="fas fa-search text-emerald-300" aria-hidden="true"></i>
+                    <input id="attendanceSearch" class="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" type="search" placeholder="Search attendance records..." />
+                </label>
             </section>
 
             <section class="section-shell">
@@ -1199,6 +1227,6 @@
         <i class="fas fa-desktop mr-2"></i>Test PC Selector
     </button>
 
-    <script src="/js/sidebar-component.js" defer></script>
+    <script src="/js/sidebar-component.js?v=66" defer></script>
 </body>
 </html>

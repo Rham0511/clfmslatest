@@ -6,7 +6,7 @@
     <title>Scan Attendance | ComLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=4">
+    <link rel="stylesheet" href="/css/sidebar.css?v=66">
     <style>
         body { 
             background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); 
@@ -32,6 +32,52 @@
             border-color: #f59e0b;
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05));
         }
+        body.student-portal.student-attendance-page .student-page-subtitle {
+            display: block;
+            margin: 0.12rem 0 0;
+            color: #a7f3d0 !important;
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1.15;
+        }
+        body.student-portal.student-attendance-page .student-university-title {
+            color: #fff;
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            line-height: 1.25;
+        }
+        html.theme-light body.student-portal.student-attendance-page .main-container.theme-light .student-university-title {
+            color: #000 !important;
+        }
+        body.student-portal.student-attendance-page #emptyState > i {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+        }
+        body.student-portal.student-attendance-page #emptyState > p {
+            color: #f3f4f6;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        html.theme-light body.student-portal.student-attendance-page .main-container.theme-light #emptyState > i {
+            color: #046a38;
+        }
+        html.theme-light body.student-portal.student-attendance-page .main-container.theme-light #emptyState > p {
+            color: #111827;
+        }
+        .attendance-header-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.55rem;
+            margin-left: auto;
+        }
+        body.student-portal.student-attendance-page .attendance-about,
+        body.student-portal.student-attendance-page [data-attendance-about],
+        body.student-portal.student-attendance-page [id*="attendance-about" i] {
+            display: none !important;
+        }
 
         @media (max-width: 640px) {
             body.student-portal .page-content {
@@ -54,38 +100,103 @@
                 line-height: 1.2;
             }
 
+            #loadingState,
+            #errorState,
+            #emptyState {
+                padding: 1.5rem 0.85rem !important;
+            }
+
+            #loadingState > i,
+            #errorState > i,
+            #emptyState > i {
+                margin-bottom: 0.65rem;
+                font-size: 2rem;
+            }
+
+            #loadingState > p,
+            #errorState > p,
+            #emptyState > p {
+                font-size: 0.88rem;
+                line-height: 1.45;
+            }
+
+            #schedulesGrid {
+                gap: 0.75rem;
+            }
+
             .schedule-card {
-                padding: 1rem !important;
-                border-radius: 1rem;
+                padding: 0.85rem !important;
+                border-radius: 0.9rem;
+            }
+
+            .schedule-card > .flex.items-start.justify-between {
+                gap: 0.65rem;
+                margin-bottom: 0.75rem;
             }
 
             .schedule-card h3 {
-                font-size: 1.05rem;
+                font-size: 0.95rem;
+                line-height: 1.3;
+            }
+
+            .schedule-card .flex.flex-col.items-end > span {
+                gap: 0.3rem;
+                padding: 0.3rem 0.55rem;
+                font-size: 0.65rem;
+            }
+
+            .schedule-card p {
+                font-size: 0.76rem;
                 line-height: 1.35;
             }
 
             .schedule-card .schedule-meta {
                 flex-wrap: wrap;
-                gap: 0.65rem 1rem;
-                padding-top: 0.8rem;
+                gap: 0.45rem 0.75rem;
+                padding-top: 0.65rem;
+                font-size: 0.72rem;
+            }
+
+            .schedule-card .schedule-meta span {
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .schedule-card > .flex.items-start.justify-between {
+                flex-direction: column;
+            }
+
+            .schedule-card .flex.flex-col.items-end {
+                width: 100%;
+                align-items: flex-start;
             }
         }
     </style>
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page student-attendance-page">
+    <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
     <div id="shared-sidebar"></div>
     
     <div class="main-container">
         <div class="page-content" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
             <!-- Header -->
-            <div class="attendance-page-heading bg-gradient-to-r from-emerald-900/90 to-teal-900/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-emerald-500/20 mb-6">
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="attendance-heading-icon bg-emerald-500/20 p-4 rounded-full">
-                        <i class="fas fa-qrcode text-4xl text-emerald-400"></i>
+            <div class="student-page-header attendance-page-heading">
+                <div class="student-page-heading">
+                    <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div class="student-page-heading-copy">
+                        <h1 class="student-page-title student-university-title">MINDORO STATE UNIVERSITY</h1>
                     </div>
-                    <div>
-                        <h1 class="text-3xl font-bold text-white mb-1">Scan Attendance</h1>
-                        <p class="text-emerald-200">Select a schedule to record your attendance</p>
+                </div>
+                <div class="attendance-header-actions" data-theme-toggle-anchor>
+                    <div class="student-page-user">
+                        <span class="student-page-user-initials" data-user-initials>ST</span>
+                        <span class="student-page-user-role" data-user-role>Student</span>
                     </div>
                 </div>
             </div>
@@ -115,8 +226,8 @@
         </div>
     </div>
 
-    <script src="/js/student-sidebar-config.js?v=5"></script>
-    <script src="/js/sidebar-component.js?v=5" defer></script>
+    <script src="/js/student-sidebar-config.js?v=30"></script>
+    <script src="/js/sidebar-component.js?v=64" defer></script>
     <script>
         async function loadSchedules() {
             const loadingState = document.getElementById('loadingState');
@@ -239,6 +350,46 @@
                 console.error('Error selecting schedule:', error);
                 alert('Failed to record attendance. Please try again.');
             }
+        }
+
+        function hideAttendanceAboutSections() {
+            const content = document.querySelector('body.student-attendance-page .page-content');
+            if (!content) return;
+
+            const aboutLabels = content.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], [role="tab"], button, a');
+            aboutLabels.forEach((label) => {
+                const text = String(label.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                if (!['about', 'about attendance', 'attendance about'].includes(text)) return;
+
+                const panelId = label.getAttribute('aria-controls') || String(label.getAttribute('data-target') || '').replace(/^#/, '');
+                const panel = panelId ? document.getElementById(panelId) : null;
+                if (panel && content.contains(panel)) panel.hidden = true;
+
+                const aboutSection = label.closest(
+                    '[data-attendance-about], .attendance-about, [class*="about-attendance" i], [id*="attendance-about" i], section, article, aside, [class*="-card" i]'
+                );
+                if (aboutSection && content.contains(aboutSection)) {
+                    aboutSection.hidden = true;
+                } else if (label.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && label.parentElement && label.parentElement !== content) {
+                    label.parentElement.hidden = true;
+                } else {
+                    label.hidden = true;
+                }
+            });
+        }
+
+        function initializeAttendanceAboutVisibility() {
+            const content = document.querySelector('body.student-attendance-page .page-content');
+            if (!content) return;
+            hideAttendanceAboutSections();
+            const observer = new MutationObserver(hideAttendanceAboutSections);
+            observer.observe(content, { childList: true, subtree: true });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAttendanceAboutVisibility, { once: true });
+        } else {
+            initializeAttendanceAboutVisibility();
         }
 
         // Load schedules on page load

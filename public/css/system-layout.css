@@ -1,0 +1,1064 @@
+body.system-layout-page {
+  --system-layout-border: rgba(74, 222, 128, .16);
+  --system-layout-muted: #94a3b8;
+}
+
+body.system-layout-page .system-dashboard-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin: 0 0 1.25rem;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid rgba(34, 197, 94, .15);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(15, 36, 27, .96), rgba(10, 29, 21, .96));
+  box-shadow: 0 12px 35px rgba(6, 64, 43, .18);
+  backdrop-filter: blur(16px) saturate(1.04);
+}
+
+body.system-layout-page .system-dashboard-heading-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .9rem;
+}
+
+body.system-layout-page .system-dashboard-heading h1 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+
+body.system-layout-page .system-dashboard-heading .student-page-user,
+body.system-layout-page .system-profile-badge {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.8rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  margin: 0;
+  padding: .35rem .85rem .35rem .4rem;
+  border: 1px solid rgba(74, 222, 128, .2);
+  border-radius: .95rem;
+  background: linear-gradient(135deg, rgba(16, 72, 46, .5), rgba(4, 24, 16, .72));
+  color: #e8f5ed;
+  text-decoration: none;
+}
+
+body.system-layout-page .system-profile-badge-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: .15rem;
+  text-align: left;
+}
+
+body.system-layout-page .system-profile-badge-name {
+  max-width: min(16rem, 32vw);
+  overflow: hidden;
+  color: #e8f5ed;
+  font-size: .86rem;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-layout-page .system-profile-badge-role {
+  color: #86c9a5;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+body.system-layout-page .system-profile-badge-avatar {
+  display: inline-flex;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: 0 0 2.1rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(74, 222, 128, .32);
+  border-radius: .7rem;
+  background: linear-gradient(145deg, rgba(34, 197, 94, .24), rgba(6, 78, 59, .38));
+  color: #a7f3d0;
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+body.system-layout-page .system-dashboard-heading-actions {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .75rem;
+}
+
+body.faculty-page .faculty-profile-link {
+  display: inline-flex;
+  border-radius: 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+body.faculty-page .faculty-profile-link:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, .9);
+  outline-offset: 3px;
+}
+
+body.app-shell :is(.system-dashboard-heading, .top-header) .search-box {
+  min-width: 0;
+  flex: 0 1 10.5rem;
+}
+
+body.app-shell :is(.system-dashboard-heading, .top-header) .search-box input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 10.5rem;
+}
+
+body.app-shell :is(.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons)
+  > .profile-theme-controls {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0;
+}
+
+body.system-layout-page .system-dashboard-heading .menu-toggle,
+body.system-layout-page .system-dashboard-heading #mobileMenuToggle {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(74, 222, 128, .2);
+  border-radius: .8rem;
+  background: rgba(7, 38, 24, .8);
+  color: #a7f3d0;
+}
+
+@media (min-width: 1024px) {
+  body.system-layout-page .system-dashboard-heading .menu-toggle,
+  body.system-layout-page .system-dashboard-heading #mobileMenuToggle {
+    display: none;
+  }
+}
+
+body.system-layout-page main {
+  row-gap: 1.25rem;
+}
+
+body.system-layout-page .summary-grid,
+body.system-layout-page .summary-row,
+body.system-layout-page .dashboard-cards,
+body.system-layout-page .faculty-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: 1rem !important;
+}
+
+@media (min-width: 1024px) {
+  body.system-layout-page.faculty-dashboard-page .faculty-metric-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+body.system-layout-page .summary-card {
+  box-sizing: border-box;
+  min-height: 9rem;
+  padding: 1.25rem;
+  border-radius: 1.1rem;
+}
+
+body.system-layout-page .summary-card .card-icon,
+body.system-layout-page .summary-card .summary-icon,
+body.system-layout-page .summary-card .icon-wrap {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+}
+
+body.system-layout-page .summary-card .card-text,
+body.system-layout-page .summary-card .label,
+body.system-layout-page .summary-card > p {
+  max-width: calc(100% - 3.5rem);
+  line-height: 1.45;
+}
+
+body.system-layout-page .summary-card .card-value,
+body.system-layout-page .summary-card .value,
+body.system-layout-page .summary-card h4,
+body.system-layout-page .dashboard-cards .card-value,
+body.system-layout-page .dashboard-cards .text-4xl {
+  font-size: clamp(1.8rem, 2.4vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+body.system-layout-page .dashboard-cards .card {
+  box-sizing: border-box;
+  min-height: 9rem;
+  padding: 1.25rem;
+  border-radius: 1.1rem;
+}
+
+body.system-layout-page .dashboard-cards .card-header {
+  margin-bottom: .85rem;
+}
+
+body.system-layout-page .dashboard-cards .card-title {
+  max-width: calc(100% - 3.5rem);
+  font-size: .75rem;
+  line-height: 1.45;
+}
+
+body.system-layout-page .faculty-metric-grid > a {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+body.system-layout-page .faculty-metric-grid > a > p:nth-of-type(1) {
+  font-size: clamp(1.8rem, 2.4vw, 2.35rem);
+}
+
+body.system-layout-page .system-filter-row {
+  display: grid;
+  grid-template-columns: minmax(14rem, 2fr) repeat(3, minmax(9rem, 1fr));
+  align-items: end;
+  gap: .85rem;
+}
+
+body.system-layout-page .system-filter-row input:not([type="checkbox"]):not([type="radio"]),
+body.system-layout-page .system-filter-row select {
+  box-sizing: border-box;
+  min-height: 2.8rem;
+  border: 1px solid var(--system-layout-border);
+  border-radius: .75rem;
+  font-size: .9rem;
+  line-height: 1.4;
+}
+
+body.system-layout-page .system-filter-row input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+body.system-layout-page .system-filter-row label,
+body.system-layout-page .system-filter-row .field > label {
+  font-size: .82rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+body.system-layout-page .attendance-filters {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.system-layout-page .attendance-search-field {
+  grid-column: 1 / -1;
+}
+
+body.system-layout-page .filters.system-filter-row {
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, auto);
+}
+
+body.system-layout-page .faculty-equipment-availability-page .system-filter-row {
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, auto);
+}
+
+body.system-layout-page .filter-toolbar.system-filter-row {
+  grid-template-columns: minmax(14rem, 2fr) minmax(14rem, 1.5fr) minmax(9rem, 1fr);
+}
+
+body.system-layout-page .maintenance-monitoring-page .filter-toolbar.system-filter-row {
+  grid-template-columns: minmax(0, 18rem) minmax(14rem, 1.5fr) minmax(9rem, auto);
+}
+
+body.system-layout-page .maintenance-search-controls {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .65rem;
+}
+
+body.system-layout-page .maintenance-search-controls .search-box {
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+body.system-layout-page .maintenance-theme-toggle-anchor {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+body.system-layout-page .assignment-controls input:not([type="checkbox"]):not([type="radio"]),
+body.system-layout-page .assignment-controls select {
+  min-height: 2.8rem;
+  font-size: .9rem;
+}
+
+body.system-layout-page table thead th {
+  padding: .9rem 1rem !important;
+  background: #15803d !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid #4ade80 !important;
+  font-size: .9rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .055em !important;
+  line-height: 1.4 !important;
+  text-align: left;
+  vertical-align: middle !important;
+}
+
+body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table thead th {
+  padding: 1rem 1.25rem !important;
+  background: #22c55e !important;
+  color: #052e16 !important;
+  border-bottom: 1px solid #86efac !important;
+  font-size: 1.1rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .035em !important;
+}
+
+body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table thead th:first-child {
+  border-top-left-radius: .65rem;
+}
+
+body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table thead th:last-child {
+  border-top-right-radius: .65rem;
+}
+
+body.system-layout-page main table tbody td {
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+body.system-layout-page .student-page-title,
+body.system-layout-page .top-header .header-title {
+  line-height: 1.25;
+}
+
+body.system-layout-page .student-page-title {
+  font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+body.system-layout-page .student-page-subtitle {
+  font-size: .7rem;
+}
+
+body.system-layout-page .top-header .header-title {
+  font-size: clamp(1.5rem, 2vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+body.system-layout-page .student-page-subtitle {
+  line-height: 1.4;
+}
+
+body.system-layout-page .attendance-rate-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: .8rem 1rem;
+  border: 1px solid var(--system-layout-border);
+  border-radius: .9rem;
+  background: rgba(74, 222, 128, .045);
+}
+
+body.system-layout-page .attendance-rate-summary p {
+  margin: 0;
+}
+
+body.system-layout-page .attendance-rate-summary [data-attendance-percentage] {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+body.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
+  height: 4.5rem;
+  min-height: 4.5rem;
+  margin: 0 0 1rem !important;
+  padding: .6rem 1rem !important;
+  border-radius: 1.1rem;
+}
+
+body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-main {
+  flex: 1 1 auto;
+  gap: .75rem;
+}
+
+body.faculty-page-heading-page.system-layout-page .system-dashboard-heading h1 {
+  min-width: 0;
+  overflow: hidden;
+  margin: 0 !important;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: .5rem;
+}
+
+@media (max-width: 1023px) {
+  body.faculty-page-heading-page.system-layout-page .main-container,
+  body.faculty-page-heading-page.system-layout-page .audit-page-content,
+  body.faculty-page-heading-page.system-layout-page > .page-shell {
+    box-sizing: border-box;
+    padding: 5rem .75rem 1.5rem !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container {
+    margin-left: 0 !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .system-dashboard-heading),
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .page-shell > .system-dashboard-heading),
+  body.faculty-page-heading-page.system-layout-page .audit-page-content > main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .page-shell > .system-dashboard-heading) > .page-shell {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .audit-page-content {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  body.faculty-page-heading-page.system-layout-page > .page-shell {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.faculty-page-heading-page.system-layout-page .main-container,
+  body.faculty-page-heading-page.system-layout-page .audit-page-content,
+  body.faculty-page-heading-page.system-layout-page > .page-shell {
+    padding-top: .5rem !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .system-dashboard-heading),
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .page-shell > .system-dashboard-heading),
+  body.faculty-page-heading-page.system-layout-page .audit-page-content > main {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    margin: 0 !important;
+    padding: 0 30px 0 15px !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .main-container > main:has(> .page-shell > .system-dashboard-heading) > .page-shell {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .audit-page-content {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page > .page-shell {
+    box-sizing: border-box;
+    padding-right: 30px !important;
+    padding-left: 15px !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+    box-sizing: border-box;
+    width: 100%;
+    height: 4.5rem;
+    min-height: 4.5rem;
+    margin: 0 0 1rem !important;
+    padding: .6rem 1rem !important;
+    border-radius: 1.1rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-main {
+    gap: .75rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading h1 {
+    margin: 0 !important;
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  }
+}
+
+body.faculty-page-heading-page .student-page-heading-copy {
+  display: none;
+}
+
+body.faculty-page-heading-page .system-page-heading {
+  margin: 0 0 .75rem;
+  padding: 1.35rem 1.35rem 1.4rem;
+  border: 1px solid rgba(34, 197, 94, .15);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(15, 36, 27, .96), rgba(10, 29, 21, .96));
+  box-shadow: 0 12px 35px rgba(6, 64, 43, .18);
+  backdrop-filter: blur(16px) saturate(1.04);
+}
+
+body.faculty-page-heading-page .system-page-heading h1 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+
+@media (max-width: 767px) {
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+    height: auto;
+    min-height: 3.75rem;
+    padding: .6rem .75rem !important;
+    margin-bottom: .85rem !important;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-actions {
+    width: auto;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .85rem;
+    padding: .7rem .75rem;
+    border-radius: .9rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-main {
+    flex: 1 1 auto;
+    gap: .5rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading h1 {
+    font-size: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-actions {
+    width: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: .35rem;
+  }
+
+  body.system-layout-page .system-dashboard-heading {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    padding: .9rem;
+    border-radius: 1rem;
+  }
+
+  body.system-layout-page .system-dashboard-heading-main {
+    gap: .6rem;
+  }
+
+  body.system-layout-page .system-dashboard-heading h1 {
+    font-size: clamp(1.2rem, 5vw, 1.6rem);
+  }
+
+  body.system-layout-page .system-dashboard-heading-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: .5rem;
+    justify-content: space-between;
+  }
+
+  body.system-layout-page .system-dashboard-heading .system-profile-badge,
+  body.system-layout-page .system-dashboard-heading .student-page-user {
+    gap: .45rem;
+    min-height: 2.55rem;
+    padding: .3rem .55rem .3rem .3rem;
+  }
+
+  body.system-layout-page .system-profile-badge-name {
+    max-width: 30vw;
+    font-size: .72rem;
+  }
+
+  body.system-layout-page .system-profile-badge-role {
+    font-size: .52rem;
+  }
+
+  body.system-layout-page .system-profile-badge-avatar {
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-basis: 1.8rem;
+  }
+
+  body.faculty-page-heading-page .system-page-heading {
+    margin-bottom: .75rem;
+    padding: .85rem .9rem;
+    border-radius: 1rem;
+  }
+
+  body.faculty-page-heading-page .system-page-heading h1 {
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
+    letter-spacing: -.025em;
+  }
+}
+
+@media (max-width: 480px) {
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+    padding: .6rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading-main {
+    gap: .4rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading .menu-toggle,
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading #mobileMenuToggle {
+    width: 2.2rem;
+    height: 2.2rem;
+    flex-basis: 2.2rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading .system-profile-badge,
+  body.faculty-page-heading-page.system-layout-page .system-dashboard-heading .student-page-user {
+    gap: .35rem;
+    min-height: 2.35rem;
+    padding: .25rem .4rem .25rem .25rem;
+  }
+
+  body.faculty-page-heading-page.system-layout-page .system-profile-badge-name {
+    max-width: 22vw;
+  }
+}
+
+@media (max-width: 1023px) {
+  body.system-layout-page .summary-grid,
+  body.system-layout-page .summary-row,
+  body.system-layout-page .dashboard-cards,
+  body.system-layout-page .faculty-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.system-layout-page .system-filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-layout-page .filters.system-filter-row,
+  body.system-layout-page .faculty-equipment-availability-page .system-filter-row,
+  body.system-layout-page .maintenance-monitoring-page .filter-toolbar.system-filter-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  body.system-layout-page .summary-grid,
+  body.system-layout-page .summary-row,
+  body.system-layout-page .dashboard-cards,
+  body.system-layout-page .faculty-metric-grid {
+    grid-template-columns: 1fr !important;
+    gap: .75rem !important;
+  }
+
+  body.system-layout-page .summary-card,
+  body.system-layout-page .dashboard-cards .card {
+    min-height: 8rem;
+    padding: 1rem;
+  }
+
+  body.system-layout-page .system-filter-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.system-layout-page #dashboard-view .dashboard-cards {
+  grid-template-columns: repeat(5, minmax(8.5rem, 1fr)) !important;
+}
+
+body.system-layout-page .attendance-rate-summary {
+  align-items: flex-start;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light :is(
+  .system-dashboard-heading,
+  .summary-card,
+  .section-shell,
+  .filter-control,
+  .table-shell
+) {
+  border: 1px solid #c9ddd0 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light :is(table th, table td) {
+  border-color: #dce8df !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .empty-state-card {
+  border: 1px dashed #a7c9ae !important;
+  background: #fff !important;
+  color: #4b5563 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .empty-state-card h4 {
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .empty-state-card p {
+  color: #4b5563 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .empty-state-icon {
+  background: #e8f3eb !important;
+  color: #046a38 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light .student-page-header {
+  background-color: #fff !important;
+  background-image: none !important;
+  border: 1px solid #c9ddd0 !important;
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light .no-pc-card {
+  background: #fff !important;
+  border: 1px dashed #a7c9ae !important;
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light .no-pc-card h3 {
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light .no-pc-card p {
+  border: 1px solid #dce8df !important;
+  border-radius: 0.75rem;
+  background: #fff !important;
+  padding: 0.75rem 1rem;
+  color: #4b5563 !important;
+}
+
+html.theme-light body.student-portal.pc-station-page .main-container.theme-light .no-pc-icon {
+  background: #e8f3eb !important;
+  color: #046a38 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light #equipmentSelectionList {
+  border: 1px solid #c9ddd0 !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option {
+  border: 1px solid #c9ddd0 !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option:hover {
+  background: #f1f7f2 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-details strong {
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-details > span {
+  color: #4b5563 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-status {
+  color: #046a38 !important;
+}
+
+html.theme-light body.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-option-status.text-amber-200 {
+  color: #8a5a0a !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light #attendance .filters .filter-control {
+  background: #fff !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light #attendance .filters .filter-control :is(input, select) {
+  background: #fff !important;
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light #attendance .filters .filter-control i {
+  color: #374151 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light #attendance .filters .filter-control:focus-within {
+  border-color: #000 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light #attendance .filters .filter-control select option {
+  background: #fff !important;
+  color: #111827 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .system-dashboard-heading .system-profile-badge.profile-theme-static {
+  border-color: rgba(74, 222, 128, .2) !important;
+  background: #04281b !important;
+  color: #fff !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-copy,
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-name {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-role {
+  background: transparent !important;
+  color: #34d399 !important;
+}
+
+html.theme-light body.student-portal.system-layout-page .main-container.theme-light .system-dashboard-heading .system-profile-badge.profile-theme-static .system-profile-badge-avatar {
+  border-color: rgba(74, 222, 128, .32) !important;
+  background: #06402b !important;
+  color: #a7f3d0 !important;
+}
+
+/* Consistent KPI cards shared by every role dashboard */
+body.system-layout-page .main-container .dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)) !important;
+  align-items: stretch;
+  gap: .8rem !important;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 8.35rem !important;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: .6rem;
+  overflow: hidden;
+  margin: 0;
+  padding: 1rem 1.05rem !important;
+  border: 1px solid rgba(110, 231, 183, .18) !important;
+  border-radius: 1rem !important;
+  background: linear-gradient(145deg, #10251a, #0a1b12) !important;
+  box-shadow: 0 8px 22px rgba(3, 24, 13, .1), inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  color: #f2fbf5 !important;
+  text-align: left;
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-grid .dashboard-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(34, 197, 94, .48) !important;
+  box-shadow: 0 14px 28px rgba(3, 24, 13, .15), 0 0 0 3px rgba(34, 197, 94, .06) !important;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-grid .dashboard-kpi-card:focus-visible {
+  outline: 3px solid #4ade80;
+  outline-offset: 3px;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-icon {
+  position: absolute !important;
+  top: 1rem;
+  right: 1rem;
+  display: grid !important;
+  width: 2.55rem !important;
+  height: 2.55rem !important;
+  min-width: 2.55rem;
+  flex: 0 0 2.55rem;
+  place-items: center;
+  margin: 0 !important;
+  border: 1px solid rgba(74, 222, 128, .2) !important;
+  border-radius: .85rem !important;
+  background: rgba(34, 197, 94, .11) !important;
+  box-shadow: none !important;
+  color: #86efac !important;
+  font-size: .95rem !important;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-label {
+  display: block;
+  min-width: 0;
+  max-width: calc(100% - 3.15rem);
+  margin: 0;
+  color: #d7eee0 !important;
+  font-size: .82rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -.005em;
+  overflow-wrap: anywhere;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-overline {
+  display: block;
+  max-width: calc(100% - 3.15rem);
+  margin: 0 0 .22rem;
+  color: #91c6a4 !important;
+  font-size: .62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .14em !important;
+  line-height: 1.3 !important;
+  text-transform: uppercase;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-value {
+  display: block;
+  min-width: 0;
+  margin: auto 0 0 !important;
+  padding-top: .65rem;
+  color: #f2fbf5 !important;
+  font-size: clamp(1.75rem, 2.15vw, 2.15rem) !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850 !important;
+  letter-spacing: -.045em;
+  line-height: 1 !important;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .card-header {
+  min-width: 0;
+  align-items: flex-start;
+  gap: .5rem;
+  margin: 0;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .card-header > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .card-title {
+  max-width: calc(100% - 3.15rem);
+  color: #91c6a4 !important;
+  font-size: .62rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .14em !important;
+  line-height: 1.3 !important;
+}
+
+body.system-layout-page .main-container .dashboard-kpi-card .card-text {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body.system-layout-page .main-container .borrow-summary-grid .dashboard-kpi-card > span:first-child {
+  display: flex;
+  width: 100%;
+  min-height: 5.8rem;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-grid .dashboard-kpi-card {
+  border-color: #c9ddd0 !important;
+  background: linear-gradient(145deg, #ffffff, #f3f8f5) !important;
+  box-shadow: 0 8px 22px rgba(27, 74, 48, .08), inset 0 1px 0 rgba(255, 255, 255, .85) !important;
+  color: #14251b !important;
+}
+
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-icon {
+  border-color: rgba(22, 131, 74, .18) !important;
+  background: #e4f4e9 !important;
+  color: #16834a !important;
+}
+
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-label,
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .card-title {
+  color: #536b5b !important;
+}
+
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-overline {
+  color: #54715d !important;
+}
+
+html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-value {
+  color: #17291e !important;
+}
+
+@media (max-width: 767px) {
+  body.system-layout-page .main-container .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .65rem !important;
+  }
+
+  body.system-layout-page .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+    min-height: 7.6rem !important;
+    padding: .85rem !important;
+  }
+
+  body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-icon {
+    top: .85rem;
+    right: .85rem;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-width: 2.25rem;
+    flex-basis: 2.25rem;
+  }
+
+  body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-label,
+  body.system-layout-page .main-container .dashboard-kpi-card .card-title,
+  body.system-layout-page .main-container .dashboard-kpi-card .dashboard-kpi-overline {
+    max-width: calc(100% - 2.75rem);
+  }
+}
+
+@media (max-width: 359px) {
+  body.system-layout-page .main-container .dashboard-kpi-grid.dashboard-kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.system-layout-page .main-container .dashboard-kpi-card {
+    transition: none !important;
+  }
+}

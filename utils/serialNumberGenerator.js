@@ -6,6 +6,7 @@
  */
 
 import { Equipment } from '../models/equipmentModel.js';
+import EquipmentSet from '../models/equipmentSetModel.js';
 import { Op } from 'sequelize';
 
 /**
@@ -119,8 +120,6 @@ async function serialNumberExists(serialNumber, excludeEquipmentId = null) {
  */
 async function generateSetId(type, campus) {
     try {
-        import EquipmentSet from '../models/equipmentSetModel.js';
-        
         const typeCode = type.toUpperCase().replace(/\s+/g, '-').substring(0, 10);
         const campusCode = campus.toUpperCase().replace(/\s+/g, '-').substring(0, 15);
         

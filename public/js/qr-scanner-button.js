@@ -10,10 +10,13 @@
     // Create floating button
     const button = document.createElement('button');
     button.id = 'qr-scan-float-btn';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Scan a QR code');
+    button.title = 'Scan a QR code';
     button.innerHTML = '<i class="fas fa-qrcode"></i>';
     button.style.cssText = `
         position: fixed;
-        bottom: 24px;
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
         right: 24px;
         width: 60px;
         height: 60px;
@@ -23,7 +26,7 @@
         border: none;
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
         cursor: pointer;
-        z-index: 9999;
+        z-index: 50;
         display: flex;
         align-items: center;
         justify-content: center;

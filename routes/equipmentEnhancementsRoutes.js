@@ -137,31 +137,35 @@ router.get('/audit/export/csv', requireInventoryRole, auditTrailController.expor
 // ============================================================================
 
 // Get all technician reports
-router.get('/reports', technicianReportController.getAllReports);
+router.get('/reports', requireTechnicianReportRole, technicianReportController.getAllReports);
+router.get('/reports/mine', requireTechnicianReportRole, technicianReportController.getMyReports);
 
 // Equipment lookup used by the technician report form
 router.get('/reports/equipment-options', requireTechnicianReportRole, technicianReportController.getReportEquipmentOptions);
 
-// Get single report
-router.get('/reports/:id', technicianReportController.getReportById);
+// Download a report in Word or PDF format (technician owner only)
+router.get('/reports/:id/download', requireTechnicianReportRole, technicianReportController.downloadReport);
 
-// Create new report (technician/admin only)
+// Get single report
+router.get('/reports/:id', requireTechnicianReportRole, technicianReportController.getReportById);
+
+// Create new report (technicians only; enforced by the controller)
 router.post('/reports', requireTechnicianReportRole, technicianReportController.createReport);
 
-// Update report (own reports or admin)
+// Update a technician's own draft only
 router.put('/reports/:id', requireTechnicianReportRole, technicianReportController.updateReport);
 
 // Submit report for review
 router.post('/reports/:id/submit', requireTechnicianReportRole, technicianReportController.submitReport);
 
-// Review report (admin only)
-router.post('/reports/:id/review', technicianReportController.reviewReport);
+// Legacy endpoint retained for compatibility; reports are read-only for admins
+router.post('/reports/:id/review', requireTechnicianReportRole, technicianReportController.reviewReport);
 
-// Delete report (draft only or admin)
+// Delete the authenticated technician's own draft report only
 router.delete('/reports/:id', technicianReportController.deleteReport);
 
 // Get report statistics
-router.get('/reports/stats/summary', technicianReportController.getReportStatistics);
+router.get('/reports/stats/summary', requireTechnicianReportRole, technicianReportController.getReportStatistics);
 
 // ============================================================================
 // HEALTH CHECK

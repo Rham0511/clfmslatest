@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Borrow Equipment | ComLab Student Portal</title>
+  <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css?v=4" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=66" />
   <style>
     :root {
       color-scheme: dark;
-      --bg: #07150F;
-      --bg-secondary: #0A1D15;
-      --panel: linear-gradient(180deg, rgba(15,36,27,.96), rgba(10,29,21,.96));
-      --panel-strong: linear-gradient(180deg, rgba(15,36,27,.98), rgba(10,29,21,.98));
+      --bg: #07150f;
+      --bg-secondary: #0a1d15;
+      --panel: linear-gradient(180deg, rgba(15,36,27,.96), rgba(7,21,15,.96));
+      --panel-strong: linear-gradient(180deg, rgba(15,36,27,.98), rgba(7,21,15,.98));
       --panel-soft: rgba(74,222,128,.06);
       --border: rgba(74,222,128,.15);
       --text: #F8FAFC;
       --muted: #B6D7C8;
-      --accent: #22C55E;
-      --accent-strong: #16A34A;
-      --accent-soft: rgba(74,222,128,.12);
+      --accent: #0c7d46;
+      --accent-strong: #046A38;
+      --accent-soft: rgba(4,106,56,.12);
       --warning: #FBBF24;
       --warning-soft: rgba(250,204,21,.14);
       --danger: #F87171;
@@ -34,7 +34,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%), radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%), linear-gradient(180deg, #07150F 0%, #0A1D15 100%);
+      background: radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%), radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%), linear-gradient(180deg, #07150f 0%, #0a1d15 100%);
       color: var(--text);
       font-family: Inter, 'Segoe UI', Roboto, sans-serif;
       line-height: 1.55;
@@ -42,8 +42,32 @@
 
     .page-shell {
       padding: 1.5rem 1.5rem 2rem;
+      padding-left: 1.85rem;
       margin-left: 280px;
       min-height: 100vh;
+    }
+
+    body.student-borrow-equipment-page .student-page-heading-copy {
+      margin-left: 0.75rem;
+    }
+
+    body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .student-page-subtitle {
+      display: block;
+      margin: 0;
+      color: #a7f3d0 !important;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .borrow-header-actions {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.55rem;
+      margin-left: auto;
     }
 
     .page-header-card {
@@ -86,27 +110,430 @@
     }
 
     .panel-card {
-      border: 1px solid var(--border);
-      background: var(--panel);
-      border-radius: 1.25rem;
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(74, 222, 128, 0.18);
+      background:
+        radial-gradient(420px 220px at 100% 0%, rgba(34, 197, 94, 0.07), transparent 72%),
+        linear-gradient(155deg, rgba(15, 36, 27, 0.98), rgba(7, 21, 15, 0.98));
+      border-radius: 1.5rem;
+      box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 20px 48px rgba(0, 0, 0, 0.25);
+      overflow: visible;
     }
 
     .panel-body {
-      padding: 1.25rem 1.3rem 1.35rem;
+      padding: 1.4rem;
+    }
+
+    .borrow-content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      gap: 1rem;
+    }
+
+    .borrow-content-grid > .panel-card {
+      min-width: 0;
+    }
+
+    .borrow-tab-switcher {
+      display: flex;
+      width: 100%;
+      gap: .5rem;
+      margin: 1rem 0;
+      padding: .35rem;
+      border: 1px solid rgba(74, 222, 128, .16);
+      border-radius: 1rem;
+      background: rgba(3, 18, 12, .72);
+    }
+
+    .borrow-tab-button {
+      display: inline-flex;
+      min-height: 2.8rem;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      border: 1px solid transparent;
+      border-radius: .75rem;
+      padding: .65rem 1rem;
+      background: transparent;
+      color: #b6d7c8;
+      font-size: .9rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .borrow-tab-button[aria-selected="true"] {
+      border-color: rgba(4, 106, 56, .85);
+      background: #046A38;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(4, 106, 56, .22);
+    }
+
+    .borrow-tab-button:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .borrow-tab-panel[hidden] { display: none !important; }
+
+    .borrow-equipment-section-title {
+      font-size: 1.125rem !important;
+      font-weight: 750 !important;
+      color: #fff !important;
+    }
+
+    .borrow-request-new {
+      outline: 2px solid rgba(52, 211, 153, 0.72);
+      outline-offset: -2px;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .borrow-requests-table {
+      width: 100%;
+      min-width: 0 !important;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .borrow-requests-table th,
+    .borrow-requests-table td {
+      padding: 0.55rem 0.5rem;
+      border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+      overflow-wrap: anywhere;
+      vertical-align: top;
+    }
+
+    .borrow-requests-table th {
+      background: linear-gradient(180deg, rgba(18, 101, 61, 0.92), rgba(12, 68, 43, 0.92));
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      line-height: 1.2;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .borrow-requests-table td {
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .borrow-requests-table th:nth-child(1) { width: 16%; }
+    .borrow-requests-table th:nth-child(2) { width: 12%; }
+    .borrow-requests-table th:nth-child(3) { width: 13%; }
+    .borrow-requests-table th:nth-child(4) { width: 13%; }
+    .borrow-requests-table th:nth-child(5) { width: 13%; }
+    .borrow-requests-table th:nth-child(6) { width: 19%; }
+    .borrow-requests-table th:nth-child(7) { width: 14%; }
+    .borrow-requests-table-wrap { width: 100%; overflow-x: hidden; border: 1px solid rgba(74, 222, 128, .15); border-radius: .9rem; }
+    .borrow-requests-table tbody tr:last-child td { border-bottom: 0; }
+    .borrow-requests-table tbody tr:nth-child(even) { background: rgba(74, 222, 128, 0.025); }
+    .borrow-requests-table tbody tr:hover { background: rgba(74, 222, 128, 0.06); }
+
+    .borrow-request-status {
+      display: inline-flex;
+      max-width: 100%;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 999px;
+      padding: 0.18rem 0.42rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .borrow-request-status-area {
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      cursor: help;
+    }
+
+    .borrow-request-status-area:focus-visible,
+    .borrow-equipment-name:focus-visible {
+      border-radius: 0.25rem;
+      outline: 2px solid #046a38;
+      outline-offset: 2px;
+    }
+
+    .borrow-request-status.pending {
+      border-color: rgba(251, 191, 36, 0.25);
+      background: rgba(245, 158, 11, 0.1);
+      color: #fcd34d;
+    }
+
+    .borrow-request-status.borrowed,
+    .borrow-request-status.approved,
+    .borrow-request-status.returned {
+      border-color: rgba(52, 211, 153, 0.24);
+      background: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+    }
+
+    .borrow-request-status.rejected,
+    .borrow-request-status.cancelled,
+    .borrow-request-status.lost {
+      border-color: rgba(251, 113, 133, 0.24);
+      background: rgba(244, 63, 94, 0.08);
+      color: #fda4af;
+    }
+
+    .borrow-request-status.overdue,
+    .borrow-request-status.pending-replacement {
+      border-color: rgba(251, 191, 36, 0.25);
+      background: rgba(245, 158, 11, 0.1);
+      color: #fcd34d;
+    }
+
+    .borrow-request-meta {
+      display: block;
+      margin-top: 0.22rem;
+      color: #91ad9c;
+      font-size: 0.63rem;
+      line-height: 1.25;
+    }
+
+    .borrow-request-date {
+      display: block;
+      color: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .borrow-request-date-meta {
+      display: block;
+      margin-top: 0.2rem;
+      color: #c4e4d1;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .borrow-request-explanation {
+      display: block;
+      margin-top: 0.22rem;
+      color: #c4e4d1;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .borrow-equipment-name {
+      cursor: help;
+    }
+
+    .borrow-requests-table td:nth-child(4) .borrow-btn {
+      min-height: 2.15rem;
+      padding: 0.42rem 0.6rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .borrow-requests-table td:nth-child(4) > .inline-flex:not(.borrow-btn) {
+      gap: 0.3rem;
+      border-radius: 0.65rem;
+      padding: 0.4rem 0.45rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .borrow-requests-heading {
+      color: #fff !important;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .borrow-request-filters {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) repeat(2, minmax(8rem, 0.58fr));
+      gap: 0.55rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .borrow-request-filter {
+      min-width: 0;
+      min-height: 2.55rem;
+      border: 1px solid rgba(74, 222, 128, 0.18);
+      border-radius: 0.7rem;
+      background: rgba(5, 24, 17, 0.76);
+      padding: 0.55rem 0.7rem;
+      color: #d1fae5;
+      font: inherit;
+      font-size: 0.875rem;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .borrow-request-filter::placeholder,
+    .borrow-form-field input::placeholder,
+    .borrow-form-field textarea::placeholder {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .borrow-request-filter:focus {
+      border-color: rgba(74, 222, 128, 0.65);
+      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.12);
+    }
+
+    .borrow-request-results {
+      margin: -0.2rem 0 0.55rem;
+      color: #91ad9c;
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 640px) {
+      .borrow-request-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .borrow-request-filter-search {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .borrow-request-message {
+      margin-bottom: 0.75rem;
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      background: rgba(245, 158, 11, 0.07);
+      color: #fcd34d;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .borrow-request-message.error {
+      border-color: rgba(251, 113, 133, 0.25);
+      background: rgba(244, 63, 94, 0.08);
+      color: #fda4af;
+    }
+
+    @media (min-width: 1200px) {
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .borrow-content-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .borrow-content-grid > main.panel-card {
+        display: flex;
+        min-height: 100%;
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .borrow-content-grid > main.panel-card > .panel-body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) #studentBorrowForm {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .borrow-form-grid {
+        flex: 1;
+        align-content: start;
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) .borrow-action-row {
+        margin-top: auto;
+        padding-top: 1.25rem;
+      }
+
+      body.student-borrow-equipment-page:not(.faculty-borrow-equipment-page) #studentBorrowRequestsSection {
+        margin-top: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .borrow-tab-switcher { gap: .3rem; }
+      .borrow-tab-button { min-height: 2.6rem; padding: .55rem .45rem; font-size: .78rem; }
+      .borrow-tab-button i { display: none; }
+      .borrow-requests-table,
+      .borrow-requests-table tbody { display: block; width: 100%; }
+      .borrow-requests-table thead { display: none; }
+      .borrow-requests-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem .8rem;
+        padding: .85rem;
+        border-bottom: 1px solid rgba(74, 222, 128, .14);
+      }
+      .borrow-requests-table tbody tr:last-child { border-bottom: 0; }
+      .borrow-requests-table tbody td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        overflow-wrap: anywhere;
+        font-size: .82rem;
+      }
+      .borrow-requests-table tbody td::before {
+        display: block;
+        margin-bottom: .15rem;
+        color: #86c9a5;
+        content: attr(data-label);
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+      .borrow-requests-table tbody td:first-child,
+      .borrow-requests-table tbody td:nth-child(6),
+      .borrow-requests-table tbody td:last-child { grid-column: 1 / -1; }
+      .borrow-request-status-area { width: 100%; }
+      .borrow-request-explanation { font-size: .72rem; }
+      .borrow-requests-table tbody td:last-child { padding-top: .55rem; border-top: 1px solid rgba(74, 222, 128, .1); }
     }
 
     .section-title {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      color: #d1fae5;
-      font-weight: 700;
-      font-size: 0.82rem;
+      color: #a7f3d0;
+      font-weight: 600;
+      font-size: 0.875rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      margin-bottom: 0.85rem;
+      margin: 0 0 0.25rem;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid rgba(74, 222, 128, 0.12);
+      border-radius: 0.85rem;
+      background: linear-gradient(100deg, rgba(34, 197, 94, 0.09), rgba(3, 18, 12, 0.32));
+    }
+
+    .section-title i {
+      display: inline-flex;
+      width: 1.9rem;
+      height: 1.9rem;
+      flex: 0 0 1.9rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(74, 222, 128, 0.16);
+      border-radius: 0.6rem;
+      background: rgba(34, 197, 94, 0.1);
+      color: #6ee7b7;
+      letter-spacing: 0;
+    }
+
+    .borrow-form-grid > .grid {
+      gap: 1rem;
+    }
+
+    .borrow-form-field {
+      align-content: start;
+      gap: 0.45rem;
     }
 
     .borrow-form-grid {
@@ -124,44 +551,337 @@
     }
 
     .borrow-form-field label {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #bbf7d0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #a7f3d0;
+      letter-spacing: 0.015em;
     }
 
     .borrow-form-field input,
     .borrow-form-field select,
     .borrow-form-field textarea {
       width: 100%;
-      border-radius: 0.9rem;
-      border: 1px solid rgba(74, 222, 128, 0.35);
-      background: rgba(6, 16, 12, 0.9);
-      color: #f8fafc;
-      padding: 0.7rem 0.85rem;
+      min-height: 3.1rem;
+      border-radius: 0.85rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      background: linear-gradient(145deg, rgba(5, 24, 17, 0.96), rgba(10, 29, 21, 0.94));
+      color: #f0fdf4;
+      padding: 0.75rem 0.9rem;
+      font-size: 0.875rem;
+      font-weight: 500;
       outline: none;
-      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    #equipmentSearch {
+      width: 3in;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    #equipmentSelectionList {
+      max-height: 380px;
+    }
+
+    .borrow-equipment-quick-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 3in);
+      align-items: start;
+      gap: 1rem;
+    }
+
+    .borrow-equipment-quick-actions > .borrow-form-field {
+      min-width: 0;
+    }
+
+    @media (max-width: 640px) {
+      .borrow-equipment-quick-actions {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .borrow-equipment-option {
+      display: grid;
+      grid-template-columns: 1.25rem minmax(0, 1fr) minmax(8rem, 12rem);
+      align-items: start;
+      gap: 0.75rem;
+      min-width: 0;
+      padding: 0.8rem;
+      border: 1px solid rgba(74, 222, 128, 0.1);
+      border-radius: 0.65rem;
+      background: rgba(7, 21, 15, 0.55);
+      cursor: pointer;
+    }
+
+    .borrow-equipment-option.is-unavailable {
+      cursor: not-allowed;
+      opacity: 0.82;
+    }
+
+    .borrow-equipment-option:hover {
+      background: rgba(74, 222, 128, 0.05);
+    }
+
+    .borrow-equipment-option input[type="checkbox"] {
+      width: 1.1rem;
+      min-width: 1.1rem;
+      height: 1.1rem;
+      min-height: 1.1rem;
+      margin: 0.15rem 0 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0.2rem;
+      background: transparent;
+      box-shadow: none;
+      accent-color: #4ade80;
+    }
+
+    .borrow-equipment-option input[type="checkbox"]:focus {
+      border: 0;
+      background: transparent;
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+    }
+
+    .borrow-equipment-option-details {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-equipment-option-details .borrow-equipment-name {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .borrow-equipment-name {
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    .borrow-equipment-option-status {
+      justify-self: end;
+      max-width: 12rem;
+      text-align: right;
+      overflow-wrap: anywhere;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .borrow-qr-scan-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      width: fit-content;
+      min-height: 2.75rem;
+      padding: 0.65rem 0.95rem;
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-radius: 0.8rem;
+      background: rgba(34, 197, 94, 0.1);
+      color: #bbf7d0;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .borrow-qr-scan-button:hover {
+      background: rgba(34, 197, 94, 0.18);
+    }
+
+    .borrow-qr-result {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.9rem;
+      background: rgba(7, 21, 15, 0.72);
+    }
+
+    .borrow-qr-result[hidden] {
+      display: none;
+    }
+
+    .borrow-qr-result-copy {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    #qrBorrowFocused[hidden] {
+      display: none;
+    }
+
+    #qrBorrowFocused {
+      width: min(100%, 760px);
+      margin: max(1rem, 6vh) auto;
+      padding: 1rem;
+    }
+
+    #qrBorrowFocused .qr-borrow-card {
+      overflow: hidden;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 1.25rem;
+      background: linear-gradient(145deg, rgba(8, 28, 19, 0.98), rgba(3, 15, 10, 0.98));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    #qrBorrowFocused .borrow-qr-result {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1.35rem;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    #qrBorrowFocused .borrow-btn {
+      width: 100%;
+      min-height: 3.25rem;
+    }
+
+    #qrBorrowFocused .qr-borrow-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    #qrBorrowFocused [data-qr-borrow-reason][hidden] {
+      display: none;
+    }
+
+    #qrBorrowFocused .qr-borrow-actions .borrow-btn {
+      min-width: 0;
+      margin: 0;
+      padding-inline: 0.65rem;
+      text-align: center;
+    }
+
+    #qrBorrowFocused .qr-request-cancelled {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      border-radius: 999px;
+      background: rgba(16, 75, 46, 0.42);
+      color: #a7f3d0;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #qrBorrowFocused .qr-return-success {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      border-radius: 999px;
+      background: rgba(16, 75, 46, 0.42);
+      color: #a7f3d0;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason {
+      display: grid;
+      gap: 0.45rem;
+      color: rgba(209, 250, 229, 0.8);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason textarea {
+      width: 100%;
+      min-height: 5rem;
+      resize: vertical;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.75rem;
+      background: rgba(2, 20, 13, 0.72);
+      padding: 0.75rem 0.85rem;
+      color: #f0fdf4;
+      font: inherit;
+    }
+
+    #qrBorrowFocused .qr-borrow-reason textarea:focus {
+      border-color: rgba(74, 222, 128, 0.65);
+      outline: 2px solid rgba(74, 222, 128, 0.18);
+    }
+
+    body.qr-borrow-focus {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 38%), #06130c;
+    }
+
+    body.qr-borrow-focus #shared-sidebar,
+    body.qr-borrow-focus .page-shell {
+      display: none !important;
+    }
+
+    .borrow-qr-result-error {
+      color: #fca5a5;
+    }
+
+    @media (max-width: 600px) {
+      .borrow-equipment-option {
+        grid-template-columns: 1.25rem minmax(0, 1fr);
+      }
+
+      .borrow-equipment-option-status {
+        grid-column: 2;
+        justify-self: start;
+        text-align: left;
+      }
+
+      .borrow-qr-result {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .borrow-qr-result .borrow-btn {
+        width: 100%;
+      }
+    }
+
+    .borrow-form-field input::placeholder,
+    .borrow-form-field textarea::placeholder {
+      color: #789988;
     }
 
     .borrow-form-field textarea {
-      min-height: 110px;
+      min-height: 125px;
       resize: vertical;
+      line-height: 1.55;
     }
 
     .borrow-form-field input:focus,
     .borrow-form-field select:focus,
     .borrow-form-field textarea:focus {
       border-color: rgba(74, 222, 128, 0.9);
-      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18);
+      background: rgba(5, 28, 18, 0.98);
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.12), 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .borrow-form-field input[readonly] {
+      border-color: rgba(74, 222, 128, 0.12);
+      background: rgba(10, 29, 21, 0.9);
+      color: #c5dfd0;
     }
 
     .borrow-inventory-card {
       margin-top: 0.2rem;
-      padding: 0.8rem 0.9rem;
-      border-radius: 0.9rem;
-      background: rgba(8, 24, 18, 0.82);
-      border: 1px solid rgba(74, 222, 128, 0.2);
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.9rem 1rem;
+      border-radius: 1rem;
+      background: linear-gradient(130deg, rgba(8, 37, 25, 0.92), rgba(7, 21, 15, 0.94));
+      border: 1px solid rgba(74, 222, 128, 0.16);
       color: #d1fae5;
       line-height: 1.5;
+    }
+
+    .borrow-inventory-card strong {
+      color: #86efac;
+      font-size: 0.8rem;
     }
 
     .equipment-status-badge {
@@ -176,7 +896,7 @@
     }
 
     .equipment-status-badge.available {
-      background: rgba(2, 44, 34, 0.9);
+      background: rgba(10, 29, 21, 0.94);
       color: #6ee7b7;
       border: 1px solid rgba(74, 222, 128, 0.6);
     }
@@ -188,9 +908,9 @@
     }
 
     .equipment-status-badge.neutral {
-      background: rgba(15, 23, 42, 0.8);
-      color: #bfdbfe;
-      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 36, 27, 0.9);
+      color: #d1fae5;
+      border: 1px solid rgba(74, 222, 128, 0.3);
     }
 
     .borrow-btn {
@@ -200,18 +920,48 @@
       border-radius: 999px;
       padding: 0.78rem 1.1rem;
       font-weight: 700;
+      font-size: 0.875rem;
       display: inline-flex;
       justify-content: center;
       align-items: center;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       box-shadow: 0 10px 24px rgba(6,64,43,.16);
+      cursor: pointer;
+    }
+
+    .borrow-btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(34, 197, 94, 0.22);
+    }
+
+    .borrow-btn:focus-visible {
+      outline: 3px solid rgba(134, 239, 172, 0.65);
+      outline-offset: 2px;
+    }
+
+    .borrow-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     .borrow-btn.secondary {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      color: #e2e8f0;
+      background: rgba(15, 36, 27, 0.9);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      color: #e2f8eb;
       box-shadow: none;
+    }
+
+    .borrow-btn.cancel {
+      background: rgba(127, 29, 29, 0.3);
+      border: 1px solid rgba(251, 113, 133, 0.35);
+      color: #ffe4e6;
+      box-shadow: none;
+    }
+
+    .borrow-btn.cancel:not(:disabled):hover {
+      background: rgba(127, 29, 29, 0.5);
+      box-shadow: 0 12px 26px rgba(159, 18, 57, 0.18);
     }
 
     .borrow-action-row {
@@ -219,6 +969,23 @@
       justify-content: flex-end;
       gap: 0.75rem;
       margin-top: 1.25rem;
+    }
+
+    .borrow-action-row .borrow-btn {
+      font-size: 0.875rem;
+      font-weight: 700;
+      padding: 0.625rem 1.25rem;
+    }
+
+    .borrow-form-grid > .borrow-form-field > p:not(#selectedEquipmentCount),
+    #facultyApprovalNotice {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    #selectedEquipmentCount {
+      font-size: 0.875rem;
+      font-weight: 500;
     }
 
     .borrow-toast {
@@ -253,7 +1020,7 @@
     .borrow-page-header h1 {
       margin: 0;
       color: #f8fafc;
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 800;
       line-height: 1.25;
     }
@@ -277,70 +1044,112 @@
         padding: 0.75rem 0.75rem 1.5rem;
       }
 
-      .borrow-page-header {
-        min-height: 6.5rem;
-        margin-bottom: 0.85rem;
-        padding: 1rem 1rem 1rem 4rem;
-        border-radius: 1.2rem;
-      }
-
-      .borrow-page-header h1 {
-        font-size: 1.2rem;
-      }
-
-      .borrow-page-header p {
-        font-size: 0.85rem;
-      }
-
       .panel-card {
-        border-radius: 1.15rem;
+        border-radius: 1.25rem;
       }
 
       .panel-body {
-        padding: 1rem;
+        padding: 0.95rem;
       }
 
       .borrow-form-grid {
-        gap: 0.8rem;
+        gap: 0.85rem;
       }
 
       .borrow-form-field label {
-        font-size: 0.8rem;
+        color: #a7f3d0;
+        font-size: 0.875rem;
+        font-weight: 600;
       }
 
       .borrow-form-field input,
       .borrow-form-field select,
       .borrow-form-field textarea {
-        min-height: 3rem;
-        font-size: 1rem;
+        min-height: 3.15rem;
+        font-size: 0.875rem;
+        font-weight: 500;
       }
 
       .section-title {
-        flex-wrap: wrap;
-        font-size: 0.76rem;
-        letter-spacing: 0.08em;
+        flex-wrap: nowrap;
+        gap: 0.55rem;
+        margin-top: 0.15rem;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.875rem;
+        letter-spacing: 0.075em;
+      }
+
+      .section-title i {
+        width: 1.75rem;
+        height: 1.75rem;
+        flex-basis: 1.75rem;
+      }
+
+      .borrow-form-grid > .grid {
+        gap: 0.85rem;
+      }
+
+      .borrow-form-field textarea {
+        min-height: 7rem;
+      }
+
+      .quantity-control {
+        display: grid;
+        grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+        gap: 0.5rem;
+      }
+
+      .quantity-control .borrow-btn {
+        width: 3rem;
+        min-height: 3.15rem;
+        padding: 0;
+        border-radius: 0.85rem;
+        font-size: 1.2rem;
+      }
+
+      .quantity-control input {
+        min-width: 0;
+        }
+        #equipment-availability,
+        #borrow-request {
+        scroll-margin-top: 1.5rem;
+        }
+        .sidebar-section-anchor {
+        display: block;
+        height: 0;
+        font-weight: 700;
+      }
+
+      #equipmentStatusRow {
+        margin-top: 0.15rem;
       }
 
       .equipment-status-badge {
+        max-width: 100%;
         white-space: normal;
-        border-radius: 0.8rem;
+        border-radius: 0.75rem;
+        line-height: 1.4;
       }
 
       .borrow-action-row {
         position: sticky;
-        bottom: 0;
+        bottom: 0.5rem;
         z-index: 5;
-        margin: 1rem -1rem -1rem;
-        padding: 0.75rem 1rem;
+        margin: 0.35rem -0.25rem -0.25rem;
+        padding: 0.6rem;
+        border: 1px solid rgba(74, 222, 128, 0.15);
+        border-radius: 1rem;
         background: rgba(7, 21, 15, 0.96);
-        border-top: 1px solid rgba(74, 222, 128, 0.15);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(14px);
       }
 
       .borrow-action-row .borrow-btn {
         flex: 1;
-        min-height: 2.9rem;
-        padding: 0.7rem 0.75rem;
-        font-size: 0.85rem;
+        min-height: 3rem;
+        padding: 0.625rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 700;
       }
 
       .borrow-toast {
@@ -351,112 +1160,82 @@
       }
     }
   </style>
+<link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
 </head>
-<body class="app-shell student-portal">
+<body class="app-shell student-portal system-layout-page student-borrow-equipment-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
   <div id="shared-sidebar"></div>
 
   <div class="page-shell">
-    <header class="borrow-page-header">
-      <div>
-        <h1>Borrow Equipment</h1>
-        <p>Complete the form to request laboratory equipment.</p>
+    <header class="student-page-header">
+      <div class="student-page-heading">
+        <button id="mobileMenuToggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+        <div class="student-page-heading-copy">
+          <h1 class="student-page-title">Equipment Borrowed</h1>
+          <p class="student-page-subtitle">Mindoro State University</p>
+        </div>
+      </div>
+      <div class="borrow-header-actions" data-theme-toggle-anchor>
+        <div class="student-page-user">
+          <span class="student-page-user-initials" data-user-initials>ST</span>
+          <span class="student-page-user-role" data-user-role>Student</span>
+        </div>
       </div>
     </header>
-    <main class="panel-card">
+    <div class="borrow-tab-switcher" role="tablist" aria-label="Borrow equipment sections">
+      <button id="borrowEquipmentTab" class="borrow-tab-button" type="button" role="tab" aria-selected="true" aria-controls="borrowEquipmentPanel">
+        <i class="fas fa-box-open" aria-hidden="true"></i>Equipment Information
+      </button>
+      <button id="borrowRequestsTab" class="borrow-tab-button" type="button" role="tab" aria-selected="false" aria-controls="studentBorrowRequestsSection">
+        <i class="fas fa-list-check" aria-hidden="true"></i>My Requests
+      </button>
+    </div>
+    <div class="borrow-content-grid">
+    <main id="borrowEquipmentPanel" class="panel-card h-full borrow-tab-panel" role="tabpanel" aria-labelledby="borrowEquipmentTab">
       <div class="panel-body">
+        <div id="facultyApprovalNotice" class="mb-5 hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/60 to-[#0b2418] p-4 text-sm text-emerald-100">
+          <div class="flex items-start gap-3">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"><i class="fas fa-shield-halved"></i></span>
+            <div><strong class="block text-emerald-200">Accountability approval required</strong><span class="mt-1 block text-emerald-100/75">Your request will be sent to the equipment’s accountable Faculty member. Equipment is not released until the request is approved.</span></div>
+          </div>
+        </div>
         <form id="studentBorrowForm">
+          <span id="borrow-request" class="sidebar-section-anchor" aria-hidden="true"></span>
           <div class="borrow-form-grid">
             <div class="borrow-form-field full">
-              <div class="section-title">
-                <button id="mobileMenuToggle" type="button" onclick="toggleSidebar()" class="menu-toggle block lg:hidden" aria-label="Open navigation">
-                  <i class="fas fa-bars"></i>
+              <div class="section-title borrow-equipment-section-title"><i class="fas fa-tools"></i> Equipment Information</div>
+            </div>
+
+            <div class="borrow-equipment-quick-actions borrow-form-field full">
+              <div class="borrow-form-field">
+                <label>Borrow using QR code</label>
+                <button id="scanEquipmentQr" class="borrow-qr-scan-button" type="button">
+                  <i class="fas fa-qrcode" aria-hidden="true"></i>
+                  Scan equipment QR
                 </button>
-                <i class="fas fa-user"></i>
-                <span>Borrower Information</span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="borrow-form-field">
-                <label for="borrowerName">Borrower Name</label>
-                <input id="borrowerName" type="text" readonly>
+                <span id="borrowQrResultPlaceholder" hidden aria-hidden="true"></span>
+                <div id="borrowQrResult" class="borrow-qr-result" aria-live="polite" hidden></div>
               </div>
               <div class="borrow-form-field">
-                <label for="borrowerType">Borrower Type</label>
-                <select id="borrowerType">
-                  <option value="Student" selected>Student</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="borrow-form-field">
-                <label for="departmentInfo">Department / Course / Office</label>
-                <input id="departmentInfo" type="text" placeholder="e.g. BSIT • 4th Year">
-              </div>
-              <div class="borrow-form-field">
-                <label for="instructorName">Instructor / Subject Teacher</label>
-                <input id="instructorName" type="text" placeholder="e.g. Prof. Santos">
+                <label for="equipmentSearch">Search equipment</label>
+                <input id="equipmentSearch" type="search" placeholder="Search equipment name or ID" autocomplete="off">
               </div>
             </div>
 
             <div class="borrow-form-field full">
-              <div class="section-title"><i class="fas fa-tools"></i> Equipment Information</div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="borrow-form-field">
-                <label for="borrowEquipmentIdInput">Equipment ID</label>
-                <input id="borrowEquipmentIdInput" type="text" placeholder="e.g. SPK-003" required autocomplete="off">
-                <div id="equipmentStatusRow" class="flex items-center gap-2 mt-1">
-                  <span id="equipmentStatusBadge" class="equipment-status-badge neutral">
-                    <i class="fas fa-circle-info"></i>
-                    <span>Enter equipment ID</span>
-                  </span>
-                </div>
-              </div>
-
-              <div class="borrow-form-field">
-                <label>Quantity</label>
-                <div class="flex items-center gap-2">
-                  <button type="button" id="quantityMinus" class="borrow-btn secondary px-3 py-2 text-sm">-</button>
-                  <input id="quantityInput" type="number" min="1" value="1" class="text-center" readonly>
-                  <button type="button" id="quantityPlus" class="borrow-btn px-3 py-2 text-sm">+</button>
-                </div>
+              <p id="selectedEquipmentCount" class="text-xs text-emerald-100/70" aria-live="polite">No equipment selected</p>
+              <div id="equipmentSelectionList" class="grid max-h-72 gap-2 overflow-y-auto rounded-xl border border-emerald-400/15 bg-[#06140d]/70 p-3" aria-label="Select equipment to borrow">
+                <span class="text-sm text-emerald-100/60" role="status">Loading equipment...</span>
               </div>
             </div>
 
             <div class="borrow-form-field full">
-              <div id="borrowEquipmentInfo" class="borrow-inventory-card" aria-live="polite">
-                <strong>Equipment:</strong>
-                <span>Enter an equipment ID to see its availability.</span>
-              </div>
-            </div>
-
-            <div class="borrow-form-field full">
-              <div class="section-title"><i class="fas fa-calendar-alt"></i> Borrow Details</div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="borrow-form-field">
-                <label for="borrowDate">Borrow Date</label>
-                <input id="borrowDate" type="date" required>
-              </div>
-              <div class="borrow-form-field">
-                <label for="borrowStartTime">Borrow Start Time</label>
-                <input id="borrowStartTime" type="time" required>
-              </div>
-              <div class="borrow-form-field">
-                <label for="expectedReturnDate">Expected Return Date</label>
-                <input id="expectedReturnDate" type="date" required>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="borrow-form-field">
-                <label for="borrowEndTime">Expected Return Time</label>
-                <input id="borrowEndTime" type="time" required>
-              </div>
+              <p class="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3 text-sm text-emerald-100/80">
+                Date/time are recorded automatically. MR Faculty approval is required; approved QR handoffs are marked Borrowed.
+              </p>
             </div>
 
             <div class="borrow-form-field full">
@@ -472,73 +1251,475 @@
         </form>
       </div>
     </main>
+
+    <section id="studentBorrowRequestsSection" class="panel-card borrow-tab-panel" role="tabpanel" aria-labelledby="borrowRequestsTab" hidden>
+      <div class="panel-body">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 class="borrow-requests-heading text-white">My Borrow Requests</h2>
+            <p class="mt-1 text-sm text-emerald-100/70">Track approvals, due dates, and returns.</p>
+          </div>
+          <button type="button" id="refreshStudentBorrowRequests" class="borrow-btn secondary">Refresh</button>
+        </div>
+        <div id="studentBorrowRequestsMessage" class="hidden mb-3 text-sm" role="status"></div>
+        <div class="borrow-request-filters" aria-label="Filter and sort borrow requests">
+          <input id="borrowRequestSearch" class="borrow-request-filter borrow-request-filter-search" type="search" placeholder="Search equipment or serial number" aria-label="Search equipment or serial number" autocomplete="off">
+          <select id="borrowRequestStatusFilter" class="borrow-request-filter" aria-label="Filter requests by status">
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="borrowed">Borrowed</option>
+            <option value="returned">Returned</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="overdue">Overdue</option>
+            <option value="lost">Lost</option>
+            <option value="pending-replacement">Pending replacement</option>
+          </select>
+          <select id="borrowRequestSort" class="borrow-request-filter" aria-label="Sort borrow requests">
+            <option value="newest">Newest request</option>
+            <option value="due-date">Due date</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+        <p id="borrowRequestResults" class="borrow-request-results" aria-live="polite"></p>
+        <div class="borrow-requests-table-wrap" role="region" aria-label="Your borrow requests">
+          <table class="borrow-requests-table text-left">
+            <thead class="sticky top-0 bg-[#0a1d15]">
+              <tr>
+                <th>Equipment</th>
+                <th>Laboratory</th>
+                <th>Borrow date</th>
+                <th>Return date</th>
+                <th>Status</th>
+                <th>Reason</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="studentBorrowRequestsBody" class="divide-y divide-emerald-400/10">
+              <tr><td colspan="7" class="px-3 py-6 text-center text-emerald-100/60">Loading your borrow requests...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    </div>
   </div>
+
+  <main id="qrBorrowFocused" hidden>
+    <section class="qr-borrow-card" aria-label="Scanned equipment borrow request"></section>
+  </main>
 
   <script>
     window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
-    const state = { equipment: [] };
+    const state = { equipment: [], borrowRequests: null, selectedEquipmentIds: new Set() };
+    const currentRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
+    const isFacultyBorrower = ['faculty', 'instructor'].includes(currentRole);
+    const focusedBorrowPage = document.getElementById('qrBorrowFocused');
+    const focusedBorrowCard = focusedBorrowPage?.querySelector('.qr-borrow-card');
+
+    function restoreQrBorrowFocus() {
+      const result = document.getElementById('borrowQrResult');
+      const placeholder = document.getElementById('borrowQrResultPlaceholder');
+      if (result && placeholder?.parentNode) placeholder.replaceWith(result);
+      document.body.classList.remove('qr-borrow-focus');
+      if (focusedBorrowPage) focusedBorrowPage.hidden = true;
+    }
+
+    function activateQrBorrowFocus() {
+      if (!focusedBorrowPage || !focusedBorrowCard) return;
+      document.body.classList.add('qr-borrow-focus');
+      focusedBorrowPage.hidden = false;
+      const result = document.getElementById('borrowQrResult');
+      if (result && result.parentElement !== focusedBorrowCard) {
+        focusedBorrowCard.appendChild(result);
+      }
+    }
+
+    function escapeBorrowText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[character]);
+    }
+
+    function highlightBorrowRequest(recordId, equipmentId) {
+      const rows = [...document.querySelectorAll('#studentBorrowRequestsBody tr[data-borrow-record-id]')];
+      const matchingRow = rows.find((row) => recordId && row.dataset.borrowRecordId === String(recordId)) ||
+        rows.find((row) => equipmentId && row.dataset.equipmentId === String(equipmentId));
+      if (!matchingRow) return;
+      rows.forEach((row) => row.classList.remove('borrow-request-new'));
+      matchingRow.classList.add('borrow-request-new');
+      matchingRow.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+
+    function setBorrowRequestsMessage(text, isError = false) {
+      const message = document.getElementById('studentBorrowRequestsMessage');
+      if (!message) return;
+      if (!text) {
+        message.textContent = '';
+        message.className = 'hidden mb-3 text-sm';
+        return;
+      }
+      message.textContent = text;
+      message.className = `borrow-request-message${isError ? ' error' : ''}`;
+      message.setAttribute('role', isError ? 'alert' : 'status');
+    }
+
+    async function fetchBorrowPageJson(url) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(url, {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal
+        });
+        const payload = await response.json().catch(() => ({}));
+        return { response, payload };
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw new Error('The service did not respond within 15 seconds. Please refresh and try again.');
+        }
+        throw error;
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    }
+
+    function formatBorrowRequestDate(value, options = {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }) {
+      if (!value) return '';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('en-US', options);
+    }
+
+    function getBorrowRequestDueTimestamp(record) {
+      if (!record.expectedReturnDate) return Number.POSITIVE_INFINITY;
+      const date = String(record.expectedReturnDate).slice(0, 10);
+      const time = String(record.expectedReturnTime || '23:59').slice(0, 5);
+      const timestamp = new Date(`${date}T${time}:00`).getTime();
+      return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
+    }
+
+    function renderStudentBorrowRequests() {
+      const body = document.getElementById('studentBorrowRequestsBody');
+      const results = document.getElementById('borrowRequestResults');
+      if (!body) return;
+
+      const search = String(document.getElementById('borrowRequestSearch')?.value || '').trim().toLowerCase();
+      const selectedStatus = String(document.getElementById('borrowRequestStatusFilter')?.value || 'all').toLowerCase();
+      const sortBy = String(document.getElementById('borrowRequestSort')?.value || 'newest');
+      const requests = (state.borrowRequests || []).filter((record) => {
+        const status = String(record.effectiveStatus || record.status || '').toLowerCase().replace(/\s+/g, '-');
+        const searchable = [
+          record.equipmentName,
+          record.equipmentId,
+          record.serialNumber,
+          record.accountableFacultyName
+        ].filter(Boolean).join(' ').toLowerCase();
+        return (selectedStatus === 'all' || status === selectedStatus) &&
+          (!search || searchable.includes(search));
+      });
+
+      requests.sort((left, right) => {
+        if (sortBy === 'due-date') {
+          const dueDifference = getBorrowRequestDueTimestamp(left) - getBorrowRequestDueTimestamp(right);
+          if (Number.isFinite(dueDifference) && dueDifference !== 0) return dueDifference;
+          if (dueDifference === Number.NEGATIVE_INFINITY) return -1;
+          if (dueDifference === Number.POSITIVE_INFINITY) return 1;
+        } else if (sortBy === 'status') {
+          const leftStatus = String(left.effectiveStatus || left.status || '');
+          const rightStatus = String(right.effectiveStatus || right.status || '');
+          const statusDifference = leftStatus.localeCompare(rightStatus);
+          if (statusDifference) return statusDifference;
+        }
+        return new Date(right.createdAt || right.created_at || right.borrowDate || 0) -
+          new Date(left.createdAt || left.created_at || left.borrowDate || 0);
+      });
+
+      if (results) {
+        results.textContent = `${requests.length} of ${(state.borrowRequests || []).length} request${(state.borrowRequests || []).length === 1 ? '' : 's'}`;
+      }
+      if (!requests.length) {
+        body.innerHTML = `<tr><td colspan="7" class="px-3 py-7 text-center text-emerald-100/60">${state.borrowRequests?.length ? 'No requests match these filters.' : 'You have not submitted any borrow requests yet.'}</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = requests.map((record) => {
+        const status = record.effectiveStatus || record.status || 'Pending';
+        const normalizedStatus = String(status).toLowerCase();
+        const isRejected = normalizedStatus === 'rejected';
+        const canMarkReturned = record.isMyRequest && String(record.status || '').toLowerCase() === 'borrowed';
+        const statusKey = normalizedStatus.replace(/[^a-z]+/g, '-');
+        const explanation = normalizedStatus === 'pending'
+          ? 'Awaiting MR approval'
+          : normalizedStatus === 'approved'
+            ? 'Approved · awaiting release'
+            : normalizedStatus === 'borrowed'
+              ? 'Currently checked out'
+              : normalizedStatus === 'returned'
+                ? 'Return completed'
+                : normalizedStatus === 'rejected'
+                  ? 'Request declined'
+                  : normalizedStatus === 'cancelled'
+                    ? 'Request cancelled'
+                    : normalizedStatus === 'overdue'
+                      ? 'Return is overdue'
+                      : normalizedStatus === 'lost'
+                        ? 'Marked as lost'
+                        : normalizedStatus === 'pending replacement'
+                          ? 'Replacement requested'
+                          : '';
+        const action = canMarkReturned
+          ? `<button type="button" data-mark-borrow-returned="${escapeBorrowText(record.id)}" aria-label="Mark ${escapeBorrowText(record.equipmentName || 'equipment')} as returned" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-400/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 disabled:cursor-wait disabled:opacity-60"><i class="fas fa-check" aria-hidden="true"></i><span>Mark as returned</span></button>`
+          : normalizedStatus === 'pending'
+            ? '<span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-2.5 py-2 text-xs font-semibold text-amber-200"><i class="fas fa-hourglass-half" aria-hidden="true"></i>Waiting for approval</span>'
+            : record.returnRequestedAt
+              ? '<span class="text-xs font-semibold text-amber-200">Return requested</span>'
+              : isRejected
+                ? `<span class="text-xs text-rose-200">${escapeBorrowText(record.rejectionReason || record.remarks || 'No rejection reason provided.')}</span>`
+                : '<span class="text-xs text-emerald-100/45">—</span>';
+        const borrowDate = formatBorrowRequestDate(record.borrowDate || record.createdAt || record.created_at, {
+          month: 'short', day: 'numeric', year: 'numeric'
+        });
+        const returnDate = record.returnDate
+          ? formatBorrowRequestDate(record.returnDate, { month: 'short', day: 'numeric', year: 'numeric' })
+          : record.expectedReturnDate
+            ? formatBorrowRequestDate(record.expectedReturnDate, { month: 'short', day: 'numeric', year: 'numeric' })
+            : '—';
+        const equipmentTooltip = `${record.equipmentId || '—'}${record.serialNumber ? ` · S/N: ${record.serialNumber}` : ''}`;
+        const mirTooltip = record.accountableFacultyName ? `MR: ${record.accountableFacultyName}` : '';
+        return `<tr class="align-top hover:bg-emerald-400/5" data-borrow-record-id="${escapeBorrowText(record.id)}" data-equipment-id="${escapeBorrowText(record.equipmentId || '')}">
+          <td data-label="Equipment"><strong class="borrow-equipment-name block text-sm font-semibold text-white" title="${escapeBorrowText(equipmentTooltip)}" tabindex="0">${escapeBorrowText(record.equipmentName || 'Equipment')}</strong><span class="borrow-request-meta">${escapeBorrowText(record.equipmentId || '')}</span></td>
+          <td data-label="Laboratory">${escapeBorrowText(record.laboratoryRoom || record.campus || '—')}</td>
+          <td data-label="Borrow date">${escapeBorrowText(borrowDate || 'Not recorded')}</td>
+          <td data-label="Return date">${escapeBorrowText(returnDate)}${record.returnTime || record.expectedReturnTime ? `<span class="borrow-request-date-meta">${escapeBorrowText(record.returnTime || record.expectedReturnTime)}</span>` : ''}</td>
+          <td data-label="Status"><div class="borrow-request-status-area" ${mirTooltip ? `title="${escapeBorrowText(mirTooltip)}"` : ''} tabindex="0" role="group" aria-label="${escapeBorrowText(`${status}. ${explanation}${mirTooltip ? `. ${mirTooltip}` : ''}`)}"><span class="borrow-request-status ${escapeBorrowText(statusKey)}">${escapeBorrowText(status)}</span><span class="borrow-request-explanation">${escapeBorrowText(explanation)}</span></div></td>
+          <td data-label="Reason">${escapeBorrowText(record.purpose || '—')}</td>
+          <td data-label="Action">${action}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function loadStudentBorrowRequests() {
+      if (isFacultyBorrower) return;
+      const section = document.getElementById('studentBorrowRequestsSection');
+      const body = document.getElementById('studentBorrowRequestsBody');
+      if (!section || !body) return;
+      if (state.borrowRequests === null) {
+        body.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-center text-emerald-100/60"><i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>Loading your borrow requests...</td></tr>';
+      }
+
+      try {
+        const { response, payload: records } = await fetchBorrowPageJson('/api/borrow-records');
+        if (!response.ok) {
+          const errorMessage = records.error || 'Unable to load your borrow requests.';
+          throw new Error(response.status === 401
+            ? 'Your session may have expired. Please log in again, then refresh your borrow requests.'
+            : errorMessage);
+        }
+        if (!Array.isArray(records)) throw new Error('The borrow requests service returned an unexpected response. Please refresh and try again.');
+        const requests = records.filter((record) =>
+          ['pending', 'approved', 'borrowed', 'rejected', 'cancelled', 'returned', 'overdue', 'lost', 'pending replacement']
+            .includes(String(record.effectiveStatus || record.status || '').toLowerCase())
+        );
+        state.borrowRequests = requests;
+        const pendingRequests = requests.filter((record) =>
+          String(record.status || '').toLowerCase() === 'pending'
+        );
+        const pendingEquipmentIds = [...new Set(pendingRequests.map((record) => record.equipmentId).filter(Boolean))];
+        setBorrowRequestsMessage(pendingEquipmentIds.length
+          ? `You have ${pendingRequests.length} pending request${pendingRequests.length === 1 ? '' : 's'} awaiting MR Faculty approval (${pendingEquipmentIds.join(', ')}). Duplicate requests for an item already pending cannot be submitted.`
+          : '');
+        renderStudentBorrowRequests();
+      } catch (error) {
+        console.error('Unable to load student borrow requests.', error);
+        const errorMessage = error.message || 'Unable to load your borrow requests.';
+        if (state.borrowRequests === null) {
+          body.innerHTML = `<tr><td colspan="7" class="px-3 py-6 text-center text-rose-300"><i class="fas fa-triangle-exclamation mr-2" aria-hidden="true"></i>${escapeBorrowText(errorMessage)}</td></tr>`;
+        }
+        setBorrowRequestsMessage(`${errorMessage} Use Refresh to try again.`, true);
+      }
+    }
+
+    function renderQrReportAction(item) {
+      return `<button type="button" class="borrow-btn" data-open-qr-report data-report-equipment-id="${escapeBorrowText(item.equipmentId)}" data-report-equipment-name="${escapeBorrowText(item.name || 'Equipment')}">Report</button>`;
+    }
+
+    async function markStudentQrBorrowReturned(button) {
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.returnQrBorrow)}/return`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ condition: 'Good' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to mark this equipment as returned.');
+
+        const success = document.createElement('span');
+        success.className = 'qr-return-success';
+        success.setAttribute('role', 'status');
+        success.textContent = 'Successfully returned';
+        button.replaceWith(success);
+        await loadBorrowEquipmentOptions();
+      } catch (error) {
+        console.error('Failed to mark Student QR borrow as returned.', error);
+        let message = button.parentElement.querySelector('[data-return-error]');
+        if (!message) {
+          message = document.createElement('p');
+          message.dataset.returnError = 'true';
+          message.className = 'mt-2 text-sm text-rose-300';
+          message.setAttribute('role', 'alert');
+          button.insertAdjacentElement('afterend', message);
+        }
+        message.textContent = error.message || 'Unable to mark this equipment as returned.';
+        button.disabled = false;
+      }
+    }
+
+    async function cancelStudentQrBorrow(button) {
+      if (!await window.appDialogs.confirm('Cancel this pending borrow request?')) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.cancelQrBorrow)}/cancel`, {
+          method: 'PUT'
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Unable to cancel this borrow request.');
+
+        const result = document.getElementById('borrowQrResult');
+        const copy = result?.querySelector('.borrow-qr-result-copy');
+        const status = copy?.querySelector('[data-qr-borrow-status]');
+        if (status) {
+          status.textContent = button.dataset.borrowStatus || 'Available to request';
+          status.className = `mt-1 block text-sm ${button.dataset.borrowed === 'true' ? 'text-amber-200' : 'text-emerald-300'}`;
+        }
+        copy?.querySelector('p[role="status"]')?.remove();
+        copy?.querySelector('.qr-request-follow-up')?.remove();
+
+        let reasonField = copy?.querySelector('[data-qr-borrow-reason]');
+        if (copy && !reasonField) {
+          reasonField = document.createElement('label');
+          reasonField.className = 'qr-borrow-reason';
+          reasonField.dataset.qrBorrowReason = '';
+          reasonField.hidden = true;
+          reasonField.innerHTML = 'Reason <span class="font-normal text-emerald-100/50">(optional)</span><textarea id="qrBorrowReason" maxlength="1000" placeholder="Reason for borrowing"></textarea>';
+          copy.append(reasonField);
+        }
+        const reasonInput = reasonField?.querySelector('textarea');
+        if (reasonInput) reasonInput.value = '';
+
+        const borrowButton = document.createElement('button');
+        borrowButton.type = 'button';
+        borrowButton.className = 'borrow-btn';
+        borrowButton.dataset.borrowScannedEquipment = button.dataset.equipmentId;
+        borrowButton.textContent = 'Borrow';
+        button.replaceWith(borrowButton);
+        await loadBorrowEquipmentOptions();
+      } catch (error) {
+        console.error('Failed to cancel Student QR borrow request.', error);
+        showBorrowToast(error.message || 'Unable to cancel this borrow request.', true);
+        button.disabled = false;
+      }
+    }
 
     function setEquipmentStatusBadge(type, message) {
       const badge = document.getElementById('equipmentStatusBadge');
       if (!badge) return;
       badge.className = 'equipment-status-badge';
       badge.classList.add(type);
-      badge.innerHTML = `<i class="${type === 'available' ? 'fas fa-check-circle' : type === 'unavailable' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-info'}"></i><span>${message}</span>`;
+      badge.replaceChildren();
+      const icon = document.createElement('i');
+      icon.className = type === 'available' ? 'fas fa-check-circle' : type === 'unavailable' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-info';
+      const label = document.createElement('span');
+      label.textContent = message;
+      badge.append(icon, label);
+    }
+
+    function isEquipmentSelectable(item, allowCurrentBorrower = false) {
+      const status = String(item.status || 'Serviceable').toLowerCase();
+      const isBorrowed = ['borrowed', 'in use'].includes(status) ||
+        String(item.activeBorrowStatus || '').toLowerCase() === 'borrowed';
+      const hasActiveRequest = Boolean(item.hasActiveBorrowRecord) && !isBorrowed;
+      const hasMirFaculty = Boolean(item.accountableFacultyUserId || item.accountableFacultyName);
+      const canRequestStatus = allowCurrentBorrower && isBorrowed && hasMirFaculty;
+      return hasMirFaculty && (canRequestStatus || (!isBorrowed && !hasActiveRequest &&
+        !['lost', 'missing', 'unserviceable', 'maintenance', 'under maintenance', 'for repair', 'for disposal'].includes(status))) &&
+        Number(item.quantity ?? item.availableQuantity ?? 0) > 0;
+    }
+
+    function isPortableBorrowOption(item) {
+      const excludedTypes = ['airconditioner', 'aircon', 'acunit', 'ac', 'cabinet', 'serverrack', 'whiteboard', 'fixed', 'fixture'];
+      const normalized = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const types = [item.category, item.name, item.equipmentType, item.itemType, item.type].map(normalized);
+      return item.isFixed !== true &&
+        item.isFixedAsset !== true &&
+        item.isPortable !== false &&
+        item.isBorrowable !== false &&
+        item.borrowable !== false &&
+        !types.some((type) => excludedTypes.some((excluded) => type === excluded || (excluded !== 'ac' && type.includes(excluded))));
     }
 
     function updateSelectedEquipmentInfo() {
-      const input = document.getElementById('borrowEquipmentIdInput');
-      const info = document.getElementById('borrowEquipmentInfo');
+      const search = String(document.getElementById('equipmentSearch')?.value || '').trim().toLowerCase();
+      const list = document.getElementById('equipmentSelectionList');
+      const count = document.getElementById('selectedEquipmentCount');
       const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
-      if (!input || !info || !submitButton) return;
+      if (!list || !count || !submitButton) return;
 
-      const equipmentId = String(input.value || '').trim();
-      if (!equipmentId) {
-        info.innerHTML = '<strong>Equipment:</strong><span>Enter an equipment ID to see its availability.</span>';
-        setEquipmentStatusBadge('neutral', 'Enter equipment ID');
-        submitButton.disabled = true;
-        submitButton.style.opacity = '0.5';
-        submitButton.style.cursor = 'not-allowed';
-        return;
+      const borrowRequests = state.borrowRequests || [];
+      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
+      const filtered = state.equipment.filter((item) => {
+        if (!isPortableBorrowOption(item)) return false;
+        const searchable = [item.name, item.equipmentId, item.category, item.laboratoryRoom].filter(Boolean).join(' ').toLowerCase();
+        return !search || searchable.includes(search);
+      });
+      if (!filtered.length) {
+        list.innerHTML = '<span class="text-sm text-emerald-100/60" role="status">No equipment matches your search.</span>';
+      } else {
+        list.innerHTML = filtered.map((item) => {
+          const id = String(item.equipmentId || '');
+          const location = item.laboratoryRoom || item.campus || 'Location not specified';
+          const equipmentTooltip = `${id || '—'} · ${location}`;
+          const selectable = Boolean(id) && isEquipmentSelectable(item);
+          const selected = state.selectedEquipmentIds.has(id);
+          const myPendingRequest = borrowRequests.some((record) =>
+              String(record.equipmentId || '') === id &&
+              String(record.status || '').toLowerCase() === 'pending' &&
+              record.isMyRequest
+          );
+          const label = selectable
+              ? 'Available'
+              : !item.accountableFacultyUserId && !item.accountableFacultyName
+                ? 'No current MR Faculty assigned'
+              : item.hasActiveBorrowRecord
+                ? myPendingRequest
+                  ? 'Your request is pending — see My Borrow Requests'
+                  : `${item.activeBorrowStatus || 'Request'} — currently unavailable`
+                : String(item.status || 'Unavailable');
+          return `<label class="borrow-equipment-option ${selectable ? '' : 'is-unavailable'}">
+            <input type="checkbox" data-equipment-choice value="${escapeBorrowText(id)}" ${selected ? 'checked' : ''} ${selectable ? '' : 'disabled'}>
+            <span class="borrow-equipment-option-details">
+              <strong class="borrow-equipment-name text-base font-bold text-white" title="${escapeBorrowText(equipmentTooltip)}" tabindex="0">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+              <span class="mt-0.5 block text-xs font-medium text-emerald-200/80">${escapeBorrowText(id)} · ${escapeBorrowText(location)}</span>
+            </span>
+            <span class="borrow-equipment-option-status text-xs ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(label)}</span>
+          </label>`;
+        }).join('');
       }
-
-      const item = state.equipment.find((entry) => String(entry.equipmentId || entry.id).toLowerCase() === equipmentId.toLowerCase());
-      if (!item) {
-        info.innerHTML = '<strong>Equipment:</strong><span>Equipment ID not found.</span>';
-        setEquipmentStatusBadge('neutral', 'Equipment ID not found');
-        submitButton.disabled = true;
-        submitButton.style.opacity = '0.5';
-        submitButton.style.cursor = 'not-allowed';
-        return;
-      }
-
-      const availability = String(item.status || 'Serviceable').toLowerCase();
-      const quantity = Number(item.quantity ?? item.availableQuantity ?? 0);
-      const isAvailable = availability !== 'lost' && availability !== 'unserviceable' && availability !== 'borrowed' && availability !== 'in use' && availability !== 'maintenance' && quantity > 0;
-
-      if (isAvailable) {
-        info.innerHTML = `
-          <div><strong>Equipment:</strong> ${item.name || 'Unknown equipment'} (${item.equipmentId || item.id || 'N/A'})</div>
-          <div><strong>Availability:</strong> Available</div>
-          <div><strong>Inventory:</strong> ${quantity} unit${quantity === 1 ? '' : 's'}</div>
-        `;
-        setEquipmentStatusBadge('available', `${item.name || 'Equipment'} (${item.equipmentId || item.id || 'N/A'}) - Available`);
-        submitButton.disabled = false;
-        submitButton.style.opacity = '1';
-        submitButton.style.cursor = 'pointer';
-        return;
-      }
-
-      const reason = availability.includes('maintenance') ? 'Maintenance - Unavailable' : availability.includes('borrow') || availability.includes('use') ? 'Currently Borrowed - Unavailable' : 'Unavailable';
-      info.innerHTML = `
-        <div><strong>Equipment:</strong> ${item.name || 'Unknown equipment'} (${item.equipmentId || item.id || 'N/A'})</div>
-        <div><strong>Availability:</strong> ${reason}</div>
-        <div><strong>Inventory:</strong> ${quantity} unit${quantity === 1 ? '' : 's'}</div>
-      `;
-      setEquipmentStatusBadge('unavailable', reason);
-      submitButton.disabled = true;
-      submitButton.style.opacity = '0.5';
-      submitButton.style.cursor = 'not-allowed';
+      count.textContent = selectedItems.length
+        ? `${selectedItems.length} equipment item${selectedItems.length === 1 ? '' : 's'} selected — one unit each`
+        : 'No equipment selected';
+      submitButton.disabled = selectedItems.length === 0;
+      submitButton.style.opacity = submitButton.disabled ? '0.5' : '1';
+      submitButton.style.cursor = submitButton.disabled ? 'not-allowed' : 'pointer';
     }
 
     function showBorrowToast(message, isError = false) {
@@ -553,75 +1734,41 @@
 
     async function loadBorrowEquipmentOptions() {
       try {
-        const response = await fetch('/api/student/equipment', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Unable to load equipment inventory.');
-        const payload = await response.json();
-        state.equipment = Array.isArray(payload) ? payload : [];
+        const { response, payload } = await fetchBorrowPageJson('/api/student/equipment');
+        if (!response.ok) throw new Error(payload.error || 'Unable to load equipment inventory.');
+        if (!Array.isArray(payload)) throw new Error('The equipment service returned an unexpected response. Please refresh and try again.');
+        state.equipment = payload;
         updateSelectedEquipmentInfo();
       } catch (error) {
         console.error(error);
+        const list = document.getElementById('equipmentSelectionList');
+        if (list) list.innerHTML = `<span class="text-sm text-rose-300" role="alert">${escapeBorrowText(error.message || 'Unable to load equipment inventory.')}</span>`;
       }
     }
 
     function hydrateBorrowPage() {
-      const user = window.__CURRENT_USER__ || {};
-      const displayName = user.name || 'Student';
-      const borrowerName = document.getElementById('borrowerName');
-      const departmentInfo = document.getElementById('departmentInfo');
-      const borrowerType = document.getElementById('borrowerType');
-      if (borrowerName) borrowerName.value = displayName;
-      if (borrowerType) borrowerType.value = 'Student';
-      if (departmentInfo && !departmentInfo.value) {
-        const program = user.program || user.course || 'BSIT';
-        const yearSection = user.yearSection || user.year || '4th Year';
-        departmentInfo.value = `${program} • ${yearSection}`;
+      document.getElementById('facultyApprovalNotice')?.classList.toggle('hidden', !isFacultyBorrower);
+      document.body.classList.toggle('faculty-borrow-equipment-page', isFacultyBorrower);
+      document.title = `${isFacultyBorrower ? 'Faculty' : 'Student'} Borrow Equipment | ComLab`;
+      const pageTitle = document.querySelector('.student-page-title');
+      const pageSubtitle = document.querySelector('.student-page-subtitle');
+      if (isFacultyBorrower) {
+        pageSubtitle?.replaceChildren(document.createTextNode('Request equipment from your campus and track the approval.'));
+      } else {
+        if (pageTitle) {
+          pageTitle.textContent = 'MINDORO STATE UNIVERSITY';
+          pageTitle.classList.add('student-university-title');
+        }
+        pageSubtitle?.remove();
       }
-      const today = new Date();
-      const dateInput = document.getElementById('borrowDate');
-      const returnDateInput = document.getElementById('expectedReturnDate');
-      const startInput = document.getElementById('borrowStartTime');
-      const endInput = document.getElementById('borrowEndTime');
-      if (dateInput && !dateInput.value) dateInput.value = today.toISOString().split('T')[0];
-      if (returnDateInput && !returnDateInput.value) returnDateInput.value = today.toISOString().split('T')[0];
-      if (startInput && !startInput.value) startInput.value = '09:00';
-      if (endInput && !endInput.value) endInput.value = '11:00';
-      const quantityInput = document.getElementById('quantityInput');
-      if (quantityInput) quantityInput.value = '1';
     }
 
     async function submitStudentBorrowRequest(event) {
       event.preventDefault();
-      const borrowerName = document.getElementById('borrowerName').value.trim();
-      const borrowerType = document.getElementById('borrowerType').value || 'Student';
-      const departmentInfo = document.getElementById('departmentInfo').value.trim();
-      const instructorName = document.getElementById('instructorName').value.trim();
-      const equipmentIdInput = document.getElementById('borrowEquipmentIdInput');
-      const equipmentId = equipmentIdInput ? equipmentIdInput.value.trim() : '';
-      const borrowDate = document.getElementById('borrowDate').value;
-      const borrowStartTime = document.getElementById('borrowStartTime').value;
-      const expectedReturnDate = document.getElementById('expectedReturnDate').value;
-      const borrowEndTime = document.getElementById('borrowEndTime').value;
       const borrowPurpose = document.getElementById('borrowPurpose').value.trim();
-      const quantity = Number(document.getElementById('quantityInput').value || 1);
-
-      if (!borrowerName || !borrowerType) {
-        showBorrowToast('Please confirm the borrower details.', true);
-        return;
-      }
-      if (!equipmentId) {
-        showBorrowToast('Please enter an equipment ID.', true);
-        return;
-      }
-      if (!borrowDate || !borrowStartTime || !expectedReturnDate || !borrowEndTime) {
-        showBorrowToast('Please complete the borrowing date and time fields.', true);
-        return;
-      }
-      if (expectedReturnDate < borrowDate) {
-        showBorrowToast('Expected return date cannot be earlier than the borrow date.', true);
-        return;
-      }
-      if (borrowEndTime <= borrowStartTime) {
-        showBorrowToast('End time must be later than start time.', true);
+      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
+      if (!selectedItems.length) {
+        showBorrowToast('Select at least one available equipment item.', true);
         return;
       }
       if (!borrowPurpose) {
@@ -629,78 +1776,324 @@
         return;
       }
 
-      const selectedItem = state.equipment.find((entry) => String(entry.equipmentId || entry.id).toLowerCase() === equipmentId.toLowerCase());
-      if (!selectedItem) {
-        showBorrowToast('Equipment ID not found.', true);
-        return;
-      }
-
-      const status = String(selectedItem.status || 'Serviceable').toLowerCase();
-      const availableQty = Number(selectedItem.quantity ?? selectedItem.availableQuantity ?? 0);
-      if (status === 'lost' || status === 'unserviceable' || status === 'borrowed' || status === 'in use' || status === 'maintenance' || availableQty <= 0) {
-        showBorrowToast('Equipment is not available for the selected date and time.', true);
-        return;
-      }
-
-      if (quantity < 1 || quantity > availableQty) {
-        showBorrowToast('Requested quantity exceeds the available inventory.', true);
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/borrow-records', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            borrowerName,
-            borrowerType,
-            departmentInfo,
-            instructorName,
-            equipmentId: selectedItem.equipmentId || selectedItem.id,
-            equipmentName: selectedItem.name,
-            quantity,
-            borrowDate,
-            borrowStartTime,
-            expectedReturnDate,
-            expectedReturnTime: borrowEndTime,
-            purpose: borrowPurpose,
-            processedBy: window.__CURRENT_USER__?.name || 'Administrator'
-          })
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(payload.error || 'Unable to submit borrow request.');
+      const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
+      submitButton.disabled = true;
+      const successfulRequests = [];
+      const failedRequests = [];
+      for (const item of selectedItems) {
+        try {
+          const response = await fetch('/api/borrow-records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipmentId: item.equipmentId, purpose: borrowPurpose })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to submit borrow request.');
+          successfulRequests.push({ equipmentId: item.equipmentId, recordId: payload.id });
+        } catch (error) {
+          console.error(`Failed to submit borrow request for ${item.equipmentId}.`, error);
+          failedRequests.push(`${item.equipmentId}: ${error.message}`);
         }
-
-        showBorrowToast('Borrow request submitted successfully.');
+      }
+      selectedItems.forEach((item) => state.selectedEquipmentIds.delete(String(item.equipmentId || '')));
+      if (!failedRequests.length) {
         document.getElementById('studentBorrowForm').reset();
-        hydrateBorrowPage();
-        updateSelectedEquipmentInfo();
-      } catch (error) {
-        console.error(error);
-        showBorrowToast(error.message || 'Unable to submit borrow request.', true);
+        showBorrowToast(isFacultyBorrower
+          ? `${successfulRequests.length} request${successfulRequests.length === 1 ? '' : 's'} submitted. The accountable Faculty member must approve before release.`
+          : `${successfulRequests.length} borrow request${successfulRequests.length === 1 ? '' : 's'} submitted for MR Faculty approval.`);
+      } else {
+        showBorrowToast(`${successfulRequests.length} submitted; ${failedRequests.length} failed. ${failedRequests.join(' · ')}`, true);
+      }
+      updateSelectedEquipmentInfo();
+      if (submitButton) submitButton.disabled = state.selectedEquipmentIds.size === 0;
+      if (failedRequests.length && !isFacultyBorrower) {
+        await Promise.all([loadStudentBorrowRequests(), loadBorrowEquipmentOptions()]);
+      }
+      if (successfulRequests.length && !isFacultyBorrower) {
+        await loadStudentBorrowRequests();
+        const newestRequest = successfulRequests[successfulRequests.length - 1];
+        highlightBorrowRequest(newestRequest.recordId, newestRequest.equipmentId);
+      }
+      if (failedRequests.length && !isFacultyBorrower) {
+        setBorrowRequestsMessage(failedRequests.join(' · '), true);
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       hydrateBorrowPage();
-      document.getElementById('borrowEquipmentIdInput')?.addEventListener('input', updateSelectedEquipmentInfo);
-      document.getElementById('quantityMinus')?.addEventListener('click', () => {
-        const input = document.getElementById('quantityInput');
-        if (!input) return;
-        input.value = String(Math.max(1, Number(input.value || 1) - 1));
+      const equipmentTab = document.getElementById('borrowEquipmentTab');
+      const requestsTab = document.getElementById('borrowRequestsTab');
+      const equipmentPanel = document.getElementById('borrowEquipmentPanel');
+      const requestsPanel = document.getElementById('studentBorrowRequestsSection');
+      const activateBorrowTab = (tabName) => {
+        const showRequests = tabName === 'requests';
+        equipmentTab?.setAttribute('aria-selected', String(!showRequests));
+        requestsTab?.setAttribute('aria-selected', String(showRequests));
+        if (equipmentPanel) equipmentPanel.hidden = showRequests;
+        if (requestsPanel) requestsPanel.hidden = !showRequests;
+      };
+      equipmentTab?.addEventListener('click', () => activateBorrowTab('equipment'));
+      requestsTab?.addEventListener('click', () => activateBorrowTab('requests'));
+      activateBorrowTab(window.location.hash === '#borrow-requests' ? 'requests' : 'equipment');
+      document.getElementById('borrowRequestSearch')?.addEventListener('input', renderStudentBorrowRequests);
+      document.getElementById('borrowRequestStatusFilter')?.addEventListener('change', renderStudentBorrowRequests);
+      document.getElementById('borrowRequestSort')?.addEventListener('change', renderStudentBorrowRequests);
+      const requestsLoad = loadStudentBorrowRequests();
+      document.getElementById('refreshStudentBorrowRequests')?.addEventListener('click', loadStudentBorrowRequests);
+      document.getElementById('studentBorrowRequestsBody')?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-mark-borrow-returned]');
+        if (!button) return;
+        if (!await window.appDialogs.confirm('Mark this equipment as returned? Confirm that you have finished using it and it is in good condition. This will close your borrow immediately.')) return;
+
+        button.disabled = true;
+        try {
+          const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.markBorrowReturned)}/return`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ condition: 'Good' })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to mark this equipment as returned.');
+          showBorrowToast('Equipment marked as returned.');
+          await loadStudentBorrowRequests();
+        } catch (error) {
+          console.error('Unable to mark student borrow record as returned.', error);
+          window.alert(error.message || 'Unable to mark this equipment as returned.');
+          button.disabled = false;
+        }
       });
-      document.getElementById('quantityPlus')?.addEventListener('click', () => {
-        const input = document.getElementById('quantityInput');
-        if (!input) return;
-        input.value = String(Math.max(1, Number(input.value || 1) + 1));
+      window.addEventListener('borrow-equipment-qr-scanned', async (event) => {
+        const scannedValue = String(event.detail?.value || '').trim();
+        let equipmentId = scannedValue;
+        const result = document.getElementById('borrowQrResult');
+        if (!result) return;
+        try {
+          equipmentId = await window.resolveEquipmentQrValue(scannedValue);
+        } catch (error) {
+          result.hidden = false;
+          result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">${escapeBorrowText(error.message || 'Unable to read this equipment QR code. Please scan again.')}</p>`;
+          activateQrBorrowFocus();
+          return;
+        }
+
+        const item = state.equipment.find((equipment) =>
+          String(equipment.equipmentId || '').toLowerCase() === equipmentId.toLowerCase()
+        );
+        if (!item) {
+          result.hidden = false;
+          result.innerHTML = '<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">No equipment in your campus matches this QR code.</p>';
+          activateQrBorrowFocus();
+          return;
+        }
+
+        result.hidden = false;
+        result.innerHTML = '<p class="borrow-qr-result-copy text-emerald-100/70" role="status">QR recognized. Loading request status...</p>';
+        const selectable = isEquipmentSelectable(item, true);
+        const isBorrowed = ['borrowed', 'in use'].includes(String(item.status || '').toLowerCase()) ||
+          String(item.activeBorrowStatus || '').toLowerCase() === 'borrowed';
+        let previousRequest = null;
+        let requestStatusError = '';
+        let scanHistoryError = '';
+        const scanHistoryRequest = !isFacultyBorrower ? (async () => {
+          try {
+            const scanResponse = await fetch(`/api/equipment/${encodeURIComponent(item.equipmentId)}/scan`, { method: 'POST' });
+            const scanPayload = await scanResponse.json().catch(() => ({}));
+            if (!scanResponse.ok) throw new Error(scanPayload.error || 'Unable to record this QR scan in Audit & History.');
+          } catch (error) {
+            console.error(`Failed to record QR scan for ${item.equipmentId}.`, error);
+            scanHistoryError = error.message || 'Unable to record this QR scan in Audit & History.';
+          }
+        })() : Promise.resolve();
+        try {
+          const response = await fetch(`/api/borrow-records/qr-student/${encodeURIComponent(item.equipmentId)}/status`, { cache: 'no-store' });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to load your request status.');
+          previousRequest = payload.request || null;
+        } catch (error) {
+          console.error(`Failed to load Student QR status for ${item.equipmentId}.`, error);
+          requestStatusError = error.message || 'Unable to load your request status.';
+        }
+        await scanHistoryRequest;
+        const previousStatus = String(previousRequest?.status || '').toLowerCase();
+        const isPendingRequest = previousStatus === 'pending';
+        const isMyActiveBorrow = isBorrowed && previousRequest?.id &&
+          ['borrowed', 'overdue'].includes(previousStatus);
+        const hasMirFaculty = Boolean(item.accountableFacultyUserId || item.accountableFacultyName);
+        if (isBorrowed) {
+          result.hidden = false;
+          result.innerHTML = `<div class="borrow-qr-result-copy">
+            <strong class="block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+            <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+            <span data-qr-borrow-status class="mt-2 block text-sm text-amber-200">${isPendingRequest ? 'Borrow request submitted — waiting for MR approval.' : !hasMirFaculty ? 'Unavailable to request — no current MR Faculty assigned' : isMyActiveBorrow ? 'Borrowed on your account' : 'Currently borrowed'}</span>
+            ${!isMyActiveBorrow && !isPendingRequest && !requestStatusError && hasMirFaculty ? '<p class="mt-2 text-xs text-emerald-100/65">A takeover request must be approved by the accountable MR Faculty member before the item is yours.</p><label class="qr-borrow-reason" data-qr-borrow-reason hidden>Reason <span class="font-normal text-emerald-100/50">(optional)</span><textarea id="qrBorrowReason" maxlength="1000" placeholder="Reason for requesting this item"></textarea></label>' : ''}
+            ${isPendingRequest ? '<p class="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100" role="status">Your request is awaiting MR Faculty review.</p>' : ''}
+          </div>
+          <div class="qr-borrow-actions">
+            ${isPendingRequest && previousRequest?.id ? `<button type="button" class="borrow-btn cancel" data-cancel-qr-borrow="${escapeBorrowText(previousRequest.id)}">Cancel borrow</button>` : ''}
+            ${isMyActiveBorrow ? `<button type="button" class="borrow-btn" data-return-qr-borrow="${escapeBorrowText(previousRequest.id)}">Mark as returned</button>` : ''}
+            ${!isMyActiveBorrow && !isPendingRequest && !requestStatusError && hasMirFaculty ? `<button type="button" class="borrow-btn" data-borrow-scanned-equipment="${escapeBorrowText(item.equipmentId)}" data-qr-takeover="true">Take over</button>` : ''}
+            ${renderQrReportAction(item)}
+          </div>`;
+          activateQrBorrowFocus();
+          return;
+        }
+        const status = selectable
+          ? (isBorrowed
+            ? 'Request takeover — MR Faculty approval required'
+            : 'Available to request')
+          : !hasMirFaculty
+            ? 'Unavailable to request — no current MR Faculty assigned'
+          : item.hasActiveBorrowRecord
+            ? `${item.activeBorrowStatus || 'Request'}`
+            : String(item.status || 'Unavailable');
+        result.hidden = false;
+        result.innerHTML = `<div class="borrow-qr-result-copy">
+          <strong class="block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+          <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+          <span data-qr-borrow-status class="mt-1 block text-sm ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(status)}</span>
+          <span class="mt-2 block text-xs text-emerald-100/60">Borrow requests require approval from the accountable MR Faculty member.</span>
+          ${previousStatus === 'rejected' ? `<div class="mt-2 rounded-lg border border-rose-400/20 bg-rose-400/10 p-3 text-sm text-rose-100" role="status"><strong>Previous request rejected</strong><p class="mt-1">${escapeBorrowText(previousRequest.reason || 'No reason was provided.')}</p></div>` : ''}
+          ${isPendingRequest ? '<p class="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100" role="status">Your request is awaiting MR Faculty review.</p>' : ''}
+          ${scanHistoryError ? `<p class="mt-2 text-sm text-rose-300" role="alert">${escapeBorrowText(scanHistoryError)}</p>` : ''}
+          ${requestStatusError ? `<p class="mt-2 text-sm text-rose-300" role="alert">${escapeBorrowText(requestStatusError)}</p>` : ''}
+          <label class="qr-borrow-reason" data-qr-borrow-reason hidden>Reason <span class="font-normal text-emerald-100/50">(optional)</span><textarea id="qrBorrowReason" maxlength="1000" placeholder="Reason for borrowing"></textarea></label>
+        </div>
+        <div class="qr-borrow-actions">
+          ${isPendingRequest && previousRequest?.id ? `<button type="button" class="borrow-btn cancel" data-cancel-qr-borrow="${escapeBorrowText(previousRequest.id)}">Cancel borrow</button>` : ''}
+          ${selectable && !isPendingRequest && previousStatus !== 'borrowed' && !requestStatusError ? `<button type="button" class="borrow-btn" data-borrow-scanned-equipment="${escapeBorrowText(item.equipmentId)}">Borrow</button>` : ''}
+          ${renderQrReportAction(item)}
+        </div>`;
+        activateQrBorrowFocus();
+      });
+      document.getElementById('borrowQrResult')?.addEventListener('click', async (event) => {
+        const cancelButton = event.target.closest('[data-cancel-qr-borrow]');
+        if (cancelButton) {
+          await cancelStudentQrBorrow(cancelButton);
+          return;
+        }
+        const returnButton = event.target.closest('[data-return-qr-borrow]');
+        if (returnButton) {
+          await markStudentQrBorrowReturned(returnButton);
+          return;
+        }
+        const button = event.target.closest('[data-borrow-scanned-equipment]');
+        if (!button) return;
+        const item = state.equipment.find((equipment) => String(equipment.equipmentId) === button.dataset.borrowScannedEquipment);
+        if (!item) {
+          showBorrowToast('The scanned equipment is no longer available in the list. Please scan again.', true);
+          return;
+        }
+        if (button.dataset.borrowReady !== 'true') {
+          const reason = document.querySelector('#borrowQrResult [data-qr-borrow-reason]');
+          if (reason) reason.hidden = false;
+          button.dataset.borrowStatus = document.querySelector('#borrowQrResult [data-qr-borrow-status]')?.textContent || 'Available to request';
+          button.dataset.borrowReady = 'true';
+          button.textContent = button.dataset.qrTakeover === 'true'
+            ? 'Submit takeover request'
+            : 'Submit request';
+          document.getElementById('qrBorrowReason')?.focus();
+          return;
+        }
+        button.disabled = true;
+        try {
+          const response = await fetch('/api/borrow-records/qr-student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              equipmentId: item.equipmentId,
+              purpose: document.getElementById('qrBorrowReason')?.value.trim() || null
+            })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Unable to submit borrow request.');
+          const result = document.getElementById('borrowQrResult');
+          if (result) {
+            const mirName = payload.accountableFacultyName || item.accountableFacultyName;
+            const cancelButton = document.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.className = 'borrow-btn cancel';
+            cancelButton.dataset.cancelQrBorrow = payload.id;
+            cancelButton.dataset.equipmentId = item.equipmentId;
+            cancelButton.dataset.borrowStatus = button.dataset.borrowStatus ||
+              (button.dataset.qrTakeover === 'true'
+                ? 'Currently borrowed'
+                : 'Available to request');
+            cancelButton.dataset.borrowed = String(
+              ['borrowed', 'in use'].includes(String(item.status || '').toLowerCase()) ||
+              String(item.activeBorrowStatus || '').toLowerCase() === 'borrowed'
+            );
+            cancelButton.textContent = 'Cancel borrow';
+            button.replaceWith(cancelButton);
+
+            result.querySelector('[data-qr-borrow-reason]')?.remove();
+            const copy = result.querySelector('.borrow-qr-result-copy');
+            const status = copy?.querySelector('[data-qr-borrow-status]');
+            if (status) {
+              status.textContent = button.dataset.qrTakeover === 'true'
+                ? 'Takeover request submitted — waiting for MR approval.'
+                : 'Borrow request submitted — waiting for MR approval.';
+              status.className = 'mt-1 block text-sm text-amber-200';
+            }
+            if (copy) {
+              const followUp = document.createElement('p');
+              followUp.className = 'qr-request-follow-up mt-3 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-sm text-emerald-100';
+              followUp.textContent = mirName
+                ? `MR Faculty for this item: ${mirName}. If your request is not approved, you can contact them in person to follow up.`
+                : 'If your request is not approved, contact the laboratory staff in person to ask who is responsible for this item.';
+              copy.append(followUp);
+            }
+          }
+          if (!isFacultyBorrower) {
+            await loadStudentBorrowRequests();
+            restoreQrBorrowFocus();
+            highlightBorrowRequest(payload.id, item.equipmentId);
+          }
+          await loadBorrowEquipmentOptions();
+        } catch (error) {
+          console.error(`Failed to submit QR borrow request for ${item.equipmentId}.`, error);
+          showBorrowToast(error.message || 'Unable to submit borrow request.', true);
+          const result = document.getElementById('borrowQrResult');
+          let errorMessage = result?.querySelector('[data-qr-borrow-error]');
+          if (result && !errorMessage) {
+            errorMessage = document.createElement('p');
+            errorMessage.dataset.qrBorrowError = 'true';
+            errorMessage.className = 'mt-3 rounded-lg border border-rose-400/25 bg-rose-400/10 p-3 text-sm text-rose-200';
+            errorMessage.setAttribute('role', 'alert');
+            result.querySelector('.borrow-qr-result-copy')?.append(errorMessage);
+          }
+          if (errorMessage) errorMessage.textContent = error.message || 'Unable to submit borrow request.';
+          await Promise.all([loadStudentBorrowRequests(), loadBorrowEquipmentOptions()]);
+          button.disabled = false;
+        }
+      });
+      document.getElementById('equipmentSearch')?.addEventListener('input', updateSelectedEquipmentInfo);
+      document.getElementById('equipmentSelectionList')?.addEventListener('change', (event) => {
+        const checkbox = event.target.closest('[data-equipment-choice]');
+        if (!checkbox) return;
+        if (checkbox.checked) state.selectedEquipmentIds.add(checkbox.value);
+        else state.selectedEquipmentIds.delete(checkbox.value);
+        updateSelectedEquipmentInfo();
       });
       document.getElementById('cancelBorrowEquipmentRequest')?.addEventListener('click', () => {
-        window.location.href = '/student/dashboard';
+        window.location.href = isFacultyBorrower ? '/faculty-dashboard' : '/student/dashboard';
       });
       document.getElementById('studentBorrowForm')?.addEventListener('submit', submitStudentBorrowRequest);
-      await loadBorrowEquipmentOptions();
+      await Promise.all([requestsLoad, loadBorrowEquipmentOptions()]);
       updateSelectedEquipmentInfo();
+      const scanParams = new URLSearchParams(window.location.search);
+      const scannedEquipmentValue = scanParams.get('equipmentId') ||
+        (scanParams.get('equipmentQr')
+          ? `${window.location.origin}/equipment/uid/${encodeURIComponent(scanParams.get('equipmentQr'))}`
+          : '');
+      if (scannedEquipmentValue) {
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+          detail: { value: scannedEquipmentValue }
+        }));
+        scanParams.delete('equipmentId');
+        scanParams.delete('equipmentQr');
+        const remainingQuery = scanParams.toString();
+        window.history.replaceState({}, '', `${window.location.pathname}${remainingQuery ? `?${remainingQuery}` : ''}${window.location.hash}`);
+      }
       window.setActive && setActive('/student/borrow-equipment');
       window.markActiveItem && markActiveItem();
       const nav = document.querySelector('.nav-item[href="/student/borrow-equipment"]');
@@ -708,8 +2101,9 @@
     });
   </script>
 
-  <script src="/js/student-sidebar-config.js?v=5" defer></script>
-  <script src="/js/sidebar-component.js?v=5" defer></script>
-    <script src="/js/qr-scanner-button.js?v=1" defer></script>
+  <script src="/js/qr-equipment-report.js?v=1" defer></script>
+  <script src="/js/student-sidebar-config.js?v=30" defer></script>
+  <script src="/js/sidebar-component.js?v=64" defer></script>
+  <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
 </body>
 </html>

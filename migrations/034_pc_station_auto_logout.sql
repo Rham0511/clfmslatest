@@ -1,0 +1,2 @@
+ALTER TABLE pc_station_sessions
+  ADD COLUMN IF NOT EXISTS autoLogoutAt DATETIME NULL;

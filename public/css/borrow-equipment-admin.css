@@ -1,0 +1,620 @@
+/* Admin borrow register: compact page chrome, clear hierarchy, and a focused table viewport. */
+html body.admin-borrow-equipment-page {
+  min-height: 100vh;
+  overflow-x: clip !important;
+}
+
+html body.admin-borrow-equipment-page .main-container {
+  box-sizing: border-box;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 100vh !important;
+  margin-left: var(--sidebar-width, 280px) !important;
+  padding: 0 clamp(.65rem, 1.1vw, 1rem) 1rem !important;
+  gap: 0 !important;
+  overflow-x: clip !important;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header {
+  box-sizing: border-box !important;
+  position: fixed !important;
+  inset: 0 0 auto var(--sidebar-width, 280px) !important;
+  z-index: 1050 !important;
+  display: flex !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 2.75rem !important;
+  height: 2.75rem !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .7rem !important;
+  margin: 0 !important;
+  padding: .22rem .85rem !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(74, 222, 128, .24) !important;
+  border-radius: 0 !important;
+  background: linear-gradient(180deg, #0e2419, #091a12) !important;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, .18) !important;
+  backdrop-filter: blur(12px);
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-main {
+  display: flex !important;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center !important;
+  gap: .55rem !important;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header h1 {
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  color: #e8f5ed !important;
+  font-size: .98rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-actions {
+  display: flex !important;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center !important;
+  justify-content: flex-end;
+  gap: .35rem !important;
+  margin: 0 0 0 auto !important;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge {
+  min-width: 0;
+  min-height: 2rem !important;
+  gap: .38rem !important;
+  margin: 0 !important;
+  padding: .12rem .48rem .12rem .24rem !important;
+  border: 1px solid rgba(74, 222, 128, .28) !important;
+  border-radius: .58rem !important;
+  background: #082b1d !important;
+  box-shadow: none !important;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge-avatar {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  flex: 0 0 1.5rem !important;
+  border-radius: .4rem !important;
+  font-size: .62rem !important;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge-name {
+  max-width: min(11rem, 23vw);
+  font-size: .68rem !important;
+  line-height: 1.05;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge-role {
+  font-size: .47rem !important;
+  line-height: 1.05;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header .comlab-notification-button,
+html body.admin-borrow-equipment-page .borrow-page-header .profile-theme-toggle {
+  box-sizing: border-box !important;
+  display: inline-grid !important;
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  flex: 0 0 2rem !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 1px solid rgba(74, 222, 128, .28) !important;
+  border-radius: .58rem !important;
+  background: #0d3523 !important;
+  color: #c6f6d5 !important;
+  text-decoration: none;
+}
+
+html body.admin-borrow-equipment-page .borrow-page-header-spacer {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0 0 .55rem;
+  pointer-events: none;
+}
+
+html body.admin-borrow-equipment-page .page-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - 3.35rem);
+  border-radius: 1rem;
+  overflow: visible;
+  box-shadow: 0 12px 32px rgba(4, 24, 15, .13);
+}
+
+html body.admin-borrow-equipment-page .page-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding: .85rem;
+}
+
+html body.admin-borrow-equipment-page .summary-grid {
+  gap: .65rem !important;
+  margin: 0 0 .72rem !important;
+}
+
+html body.admin-borrow-equipment-page #mainContainer .summary-grid {
+  gap: .65rem !important;
+  margin-bottom: .72rem !important;
+}
+
+html body.admin-borrow-equipment-page .summary-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 5.7rem !important;
+  padding: .72rem .82rem !important;
+  border-radius: .85rem !important;
+  text-align: left;
+}
+
+html body.admin-borrow-equipment-page .summary-card .label {
+  max-width: calc(100% - 2.3rem);
+  font-size: .66rem;
+  letter-spacing: .08em;
+  line-height: 1.3;
+}
+
+html body.admin-borrow-equipment-page .summary-card .value {
+  margin-top: .28rem;
+  font-size: clamp(1.45rem, 2.1vw, 1.8rem);
+  line-height: 1.05;
+}
+
+html body.admin-borrow-equipment-page .summary-card .summary-icon {
+  top: .62rem;
+  right: .62rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: .55rem;
+  font-size: 1rem;
+}
+
+html body.admin-borrow-equipment-page .search-row {
+  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(130px, 1fr));
+  align-items: end;
+  gap: .58rem;
+  margin: 0 0 .65rem;
+  padding: .35rem 0 0;
+}
+
+html body.admin-borrow-equipment-page .system-filter-row .field {
+  min-width: 0;
+  gap: .32rem;
+}
+
+html body.admin-borrow-equipment-page .system-filter-row .field label {
+  color: #a8c9b5;
+  font-size: .68rem;
+  font-weight: 750;
+  letter-spacing: .045em;
+}
+
+html body.admin-borrow-equipment-page .system-filter-row input,
+html body.admin-borrow-equipment-page .system-filter-row select {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 2.55rem;
+  height: 2.55rem;
+  padding: .48rem .65rem;
+  border-radius: .62rem;
+  font-size: .78rem;
+}
+
+html body.admin-borrow-equipment-page .tab-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .38rem;
+  margin: 0 0 .55rem;
+}
+
+html body.admin-borrow-equipment-page .tab-switcher .action-btn {
+  min-height: 2.15rem;
+  padding: .42rem .75rem;
+  border-radius: .65rem;
+  font-size: .74rem;
+}
+
+html body.admin-borrow-equipment-page .tab-switcher .action-btn[aria-selected="true"] {
+  border-color: #16834a !important;
+  background: linear-gradient(135deg, #16834a, #20a75b) !important;
+  color: #fff !important;
+}
+
+html body.admin-borrow-equipment-page .tab-switcher .action-btn[aria-selected="false"] {
+  background: transparent;
+  color: #bfd8c8;
+}
+
+html body.admin-borrow-equipment-page .table-wrap {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(58vh, 38rem) !important;
+  min-height: 10rem;
+  flex: 1 1 auto;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #34744d #0a1d13;
+  border-radius: .72rem;
+  scroll-margin-top: 3.3rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar {
+  display: block !important;
+  width: .62rem;
+  height: .62rem;
+  background: #0a1d13;
+}
+
+html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #0a1d13;
+}
+
+html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
+  border: 1px solid #0a1d13;
+  border-radius: 999px;
+  background: #34744d;
+}
+
+html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #4ade80;
+}
+
+html body.admin-borrow-equipment-page .table-wrap thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+  padding: .58rem .62rem !important;
+  background: #123a28 !important;
+  color: #e4f5e9 !important;
+  font-size: .66rem !important;
+  letter-spacing: .055em !important;
+}
+
+html body.admin-borrow-equipment-page .table-wrap > table {
+  height: 100%;
+}
+
+html body.admin-borrow-equipment-page .table-wrap tbody {
+  height: 100%;
+}
+
+html body.admin-borrow-equipment-page .table-wrap .empty-state {
+  display: grid;
+  min-height: 5rem;
+  place-content: center;
+  gap: .2rem;
+}
+
+html body.admin-borrow-equipment-page .table-wrap tbody td {
+  padding: .58rem .62rem !important;
+  font-size: .78rem !important;
+  line-height: 1.4 !important;
+}
+
+html body.admin-borrow-equipment-page .table-wrap tbody tr {
+  transition: background-color .16s ease;
+}
+
+html body.admin-borrow-equipment-page :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid #4ade80 !important;
+  outline-offset: 2px;
+}
+
+html body.admin-borrow-equipment-page .pagination-row {
+  gap: .4rem;
+  margin-top: .6rem;
+}
+
+html body.admin-borrow-equipment-page #borrowPaginationControls .pagination-btn {
+  min-height: 2.2rem !important;
+  padding: .35rem .7rem !important;
+  font-size: .76rem !important;
+}
+
+html.theme-light body.admin-borrow-equipment-page .main-container.theme-light {
+  color: #183b2b;
+}
+
+html.theme-light body.admin-borrow-equipment-page .page-card {
+  border-color: #d1e0d5;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(24, 59, 38, .07);
+}
+
+html.theme-light body.admin-borrow-equipment-page .summary-card {
+  border-color: #d1e0d5;
+  background: linear-gradient(145deg, #fff, #f1f8f3);
+  color: #20352a;
+  box-shadow: 0 3px 12px rgba(24, 59, 38, .06);
+}
+
+html.theme-light body.admin-borrow-equipment-page .summary-card .label,
+html.theme-light body.admin-borrow-equipment-page .system-filter-row .field label {
+  color: #526c5c;
+}
+
+html.theme-light body.admin-borrow-equipment-page .summary-card .value {
+  color: #172b22;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap {
+  border-color: #d5e3d9;
+  background: #fff;
+  scrollbar-color: #91b69d #eef4f0;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar,
+html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
+  background: #eef4f0;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
+  border-color: #eef4f0;
+  background: #91b69d;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap thead th {
+  border-color: #d2e2d7;
+  background: #e8f2eb;
+  color: #244a33;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even) {
+  background: #f6faf7;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:hover {
+  background: #edf7f0;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody td {
+  border-color: #e2ebe5;
+  color: #293d31 !important;
+}
+
+html.theme-light body.admin-borrow-equipment-page .empty-state {
+  border-color: #d4e4d8;
+  background: #f7faf8;
+  color: #506758;
+}
+
+html.theme-light body.admin-borrow-equipment-page .modal-card {
+  border-color: #cbded1;
+  background: #fff;
+  color: #20352a;
+  box-shadow: 0 24px 70px rgba(24, 59, 38, .2);
+}
+
+html.theme-light body.admin-borrow-equipment-page .modal-card :is(h3, .section-title, .card-title, .card-value) {
+  color: #20352a !important;
+}
+
+@media (max-width: 1023px) {
+  html body.admin-borrow-equipment-page .main-container {
+    margin-left: 0 !important;
+    padding-right: .75rem !important;
+    padding-left: .75rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header:not(#comlab-header-specificity) {
+    inset: 0 !important;
+    width: 100% !important;
+    min-height: 3rem !important;
+    height: 3rem !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header #mobileMenuToggle {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: inline-flex !important;
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    flex: 0 0 2.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(74, 222, 128, .18) !important;
+    border-radius: .5rem !important;
+    background: rgba(6, 24, 17, .7) !important;
+    color: #a7f3d0 !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    line-height: 1 !important;
+    vertical-align: middle;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-main {
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    align-items: center !important;
+    align-self: center !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-main h1 {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-actions {
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    min-width: max-content !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    align-self: center !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-actions > * {
+    align-self: center !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .profile-theme-controls {
+    display: inline-flex !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+    align-items: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .comlab-notification-button,
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .profile-theme-toggle,
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-profile-badge {
+    height: 2rem !important;
+    min-height: 2rem !important;
+    align-self: center !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .profile-theme-toggle {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    flex: 0 0 2rem !important;
+    padding: 0 !important;
+  }
+
+  html body.admin-borrow-equipment-page #sidebar {
+    width: min(88vw, 320px) !important;
+    min-width: min(88vw, 320px) !important;
+    max-width: min(88vw, 320px) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 1rem 1rem 0 !important;
+  }
+
+  html body.admin-borrow-equipment-page #sidebar.mobile-closed {
+    transform: translateX(-100%) !important;
+  }
+
+  html body.admin-borrow-equipment-page #sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  html body.admin-borrow-equipment-page .borrow-page-header-spacer {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    margin-bottom: .5rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-main {
+    flex: 1 1 auto !important;
+    gap: .4rem !important;
+  }
+
+  html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-actions {
+    gap: .3rem !important;
+  }
+
+  html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge-copy {
+    display: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  html body.admin-borrow-equipment-page .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body.admin-borrow-equipment-page .search-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body.admin-borrow-equipment-page .system-filter-row .field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  html body.admin-borrow-equipment-page .page-panel { padding: .68rem; }
+  html body.admin-borrow-equipment-page .table-wrap { max-height: 54vh !important; }
+}
+
+@media (max-width: 480px) {
+  html body.admin-borrow-equipment-page .borrow-page-header { padding-right: .5rem !important; padding-left: .5rem !important; }
+  html body.admin-borrow-equipment-page .borrow-page-header h1 { font-size: .84rem !important; }
+  html body.admin-borrow-equipment-page .borrow-page-header .system-profile-badge-copy { display: none; }
+  html body.admin-borrow-equipment-page .summary-grid { gap: .45rem !important; }
+  html body.admin-borrow-equipment-page .summary-card { min-height: 5.2rem !important; padding: .6rem !important; }
+  html body.admin-borrow-equipment-page .search-row { grid-template-columns: minmax(0, 1fr) !important; }
+  html body.admin-borrow-equipment-page .system-filter-row .field:first-child { grid-column: auto; }
+  html body.admin-borrow-equipment-page .tab-switcher { flex-wrap: nowrap; overflow-x: auto; padding: .1rem .1rem .35rem; }
+  html body.admin-borrow-equipment-page .tab-switcher .action-btn { flex: 0 0 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.admin-borrow-equipment-page *,
+  html body.admin-borrow-equipment-page *::before,
+  html body.admin-borrow-equipment-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Keep the borrow page title legible when the global light theme is active. */
+html body.app-shell.admin-borrow-equipment-page .borrow-page-header {
+  background: linear-gradient(180deg, #0e2419, #091a12) !important;
+  border-bottom: 1px solid rgba(74, 222, 128, .24) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page .borrow-page-header .system-dashboard-heading-main {
+  display: flex !important;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page .borrow-page-header h1 {
+  color: #e8f5ed !important;
+}
+
+/* Let the main register use the available viewport instead of ending midway down the page. */
+html body.admin-borrow-equipment-page #mainContainer > .page-card {
+  box-sizing: border-box;
+  flex: 1 0 auto;
+  min-height: max(27rem, calc(100vh - 4.35rem));
+  min-height: max(27rem, calc(100dvh - 4.35rem));
+}
+
+html body.admin-borrow-equipment-page #mainContainer > .page-card > .page-panel {
+  min-height: 100%;
+}
