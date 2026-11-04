@@ -3444,7 +3444,6 @@ const pageConfigs = {
         </div>
       </div>
 
-      <script src="/js/audit-logs-page.js?v=20261104"></script>
     `
   },
   "reports": {
@@ -4664,6 +4663,9 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   const auditLogsStylesheet = pageName === "audit-logs"
     ? '<link rel="stylesheet" href="/css/audit-logs.css?v=11">'
     : "";
+  const auditLogsScript = pageName === "audit-logs"
+    ? '<script src="/js/audit-logs-page.js?v=20261104-fix1" defer></script>'
+    : "";
   const inlineJson = (value) => JSON.stringify(value).replaceAll("<", "\\u003c");
   const currentUserJson = inlineJson({
     name: currentUserName,
@@ -4702,6 +4704,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${reportsStylesheet}
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   ${auditLogsStylesheet}
+  ${auditLogsScript}
 </head>
 <body class="app-shell${portalClass}${laboratorySchedulesPageClass}${dashboardHeaderPageClass}${reportsPageClass}${auditLogsPageClass}">
   <script>window.__CURRENT_USER__ = ${currentUserJson};</script>
