@@ -1680,6 +1680,18 @@
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   <style>
+    html.theme-light body.app-shell.admin-dashboard-page,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer .main-content {
+      background: #fff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer::before,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer::after {
+      background: none !important;
+      opacity: 0 !important;
+    }
+
     @media (max-width: 767px) {
       body.admin-dashboard-page .system-dashboard-heading {
         flex-wrap: nowrap;
