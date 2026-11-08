@@ -15,6 +15,9 @@ const defaultSidebarItems = [
   { label: 'Logout', href: '/logout', icon: 'fas fa-right-from-bracket' }
 ];
 
+const isFacilitiesEmbeddedPage = new URLSearchParams(window.location.search).get('embedded') === 'facilities';
+if (isFacilitiesEmbeddedPage) document.body?.classList.add('facilities-embedded');
+
 const defaultSidebarHeader = {
   iconClass: 'fas fa-server',
   logoText: 'ComLab',
@@ -65,6 +68,7 @@ function getSidebarItems() {
         }
       };
       insertAdminItem({ label: 'Faculty Management', href: '/faculty-management', icon: 'fas fa-chalkboard-user' });
+      insertAdminItem({ label: 'User Management', href: '/user-management', icon: 'fas fa-user-gear' });
       insertAdminItem({ label: 'Technician Accomplishments', href: '/technician-accomplishments', icon: 'fas fa-clipboard-check' });
       const archivedItem = items.find((item) =>
         normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) === '/archived-records' ||
@@ -99,7 +103,9 @@ function getSidebarItems() {
         items.splice(insertIndex, 0, accomplishmentsItem);
       }
     }
-    return items;
+    return role.includes('admin')
+      ? normalizeAdminFacilityItems(items).filter((item) => normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) !== '/page/laboratory-schedules')
+      : items;
   }
 
   // Fallback: if page indicates student portal, show student-specific items
@@ -117,7 +123,55 @@ function getSidebarItems() {
     ];
   }
 
-  return defaultSidebarItems;
+  const role = String(window.__CURRENT_USER__?.role || config.role || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+  return role.includes('admin')
+    ? normalizeAdminFacilityItems(defaultSidebarItems).filter((item) => normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) !== '/page/laboratory-schedules')
+    : defaultSidebarItems;
+}
+
+function normalizeAdminFacilityItems(sourceItems) {
+  const legacyEquipmentPaths = new Set([
+    '/equipment-inventory',
+    '/equipment-assignment',
+    '/equipment-availability',
+    '/equipment-borrowed',
+    '/admin-dashboard',
+    '/borrow-equipment'
+  ]);
+  const legacyEquipmentLabels = new Set([
+    'equipment inventory',
+    'equipment assignment',
+    'equipment availability',
+    'equipment borrowed',
+    'borrowed equipment'
+  ]);
+  const isLegacyEquipmentItem = (item) => {
+    const path = normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]);
+    const label = String(item.label || '').trim().toLowerCase();
+    return (legacyEquipmentPaths.has(path) && path !== '/admin-dashboard') ||
+      legacyEquipmentLabels.has(label) ||
+      (path === '/admin-dashboard' && label === 'equipment availability');
+  };
+  const items = [...sourceItems];
+  const firstLegacyIndex = items.findIndex(isLegacyEquipmentItem);
+  const filteredItems = items.filter((item) => !isLegacyEquipmentItem(item));
+
+  const existingFacilitiesItem = filteredItems.find((item) =>
+    normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) === '/page/facilities' ||
+    String(item.label || '').trim().toLowerCase() === 'facilities'
+  );
+  if (existingFacilitiesItem) {
+    existingFacilitiesItem.label = 'Facilities';
+    existingFacilitiesItem.href = '/page/facilities';
+    existingFacilitiesItem.icon ||= 'fas fa-building-circle-check';
+  } else {
+    const insertionIndex = firstLegacyIndex >= 0 ? Math.min(firstLegacyIndex, filteredItems.length) : Math.min(2, filteredItems.length);
+    filteredItems.splice(insertionIndex, 0, { label: 'Facilities', href: '/page/facilities', icon: 'fas fa-building-circle-check' });
+  }
+  return filteredItems;
 }
 
 function getSidebarHeader() {
@@ -164,6 +218,8 @@ function getActivePath() {
   }
 
   if (hash) {
+    if (pathname === '/page/computer-labs' && hash === '#schedules') return aliasedPath;
+    if (pathname === '/page/facilities') return aliasedPath;
     return `${aliasedPath}${hash}`;
   }
 
@@ -281,7 +337,7 @@ function renderSidebarComponent() {
   const navLinks = sidebarItems.map(item => {
     if (item.href === '/equipment-assignment' && !['admin', 'administrator'].includes(currentRole)) return '';
     const isNewReports = String(item.label || '').trim() === 'New Reports';
-    const isBorrowLink = /borrow-equipment/i.test(String(item.label || '')) || /borrow-equipment/i.test(String(item.href || ''));
+    const isBorrowLink = /borrow-equipment/i.test(String(item.label || '')) || /borrow-equipment/i.test(String(item.href || '')) || String(item.label || '').trim().toLowerCase() === 'facilities';
     const isBorrowRequests = /borrow requests/i.test(String(item.label || '')) || /borrow-requests/i.test(String(item.href || ''));
     const href = item.href || '/';
     const clickHandler = `setActive(this); closeSidebarOnMobile();`;
@@ -669,10 +725,12 @@ function ensureCompactPageHeaderTitles() {
       else target.prepend(title);
     }
 
-    const spacer = document.createElement('div');
-    spacer.className = 'comlab-page-header-spacer';
-    spacer.setAttribute('aria-hidden', 'true');
-    header.parentElement?.insertBefore(spacer, header);
+    if (header.dataset.comlabNoHeaderSpacer !== 'true') {
+      const spacer = document.createElement('div');
+      spacer.className = 'comlab-page-header-spacer';
+      spacer.setAttribute('aria-hidden', 'true');
+      header.parentElement?.insertBefore(spacer, header);
+    }
     document.body.append(header);
   });
 }
@@ -702,7 +760,7 @@ function ensureRoleNotificationButtons() {
 
   const destinations = {
     admin: { href: '/borrow-equipment', label: 'Open borrow requests' },
-    technician: { href: '/technician-dashboard#borrow-requests', label: 'Open pending work and borrow requests' },
+    technician: { href: '/technician-dashboard#new-reports', label: 'Open notification center' },
     faculty: { href: '/faculty-my-requests', label: 'Open my requests and approvals' },
     student: { href: '/student-my-requests', label: 'Open my borrow requests' }
   };
@@ -753,11 +811,263 @@ function ensureRoleNotificationButtons() {
     button.classList.add('comlab-notification-button');
     button.dataset.comlabNotificationButton = 'true';
     button.setAttribute('aria-label', 'Notifications');
+    if (role === 'technician') {
+      button.setAttribute('aria-haspopup', 'dialog');
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-controls', 'comlab-technician-notification-panel');
+    }
     button.title = destination.label;
     const badge = button.querySelector('#adminBorrowNotificationBadge, [data-comlab-notification-count]');
-    if (badge) badge.classList.add('comlab-notification-badge');
+    if (badge) {
+      badge.classList.add('comlab-notification-badge');
+      if (role === 'technician') {
+        // Inline important positioning keeps the count anchored to the bell even
+        // when page-specific header rules override the shared stylesheet.
+        button.style.setProperty('position', 'relative', 'important');
+        button.style.setProperty('overflow', 'visible', 'important');
+        badge.style.setProperty('position', 'absolute', 'important');
+        badge.style.setProperty('top', '-.15rem', 'important');
+        badge.style.setProperty('right', '-.15rem', 'important');
+        badge.style.setProperty('transform', 'none', 'important');
+        badge.style.setProperty('z-index', '2', 'important');
+        badge.style.setProperty('pointer-events', 'none', 'important');
+      }
+    }
   });
 }
+
+function getTechnicianNotificationStorageKey() {
+  const user = window.__CURRENT_USER__ || {};
+  const identity = user.id ?? user.userId ?? user.email ?? user.name ?? 'technician';
+  return `comlab-tech-dismissed-notifications:${String(identity).trim().toLowerCase()}`;
+}
+
+function getDismissedTechnicianNotificationIds() {
+  try {
+    const value = JSON.parse(localStorage.getItem(getTechnicianNotificationStorageKey()) || '[]');
+    return new Set(Array.isArray(value) ? value.map(String) : []);
+  } catch (error) {
+    return new Set();
+  }
+}
+
+function dismissTechnicianNotificationIds(ids) {
+  const dismissed = getDismissedTechnicianNotificationIds();
+  ids.map(String).filter(Boolean).forEach(id => dismissed.add(id));
+  try {
+    localStorage.setItem(getTechnicianNotificationStorageKey(), JSON.stringify([...dismissed].slice(-500)));
+  } catch (error) {
+    // Notifications can still be opened if browser storage is unavailable.
+  }
+}
+
+function closeTechnicianNotificationPanel() {
+  document.getElementById('comlab-technician-notification-panel')?.remove();
+  document.querySelectorAll('[data-comlab-notification-button]').forEach(button => {
+    if (getCurrentComLabRole() === 'technician') button.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function ensureTechnicianNotificationPanelStyles() {
+  if (document.getElementById('comlab-technician-notification-panel-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'comlab-technician-notification-panel-styles';
+  style.textContent = `
+    #comlab-technician-notification-panel { position:fixed; z-index:100000; top:var(--comlab-notice-top,5rem); right:var(--comlab-notice-right,1rem); width:min(25rem,calc(100vw - 1.5rem)); max-height:min(72vh,38rem); overflow:auto; padding:1rem; border:1px solid rgba(74,222,128,.3); border-radius:1rem; background:#071b13; color:#e7f5ec; box-shadow:0 18px 55px rgba(0,0,0,.48); font-family:inherit; font-size:13px; font-weight:500; line-height:1.45; }
+    #comlab-technician-notification-panel .comlab-notice-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding-bottom:.75rem; border-bottom:1px solid rgba(74,222,128,.18); }
+    #comlab-technician-notification-panel .comlab-notice-heading strong { font-size:1rem; color:#f0fff4; }
+    #comlab-technician-notification-panel .comlab-notice-heading span { color:#a7d9b8; font-size:.75rem; }
+    #comlab-technician-notification-panel .comlab-notice-clear { padding:.3rem .55rem; border:1px solid rgba(74,222,128,.2); border-radius:.5rem; background:rgba(16,49,34,.75); color:#b9e7c8; font:inherit; font-size:.72rem; cursor:pointer; }
+    #comlab-technician-notification-panel .comlab-notice-clear:hover { border-color:rgba(74,222,128,.55); color:#f0fff4; }
+    #comlab-technician-notification-panel .comlab-notice-section { padding-top:.85rem; }
+    #comlab-technician-notification-panel .comlab-notice-section-heading { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.45rem; color:#c5e7d0; font-weight:750; }
+    #comlab-technician-notification-panel .comlab-notice-section-heading a { color:#6ee7a5; font-size:.75rem; text-decoration:none; }
+    #comlab-technician-notification-panel .comlab-notice-row { display:block; width:100%; margin-top:.4rem; padding:.65rem .75rem; border:1px solid rgba(74,222,128,.13); border-radius:.7rem; background:rgba(16,49,34,.72); color:inherit; text-align:left; text-decoration:none; }
+    #comlab-technician-notification-panel .comlab-notice-row:hover, #comlab-technician-notification-panel .comlab-notice-row:focus-visible { border-color:rgba(74,222,128,.5); background:rgba(21,70,45,.8); outline:none; }
+    #comlab-technician-notification-panel .comlab-notice-row strong { display:block; overflow:hidden; color:#effff3; text-overflow:ellipsis; white-space:nowrap; }
+    #comlab-technician-notification-panel .comlab-notice-row small { display:block; margin-top:.15rem; color:#a9c9b3; }
+    #comlab-technician-notification-panel .comlab-notice-empty { padding:.6rem .7rem; border-radius:.7rem; background:rgba(16,49,34,.45); color:#9bb5a3; }
+    @keyframes comlab-notification-target-pulse { 0%,100% { filter:none; transform:scale(1); box-shadow:none; } 22%,58% { filter:brightness(1.2); transform:scale(1.012); box-shadow:0 0 0 3px rgba(74,222,128,.52); } }
+    .comlab-notification-target-highlight { position:relative; z-index:2; transform-origin:center; animation:comlab-notification-target-pulse 1.1s ease-in-out 3; }
+    .comlab-notification-target-marker { display:inline-flex; align-items:center; justify-content:center; margin-right:.45rem; color:#43e58b; font-size:1.2em; font-weight:900; animation:comlab-notification-marker-nudge .55s ease-in-out 4; }
+    @keyframes comlab-notification-marker-nudge { 0%,100% { transform:translateX(0); } 50% { transform:translateX(.28rem); } }
+    @media (prefers-reduced-motion:reduce) { .comlab-notification-target-highlight,.comlab-notification-target-marker { animation:none !important; } }
+  `;
+  document.head.append(style);
+}
+
+async function toggleTechnicianNotificationPanel(button) {
+  if (document.getElementById('comlab-technician-notification-panel')) {
+    closeTechnicianNotificationPanel();
+    return;
+  }
+
+  ensureTechnicianNotificationPanelStyles();
+  const panel = document.createElement('section');
+  panel.id = 'comlab-technician-notification-panel';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'Technician notifications');
+  panel.innerHTML = '<div class="comlab-notice-heading"><strong>Notifications</strong><span>Loading…</span></div><div class="comlab-notice-empty">Loading pending work and borrow requests…</div>';
+  document.body.append(panel);
+  button.setAttribute('aria-expanded', 'true');
+
+  const placePanel = () => {
+    if (!panel.isConnected) return;
+    const rect = button.getBoundingClientRect();
+    const right = Math.max(12, window.innerWidth - rect.right);
+    const top = Math.min(rect.bottom + 10, Math.max(12, window.innerHeight - 180));
+    panel.style.setProperty('--comlab-notice-right', `${right}px`);
+    panel.style.setProperty('--comlab-notice-top', `${top}px`);
+  };
+  placePanel();
+  window.addEventListener('resize', placePanel, { passive: true, once: true });
+
+  const dismissed = getDismissedTechnicianNotificationIds();
+  const [reportsResult, borrowsResult] = await Promise.allSettled([
+    fetch('/api/maintenance?status=Pending', { cache: 'no-store' }).then(response => response.ok ? response.json() : []),
+    fetch('/api/borrow-notifications?unreadOnly=true', { cache: 'no-store' }).then(response => response.ok ? response.json() : [])
+  ]);
+  if (!panel.isConnected) return;
+  const allReports = reportsResult.status === 'fulfilled' && Array.isArray(reportsResult.value) ? reportsResult.value : [];
+  const allBorrowNotifications = borrowsResult.status === 'fulfilled' && Array.isArray(borrowsResult.value) ? borrowsResult.value : [];
+  const reports = allReports.filter(report => !dismissed.has(`maintenance:${report.id}`));
+  const borrowNotifications = allBorrowNotifications.filter(notification => !dismissed.has(`borrow:${notification.id}`));
+  const failed = reportsResult.status === 'rejected' && borrowsResult.status === 'rejected';
+  const total = reports.length + borrowNotifications.length;
+  panel.replaceChildren();
+
+  const header = document.createElement('div');
+  header.className = 'comlab-notice-heading';
+  const headingCopy = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = 'Notifications';
+  const summary = document.createElement('span');
+  summary.textContent = failed ? 'Could not load alerts' : `${total} ${total === 1 ? 'item' : 'items'} need attention`;
+  headingCopy.append(title, summary);
+  headingCopy.style.display = 'grid';
+  const clearAll = document.createElement('button');
+  clearAll.type = 'button';
+  clearAll.className = 'comlab-notice-clear';
+  clearAll.textContent = 'Clear all';
+  clearAll.disabled = total === 0 || failed;
+  clearAll.addEventListener('click', () => {
+    const ids = [
+      ...allReports.map(report => `maintenance:${report.id}`),
+      ...allBorrowNotifications.map(notification => `borrow:${notification.id}`)
+    ];
+    dismissTechnicianNotificationIds(ids);
+    closeTechnicianNotificationPanel();
+    refreshRoleNotificationCount();
+  });
+  header.append(headingCopy, clearAll);
+  panel.append(header);
+
+  const appendSection = (label, items, href, kind) => {
+    const section = document.createElement('div');
+    section.className = 'comlab-notice-section';
+    const sectionHeading = document.createElement('div');
+    sectionHeading.className = 'comlab-notice-section-heading';
+    const sectionTitle = document.createElement('span');
+    sectionTitle.textContent = `${label} (${items.length})`;
+    const viewAll = document.createElement('a');
+    viewAll.href = href;
+    viewAll.textContent = 'View all';
+    viewAll.dataset.comlabNotificationLink = 'true';
+    sectionHeading.append(sectionTitle, viewAll);
+    section.append(sectionHeading);
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'comlab-notice-empty';
+      empty.textContent = `No ${kind === 'maintenance' ? 'pending reports' : 'borrow requests'} right now.`;
+      section.append(empty);
+    } else {
+      items.slice(0, 6).forEach(item => {
+        const link = document.createElement('a');
+        link.className = 'comlab-notice-row';
+        link.href = href;
+        link.dataset.comlabNotificationLink = 'true';
+        link.dataset.comlabNotificationItem = 'true';
+        link.dataset.notificationType = kind;
+        const rowTitle = document.createElement('strong');
+        const rowMeta = document.createElement('small');
+        if (kind === 'maintenance') {
+          link.dataset.notificationRecordId = String(item.id ?? '');
+          link.dataset.notificationDismissalId = `maintenance:${item.id}`;
+          const equipmentId = item.equipmentId || item.equipment_id || 'Equipment issue';
+          const equipmentName = item.equipmentName || item.equipment?.name || '';
+          rowTitle.textContent = [equipmentId, equipmentName].filter(Boolean).join(' · ');
+          rowMeta.textContent = [item.category || item.issueTitle || 'Maintenance report', item.reporterName || item.reporter?.name, item.campus || item.equipment?.campus].filter(Boolean).join(' · ');
+        } else {
+          link.dataset.notificationRecordId = String(item.relatedId ?? '');
+          link.dataset.notificationDismissalId = `borrow:${item.id}`;
+          rowTitle.textContent = item.title || (item.type === 'borrow_return_request' ? 'Equipment return requested' : 'New borrow request');
+          rowMeta.textContent = item.message || item.campus || '';
+        }
+        link.append(rowTitle, rowMeta);
+        section.append(link);
+      });
+      if (items.length > 6) {
+        const more = document.createElement('div');
+        more.className = 'comlab-notice-empty';
+        more.textContent = `And ${items.length - 6} more…`;
+        section.append(more);
+      }
+    }
+    panel.append(section);
+  };
+
+  if (failed) {
+    const error = document.createElement('div');
+    error.className = 'comlab-notice-empty';
+    error.textContent = 'Unable to load notifications. Please try again.';
+    panel.append(error);
+  } else {
+    appendSection('Maintenance reports', reports, '/technician-dashboard#new-reports', 'maintenance');
+    appendSection('Borrow requests', borrowNotifications, '/technician-dashboard#borrow-requests', 'borrow');
+  }
+}
+
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-comlab-notification-button]');
+  if (button && getCurrentComLabRole() === 'technician') {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleTechnicianNotificationPanel(button);
+    return;
+  }
+  const panel = document.getElementById('comlab-technician-notification-panel');
+  if (!panel) return;
+  if (panel.contains(event.target)) {
+    const notificationItem = event.target.closest('[data-comlab-notification-item]');
+    if (notificationItem) {
+      event.preventDefault();
+      const notificationType = notificationItem.dataset.notificationType;
+      const recordId = notificationItem.dataset.notificationRecordId;
+      dismissTechnicianNotificationIds([notificationItem.dataset.notificationDismissalId]);
+      closeTechnicianNotificationPanel();
+      refreshRoleNotificationCount();
+      const section = notificationType === 'maintenance' ? 'new-reports' : 'borrow-requests';
+      const targetHref = `/technician-dashboard#${section}`;
+      if (window.location.pathname.replace(/\/$/, '') !== '/technician-dashboard') {
+        window.location.assign(targetHref);
+        return;
+      }
+      window.location.hash = section;
+      window.dispatchEvent(new CustomEvent('comlab:focus-technician-notification', {
+        detail: { type: notificationType, recordId }
+      }));
+      return;
+    }
+    if (event.target.closest('[data-comlab-notification-link]')) closeTechnicianNotificationPanel();
+    return;
+  }
+  closeTechnicianNotificationPanel();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeTechnicianNotificationPanel();
+});
 
 function ensureAdminProfileShortcut() {
   if (getCurrentComLabRole() !== 'admin') return;
@@ -793,7 +1103,7 @@ function ensureFloatingScanButton() {
   if (document.querySelector('script[data-comlab-floating-scanner]')) return;
 
   const scannerScript = document.createElement('script');
-  scannerScript.src = '/js/qr-scanner-button.js?v=3';
+  scannerScript.src = '/js/qr-scanner-button.js?v=7';
   scannerScript.dataset.comlabFloatingScanner = 'true';
   document.head.append(scannerScript);
 }
@@ -838,8 +1148,13 @@ async function refreshRoleNotificationCount() {
       ]);
       const reports = reportsResponse.ok ? await reportsResponse.json() : [];
       const borrowNotifications = borrowResponse.ok ? await borrowResponse.json() : [];
-      const reportCount = Array.isArray(reports) ? reports.length : 0;
-      const borrowCount = Array.isArray(borrowNotifications) ? borrowNotifications.length : 0;
+      const dismissed = getDismissedTechnicianNotificationIds();
+      const reportCount = Array.isArray(reports)
+        ? reports.filter(report => !dismissed.has(`maintenance:${report.id}`)).length
+        : 0;
+      const borrowCount = Array.isArray(borrowNotifications)
+        ? borrowNotifications.filter(notification => !dismissed.has(`borrow:${notification.id}`)).length
+        : 0;
       setRoleNotificationCount(reportCount + borrowCount);
       return;
     }
@@ -1003,6 +1318,10 @@ window.addEventListener('storage', (event) => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  if (isFacilitiesEmbeddedPage) {
+    document.getElementById('shared-sidebar')?.remove();
+    return;
+  }
   hydrateStudentPageHeader();
   hydrateAuthenticatedProfileNames();
   renderSidebarComponent();

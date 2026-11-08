@@ -6,7 +6,7 @@
     <title>ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         :root {
             --primary: #052e1d;
@@ -978,6 +978,11 @@
                 border-top: 0;
             }
 
+            #recentPcActivityTable td:first-child {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.2rem;
+            }
+
             .modern-table td[colspan="5"] {
                 display: block;
             }
@@ -1155,7 +1160,7 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=1">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=11">
 </head>
 <body class="app-shell student-portal system-layout-page student-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -1187,57 +1192,58 @@
                 </div>
             </header>
             <section class="summary-grid dashboard-kpi-grid" aria-label="Student facility overview">
-                <article class="summary-card dashboard-kpi-card pc-station">
+                <a class="summary-card dashboard-kpi-card pc-station" href="/my-pc-station" aria-label="View your PC station">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
                         <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Station</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-current-pc-value>Loading...</h4>
                         <p class="dashboard-kpi-description" data-current-pc-description>Checking your assignment</p>
                     </div>
-                </article>
-                <article class="summary-card dashboard-kpi-card borrowed">
+                </a>
+                <a class="summary-card dashboard-kpi-card borrowed" href="/student/borrow-equipment#borrow-requests" aria-label="View your borrowed items and borrow requests">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-box-open" aria-hidden="true"></i></div>
                     <div class="card-text">
                         <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Borrowed Items</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-borrow-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-borrow-description>Checking borrowed items</p>
                     </div>
-                </article>
-                <article class="summary-card dashboard-kpi-card issues">
+                </a>
+                <a class="summary-card dashboard-kpi-card issues" href="/student-my-requests#issueReportsPanel" aria-label="View your reported issues">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></div>
                     <div class="card-text">
                         <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Reported Issues</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-issue-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-issue-description>Checking your requests</p>
                     </div>
-                </article>
-                <article class="summary-card dashboard-kpi-card sessions">
+                </a>
+                <a class="summary-card dashboard-kpi-card sessions" href="/student-audit-history" aria-label="View your PC session history">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
                         <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Sessions</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-session-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-session-description>In the last 30 days</p>
                     </div>
-                </article>
+                </a>
             </section>
 
             <section class="section-shell">
                 <div class="section-header">
                     <div>
                         <h3>My PC Station Status &amp; Recent Activity</h3>
-                        <p class="text-sm text-slate-400">Review your current workstation assignment and recent sessions.</p>
+                        <p>Latest sessions, station details, and time used.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <a class="borrow-btn secondary" href="/my-pc-station">My PC Station</a>
-                        <a class="borrow-btn inline-flex" href="/student/borrow-equipment">Borrow Equipment</a>
+                        <a class="borrow-btn secondary" href="/my-pc-station"><i class="fas fa-desktop" aria-hidden="true"></i><span>My PC Station</span></a>
+                        <a class="borrow-btn inline-flex" href="/student/borrow-equipment"><i class="fas fa-box-open" aria-hidden="true"></i><span>Borrow Equipment</span></a>
                     </div>
                 </div>
 
                 <div class="table-shell" role="region" aria-label="Recent PC activity" tabindex="0">
-                    <table class="modern-table">
+                    <table id="recentPcActivityTable" class="modern-table">
+                        <caption class="sr-only">Your six most recent PC station sessions</caption>
                         <thead>
                             <tr>
-                                <th>PC Set</th>
+                                <th>Station</th>
                                 <th>Activity</th>
                                 <th>Started</th>
                                 <th>Ended</th>
@@ -1279,7 +1285,7 @@
             equipmentLoaded: false,
             equipmentRequest: null
         };
-        const OVERVIEW_REFRESH_INTERVAL = 30000;
+        const OVERVIEW_REFRESH_INTERVAL = 15000;
 
         async function fetchJson(url) {
             const response = await fetch(url, { cache: 'no-store' });
@@ -1339,10 +1345,12 @@
         }
 
         function formatDuration(minutes) {
-            const totalMinutes = Number(minutes);
-            if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return '—';
+            if (minutes == null) return '—';
+            const rawMinutes = Number(minutes);
+            if (!Number.isFinite(rawMinutes) || rawMinutes < 0) return '—';
+            const totalMinutes = Math.round(rawMinutes);
             const hours = Math.floor(totalMinutes / 60);
-            const remainingMinutes = Math.round(totalMinutes % 60);
+            const remainingMinutes = totalMinutes % 60;
             if (!hours) return `${remainingMinutes} min`;
             return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
         }
@@ -1356,15 +1364,23 @@
                 return;
             }
 
-            tbody.innerHTML = sessions.slice(0, 6).map((session) => `
-                <tr>
-                    <td data-label="PC Set">${escapeHtml(session.pcSetId || '—')}</td>
-                    <td data-label="Activity">${escapeHtml(session.subject || session.activity || 'PC session')}</td>
+            tbody.innerHTML = sessions.slice(0, 6).map((session) => {
+                const isActive = !session.usageEndTime;
+                const stationName = session.stationName ||
+                    (session.pcSetId ? `PC Station ${String(session.pcSetId).replace(/^PC-SET-/i, '')}` : 'PC Station');
+                return `
+                <tr class="${isActive ? 'is-active-session' : 'is-completed-session'}">
+                    <td class="activity-station-cell" data-label="Station">
+                        <span class="activity-station-name">${escapeHtml(stationName)}</span>
+                        <span class="activity-session-status">${isActive ? 'Active' : 'Completed'}</span>
+                    </td>
+                    <td class="activity-type-cell" data-label="Activity">${escapeHtml(session.subject || session.activity || 'PC session')}</td>
                     <td data-label="Started">${escapeHtml(formatDateTime(session.usageStartTime))}</td>
-                    <td data-label="Ended">${escapeHtml(session.usageEndTime ? formatDateTime(session.usageEndTime) : 'Active')}</td>
-                    <td data-label="Duration">${escapeHtml(formatDuration(session.durationMinutes))}</td>
+                    <td data-label="Ended">${escapeHtml(session.usageEndTime ? formatDateTime(session.usageEndTime) : 'In progress')}</td>
+                    <td class="activity-duration-cell" data-label="Duration">${escapeHtml(isActive ? 'In progress' : formatDuration(session.durationMinutes))}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function escapeHtml(value) {
@@ -1393,11 +1409,16 @@
             const results = await Promise.allSettled([
                 fetchJson(`/api/equipment/current-assignment/${encodeURIComponent(userId)}`),
                 fetchJson(`/api/equipment/usage-history/${encodeURIComponent(userId)}`),
+                fetchJson('/api/pc-stations/my-sessions'),
                 fetchJson('/api/borrow-records'),
                 fetchJson('/api/maintenance')
             ]);
 
-            const [assignmentResult, sessionsResult, borrowResult, issuesResult] = results;
+            const [assignmentResult, sessionsResult, activeStationsResult, borrowResult, issuesResult] = results;
+            const activeStations = activeStationsResult.status === 'fulfilled' &&
+                Array.isArray(activeStationsResult.value.sessions)
+                ? activeStationsResult.value.sessions
+                : [];
             if (assignmentResult.status === 'fulfilled' &&
                 typeof assignmentResult.value.hasAssignment === 'boolean') {
                 const assignment = assignmentResult.value.assignment;
@@ -1406,7 +1427,7 @@
                     '[data-current-pc-description]',
                     assignmentResult.value.hasAssignment
                         ? assignment?.pcSetId || assignment?.equipmentName || 'Assigned'
-                        : 'No Active PC',
+                        : 'No station',
                     assignmentResult.value.hasAssignment
                         ? assignment?.laboratoryRoom || 'Currently assigned'
                         : 'No active workstation assigned'
@@ -1419,9 +1440,37 @@
                 setMetric('[data-current-pc-value]', '[data-current-pc-description]', '—', 'Unable to load assignment');
             }
 
+            if (activeStations.length) {
+                const activeStation = activeStations[0];
+                setMetric(
+                    '[data-current-pc-value]',
+                    '[data-current-pc-description]',
+                    activeStation.setName || activeStation.setId,
+                    activeStation.location || 'Currently signed in'
+                );
+            } else if (activeStationsResult.status === 'rejected') {
+                console.error('Unable to load active PC station sessions.', activeStationsResult.reason);
+            }
+
             if (sessionsResult.status === 'fulfilled' &&
                 Array.isArray(sessionsResult.value.usageHistory)) {
-                const sessions = sessionsResult.value.usageHistory;
+                const sessions = sessionsResult.value.usageHistory.slice();
+                const loggedActiveSetIds = new Set(sessions
+                    .filter((session) => !session.usageEndTime && session.pcSetId)
+                    .map((session) => String(session.pcSetId)));
+                activeStations.forEach((session) => {
+                    if (loggedActiveSetIds.has(String(session.setId))) return;
+                    sessions.push({
+                        pcSetId: session.setId,
+                        usageStartTime: session.startedAt,
+                        usageEndTime: null,
+                        durationMinutes: null,
+                        activity: 'Active PC station'
+                    });
+                });
+                sessions.sort((left, right) =>
+                    (new Date(right.usageStartTime).getTime() || 0) - (new Date(left.usageStartTime).getTime() || 0)
+                );
                 const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
                 const recentSessions = sessions.filter((session) => {
                     const startedAt = new Date(session.usageStartTime).getTime();
@@ -1474,8 +1523,8 @@
                 setMetric(
                     '[data-issue-count]',
                     '[data-issue-description]',
-                    String(pendingCount),
-                    `${issuesResult.value.length} submitted · ${pendingCount} pending · ${inProgressCount} in progress`
+                    String(issuesResult.value.length),
+                    `${pendingCount} pending · ${inProgressCount} in progress`
                 );
             } else {
                 const error = issuesResult.status === 'rejected'
@@ -1794,6 +1843,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=75" defer></script>
 </body>
 </html>

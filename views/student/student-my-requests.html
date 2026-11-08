@@ -6,7 +6,7 @@
     <title>ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         body {
             background: #020617;
@@ -371,15 +371,86 @@
         }
 
         #requestsState .maintenance-reports-table thead th {
-            color: #fff;
-            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(110, 231, 183, 0.24);
+            background: #0a2318;
+            color: #d1fae5;
+            font-size: 0.76rem;
             font-weight: 700;
+            letter-spacing: 0.06em;
         }
 
         #requestsState .maintenance-reports-table tbody td {
+            border-bottom: 1px solid rgba(52, 211, 153, 0.16);
             color: #fff;
             font-size: 0.875rem;
             font-weight: 500;
+        }
+
+        #requestsState .maintenance-reports-table tbody tr:hover {
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        #requestsState .maintenance-reports-table .col-report-id { width: 9%; }
+        #requestsState .maintenance-reports-table .col-equipment { width: 20%; }
+        #requestsState .maintenance-reports-table .col-description { width: 29%; }
+        #requestsState .maintenance-reports-table .col-dates { width: 16%; }
+        #requestsState .maintenance-reports-table .col-status { width: 12%; }
+        #requestsState .maintenance-reports-table .col-action { width: 14%; }
+
+        #requestsState .report-category {
+            color: #d1fae5;
+            font-weight: 700;
+        }
+
+        #requestsState .report-description {
+            display: block;
+            margin-top: 0.25rem;
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        #requestsState .report-details-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.7rem;
+            border: 1px solid rgba(110, 231, 183, 0.28);
+            border-radius: 0.65rem;
+            background: rgba(6, 78, 59, 0.32);
+            color: #a7f3d0;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        #requestsState .report-details-button:hover {
+            border-color: rgba(110, 231, 183, 0.55);
+            background: rgba(6, 95, 70, 0.55);
+        }
+
+        #requestsState .report-details-row[hidden],
+        #requestsState .maintenance-reports-table tbody tr.report-details-row[hidden],
+        #requestsState .maintenance-reports-table tbody tr.report-details-row {
+            display: none !important;
+        }
+
+        #requestsState .maintenance-reports-table tbody tr.report-details-row.expanded {
+            display: block !important;
+        }
+
+        #requestsState .report-details-content {
+            padding: 0.85rem 1rem;
+            border-left: 3px solid #10b981;
+            border-radius: 0.5rem;
+            background: rgba(2, 20, 13, 0.72);
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        #requestsState .report-details-content strong {
+            color: #a7f3d0;
         }
 
         #issueReportsPanel .requests-controls {
@@ -858,16 +929,20 @@
 
         #requestsState.requests-table-shell {
             max-height: min(60vh, 32rem);
-            overflow: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
             scrollbar-gutter: stable;
         }
 
         #requestsState .maintenance-reports-table-scroll {
-            min-width: max-content;
+            width: 100%;
+            min-width: 0;
         }
 
         #requestsState .maintenance-reports-table {
-            min-width: 920px;
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
         }
 
         @media (max-width: 767px) {
@@ -876,51 +951,79 @@
             }
 
             #requestsState .maintenance-reports-table {
-                display: table;
-                width: 720px;
-                min-width: 720px !important;
-                table-layout: fixed;
+                display: block;
+                width: 100%;
             }
 
             #requestsState .maintenance-reports-table thead {
-                display: table-header-group;
-            }
-
-            #requestsState .maintenance-reports-table tbody {
-                display: table-row-group;
-            }
-
-            #requestsState .maintenance-reports-table tbody tr {
-                display: table-row;
-                overflow: visible;
-                border: 0;
-                border-radius: 0;
-                background: transparent;
-                box-shadow: none;
-            }
-
-            #requestsState .maintenance-reports-table td {
-                display: table-cell;
-                width: auto;
-                padding: 0.65rem 0.75rem;
-                border-bottom: 1px solid rgba(52, 211, 153, 0.09);
-                text-align: left;
-                font-size: 0.78rem;
-            }
-
-            #requestsState .maintenance-reports-table td[data-label]::before {
                 display: none;
             }
 
-            #requestsState .maintenance-reports-table td.equipment-cell {
-                display: table-cell;
+            #requestsState .maintenance-reports-table tbody,
+            #requestsState .maintenance-reports-table tbody tr {
+                display: block;
+                width: 100%;
+            }
+
+            #requestsState .maintenance-reports-table tbody tr.report-details-row,
+            #requestsState .maintenance-reports-table tbody tr.report-details-row[hidden] {
+                display: none !important;
+            }
+
+            #requestsState .maintenance-reports-table tbody tr.report-details-row.expanded {
+                display: block !important;
+            }
+
+            #requestsState .maintenance-reports-table tbody tr:not(.report-details-row) {
+                margin-bottom: 0.75rem;
+                overflow: hidden;
+                border: 1px solid rgba(52, 211, 153, 0.2);
+                border-radius: 0.9rem;
+                background: rgba(2, 20, 13, 0.45);
+            }
+
+            #requestsState .maintenance-reports-table tbody tr:not(.report-details-row):hover {
+                background: rgba(16, 185, 129, 0.08);
+            }
+
+            #requestsState .maintenance-reports-table td[data-label] {
+                display: grid;
+                grid-template-columns: minmax(7.5rem, 34%) minmax(0, 1fr);
+                gap: 0.7rem;
+                width: 100%;
                 padding: 0.65rem 0.75rem;
+                border-bottom: 1px solid rgba(52, 211, 153, 0.1);
+                text-align: left;
+                overflow-wrap: anywhere;
+            }
+
+            #requestsState .maintenance-reports-table td[data-label]::before {
+                content: attr(data-label);
+                color: #6ee7b7;
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            #requestsState .maintenance-reports-table td.col-status {
+                text-align: left;
+            }
+
+            #requestsState .maintenance-reports-table .report-details-row td {
+                display: block;
+                padding: 0 0 0.75rem;
+                border: 0;
+            }
+
+            #requestsState .maintenance-reports-table .report-details-row td::before {
+                display: none;
             }
         }
     </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=2">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=18">
 </head>
 <body class="app-shell student-portal system-layout-page student-my-requests-page">
     <div id="shared-sidebar"></div>
@@ -969,6 +1072,8 @@
                             <option value="Pending">Pending</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Resolved">Resolved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Cancelled">Cancelled</option>
                         </select>
                     </label>
                 </div>
@@ -1046,11 +1151,13 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=75" defer></script>
     <script>
         const requestsState = document.getElementById('requestsState');
         const maintenanceSearch = document.getElementById('maintenanceSearch');
         const maintenanceStatusFilter = document.getElementById('maintenanceStatusFilter');
+        const reportActionMenus = new WeakMap();
+        const reportActionMenuPlaceholders = new WeakMap();
         const requestsStateData = {
             records: [],
             currentPage: 1,
@@ -1064,7 +1171,7 @@
 
         const statusClasses = {
             Pending: 'bg-amber-500/15 text-amber-300',
-            'In Progress': 'bg-emerald-500/15 text-emerald-200',
+            'In Progress': 'bg-blue-500/15 text-blue-200',
             Resolved: 'bg-emerald-500/15 text-emerald-300',
             Rejected: 'bg-red-500/15 text-red-300',
             Cancelled: 'bg-emerald-950/70 text-emerald-200'
@@ -1087,10 +1194,7 @@
             return date.toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                second: '2-digit'
+                year: 'numeric'
             });
         };
 
@@ -1123,7 +1227,7 @@
             const searchValue = maintenanceSearch.value.trim().toLowerCase();
             const statusValue = maintenanceStatusFilter.value;
             const filteredRecords = requestsStateData.records.filter((item) => {
-                const searchable = `${item.equipmentName || ''} ${item.equipmentId || item.equipment_id || ''} ${item.description || ''}`.toLowerCase();
+                const searchable = `${item.equipmentName || ''} ${item.equipmentId || item.equipment_id || ''} ${item.category || ''} ${item.issueTitle || ''} ${item.description || ''}`.toLowerCase();
                 const matchesSearch = !searchValue || searchable.includes(searchValue);
                 const itemStatus = (item.status || '').toString().trim();
                 const matchesStatus = statusValue === 'all' || itemStatus === statusValue;
@@ -1157,25 +1261,104 @@
                         <thead>
                             <tr>
                                 <th class="col-report-id">Report ID</th>
-                                <th class="col-equipment">Equipment</th>
-                                <th class="col-description">Issue Description</th>
+                                <th class="col-equipment">PC Station / Equipment</th>
+                                <th class="col-description">Issue Category / Description</th>
                                 <th class="col-dates">Date Submitted</th>
                                 <th class="col-status">Status</th>
+                                <th class="col-action">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${pageRecords.map((item) => `
-                                <tr>
-                                    <td class="col-report-id" data-label="Report ID">${escapeBorrowRequestText(item.id || '—')}</td>
-                                    <td class="col-equipment equipment-cell" data-label="Equipment">
-                                        <div class="equipment-name">${escapeBorrowRequestText(item.equipmentName || item.equipment_id || '—')}</div>
-                                        <div class="equipment-id">${escapeBorrowRequestText(item.equipmentId || item.equipment_id || '—')}</div>
-                                    </td>
-                                    <td class="col-description description-cell" data-label="Issue Description">${escapeBorrowRequestText(item.description || '—')}</td>
-                                    <td class="col-dates date-cell" data-label="Date Submitted">${escapeBorrowRequestText(formatDate(item.dateReported || item.date || item.created_at || item.createdAt))}</td>
-                                    <td class="col-status status-cell" data-label="Status"><span class="status-badge ${statusClasses[item.status] || 'bg-emerald-950/70 text-emerald-200'}">${escapeBorrowRequestText(item.status || 'Pending')}</span></td>
-                                </tr>
-                            `).join('')}
+                            ${pageRecords.map((item) => {
+                                const reportId = escapeBorrowRequestText(item.id || '—');
+                                const status = (item.status || 'Pending').toString().trim();
+                                const statusClass = getStatusClass(status);
+                                const equipmentName = item.equipmentName || item.equipment_id || item.equipmentId || '—';
+                                const equipmentId = item.equipmentId || item.equipment_id || '';
+                                const category = item.category || String(item.issueTitle || 'Equipment issue').split(':')[0].trim();
+                                const description = item.description || '—';
+                                const normalizedStatus = status.toLowerCase();
+                                const isStudentOwnerPage = currentPageRole === 'student';
+                                const canChangePendingReport = isStudentOwnerPage && normalizedStatus === 'pending' && !item.assignedTo;
+                                const canArchiveReport = isStudentOwnerPage && ['resolved', 'rejected', 'cancelled'].includes(normalizedStatus);
+                                const laboratoryName = String(item.laboratoryName || '').trim();
+                                let laboratoryRoom = String(item.laboratoryRoom || '').trim();
+                                const roomLabPrefix = laboratoryRoom.slice(0, laboratoryName.length);
+                                if (laboratoryName && roomLabPrefix.toLowerCase() === laboratoryName.toLowerCase() &&
+                                    (!laboratoryRoom[laboratoryName.length] || /[\s—–-]/.test(laboratoryRoom[laboratoryName.length]))) {
+                                    laboratoryRoom = laboratoryRoom.slice(laboratoryName.length).replace(/^[\s—–-]+/, '').trim();
+                                }
+                                const locationParts = [laboratoryName, laboratoryRoom, item.campus]
+                                    .map(value => String(value || '').trim())
+                                    .filter(Boolean);
+                                const seenLocationParts = new Set();
+                                const location = locationParts
+                                    .filter(value => {
+                                        const key = value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                                        if (seenLocationParts.has(key)) return false;
+                                        seenLocationParts.add(key);
+                                        return true;
+                                    })
+                                    .join(' · ') || 'Location not recorded';
+                                const extraDetails = [
+                                    ['Priority', item.priority || 'Medium'],
+                                    ['Reported location', location],
+                                    ['Assigned technician', item.technicianName || 'Not assigned'],
+                                    ['Technician update', item.technicianNotes || 'No technician update yet.'],
+                                    ['Resolved date', item.resolvedDate ? formatDate(item.resolvedDate) : 'Not resolved']
+                                ];
+                                const actionItems = [
+                                    ...(canChangePendingReport ? [
+                                        ['cancel', 'Cancel report', 'fa-ban', '']
+                                    ] : []),
+                                    ...(canArchiveReport ? [
+                                        ['archive', 'Archive report', 'fa-box-archive', '']
+                                    ] : []),
+                                    ...(canChangePendingReport ? [
+                                        ['delete', 'Delete report', 'fa-trash-can', 'is-danger']
+                                    ] : [])
+                                ];
+                                const actionMenu = actionItems.length ? `
+                                    <div class="report-menu-wrap">
+                                        <button type="button" class="report-menu-toggle" data-report-menu-toggle aria-label="More actions for report ${reportId}" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                                        </button>
+                                        <div class="report-actions-menu" data-report-actions-menu hidden>
+                                            ${actionItems.map(([action, label, icon, tone]) => `<button type="button" class="report-menu-item ${tone}" data-report-action="${action}" data-report-id="${reportId}"><i class="fas ${icon}" aria-hidden="true"></i><span>${label}</span></button>`).join('')}
+                                        </div>
+                                    </div>` : '';
+                                return `
+                                    <tr>
+                                        <td class="col-report-id" data-label="Report ID">${reportId}</td>
+                                        <td class="col-equipment equipment-cell" data-label="PC Station / Equipment">
+                                            <div class="equipment-name">${escapeBorrowRequestText(equipmentName)}</div>
+                                            ${equipmentId && equipmentId !== equipmentName ? `<div class="equipment-id">${escapeBorrowRequestText(equipmentId)}</div>` : ''}
+                                        </td>
+                                        <td class="col-description description-cell" data-label="Issue Category / Description">
+                                            <span class="report-category">${escapeBorrowRequestText(category)}</span>
+                                            <span class="report-description">${escapeBorrowRequestText(description)}</span>
+                                        </td>
+                                        <td class="col-dates date-cell" data-label="Date Submitted">${escapeBorrowRequestText(formatDate(item.dateReported || item.date || item.created_at || item.createdAt))}</td>
+                                        <td class="col-status status-cell" data-label="Status"><span class="status-badge ${statusClass}">${escapeBorrowRequestText(status)}</span></td>
+                                        <td class="col-action" data-label="Action">
+                                            <div class="report-row-actions">
+                                                <button type="button" class="report-details-button" data-report-details="${reportId}" aria-expanded="false"><i class="fas fa-eye" aria-hidden="true"></i>View Details</button>
+                                                ${actionMenu}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="report-details-row" data-report-details-row="${reportId}" hidden style="display: none !important;">
+                                        <td colspan="6">
+                                            <div class="report-details-content">
+                                                <div class="report-details-heading"><i class="fas fa-circle-info" aria-hidden="true"></i><strong>Report details</strong></div>
+                                                <dl class="report-details-grid">
+                                                    ${extraDetails.map(([label, value]) => `<div><dt>${escapeBorrowRequestText(label)}</dt><dd>${escapeBorrowRequestText(value)}</dd></div>`).join('')}
+                                                </dl>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -1201,7 +1384,7 @@
 
         const loadRequests = async () => {
             try {
-                const response = await fetch('/api/maintenance');
+                const response = await fetch('/api/maintenance?mine=true', { cache: 'no-store' });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -1217,6 +1400,153 @@
             }
         };
 
+        const closeReportActionMenus = (except = null) => {
+            requestsState.querySelectorAll('[data-report-menu-toggle]').forEach((toggle) => {
+                if (toggle === except) return;
+                toggle.setAttribute('aria-expanded', 'false');
+                const menu = reportActionMenus.get(toggle) || toggle.parentElement?.querySelector('[data-report-actions-menu]');
+                if (menu) {
+                    menu.hidden = true;
+                    menu.style.removeProperty('top');
+                    menu.style.removeProperty('left');
+                    menu.style.removeProperty('transform');
+                    const placeholder = reportActionMenuPlaceholders.get(menu);
+                    if (placeholder?.parentNode) {
+                        placeholder.parentNode.insertBefore(menu, placeholder);
+                        placeholder.remove();
+                    }
+                    reportActionMenus.delete(toggle);
+                    reportActionMenuPlaceholders.delete(menu);
+                }
+                toggle.closest('tr')?.classList.remove('report-menu-open');
+            });
+        };
+
+        const toggleReportDetails = (detailsButton) => {
+            const detailsRow = detailsButton.closest('tr')?.nextElementSibling;
+            if (!detailsRow || !detailsRow.classList.contains('report-details-row')) return;
+
+            const isExpanded = detailsButton.getAttribute('aria-expanded') === 'true';
+            const shouldExpand = !isExpanded;
+
+            detailsRow.classList.toggle('expanded', shouldExpand);
+            detailsButton.setAttribute('aria-expanded', String(shouldExpand));
+            detailsRow.hidden = !shouldExpand;
+            const detailsDisplay = shouldExpand
+                ? (window.matchMedia('(max-width: 767px)').matches ? 'block' : 'table-row')
+                : 'none';
+            detailsRow.style.setProperty('display', detailsDisplay, 'important');
+            detailsButton.innerHTML = shouldExpand
+                ? '<i class="fas fa-eye-slash" aria-hidden="true"></i>Hide Details'
+                : '<i class="fas fa-eye" aria-hidden="true"></i>View Details';
+        };
+
+        requestsState.addEventListener('click', async (event) => {
+            const detailsButton = event.target.closest('[data-report-details]');
+            if (detailsButton) {
+                toggleReportDetails(detailsButton);
+                return;
+            }
+
+            const menuToggle = event.target.closest('[data-report-menu-toggle]');
+            if (menuToggle) {
+                const menu = reportActionMenus.get(menuToggle) || menuToggle.parentElement?.querySelector('[data-report-actions-menu]');
+                if (!menu) return;
+                const shouldOpen = menu.hidden;
+                closeReportActionMenus(menuToggle);
+                if (!shouldOpen) {
+                    closeReportActionMenus();
+                    return;
+                }
+
+                menu.hidden = false;
+                menuToggle.setAttribute('aria-expanded', 'true');
+                menuToggle.closest('tr')?.classList.add('report-menu-open');
+                const placeholder = document.createComment('report-actions-menu');
+                menu.before(placeholder);
+                reportActionMenus.set(menuToggle, menu);
+                reportActionMenuPlaceholders.set(menu, placeholder);
+                document.body.appendChild(menu);
+
+                requestAnimationFrame(() => {
+                    if (menu.hidden || !menu.isConnected) return;
+                    const triggerRect = menuToggle.getBoundingClientRect();
+                    const menuRect = menu.getBoundingClientRect();
+                    const margin = 8;
+                    const gap = 6;
+                    const fitsBelow = triggerRect.bottom + gap + menuRect.height <= window.innerHeight - margin;
+                    menu.style.top = fitsBelow
+                        ? `${triggerRect.bottom + gap}px`
+                        : `${triggerRect.top - gap}px`;
+                    menu.style.left = `${Math.max(margin, Math.min(
+                        triggerRect.right - menuRect.width,
+                        window.innerWidth - menuRect.width - margin
+                    ))}px`;
+                    menu.style.transform = fitsBelow ? '' : 'translateY(-100%)';
+                });
+                return;
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('[data-report-actions-menu]')) return;
+            if (!event.target.closest('#requestsState .report-row-actions')) closeReportActionMenus();
+        });
+        document.addEventListener('click', async (event) => {
+            const actionButton = event.target.closest('[data-report-action]');
+            if (!actionButton) return;
+            event.preventDefault();
+
+            const action = actionButton.dataset.reportAction;
+            const reportId = actionButton.dataset.reportId;
+            const actionMessages = {
+                cancel: {
+                    confirm: 'Cancel this pending issue report? It will remain in My Reports with a Cancelled status.',
+                    method: 'POST',
+                    endpoint: `/api/maintenance/${encodeURIComponent(reportId)}/cancel`,
+                    success: 'Issue report cancelled.'
+                },
+                archive: {
+                    confirm: 'Archive this closed issue report? It will leave active report lists and can be restored by an administrator.',
+                    method: 'POST',
+                    endpoint: `/api/archive/maintenance-report/${encodeURIComponent(reportId)}`,
+                    success: 'Issue report archived.'
+                },
+                delete: {
+                    confirm: 'Permanently delete this unassigned pending issue report? This cannot be undone.',
+                    method: 'DELETE',
+                    endpoint: `/api/maintenance/${encodeURIComponent(reportId)}`,
+                    success: 'Issue report deleted.'
+                }
+            };
+            const config = actionMessages[action];
+            if (!config) return;
+            closeReportActionMenus();
+            if (!await window.appDialogs.confirm(config.confirm)) return;
+            actionButton.disabled = true;
+            try {
+                const response = await fetch(config.endpoint, { method: config.method, cache: 'no-store' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || `Unable to ${action} this report.`);
+                if (action === 'cancel') maintenanceStatusFilter.value = 'all';
+                await loadRequests();
+                await window.appDialogs.alert(payload.message || config.success);
+            } catch (error) {
+                await window.appDialogs.alert(error.message || `Unable to ${action} this report.`);
+            } finally {
+                actionButton.disabled = false;
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            const openToggle = requestsState.querySelector('[data-report-menu-toggle][aria-expanded="true"]');
+            if (!openToggle) return;
+            closeReportActionMenus();
+            openToggle.focus();
+        });
+        window.addEventListener('scroll', () => closeReportActionMenus(), { capture: true, passive: true });
+        window.addEventListener('resize', () => closeReportActionMenus());
+
         maintenanceSearch.addEventListener('input', () => {
             requestsStateData.currentPage = 1;
             renderRequests();
@@ -1227,6 +1557,9 @@
         });
 
         loadRequests();
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) loadRequests();
+        });
 
         const renderBorrowRequestsPagination = (totalRecords) => {
             const totalPages = Math.max(1, Math.ceil(totalRecords / borrowRequestsStateData.rowsPerPage));
@@ -1437,6 +1770,6 @@
         });
         if (isFacultyPage) loadBorrowRequests();
     </script>
-    <script src="/js/qr-scanner-button.js?v=3" defer></script>
+    <script src="/js/qr-scanner-button.js?v=9" defer></script>
 </body>
 </html>

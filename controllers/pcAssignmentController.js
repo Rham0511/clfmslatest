@@ -234,8 +234,8 @@ export const assignPC = async (req, res) => {
             // End the previous session first
             await sequelize.query(
                 `UPDATE equipment_usage_logs 
-                 SET usageEndTime = NOW(),
-                     durationMinutes = TIMESTAMPDIFF(MINUTE, usageStartTime, NOW())
+                 SET usageEndTime = UTC_TIMESTAMP(),
+                     durationMinutes = GREATEST(ROUND(TIMESTAMPDIFF(SECOND, usageStartTime, UTC_TIMESTAMP()) / 60), 1)
                  WHERE id = ?`,
                 {
                     replacements: [userActiveSession[0].id],
@@ -304,8 +304,8 @@ export const endPCSession = async (req, res) => {
 
         let query = `
             UPDATE equipment_usage_logs 
-            SET usageEndTime = NOW(),
-                durationMinutes = TIMESTAMPDIFF(MINUTE, usageStartTime, NOW())
+            SET usageEndTime = UTC_TIMESTAMP(),
+                durationMinutes = GREATEST(ROUND(TIMESTAMPDIFF(SECOND, usageStartTime, UTC_TIMESTAMP()) / 60), 1)
             WHERE userId = ? AND usageEndTime IS NULL
         `;
         const params = [userId];
@@ -361,7 +361,7 @@ export const getCurrentPCAssignment = async (req, res) => {
                e.name as equipmentName,
                 e.assetNumber,
                 e.laboratoryRoom,
-                TIMESTAMPDIFF(MINUTE, eul.usageStartTime, NOW()) as durationMinutes
+                GREATEST(ROUND(TIMESTAMPDIFF(SECOND, eul.usageStartTime, NOW()) / 60), 1) as durationMinutes
              FROM equipment_usage_logs eul
              JOIN equipment e ON eul.equipmentId = e.id
              WHERE eul.userId = ? AND eul.usageEndTime IS NULL

@@ -432,7 +432,15 @@ export const recordPCStationAttendance = async ({ student, station, transaction,
       existing.pcStationSetId = station.setId;
       await existing.save({ transaction });
     }
-    return { recorded: true, alreadyRecorded: true, status: existing.status, schedule, stationSetId: station.setId, autoLogoutAt };
+    return {
+      recorded: true,
+      alreadyRecorded: true,
+      status: existing.status,
+      schedule,
+      stationSetId: station.setId,
+      attendanceId: existing.id,
+      autoLogoutAt
+    };
   }
 
   const attendanceValues = {
@@ -447,19 +455,22 @@ export const recordPCStationAttendance = async ({ student, station, transaction,
     pcStationSetId: station.setId
   };
 
+  let attendanceId;
   if (existing) {
     Object.assign(existing, attendanceValues);
     await existing.save({ transaction });
+    attendanceId = existing.id;
   } else {
-    await Attendance.create({
+    const attendance = await Attendance.create({
       studentId,
       laboratoryScheduleId: schedule.id,
       date,
       ...attendanceValues
     }, { transaction });
+    attendanceId = attendance.id;
   }
 
-  return { recorded: true, status, schedule, stationSetId: station.setId, autoLogoutAt };
+  return { recorded: true, status, schedule, stationSetId: station.setId, attendanceId, autoLogoutAt };
 };
 
 const getAttendanceStatusForSession = async (session, now = new Date()) => {

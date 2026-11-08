@@ -414,7 +414,7 @@
           <div class="landing-copy">
             <p class="landing-eyebrow">Welcome to</p>
             <h1>Computer Laboratory Facilities Management System</h1>
-            <p class="landing-description">Efficiently manage laboratory schedules, attendance, equipment inventory, and maintenance requests in one centralized platform.</p>
+            <p class="landing-description">Manage laboratory logs, equipment reports, inventory, and borrow requests in one centralized platform.</p>
             <div class="landing-cta-row">
               <a href="/login" class="landing-cta">Get Started</a>
             </div>

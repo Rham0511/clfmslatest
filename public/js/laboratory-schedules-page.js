@@ -7,7 +7,6 @@
           let editingScheduleId = null;
           let instructorAccounts = [];
           let scheduleLayoutResizeTimer = null;
-
           function getStatusBadge(status) {
             const map = {
               Confirmed: 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/40',
@@ -408,8 +407,10 @@
 
           function getScheduleLabNumber(room) {
             const normalized = normalizeScheduleFilterValue(room);
-            if (normalized.includes('laboratory 2') || normalized.includes('lab 2') || normalized.includes('room 204')) return '2';
-            if (normalized.includes('laboratory 1') || normalized.includes('lab 1') || normalized.includes('room 202')) return '1';
+            const labMatch = normalized.match(/\b(?:com\s*lab|computer\s*lab|laboratory|lab)\s*([12])\b/);
+            if (labMatch) return labMatch[1];
+            if (normalized.includes('room 204')) return '2';
+            if (normalized.includes('room 202')) return '1';
             return '';
           }
 
@@ -725,21 +726,21 @@
 
             const selectedInstructorId = String(document.getElementById('scheduleFilterInstructor')?.value || '');
             const selectedInstructor = instructorAccounts.find((account) => account.id === selectedInstructorId) || null;
-            const selectedLab = document.querySelector('.schedule-lab-filter.is-active')?.dataset.labFilter || '';
+            const selectedLab = document.querySelector('.schedule-lab-filter.is-active')?.dataset.labFilter || '1';
             const filteredSchedules = scheduleData.filter((item) => {
               const instructor = String(item.instructor || '').trim().toLowerCase();
               const matchesInstructor = !selectedInstructor ||
                 (item.instructorUserId
                   ? String(item.instructorUserId) === selectedInstructor.accountId
                   : instructor === selectedInstructor.name.trim().toLowerCase());
-              const matchesLab = !selectedLab || getScheduleLabNumber(item.laboratoryRoom) === selectedLab;
+              const matchesLab = getScheduleLabNumber(item.laboratoryRoom) === selectedLab;
               return matchesInstructor && matchesLab;
             });
 
             if (count) {
               if (scheduleLoadState === 'loading') count.textContent = 'Loading schedules…';
               else if (scheduleLoadState === 'error') count.textContent = 'Schedules unavailable';
-              else count.textContent = filteredSchedules.length + ' of ' + scheduleData.length + ' schedules';
+              else count.textContent = filteredSchedules.length + ' COMLAB ' + selectedLab + ' schedules';
             }
 
             const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -801,6 +802,9 @@
               column.dataset.day = day;
               column.style.height = (slotCount * rowHeight) + 'px';
               column.style.setProperty('--schedule-row-height', rowHeight + 'px');
+              column.style.display = 'grid';
+              column.style.gridTemplateRows = 'repeat(' + slotCount + ', ' + rowHeight + 'px)';
+              column.style.gridTemplateColumns = 'minmax(0, 1fr)';
               column.style.gridColumn = String(dayIndex + 2);
               body.append(column);
             });
@@ -808,6 +812,7 @@
             if (!filteredSchedules.length) {
               const empty = document.createElement('div');
               empty.className = 'schedule-calendar-empty';
+              empty.style.gridColumn = '2 / -1';
               empty.style.gridRow = '1 / span 5';
               empty.setAttribute('role', 'status');
               empty.setAttribute('aria-live', 'polite');
@@ -834,9 +839,10 @@
               const column = body.querySelector('[data-day="' + days[dayIndex] + '"]');
               if (!column) return;
 
-              const event = document.createElement('button');
-              event.type = 'button';
-              event.className = 'schedule-event';
+              const event = document.createElement(item.isHardcoded ? 'div' : 'button');
+              if (item.isHardcoded) event.setAttribute('role', 'group');
+              else event.type = 'button';
+              event.className = 'schedule-event' + (item.isHardcoded ? ' schedule-event--hardcoded' : '');
               event.dataset.lab = getScheduleLabNumber(item.laboratoryRoom);
               event.dataset.scheduleId = String(item.id);
               event.dataset.scheduleStart = String(visibleStart);
@@ -846,21 +852,30 @@
               event.style.borderColor = event.style.color === '#ffffff'
                 ? 'rgba(255,255,255,.55)'
                 : 'rgba(7,20,14,.42)';
-              event.style.top = (((visibleStart - calendarStart) / slotMinutes) * rowHeight + 1) + 'px';
               const eventHeight = Math.max(1, ((visibleEnd - visibleStart) / slotMinutes) * rowHeight - 2);
-              event.style.height = eventHeight + 'px';
+              if (item.isHardcoded) {
+                const firstGridRow = Math.floor((visibleStart - calendarStart) / slotMinutes) + 1;
+                const lastGridRow = Math.ceil((visibleEnd - calendarStart) / slotMinutes) + 1;
+                event.style.gridRow = firstGridRow + ' / ' + lastGridRow;
+                event.style.gridColumn = '1 / -1';
+              } else {
+                event.style.top = (((visibleStart - calendarStart) / slotMinutes) * rowHeight + 1) + 'px';
+                event.style.height = eventHeight + 'px';
+              }
               event.title = [
                 item.subject || 'Laboratory session',
                 [item.yearLevel, item.section ? 'Section ' + item.section : ''].filter(Boolean).join(' · '),
                 item.instructor || 'No instructor',
                 formatScheduleTime(item.startTime) + ' to ' + formatScheduleTime(item.endTime),
+                item.roomNote || '',
                 item.laboratoryRoom || ''
               ].filter(Boolean).join(' · ');
               event.setAttribute('aria-label', [
                 item.subject || 'Laboratory session',
                 [item.yearLevel, item.section ? 'Section ' + item.section : ''].filter(Boolean).join(', '),
                 item.instructor || 'No instructor',
-                formatScheduleTime(item.startTime) + ' to ' + formatScheduleTime(item.endTime)
+                formatScheduleTime(item.startTime) + ' to ' + formatScheduleTime(item.endTime),
+                item.roomNote || ''
               ].filter(Boolean).join(', '));
 
               const time = document.createElement('span');
@@ -872,6 +887,9 @@
               const instructor = document.createElement('span');
               instructor.className = 'schedule-event-instructor';
               instructor.textContent = item.instructor || 'Instructor not assigned';
+              const roomNote = document.createElement('span');
+              roomNote.className = 'schedule-event-location';
+              roomNote.textContent = item.roomNote || '';
               const subject = document.createElement('span');
               subject.className = 'schedule-event-subject';
               subject.textContent = item.subject || '';
@@ -881,21 +899,25 @@
               if (eventHeight >= 72) {
                 const meta = document.createElement('span');
                 meta.className = 'schedule-event-meta';
-                meta.append(time, instructor);
+                meta.append(time);
+                if (roomNote.textContent) meta.append(roomNote);
+                else meta.append(instructor);
                 event.append(meta);
               }
-              event.addEventListener('click', () => window.openScheduleDetails(item.id));
-              event.addEventListener('contextmenu', (contextEvent) => {
-                contextEvent.preventDefault();
-                openScheduleContextMenu(item.id, contextEvent.clientX, contextEvent.clientY);
-              });
-              event.addEventListener('keydown', (keyboardEvent) => {
-                if (keyboardEvent.shiftKey && keyboardEvent.key === 'F10') {
-                  keyboardEvent.preventDefault();
-                  const bounds = event.getBoundingClientRect();
-                  openScheduleContextMenu(item.id, bounds.left, bounds.bottom);
-                }
-              });
+              if (!item.isHardcoded) {
+                event.addEventListener('click', () => window.openScheduleDetails(item.id));
+                event.addEventListener('contextmenu', (contextEvent) => {
+                  contextEvent.preventDefault();
+                  openScheduleContextMenu(item.id, contextEvent.clientX, contextEvent.clientY);
+                });
+                event.addEventListener('keydown', (keyboardEvent) => {
+                  if (keyboardEvent.shiftKey && keyboardEvent.key === 'F10') {
+                    keyboardEvent.preventDefault();
+                    const bounds = event.getBoundingClientRect();
+                    openScheduleContextMenu(item.id, bounds.left, bounds.bottom);
+                  }
+                });
+              }
               column.append(event);
             });
 
@@ -912,6 +934,7 @@
                 .sort((a, b) => a.start - b.start || a.end - b.end);
               let cluster = [];
               let clusterEnd = -1;
+              let maxLaneCount = 1;
               const positionCluster = () => {
                 if (!cluster.length) return;
                 const laneEnds = [];
@@ -922,11 +945,9 @@
                   entry.lane = lane;
                 });
                 const laneCount = laneEnds.length;
-                const inset = 3;
+                maxLaneCount = Math.max(maxLaneCount, laneCount);
                 cluster.forEach((entry) => {
-                  const laneWidth = (100 - inset * 2) / laneCount;
-                  entry.element.style.left = 'calc(' + (inset + entry.lane * laneWidth) + '% + 1px)';
-                  entry.element.style.width = 'calc(' + laneWidth + '% - 2px)';
+                  entry.laneCount = laneCount;
                 });
                 cluster = [];
                 clusterEnd = -1;
@@ -937,6 +958,13 @@
                 clusterEnd = Math.max(clusterEnd, entry.end);
               });
               positionCluster();
+              column.style.gridTemplateColumns = 'repeat(' + maxLaneCount + ', minmax(0, 1fr))';
+              dayEvents.forEach((entry) => {
+                if (entry.element.classList.contains('schedule-event--hardcoded')) return;
+                const laneWidth = (100 - 6) / entry.laneCount;
+                entry.element.style.left = 'calc(' + (3 + entry.lane * laneWidth) + '% + 1px)';
+                entry.element.style.width = 'calc(' + laneWidth + '% - 2px)';
+              });
             });
 
             calendar.append(body);

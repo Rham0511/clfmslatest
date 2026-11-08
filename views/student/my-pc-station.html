@@ -6,7 +6,7 @@
     <title>My PC Station | ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         :root {
             --accent: #22C55E;
@@ -569,13 +569,24 @@
         }
 
         body.student-portal.pc-station-page .usage-history-table td {
-            grid-template-columns: 3.1rem minmax(0, 1fr);
+            grid-template-columns: max-content minmax(0, 1fr);
             gap: 0.22rem;
             padding: 0.2rem 0.08rem !important;
             border: 0 !important;
             background: transparent !important;
             font-size: 0.66rem !important;
             line-height: 1.25;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table td:first-child .usage-history-value {
+            overflow: visible;
+            white-space: nowrap;
+        }
+
+        body.student-portal.pc-station-page .usage-history-table td:first-child .usage-history-primary {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
         }
 
         body.student-portal.pc-station-page .usage-history-table td:nth-child(2) {
@@ -602,7 +613,7 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=9">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=11">
 </head>
 <body class="app-shell student-portal system-layout-page pc-station-page">
     <div id="shared-sidebar"></div>
@@ -632,7 +643,6 @@
                         <span class="pc-scan-icon" aria-hidden="true"><i class="fas fa-desktop"></i></span>
                         <div>
                             <h2 id="pcScanInfoTitle">My PC Station</h2>
-                            <p>Active QR sign-ins appear here. Scan the station QR again or sign out below when you finish.</p>
                         </div>
                     </div>
                     <a class="pc-logs-link" href="/student-audit-history">
@@ -691,7 +701,7 @@
                     container.innerHTML = `
                         <div class="pc-session-empty">
                             <i class="fas fa-qrcode" aria-hidden="true"></i>
-                            <span>Not signed in at a PC station. Scan the QR code at your workstation to start a session.</span>
+                            <span>Scan a PC station QR code to log in. Scan it again or use the button here to end your session.</span>
                         </div>`;
                     return;
                 }
@@ -743,7 +753,7 @@
                 if (!response.ok) throw new Error(payload.error || 'Unable to log out from this PC station.');
 
                 feedback.textContent = payload.message || 'You have been signed out from this PC station.';
-                await loadMyPCStationSessions();
+                await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
             } catch (error) {
                 feedback.textContent = error.message || 'Unable to log out from this PC station.';
                 button.disabled = false;
@@ -799,6 +809,16 @@
             return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
         }
 
+        function formatHistoryDuration(minutes) {
+            if (minutes == null) return null;
+            const totalMinutes = Number(minutes);
+            if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return null;
+            const hours = Math.floor(totalMinutes / 60);
+            const remainingMinutes = Math.round(totalMinutes % 60);
+            if (!hours) return `${remainingMinutes} min`;
+            return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
+        }
+
         async function loadUsageHistory() {
             const container = document.getElementById('historyContainer');
             
@@ -822,16 +842,16 @@
                     container.innerHTML = `
                         <div class="usage-history-scroll overflow-x-auto" tabindex="0" aria-label="Scrollable PC usage history">
                             <table class="usage-history-table">
-                                <thead><tr><th>PC Set</th><th>Class / Subject</th><th>Instructor</th><th>Laboratory</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead>
+                                <thead><tr><th>Station</th><th>Class / Subject</th><th>Instructor</th><th>Laboratory</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead>
                                 <tbody>${history.map(item => `
                                     <tr>
-                                        <td><span class="usage-history-cell-label">PC Set</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.pcSetId || 'Set not assigned')}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Station</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.stationName || (item.pcSetId ? `PC Station ${item.pcSetId.replace(/^PC-SET-/i, '')}` : 'PC Station'))}</span></span></td>
                                         <td><span class="usage-history-cell-label">Class / Subject</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryCourseSection(item.courseSection) || (item.attendanceId ? 'Class session' : 'Unscheduled session'))}</span><small>${escapeHistoryText(item.subject || (item.attendanceId ? item.traceStatus || 'Class details unavailable' : 'No class schedule — session recorded'))}</small></span></td>
                                         <td><span class="usage-history-cell-label">Instructor</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.instructor || '—')}</span></span></td>
-                                        <td><span class="usage-history-cell-label">Laboratory</span><button class="usage-history-value usage-history-expandable" type="button" aria-expanded="false" title="Tap to show full laboratory name" onclick="toggleHistoryLab(this)"><span class="usage-history-primary">${escapeHistoryText(item.laboratoryRoom || '—')}</span></button></td>
+                                        <td><span class="usage-history-cell-label">Laboratory</span><button class="usage-history-value usage-history-expandable" type="button" aria-expanded="false" title="Tap to show full laboratory and room" onclick="toggleHistoryLab(this)"><span class="usage-history-primary">${escapeHistoryText(item.laboratoryRoom || '—')}</span></button></td>
                                         <td><span class="usage-history-cell-label">Started</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryDateTime(item.usageStartTime))}</span></span></td>
                                         <td><span class="usage-history-cell-label">Ended</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.usageEndTime ? formatHistoryDateTime(item.usageEndTime) : 'Active')}</span></span></td>
-                                        <td><span class="usage-history-cell-label">Duration</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.durationMinutes == null ? 'Active' : `${item.durationMinutes} min`)}</span></span></td>
+                                        <td><span class="usage-history-cell-label">Duration</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryDuration(item.durationMinutes) ?? (item.usageEndTime ? 'Unavailable' : 'Active'))}</span></span></td>
                                     </tr>
                                 `).join('')}</tbody>
                             </table>
@@ -863,12 +883,17 @@
             await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
             window.clearTimeout(loadingFallback);
 
-            window.setInterval(() => {
-                if (document.visibilityState === 'visible') loadMyPCStationSessions();
-            }, 15000);
+            const refreshPCStationData = () => {
+                if (document.visibilityState === 'visible') {
+                    Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
+                }
+            };
+            window.setInterval(refreshPCStationData, 15000);
+            window.addEventListener('focus', refreshPCStationData);
+            document.addEventListener('visibilitychange', refreshPCStationData);
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=75" defer></script>
 </body>
 </html>

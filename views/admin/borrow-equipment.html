@@ -6,7 +6,7 @@
   <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css?v=70" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=75" />
   <style>
     :root {
       color-scheme: dark;
@@ -910,8 +910,8 @@
 
     .record-details-modal {
       width: min(1080px, 100%) !important;
-      max-height: min(88vh, 900px) !important;
-      max-height: min(88dvh, 900px) !important;
+      max-height: min(86vh, 820px) !important;
+      max-height: min(86dvh, 820px) !important;
     }
 
     .record-details-modal .modal-header {
@@ -928,8 +928,8 @@
     }
 
     .record-details-modal #closeDetailsModalBtn {
-      width: 2.65rem;
-      height: 2.65rem;
+      width: 2.2rem;
+      height: 2.2rem;
       display: grid;
       place-items: center;
       border: 1px solid rgba(110,231,183,.18);
@@ -951,35 +951,36 @@
     }
 
     .record-details-modal .modal-header {
-      padding: 1.4rem 1.6rem 1.1rem !important;
+      padding: 0.85rem 1.1rem !important;
     }
 
     .record-details-modal .modal-header > div:first-child > p {
-      margin-bottom: 0.35rem;
-      font-size: 1rem;
+      margin-bottom: 0.2rem;
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .record-details-modal #detailsModalTitle {
-      font-size: 2rem;
+      font-size: clamp(1.25rem, 2vw, 1.55rem);
       font-weight: 800;
-      line-height: 1.15;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
     }
 
     .record-details-modal .modal-body {
-      padding: 1.25rem 1.6rem 1.6rem !important;
+      padding: 0.85rem 1.1rem 1rem !important;
     }
 
     .record-details-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.25rem !important;
+      gap: 0.65rem !important;
     }
 
     .record-details-grid > .glass-card {
       min-width: 0;
-      padding: 1.35rem;
+      padding: 0.75rem;
       border-color: rgba(110,231,183,.17);
       background: linear-gradient(145deg, rgba(18,48,34,.72), rgba(8,28,19,.78));
       box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
@@ -990,39 +991,39 @@
     }
 
     .record-details-grid .card-title {
-      margin-bottom: 1rem;
+      margin-bottom: 0.55rem;
       color: #d1fae5;
-      font-size: 1.2rem;
+      font-size: 0.95rem;
       font-weight: 800;
-      letter-spacing: 0.045em;
+      letter-spacing: 0.035em;
       text-transform: uppercase;
     }
 
     .record-details-grid .card-grid {
-      gap: 1.1rem 1.25rem;
+      gap: 0.5rem;
     }
 
     .record-details-grid .card-item {
       min-width: 0;
-      padding: 0.8rem;
+      padding: 0.55rem;
       border-radius: 0.75rem;
       border: 1px solid rgba(110,231,183,.07);
       background: rgba(255, 255, 255, 0.035);
     }
 
     .record-details-grid .card-label {
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.18rem;
       color: #b7d8c8;
-      font-size: 1rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     .record-details-grid .card-value {
       color: #ffffff;
-      font-size: 1.2rem;
+      font-size: 0.98rem;
       font-weight: 750;
-      line-height: 1.4;
+      line-height: 1.32;
       overflow-wrap: anywhere;
     }
 
@@ -1032,8 +1033,8 @@
     }
 
     .record-details-modal .status-large {
-      padding: 0.6rem 1rem;
-      font-size: 1rem;
+      padding: 0.42rem 0.72rem;
+      font-size: 0.8rem;
     }
 
     #mainContainer.theme-light .record-details-grid > .glass-card {
@@ -1077,23 +1078,23 @@
         border-radius: 1.1rem;
       }
       .record-details-modal .modal-header {
-        padding: 1.1rem !important;
+        padding: 0.75rem !important;
       }
       .record-details-modal .modal-body {
-        padding: 1rem !important;
+        padding: 0.75rem !important;
       }
       .record-details-grid {
         grid-template-columns: 1fr;
-        gap: 1rem !important;
+        gap: 0.6rem !important;
       }
       .record-details-grid > .glass-card:last-child {
         grid-column: auto;
       }
       .record-details-grid > .glass-card {
-        padding: 1rem;
+        padding: 0.65rem;
       }
       .record-details-modal #detailsModalTitle {
-        font-size: 1.7rem;
+        font-size: 1.3rem;
       }
     }
 
@@ -1255,7 +1256,7 @@
       color: #526b5b;
     }
   </style>
-  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=6">
+  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=12">
   <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell system-layout-page admin-borrow-equipment-page">
@@ -1285,7 +1286,7 @@
     <div class="page-card">
       <div class="page-panel">
         <div class="summary-grid">
-          <button class="summary-card" type="button" data-summary-filter="all" aria-pressed="false" aria-label="Show all borrow records">
+          <button class="summary-card" type="button" data-summary-filter="all" aria-pressed="true" aria-label="Show all borrow records">
             <div class="summary-icon"><i class="fas fa-file-alt"></i></div>
             <div class="label">Total Borrow Records</div>
             <div class="value" id="summaryTotalRecords">0</div>
@@ -1343,11 +1344,12 @@
           </div>
         </div>
         <div class="tab-switcher" role="tablist" aria-label="Borrow record views">
-          <button id="tabCurrent" class="action-btn primary" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="true">Current Borrow Records</button>
+          <button id="tabAll" class="action-btn primary" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="true">All Records</button>
+          <button id="tabCurrent" class="action-btn" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="false">Current Borrow Records</button>
           <button id="tabHistory" class="action-btn" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="false">Borrow History</button>
           <button id="tabAudit" class="action-btn" type="button" role="tab" aria-controls="borrowRecordsTablePanel" aria-selected="false">Borrow Audit</button>
         </div>
-        <div id="borrowRecordsTablePanel" class="table-wrap" role="tabpanel" aria-labelledby="tabCurrent" tabindex="0">
+        <div id="borrowRecordsTablePanel" class="table-wrap" role="tabpanel" aria-labelledby="tabAll" tabindex="0">
           <table>
             <thead id="borrowRecordsTableHead">
               <tr>
@@ -1547,11 +1549,11 @@
   <div class="modal-overlay" id="detailsModalOverlay" aria-hidden="true">
     <div class="modal-card record-details-modal" role="dialog" aria-modal="true" aria-labelledby="detailsModalTitle" style="width:min(1080px,98%)">
       <div class="modal-header" style="align-items:flex-start;gap:1rem;padding:1rem 1.1rem;border-bottom:none;">
-        <div style="flex:1">
+        <div style="min-width:0;flex:1">
           <p class="text-sm text-emerald-300">Borrow Details</p>
           <h3 class="font-semibold text-white" id="detailsModalTitle">Record Details</h3>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+        <div style="display:flex;flex-direction:row;align-items:center;gap:0.5rem;flex:0 0 auto">
           <div id="detailStatusBadge" class="status-large status-borrowed">Borrowed</div>
           <button class="action-btn" id="closeDetailsModalBtn" type="button"><i class="fas fa-times"></i></button>
         </div>
@@ -1592,10 +1594,71 @@
     </div>
   </div>
 
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  <div class="modal-overlay" id="auditDetailsModalOverlay" aria-hidden="true">
+    <div class="modal-card record-details-modal audit-details-modal" role="dialog" aria-modal="true" aria-labelledby="auditDetailsTitle" style="width:min(1080px,98%)">
+      <div class="modal-header">
+        <div style="min-width:0;flex:1">
+          <p class="text-sm text-emerald-300">Borrow Audit Event</p>
+          <h3 class="font-semibold text-white" id="auditDetailsTitle">Audit event details</h3>
+        </div>
+        <div style="display:flex;align-items:center;gap:.65rem;flex:0 0 auto">
+          <div id="auditDetailsStatus" class="status-large status-returned">Returned</div>
+          <button class="action-btn" id="closeAuditDetailsBtn" type="button" aria-label="Close audit details"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="record-details-grid audit-details-grid" style="display:grid">
+          <section class="glass-card">
+            <div class="card-title"><i class="fas fa-clock"></i> Event</div>
+            <div class="card-grid">
+              <div class="card-item"><div class="card-label">Event time</div><div class="card-value" data-audit-detail="eventTime">—</div></div>
+              <div class="card-item"><div class="card-label">Event</div><div class="card-value" data-audit-detail="eventName">—</div></div>
+              <div class="card-item"><div class="card-label">Processed by</div><div class="card-value" data-audit-detail="processedBy">—</div></div>
+              <div class="card-item"><div class="card-label">Borrow record</div><div class="card-value" data-audit-detail="borrowRecordId">—</div></div>
+            </div>
+          </section>
+          <section class="glass-card">
+            <div class="card-title"><i class="fas fa-tools"></i> Equipment</div>
+            <div class="card-grid">
+              <div class="card-item"><div class="card-label">Equipment</div><div class="card-value" data-audit-detail="equipmentName">—</div></div>
+              <div class="card-item"><div class="card-label">Equipment ID</div><div class="card-value" data-audit-detail="equipmentId">—</div></div>
+              <div class="card-item"><div class="card-label">Serial number</div><div class="card-value" data-audit-detail="serialNumber">—</div></div>
+              <div class="card-item"><div class="card-label">Campus</div><div class="card-value" data-audit-detail="campus">—</div></div>
+            </div>
+          </section>
+          <section class="glass-card">
+            <div class="card-title"><i class="fas fa-user"></i> Borrower</div>
+            <div class="card-grid">
+              <div class="card-item"><div class="card-label">Name</div><div class="card-value" data-audit-detail="borrowerName">—</div></div>
+              <div class="card-item full"><div class="card-label">Department / College</div><div class="card-value" data-audit-detail="department">—</div></div>
+            </div>
+          </section>
+          <section class="glass-card">
+            <div class="card-title"><i class="fas fa-people-arrows-left-right"></i> Custody</div>
+            <div class="card-grid">
+              <div class="card-item full"><div class="card-label">Current holder(s)</div><div class="card-value" data-audit-detail="currentHolders">—</div></div>
+              <div class="card-item"><div class="card-label">Last borrower</div><div class="card-value" data-audit-detail="lastBorrower">—</div></div>
+              <div class="card-item"><div class="card-label">Last release time</div><div class="card-value" data-audit-detail="lastReleasedAt">—</div></div>
+            </div>
+          </section>
+          <section class="glass-card">
+            <div class="card-title"><i class="fas fa-note-sticky"></i> Notes</div>
+            <div class="card-grid">
+              <div class="card-item"><div class="card-label">Condition</div><div class="card-value" data-audit-detail="condition">—</div></div>
+              <div class="card-item"><div class="card-label">Purpose</div><div class="card-value" data-audit-detail="purpose">—</div></div>
+              <div class="card-item full"><div class="card-label">Remarks</div><div class="card-value" data-audit-detail="remarks">—</div></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/sidebar-component.js?v=77" defer></script>
   <script>
     const borrowModal = document.getElementById('borrowModalOverlay');
     const returnModal = document.getElementById('returnModalOverlay');
+    const auditDetailsModal = document.getElementById('auditDetailsModalOverlay');
     const recordsBody = document.getElementById('borrowRecordsTableBody');
     const inventorySummaryText = document.getElementById('inventorySummaryText');
     const equipmentTypeInput = document.getElementById('equipmentTypeInput');
@@ -1617,10 +1680,10 @@
       records: [],
       audit: [],
       activeRecordId: null,
-      activeTab: 'current',
+      activeTab: 'all',
       filters: { search: '', status: 'all', type: 'all', date: '' },
       currentPage: 1,
-      summaryFilter: null
+      summaryFilter: 'all'
     };
 
     let latestBorrowLoadToken = 0;
@@ -1736,7 +1799,7 @@
       } catch (error) {
         console.error('Unable to load borrow audit.', error);
         if (state.activeTab === 'audit') {
-          recordsBody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${escapeHtml(error.message || 'Unable to load borrow audit.')}</div></td></tr>`;
+          recordsBody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${escapeHtml(error.message || 'Unable to load borrow audit.')}</div></td></tr>`;
           renderPagination(0);
         }
       }
@@ -1931,8 +1994,15 @@
           event.borrowerName,
           event.equipmentName,
           event.equipmentId,
+          event.serialNumber,
+          event.eventType,
+          event.status,
+          event.borrowerCollege,
+          event.departmentInfo,
           event.processedBy,
+          event.condition,
           event.remarks,
+          event.purpose,
           ...(event.currentHolders || []).map((holder) => holder.name),
           event.lastBorrower?.name
         ].join(' ').toLowerCase();
@@ -1948,25 +2018,26 @@
       const pageRecords = filtered.slice(startIndex, startIndex + pageSize);
       document.getElementById('borrowRecordsTableHead').innerHTML = `<tr>
         <th>Event Time</th><th>Equipment</th><th>Borrower</th><th>Event</th>
-        <th>Current Holder</th><th>Last Borrower</th><th>Processed By</th><th>Details</th>
+        <th>Processed By</th><th>Details</th>
       </tr>`;
       if (!filtered.length) {
-        recordsBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-clipboard-check" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No audit events match these filters.</div></div></td></tr>';
+        recordsBody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-clipboard-check" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No audit events match these filters.</div></div></td></tr>';
         renderPagination(0);
         return;
       }
       recordsBody.innerHTML = pageRecords.map((event) => {
-        const holders = (event.currentHolders || []).map((holder) => `${holder.name} (${holder.quantity})`).join(', ') || 'Not currently borrowed';
         const eventLabel = String(event.eventType || 'event').replaceAll('_', ' ');
+        const occurredAt = event.occurredAt ? new Date(event.occurredAt) : null;
+        const hasValidDate = occurredAt && !Number.isNaN(occurredAt.getTime());
+        const eventDate = hasValidDate ? occurredAt.toLocaleDateString() : '—';
+        const eventTime = hasValidDate ? occurredAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
         return `<tr>
-          <td>${escapeHtml(event.occurredAt ? new Date(event.occurredAt).toLocaleString() : '—')}</td>
-          <td>${escapeHtml(event.equipmentName || '—')}<div class="text-xs text-slate-400">${escapeHtml(event.equipmentId || '—')}${event.serialNumber ? ` · SN ${escapeHtml(event.serialNumber)}` : ''}</div></td>
-          <td>${escapeHtml(event.borrowerName || '—')}<div class="text-xs text-slate-400">${Number(event.quantity || 1)} unit(s)</div></td>
+          <td><time datetime="${escapeHtml(event.occurredAt || '')}"><span>${escapeHtml(eventDate)}</span>${eventTime ? `<span class="audit-time">${escapeHtml(eventTime)}</span>` : ''}</time></td>
+          <td><strong>${escapeHtml(event.equipmentName || '—')}</strong><div class="audit-secondary">${escapeHtml(event.equipmentId || 'No equipment ID')}</div></td>
+          <td><strong>${escapeHtml(event.borrowerName || '—')}</strong></td>
           <td><span class="status-badge ${getStatusBadgeClass({ status: event.eventType })}">${escapeHtml(eventLabel)}</span></td>
-          <td>${escapeHtml(holders)}</td>
-          <td>${escapeHtml(event.lastBorrower?.name || '—')}${event.lastBorrower?.releasedAt ? `<div class="text-xs text-slate-400">${escapeHtml(new Date(event.lastBorrower.releasedAt).toLocaleString())}</div>` : ''}</td>
           <td>${escapeHtml(event.processedBy || '—')}</td>
-          <td>${escapeHtml([event.condition, event.remarks].filter(Boolean).join(' · ') || event.purpose || '—')}</td>
+          <td><button class="audit-view-btn" type="button" data-audit-view-id="${escapeHtml(event.id)}" aria-label="View details for ${escapeHtml(event.equipmentName || 'audit event')}" title="View full audit details"><i class="fas fa-eye" aria-hidden="true"></i><span>View</span></button></td>
         </tr>`;
       }).join('');
       renderPagination(totalPages);
@@ -1988,6 +2059,7 @@
       if (state.summaryFilter === 'overdue') {
         return filtered.filter(record => getDisplayStatus(record) === 'Overdue');
       }
+      if (state.activeTab === 'all') return filtered;
       if (state.activeTab === 'current') {
         return filtered.filter(r => {
           const status = String(r.status || '').trim();
@@ -2039,8 +2111,10 @@
       if (!viewRecords.length) {
         if (state.activeTab === 'current') {
           recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-inbox" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No active borrow records.</div></div></td></tr>';
-        } else {
+        } else if (state.activeTab === 'history') {
           recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-archive" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No history records found.</div></div></td></tr>';
+        } else {
+          recordsBody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-filter" style="font-size:1.8rem;margin-bottom:0.4rem;color:var(--muted)"></i><div>No borrow records match these filters.</div></div></td></tr>';
         }
         renderPagination(0);
         return;
@@ -2071,10 +2145,10 @@
             <td><span class="status-badge ${statusClass}">${statusLabel}</span>${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeHtml(record.returnRequestedBy)}` : ''}</div>` : ''}</td>
             <td>${isBorrowed ? `<div>${escapeHtml(record.borrowerName || '—')}</div>${record.currentAccountableFacultyName ? `<div class="mt-1 text-xs text-emerald-200">Accountable: ${escapeHtml(record.currentAccountableFacultyName)}</div>` : ''}` : '—'}</td>
             <td>
-              <button class="action-btn" data-view-id="${record.id}"><i class="fas fa-eye"></i></button>
-              ${isPending ? `<button class="action-btn primary" data-approve-id="${record.id}"><i class="fas fa-check"></i></button><button class="action-btn" data-reject-id="${record.id}"><i class="fas fa-xmark"></i></button>` : ''}
-              ${isApproved ? `<button class="action-btn primary" title="Release equipment to borrower" data-release-id="${record.id}"><i class="fas fa-hand-holding"></i> Release</button>` : ''}
-              ${canReturn ? `<button class="action-btn primary" title="${record.returnRequestedAt ? 'Confirm borrower return' : 'Record equipment return'}" data-return-id="${record.id}"><i class="fas fa-undo-alt"></i>${record.returnRequestedAt ? ' Confirm Return' : ' Return'}</button>` : ''}
+              <button class="action-btn" type="button" data-view-id="${record.id}" aria-label="View borrow record" title="View details"><i class="fas fa-eye" aria-hidden="true"></i></button>
+              ${isPending ? `<button class="action-btn primary" type="button" data-approve-id="${record.id}" aria-label="Approve borrow request" title="Approve"><i class="fas fa-check" aria-hidden="true"></i></button><button class="action-btn" type="button" data-reject-id="${record.id}" aria-label="Reject borrow request" title="Reject"><i class="fas fa-xmark" aria-hidden="true"></i></button>` : ''}
+              ${isApproved ? `<button class="action-btn primary" type="button" title="Release equipment to borrower" data-release-id="${record.id}"><i class="fas fa-hand-holding" aria-hidden="true"></i> Release</button>` : ''}
+              ${canReturn ? `<button class="action-btn primary" type="button" title="${record.returnRequestedAt ? 'Confirm borrower return' : 'Record equipment return'}" data-return-id="${record.id}"><i class="fas fa-undo-alt" aria-hidden="true"></i>${record.returnRequestedAt ? ' Confirm Return' : ' Return'}</button>` : ''}
             </td>
           </tr>`;
       }).join('');
@@ -2300,11 +2374,16 @@
 
     // Click handlers for table actions
     recordsBody.addEventListener('click', (event) => {
+      const auditViewButton = event.target.closest('[data-audit-view-id]');
       const viewButton = event.target.closest('[data-view-id]');
       const returnButton = event.target.closest('[data-return-id]');
       const approveButton = event.target.closest('[data-approve-id]');
       const rejectButton = event.target.closest('[data-reject-id]');
       const releaseButton = event.target.closest('[data-release-id]');
+      if (auditViewButton) {
+        openAuditDetailsModal(auditViewButton.dataset.auditViewId);
+        return;
+      }
       if (viewButton) {
         openDetailsModal(viewButton.dataset.viewId);
       }
@@ -2349,9 +2428,9 @@
     }
 
     function setActiveTab(tab) {
-      state.activeTab = tab;
-      const selectedTab = tab === 'history' ? 'history' : tab === 'audit' ? 'audit' : 'current';
-      const tabIds = { current: 'tabCurrent', history: 'tabHistory', audit: 'tabAudit' };
+      const tabIds = { all: 'tabAll', current: 'tabCurrent', history: 'tabHistory', audit: 'tabAudit' };
+      const selectedTab = Object.prototype.hasOwnProperty.call(tabIds, tab) ? tab : 'current';
+      state.activeTab = selectedTab;
       Object.entries(tabIds).forEach(([key, id]) => {
         const button = document.getElementById(id);
         const isSelected = key === selectedTab;
@@ -2380,6 +2459,12 @@
     });
 
     // Tabs
+    document.getElementById('tabAll').addEventListener('click', () => {
+      clearSummarySelection();
+      setActiveTab('all');
+      state.currentPage = 1;
+      renderRecords();
+    });
     document.getElementById('tabCurrent').addEventListener('click', () => {
       clearSummarySelection();
       setActiveTab('current');
@@ -2430,6 +2515,8 @@
       statusBadge.textContent = statusLabel;
       statusBadge.className = `status-large ${statusClass}`;
 
+      const detailsModalBody = detailsModal.querySelector('.modal-body');
+      if (detailsModalBody) detailsModalBody.scrollTop = 0;
       detailsModal.classList.add('show');
       detailsModal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('borrow-details-open');
@@ -2444,10 +2531,79 @@
       detailsModalTrigger?.focus?.();
       detailsModalTrigger = null;
     }
+
+    let auditDetailsTrigger = null;
+    function formatAuditDateTime(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
+    function openAuditDetailsModal(eventId) {
+      const auditEvent = state.audit.find((item) => String(item.id) === String(eventId));
+      if (!auditEvent) return;
+
+      auditDetailsTrigger = document.activeElement;
+      const eventName = String(auditEvent.eventType || auditEvent.status || 'event').replaceAll('_', ' ');
+      const currentHolders = (auditEvent.currentHolders || []).map((holder) => {
+        return holder.name || 'Unknown borrower';
+      }).join(', ') || 'Not currently borrowed';
+      const detailValues = {
+        eventTime: formatAuditDateTime(auditEvent.occurredAt),
+        eventName,
+        processedBy: auditEvent.processedBy || '—',
+        borrowRecordId: auditEvent.borrowRecordId || '—',
+        equipmentName: auditEvent.equipmentName || '—',
+        equipmentId: auditEvent.equipmentId || '—',
+        serialNumber: auditEvent.serialNumber || '—',
+        campus: auditEvent.campus || '—',
+        borrowerName: auditEvent.borrowerName || '—',
+        department: auditEvent.departmentInfo || auditEvent.borrowerCollege || '—',
+        currentHolders,
+        lastBorrower: auditEvent.lastBorrower?.name || '—',
+        lastReleasedAt: formatAuditDateTime(auditEvent.lastBorrower?.releasedAt),
+        condition: auditEvent.condition || '—',
+        purpose: auditEvent.purpose || '—',
+        remarks: auditEvent.remarks || '—'
+      };
+
+      document.getElementById('auditDetailsTitle').textContent = auditEvent.equipmentName || `Audit record ${auditEvent.id}`;
+      const statusBadge = document.getElementById('auditDetailsStatus');
+      statusBadge.textContent = eventName;
+      statusBadge.className = `status-large ${getStatusBadgeClass({ status: auditEvent.eventType || auditEvent.status })}`;
+      auditDetailsModal.querySelectorAll('[data-audit-detail]').forEach((element) => {
+        const key = element.dataset.auditDetail;
+        element.textContent = detailValues[key] ?? '—';
+      });
+
+      const auditModalBody = auditDetailsModal.querySelector('.modal-body');
+      if (auditModalBody) auditModalBody.scrollTop = 0;
+      auditDetailsModal.classList.add('show');
+      auditDetailsModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('borrow-details-open');
+      document.getElementById('closeAuditDetailsBtn')?.focus();
+    }
+
+    function closeAuditDetailsModal() {
+      auditDetailsModal.classList.remove('show');
+      auditDetailsModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('borrow-details-open');
+      if (auditDetailsTrigger?.isConnected) auditDetailsTrigger.focus();
+      else document.getElementById('borrowRecordsTablePanel')?.focus();
+      auditDetailsTrigger = null;
+    }
+
     document.getElementById('closeDetailsModalBtn').addEventListener('click', closeDetailsModal);
     detailsModal.addEventListener('click', (e) => { if (e.target === detailsModal) closeDetailsModal(); });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && detailsModal.classList.contains('show')) closeDetailsModal();
+    });
+    document.getElementById('closeAuditDetailsBtn').addEventListener('click', closeAuditDetailsModal);
+    auditDetailsModal.addEventListener('click', (event) => {
+      if (event.target === auditDetailsModal) closeAuditDetailsModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && auditDetailsModal.classList.contains('show')) closeAuditDetailsModal();
     });
 
     equipmentTypeInput.addEventListener('input', () => {
@@ -2462,21 +2618,25 @@
       populateAvailableEquipment();
     });
     searchInput.addEventListener('input', (event) => {
+      clearSummarySelection();
       state.filters.search = event.target.value;
       state.currentPage = 1;
       renderRecords();
     });
     statusFilter.addEventListener('change', (event) => {
+      clearSummarySelection();
       state.filters.status = event.target.value;
       state.currentPage = 1;
       renderRecords();
     });
     typeFilter.addEventListener('change', (event) => {
+      clearSummarySelection();
       state.filters.type = event.target.value;
       state.currentPage = 1;
       renderRecords();
     });
     dateFilter.addEventListener('change', (event) => {
+      clearSummarySelection();
       state.filters.date = event.target.value;
       state.currentPage = 1;
       renderRecords();
@@ -2507,10 +2667,7 @@
       document.getElementById('borrowDate').value = new Date().toISOString().split('T')[0];
       const expected = new Date(); expected.setDate(expected.getDate() + 7);
       document.getElementById('expectedReturnDate').value = expected.toISOString().split('T')[0];
-      // Initialize tabs
-      document.getElementById('tabCurrent').classList.add('primary');
-      document.getElementById('tabHistory').classList.remove('primary');
-      document.getElementById('tabAudit').classList.remove('primary');
+      setActiveTab(state.activeTab);
 
       window.__BORROW_REFRESH_INTERVAL__ = window.setInterval(async () => {
         await loadRecords();

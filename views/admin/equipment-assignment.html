@@ -6,7 +6,7 @@
   <title>Equipment Assignment | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=70">
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
   <style>
     html,
     body {
@@ -315,6 +315,31 @@
       border: 1px solid var(--assignment-border);
       border-radius: .7rem;
       background: rgba(34, 197, 94, .07);
+    }
+
+    body.admin-shell button.assignment-overview-stat {
+      color: var(--assignment-ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    body.admin-shell button.assignment-overview-stat:hover {
+      transform: translateY(-1px);
+      border-color: rgba(52, 211, 153, .58);
+      background: rgba(34, 197, 94, .13);
+    }
+
+    body.admin-shell button.assignment-overview-stat[aria-pressed="true"] {
+      border-color: rgba(52, 211, 153, .68);
+      background: linear-gradient(145deg, rgba(16, 92, 57, .46), rgba(34, 197, 94, .12));
+      box-shadow: inset 0 0 0 1px rgba(52, 211, 153, .14);
+    }
+
+    body.admin-shell button.assignment-overview-stat:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
     }
 
     body.admin-shell .assignment-overview-stat > span {
@@ -1211,10 +1236,18 @@
           </div>
           <div class="assignment-toolbar-actions">
             <div class="assignment-overview-stats" aria-label="Equipment assignment summary">
-              <span class="assignment-overview-stat"><span>Matching</span><strong id="equipmentCount">Loading…</strong></span>
-              <span class="assignment-overview-stat"><span>Assigned</span><strong id="assignmentAssignedCount">—</strong></span>
-              <span class="assignment-overview-stat"><span>Unassigned</span><strong id="assignmentUnassignedCount">—</strong></span>
-              <span class="assignment-overview-stat"><span>Faculty</span><strong id="facultyCount">Loading…</strong></span>
+              <button class="assignment-overview-stat" type="button" data-assignment-summary-filter="all" aria-pressed="true" title="Show all equipment">
+                <span>Total Equipment</span><strong id="totalEquipmentCount">Loading…</strong>
+              </button>
+              <button class="assignment-overview-stat" type="button" data-assignment-summary-filter="assigned" aria-pressed="false" title="Show assigned equipment">
+                <span>Assigned</span><strong id="assignmentAssignedCount">—</strong>
+              </button>
+              <button class="assignment-overview-stat" type="button" data-assignment-summary-filter="unassigned" aria-pressed="false" title="Show unassigned equipment">
+                <span>Unassigned</span><strong id="assignmentUnassignedCount">—</strong>
+              </button>
+              <button class="assignment-overview-stat" type="button" data-open-assignment-faculty-filter aria-controls="assignmentFacultyFilter" title="Choose a faculty filter">
+                <span>Faculty</span><strong id="facultyCount">Loading…</strong>
+              </button>
             </div>
             <button id="refreshAssignments" type="button" class="assignment-refresh-button">
               <i class="fas fa-rotate-right" aria-hidden="true"></i><span>Refresh</span>
@@ -1306,7 +1339,7 @@
   </div>
 
   <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  <script src="/js/sidebar-component.js?v=77" defer></script>
   <script>
     const state = { equipment: [], faculty: [], histories: new Set(), selectedEquipmentIds: new Set(), loading: false, bulkAssigning: false, currentPage: 1 };
     const rowsPerPage = 12;
@@ -1362,14 +1395,25 @@
       });
     }
 
+    function syncSummaryFilterButtons() {
+      const status = document.getElementById('assignmentStatusFilter').value;
+      const faculty = document.getElementById('assignmentFacultyFilter').value;
+      const hasSearch = Boolean(document.getElementById('assignmentSearch').value.trim());
+      document.querySelectorAll('[data-assignment-summary-filter]').forEach((button) => {
+        const active = button.dataset.assignmentSummaryFilter === status && faculty === 'all' && !hasSearch;
+        button.setAttribute('aria-pressed', String(active));
+      });
+    }
+
     function renderRows() {
       const visible = getVisibleEquipment();
-      document.getElementById('equipmentCount').textContent = String(visible.length);
+      document.getElementById('totalEquipmentCount').textContent = String(state.equipment.length);
       document.getElementById('clearAssignmentSearch').hidden = !document.getElementById('assignmentSearch').value;
       document.getElementById('facultyCount').textContent = String(state.faculty.length);
       const assignedCount = state.equipment.filter((item) => item.accountableFaculty?.id != null).length;
       document.getElementById('assignmentAssignedCount').textContent = String(assignedCount);
       document.getElementById('assignmentUnassignedCount').textContent = String(state.equipment.length - assignedCount);
+      syncSummaryFilterButtons();
       const totalPages = Math.max(1, Math.ceil(visible.length / rowsPerPage));
       state.currentPage = Math.min(Math.max(1, state.currentPage), totalPages);
       const startIndex = (state.currentPage - 1) * rowsPerPage;
@@ -1640,6 +1684,29 @@
     });
 
     const assignmentSearch = document.getElementById('assignmentSearch');
+    document.querySelector('.assignment-overview-stats').addEventListener('click', (event) => {
+      const summaryFilter = event.target.closest('[data-assignment-summary-filter]');
+      if (summaryFilter) {
+        assignmentSearch.value = '';
+        document.getElementById('assignmentStatusFilter').value = summaryFilter.dataset.assignmentSummaryFilter;
+        document.getElementById('assignmentFacultyFilter').value = 'all';
+        document.getElementById('bulkFacultySelect').value = '';
+        state.selectedEquipmentIds.clear();
+        state.currentPage = 1;
+        renderRows();
+        return;
+      }
+
+      if (event.target.closest('[data-open-assignment-faculty-filter]')) {
+        const facultyFilter = document.getElementById('assignmentFacultyFilter');
+        try {
+          if (typeof facultyFilter.showPicker === 'function') facultyFilter.showPicker();
+          else facultyFilter.focus();
+        } catch {
+          facultyFilter.focus();
+        }
+      }
+    });
     assignmentSearch.addEventListener('input', () => {
       state.currentPage = 1;
       renderRows();

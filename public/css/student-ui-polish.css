@@ -794,6 +794,17 @@ body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-e
   }
 
   body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-table td:nth-child(1) { grid-area: pc; }
+  body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-table td:nth-child(1) {
+    grid-template-columns: max-content minmax(0, 1fr) !important;
+    gap: .35rem !important;
+    overflow: visible !important;
+  }
+  body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-table td:nth-child(1) .usage-history-value,
+  body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-table td:nth-child(1) .usage-history-primary {
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+  }
   body.app-shell.student-portal.pc-station-page #historyContainer .usage-history-table td:nth-child(2) {
     grid-area: subject;
     grid-template-columns: 5.8rem minmax(0, 1fr) !important;
@@ -1102,7 +1113,10 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
   html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table-scroll {
     width: 100% !important;
     min-width: 0 !important;
-    overflow: visible !important;
+    max-height: 65vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-color: #83ad8f #e8f1ea;
   }
 
   html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table {
@@ -1302,6 +1316,223 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
   }
 }
 
+body.app-shell.student-dashboard-page #recentPcActivityTable .activity-station-cell {
+  min-width: 10rem;
+  font-weight: 750;
+}
+
+body.app-shell.student-dashboard-page #recentPcActivityTable .activity-session-status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .3rem;
+  padding: .18rem .55rem;
+  border: 1px solid rgba(110, 231, 183, .2);
+  border-radius: 999px;
+  background: rgba(110, 231, 183, .08);
+  color: #b6d7c8;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+body.app-shell.student-dashboard-page #recentPcActivityTable .is-active-session .activity-session-status {
+  border-color: rgba(74, 222, 128, .35);
+  background: rgba(34, 197, 94, .12);
+  color: #86efac;
+}
+
+body.app-shell.student-dashboard-page #recentPcActivityTable .activity-duration-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .section-shell {
+  border-color: #d5e5da !important;
+  background: linear-gradient(145deg, #ffffff, #f8fbf9) !important;
+  box-shadow: 0 8px 24px rgba(31, 75, 48, .06) !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .section-header p {
+  color: #64796c !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr {
+  background: #ffffff !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr:hover {
+  background: #f7fbf8 !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable td {
+  border-color: #e4eee7 !important;
+  color: #294839 !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable .activity-session-status {
+  border-color: #d5e5da;
+  background: #f2f7f3;
+  color: #52685a;
+}
+
+html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable .is-active-session .activity-session-status {
+  border-color: #b7dfc2;
+  background: #eaf7ed;
+  color: #177141;
+}
+
+@media (max-width: 767px) {
+  html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-station-cell,
+  html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-duration-cell {
+    border-color: #e4eee7 !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-type-cell {
+    color: #173b2a !important;
+  }
+}
+
+@media (max-width: 767px) {
+  body.app-shell.student-portal .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+    min-height: 7.25rem !important;
+    padding: .75rem .8rem !important;
+  }
+
+  body.app-shell.student-portal .main-container .dashboard-kpi-card .card-text {
+    min-height: 5.7rem;
+  }
+
+  body.app-shell.student-portal .main-container .dashboard-kpi-card .dashboard-kpi-value {
+    padding-top: .25rem !important;
+    font-size: 1.6rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header {
+    gap: .65rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header > div:first-child {
+    display: grid;
+    gap: .2rem;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header > div:first-child p {
+    margin: 0 !important;
+    font-size: .8rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header > div:last-child .borrow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable,
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable thead {
+    display: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody {
+    display: grid !important;
+    gap: .65rem !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .45rem .8rem !important;
+    margin: 0 !important;
+    padding: .75rem .85rem !important;
+    border: 1px solid rgba(110, 231, 183, .18) !important;
+    border-radius: .95rem !important;
+    background: #0c2118 !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .12) !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody td {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: .15rem !important;
+    min-width: 0 !important;
+    padding: .25rem 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #e1f4e8 !important;
+    font-size: .86rem !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody td::before {
+    display: block !important;
+    color: #6ee7b7 !important;
+    content: attr(data-label) !important;
+    font-size: .61rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .075em !important;
+    line-height: 1.3 !important;
+    text-transform: uppercase;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-station-cell,
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-type-cell,
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-duration-cell {
+    grid-column: 1 / -1 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-station-cell {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding-bottom: .55rem !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .14) !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-station-cell::before {
+    display: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-session-status {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-type-cell {
+    padding-top: .15rem !important;
+    color: #f0fdf4 !important;
+    font-weight: 650 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody .activity-duration-cell {
+    grid-template-columns: auto 1fr !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: .1rem;
+    padding-top: .5rem !important;
+    border-top: 1px solid rgba(110, 231, 183, .14) !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody td[colspan="5"] {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    padding: .9rem !important;
+    text-align: center;
+  }
+}
+
 /* Enable the shared light theme on Student PC Logs. */
 html.theme-light body.app-shell.student-portal.student-pc-audit-page {
   background: #edf4ef !important;
@@ -1446,7 +1677,97 @@ html.theme-light body.app-shell.student-portal.student-pc-audit-page .table-mess
   color: #23834d !important;
 }
 
-@media (max-width: 720px) {
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .main-container.theme-light .audit-overview {
+  border-color: #cfe2d4 !important;
+  background: linear-gradient(125deg, #ffffff, #edf7f0) !important;
+  box-shadow: 0 8px 24px rgba(31, 75, 48, .07) !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .main-container.theme-light .audit-overview :is(.audit-overview-kicker, h1, .audit-overview-description) {
+  color: #173b2a !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .main-container.theme-light .audit-overview .audit-overview-kicker {
+  color: #247044 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-overview-icon,
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-title-icon {
+  border-color: #c5dfcd !important;
+  background: #e8f3eb !important;
+  color: #247044 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-overview-note {
+  border-color: #cbded1 !important;
+  background: #f5faf6 !important;
+  color: #496556 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-overview-note i {
+  color: #247044 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs {
+  border-color: #d3e2d7 !important;
+  background: #e5eee7 !important;
+  box-shadow: 0 4px 14px rgba(31, 75, 48, .05) !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #365b46 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab i {
+  color: #247044 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab:hover {
+  background: #d7e9dc !important;
+}
+
+html body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab[aria-selected="true"],
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab[aria-selected="true"] {
+  border-color: #4ade80 !important;
+  background: linear-gradient(135deg, #075c35, #06452b) !important;
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
+  text-shadow: 0 0 10px rgba(74, 222, 128, .5) !important;
+  box-shadow: 0 0 16px rgba(74, 222, 128, .22), inset 0 1px rgba(255, 255, 255, .12) !important;
+}
+
+html body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab[aria-selected="true"] i,
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab[aria-selected="true"] i {
+  color: #4ade80 !important;
+  -webkit-text-fill-color: #4ade80 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs .audit-tab:not([aria-selected="true"]):hover {
+  border-color: #b6d5bf !important;
+  background: #d7e9dc !important;
+  color: #174b30 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-card-header,
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-results {
+  background: #ffffff !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-table tbody td {
+  border-bottom-color: #e4eee7 !important;
+  background: transparent !important;
+  color: #294839 !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-table .action-badge:not(.login):not(.logout) {
+  border-color: #d7e3da !important;
+  background: #f0f5f1 !important;
+  color: #365b46 !important;
+}
+
+@media (max-width: 767px) {
   html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-table tbody {
     background: transparent !important;
   }
@@ -1462,13 +1783,17 @@ html.theme-light body.app-shell.student-portal.student-pc-audit-page .table-mess
     background: #f4faf5 !important;
   }
 
+  html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-table tbody td {
+    border-bottom: 0 !important;
+  }
+
   html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-table tbody td:last-child {
     border-top-color: #e4eee7 !important;
   }
 }
 
 /* Keep PC log entries compact on phones so more sessions fit on screen. */
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   body.app-shell.student-portal.student-pc-audit-page .audit-card-header {
     gap: .55rem !important;
     padding: .65rem .75rem !important;
@@ -1537,5 +1862,501 @@ html.theme-light body.app-shell.student-portal.student-pc-audit-page .table-mess
     gap: .45rem !important;
     padding: .55rem .75rem !important;
     font-size: .7rem !important;
+  }
+}
+
+/* Give every student page a consistent phone gutter and a little breathing room. */
+@media (max-width: 767px) {
+  body.app-shell.student-portal .main-container > main,
+  body.app-shell.student-portal .main-container > .page-shell,
+  body.app-shell.student-portal .main-container > .page-content,
+  body.app-shell.student-portal > .page-shell,
+  body.app-shell.student-portal main.main-container {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: clamp(.65rem, 3vw, .9rem) !important;
+    padding-right: clamp(.65rem, 3vw, .9rem) !important;
+  }
+
+  body.app-shell.student-portal .main-container > main,
+  body.app-shell.student-portal .main-container > .page-shell,
+  body.app-shell.student-portal > .page-shell {
+    min-width: 0 !important;
+  }
+
+  body.app-shell.student-portal .main-container > main > *,
+  body.app-shell.student-portal .main-container > .page-shell > *,
+  body.app-shell.student-portal > .page-shell > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  body.app-shell.student-portal .main-container :is(input, select, textarea, button),
+  body.app-shell.student-portal > .page-shell :is(input, select, textarea, button) {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.app-shell.student-portal .main-container :is(input, select, textarea),
+  body.app-shell.student-portal > .page-shell :is(input, select, textarea) {
+    min-width: 0;
+  }
+
+  body.app-shell.student-portal .main-container :is(.glass-card, .panel-card, .audit-card, .requests-panel, .no-pc-card),
+  body.app-shell.student-portal > .page-shell :is(.glass-card, .panel-card, .audit-card, .requests-panel, .no-pc-card) {
+    border-radius: 1.05rem;
+  }
+
+  body.app-shell.student-portal .main-container :is(.borrow-form-grid, .borrow-content-grid, .requests-controls, .audit-filter),
+  body.app-shell.student-portal > .page-shell :is(.borrow-form-grid, .borrow-content-grid, .requests-controls, .audit-filter) {
+    min-width: 0;
+    gap: .7rem;
+  }
+
+  body.app-shell.student-portal .main-container :is(.borrow-btn, .btn-primary, .btn-ghost, .audit-pagination button),
+  body.app-shell.student-portal > .page-shell :is(.borrow-btn, .btn-primary, .btn-ghost, .audit-pagination button) {
+    min-height: 2.65rem;
+    white-space: normal;
+    line-height: 1.3;
+  }
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll {
+  max-height: 65vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-color: #34855a #10291d;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #10291d;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #10291d;
+  border-radius: 999px;
+  background: #34855a;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll {
+  scrollbar-color: #83ad8f #e8f1ea;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll::-webkit-scrollbar-track {
+  background: #e8f1ea;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll::-webkit-scrollbar-thumb {
+  border-color: #e8f1ea;
+  background: #83ad8f;
+}
+
+/* Keep report cards compact on phones. */
+@media (max-width: 767px) {
+  html body.app-shell.student-portal.student-my-requests-page #requestsState.requests-table-shell {
+    box-sizing: border-box !important;
+    max-height: none !important;
+    overflow: visible !important;
+    scrollbar-gutter: auto !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table-scroll {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: 65vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-color: #34855a #10291d;
+    scrollbar-width: thin;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table thead {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    gap: .7rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr:not(.report-details-row) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-areas: "reportid status" "equipment equipment" "description description" "date action" !important;
+    align-items: start !important;
+    gap: .55rem .8rem !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: .8rem .9rem !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(79, 190, 139, .24) !important;
+    border-radius: .95rem !important;
+    background: rgba(8, 31, 21, .88) !important;
+    box-shadow: 0 5px 16px rgba(0, 0, 0, .12) !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr[hidden] {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td[data-label] {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #d3e6db !important;
+    text-align: left !important;
+    font-size: .82rem !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td[data-label]::before {
+    display: block !important;
+    margin: 0 0 .18rem !important;
+    color: #83c9a8 !important;
+    content: attr(data-label);
+    font-size: .58rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .075em !important;
+    line-height: 1.3 !important;
+    text-transform: uppercase;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-report-id { grid-area: reportid !important; align-self: center !important; color: #d3e6db !important; font-size: .8rem !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-status { grid-area: status !important; justify-self: end !important; text-align: right !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-status::before { text-align: right !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-equipment { grid-area: equipment !important; }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-description {
+    grid-area: description !important;
+    padding-top: .5rem !important;
+    border-top: 1px solid rgba(110, 170, 139, .16) !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-name {
+    color: #f0f7f2 !important;
+    font-size: .98rem !important;
+    font-weight: 750 !important;
+    line-height: 1.3 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-id {
+    margin-top: .08rem !important;
+    color: #a8c6b5 !important;
+    font-size: .72rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-category { display: block !important; color: #dcebe1 !important; font-weight: 700 !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-description { display: block !important; margin-top: .1rem !important; color: #a9c0b2 !important; font-size: .78rem !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-dates { grid-area: date !important; align-self: center !important; color: #b9d0c2 !important; font-size: .75rem !important; }
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-action { grid-area: action !important; align-self: end !important; justify-self: end !important; text-align: right !important; }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-details-button {
+    min-height: 2.25rem !important;
+    padding: .45rem .7rem !important;
+    border-radius: .7rem !important;
+    font-size: .76rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-details-row {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: -.45rem 0 0 !important;
+    padding: 0 .35rem .25rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-details-row[hidden] { display: none !important; }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-details-row td {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: .75rem !important;
+    border: 1px solid rgba(79, 190, 139, .2) !important;
+    border-radius: .75rem !important;
+    background: rgba(8, 31, 21, .7) !important;
+    color: #c6ddd0 !important;
+    font-size: .8rem !important;
+    line-height: 1.5 !important;
+    white-space: pre-line !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr:not(.report-details-row) { border-color: #d5e5da !important; background: #fff !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody td[data-label] { color: #294839 !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody td[data-label]::before { color: #23834d !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table td.col-report-id,
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table td.col-dates { color: #536c5c !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .equipment-name { color: #20392b !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .equipment-id,
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-description { color: #60776a !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-category { color: #294839 !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-details-row td { border-color: #d5e5da !important; background: #f7fbf8 !important; color: #294839 !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody { grid-template-columns: minmax(0, 1fr) !important; }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-details-row {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: -.45rem 0 0 !important;
+    padding: 0 .35rem .25rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-details-row td {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: .75rem !important;
+  }
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .col-action { width: 20%; }
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .col-description { width: 25%; }
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .col-dates { width: 14%; }
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .4rem;
+  min-width: 0;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-button,
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-toggle {
+  min-height: 2.45rem;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-toggle {
+  display: inline-grid;
+  width: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(110, 231, 183, .28);
+  border-radius: .7rem;
+  background: rgba(6, 78, 59, .32);
+  color: #a7f3d0;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-toggle:hover,
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-toggle[aria-expanded="true"] {
+  transform: translateY(-1px);
+  border-color: rgba(110, 231, 183, .58);
+  background: rgba(6, 95, 70, .62);
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-actions-menu {
+  position: fixed !important;
+  z-index: 12000 !important;
+  display: grid;
+  width: min(13rem, calc(100vw - 1rem));
+  gap: .22rem;
+  padding: .4rem;
+  border: 1px solid rgba(110, 231, 183, .24);
+  border-radius: .85rem;
+  background: #0b2117;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .38), 0 0 0 1px rgba(110, 231, 183, .05);
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-actions-menu[hidden] {
+  display: none !important;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-menu-item {
+  display: flex;
+  min-height: 2.55rem;
+  align-items: center;
+  gap: .65rem;
+  padding: .5rem .65rem;
+  border: 0;
+  border-radius: .58rem;
+  background: transparent;
+  color: #d4e8dc;
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition: background .14s ease, color .14s ease;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-menu-item:hover,
+body.app-shell.student-portal.student-my-requests-page .report-menu-item:focus-visible {
+  outline: none;
+  background: rgba(110, 231, 183, .1);
+  color: #f0fff6;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-menu-item > i {
+  width: 1rem;
+  color: #8ddbb5;
+  text-align: center;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger,
+body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger > i {
+  color: #fda4af;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger:hover,
+body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger:focus-visible {
+  background: rgba(244, 63, 94, .12);
+  color: #ffe4e8;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tr.report-menu-open {
+  position: relative;
+  z-index: 20;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-content {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(110, 231, 183, .16);
+  border-left: 3px solid #10b981;
+  border-radius: .8rem;
+  background: rgba(2, 20, 13, .58);
+  white-space: normal;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-heading {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin-bottom: .7rem;
+  color: #a7f3d0;
+  font-size: .85rem;
+  font-weight: 750;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  margin: 0;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid > div {
+  min-width: 0;
+  padding: .6rem .7rem;
+  border: 1px solid rgba(110, 231, 183, .1);
+  border-radius: .65rem;
+  background: rgba(110, 231, 183, .035);
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid dt {
+  margin-bottom: .18rem;
+  color: #83c9a8;
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid dd {
+  margin: 0;
+  color: #d3e6db;
+  font-size: .76rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page .report-actions-menu {
+  border-color: #d5e5da;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 75, 48, .2);
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .report-menu-toggle {
+  border-color: #cbded1;
+  background: #f5faf6;
+  color: #237448;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page .report-menu-item { color: #294839; }
+html.theme-light body.app-shell.student-portal.student-my-requests-page .report-menu-item > i { color: #258450; }
+html.theme-light body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger,
+html.theme-light body.app-shell.student-portal.student-my-requests-page .report-menu-item.is-danger > i { color: #b4233a; }
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .report-details-content {
+  border-color: #d5e5da;
+  background: #f7fbf8;
+  color: #294839;
+}
+
+html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .report-details-heading { color: #237448; }
+html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .report-details-grid > div { border-color: #e0ece3; background: #fff; }
+html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .report-details-grid dt { color: #348056; }
+html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .report-details-grid dd { color: #294839; }
+
+@media (max-width: 767px) {
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-menu-open {
+    z-index: 40 !important;
+    overflow: visible !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .report-row-actions {
+    justify-content: flex-end;
+    gap: .32rem;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-button {
+    min-height: 2.5rem !important;
+    padding: .45rem .58rem !important;
+    font-size: .7rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

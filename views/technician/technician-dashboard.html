@@ -7,7 +7,7 @@
     <title>ComLab Technician Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         :root {
             --emerald-950: #06402B;
@@ -2119,7 +2119,7 @@
         }
     </style>
       <link rel="stylesheet" href="/css/table-readability.css?v=1">
-      <link rel="stylesheet" href="/css/technician-dashboard.css?v=39">
+      <link rel="stylesheet" href="/css/technician-dashboard.css?v=48">
     </head>
 <body class="app-shell technician-portal system-layout-page technician-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -2411,7 +2411,7 @@
 
             <section id="new-reports" class="nav-anchor tech-card p-5 lg:p-7 page-section">
                 <div class="maintenance-report-stats" role="group" aria-label="Maintenance report summary">
-                    <button type="button" class="maintenance-report-stat maintenance-report-stat--total is-selected" data-maintenance-summary-filter="all" aria-pressed="true"><span class="maintenance-report-stat-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span><span class="maintenance-report-stat-copy"><span>Total reports</span><strong data-maintenance-total-count>0</strong></span></button>
+                    <button type="button" class="maintenance-report-stat maintenance-report-stat--total is-selected" data-maintenance-summary-filter="all" aria-pressed="true"><span class="maintenance-report-stat-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span><span class="maintenance-report-stat-copy"><span>Matching reports</span><strong data-maintenance-total-count>0</strong></span></button>
                     <button type="button" class="maintenance-report-stat maintenance-report-stat--pending" data-maintenance-summary-filter="pending" aria-pressed="false"><span class="maintenance-report-stat-icon"><i class="fas fa-clock" aria-hidden="true"></i></span><span class="maintenance-report-stat-copy"><span>Pending</span><strong data-maintenance-pending-count>0</strong></span></button>
                     <button type="button" class="maintenance-report-stat maintenance-report-stat--progress" data-maintenance-summary-filter="in-progress" aria-pressed="false"><span class="maintenance-report-stat-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></span><span class="maintenance-report-stat-copy"><span>In progress</span><strong data-maintenance-progress-count>0</strong></span></button>
                     <button type="button" class="maintenance-report-stat maintenance-report-stat--resolved" data-maintenance-summary-filter="resolved" aria-pressed="false"><span class="maintenance-report-stat-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></span><span class="maintenance-report-stat-copy"><span>Resolved</span><strong data-maintenance-resolved-count>0</strong></span></button>
@@ -2422,7 +2422,7 @@
                         <span class="maintenance-report-result-count"><strong data-maintenance-queue-count>0</strong> requests</span>
                     </div>
                     <div class="maintenance-report-toolbar">
-                        <input id="requestSearchInput" type="search" placeholder="Search equipment, issue, or reporter" aria-label="Search maintenance requests">
+                        <select id="requestLaboratoryFilter" aria-label="Filter reports by ComLab"><option value="all">All ComLabs</option></select>
                         <select id="technicianReportStatusFilter" aria-label="Filter report status">
                             <option value="all">All statuses</option>
                             <option value="pending">Pending</option>
@@ -2432,6 +2432,7 @@
                         </select>
                         <select id="requestPriorityFilter" aria-label="Filter maintenance priority"><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="unspecified">Unspecified</option></select>
                         <select id="requestSortFilter" aria-label="Sort maintenance requests"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+                        <input id="requestSearchInput" type="search" placeholder="Search equipment, issue, or reporter" aria-label="Search maintenance requests">
                     </div>
                     <div class="maintenance-report-tabs" role="tablist" aria-label="Filter requests by reporter">
                         <button type="button" class="maintenance-report-tab is-active" data-reporter-tab="all" role="tab" aria-selected="true">All assigned <span data-request-tab-count="all">0</span></button>
@@ -3006,7 +3007,7 @@
                 }
             });
             const query = params.toString();
-            const response = await fetch('/api/maintenance' + (query ? `?${query}` : ''));
+            const response = await fetch('/api/maintenance' + (query ? `?${query}` : ''), { cache: 'no-store' });
             if (!response.ok) return [];
             const data = await response.json();
             return Array.isArray(data) ? data : [];
@@ -3256,14 +3257,67 @@
             pagination.appendChild(next);
         }
 
-        async function loadTechnicianEquipmentActivity() {
+        async function loadTechnicianEquipmentActivity(maintenanceRequestsPromise = fetchMaintenanceRequests()) {
             const list = document.getElementById('technicianEquipmentActivity');
             if (!list) return;
             try {
-                const response = await fetch('/api/equipment-scan-history', { cache: 'no-store' });
+                const [response, maintenanceRequests] = await Promise.all([
+                    fetch('/api/equipment-scan-history', { cache: 'no-store' }),
+                    maintenanceRequestsPromise
+                ]);
                 const payload = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(payload.error || 'Unable to load equipment activity.');
-                technicianEquipmentActivityEvents = Array.isArray(payload.data) ? payload.data : [];
+                const auditEvents = Array.isArray(payload.data) ? payload.data : [];
+                const loggedMaintenanceIds = new Set(auditEvents
+                    .filter((event) => event.actionType === 'equipment_issue_reported' && event.maintenanceRequestId)
+                    .map((event) => String(event.maintenanceRequestId)));
+                const recoveredReportEvents = (Array.isArray(maintenanceRequests) ? maintenanceRequests : [])
+                    .filter((report) => report?.id && !loggedMaintenanceIds.has(String(report.id)) && !isRequestedDummyMaintenanceReport(report))
+                    .map((report) => {
+                        const equipment = report.equipment || {};
+                        const equipmentRecordId = Number(equipment.id);
+                        const equipmentAssetId = String(report.equipmentId || report.equipment_id || equipment.equipmentId || '').trim();
+                        if (!Number.isInteger(equipmentRecordId) || !equipmentAssetId) return null;
+
+                        const reporter = report.reporter || {};
+                        const reporterName = report.reporterName || reporter.name || report.student_name || 'Unknown user';
+                        const category = report.category || 'Equipment issue';
+                        const equipmentName = report.equipmentName || equipment.name || equipmentAssetId;
+                        const linkedEvent = auditEvents.find((event) => Number(event.equipmentId) === equipmentRecordId);
+                        const reportDate = report.dateReported || report.created_at || report.createdAt || report.date || null;
+
+                        return {
+                            id: `maintenance-report-${report.id}`,
+                            equipmentId: equipmentRecordId,
+                            serialNumber: report.serialNumber || equipment.serialNumber || null,
+                            actionType: 'equipment_issue_reported',
+                            actionDescription: `${category} reported for ${equipmentName} (${equipmentAssetId}) by ${reporterName}${report.description ? `: ${report.description}` : '.'}`,
+                            performedBy: report.reportedBy || report.student_id || reporter.id || null,
+                            performedByName: reporterName,
+                            actionTimestamp: reportDate,
+                            equipmentName,
+                            equipmentAssetId,
+                            equipmentCategory: category,
+                            campus: report.campus || equipment.campus || null,
+                            laboratoryRoom: report.laboratoryRoom || equipment.laboratoryRoom || null,
+                            equipmentStatus: report.equipmentStatus || equipment.status || null,
+                            scannerName: reporterName,
+                            scannerRole: report.reporterRole || reporter.role || 'student',
+                            scannerProgram: report.reporterProgram || reporter.program || null,
+                            scannerCollege: report.reporterCollege || reporter.college || null,
+                            scannerYear: report.reporterYear || reporter.year || null,
+                            scannerSection: report.reporterSection || reporter.section || null,
+                            reportCategory: category,
+                            maintenanceRequestId: String(report.id),
+                            currentHolders: linkedEvent?.currentHolders || [],
+                            assignedTo: linkedEvent?.assignedTo || []
+                        };
+                    })
+                    .filter(Boolean);
+
+                technicianEquipmentActivityEvents = [...auditEvents, ...recoveredReportEvents]
+                    .sort((first, second) => new Date(second.actionTimestamp || 0) - new Date(first.actionTimestamp || 0))
+                    .slice(0, 200);
                 populateTechnicianActivityLaboratories();
                 renderTechnicianEquipmentActivity();
             } catch (error) {
@@ -3760,8 +3814,41 @@
 
         function formatTechnicianLaboratoryRoom(value) {
             const room = String(value || '').trim();
-            const match = room.match(/^(?:com\s*)?lab\s*([12])$/i);
-            return match ? `COMLAB ${match[1]}` : room;
+            const match = room.match(/\b(?:com\s*)?lab(?:oratory)?\s*[-#:]?\s*(\d+)\b/i);
+            if (!match) return room;
+            const label = `COMLAB ${Number(match[1])}`;
+            const suffix = room.replace(match[0], '').replace(/^\s*[—–-]\s*/, '').trim();
+            return suffix ? `${label} — ${suffix}` : label;
+        }
+
+        function getTechnicianMaintenanceLaboratory(report) {
+            const room = formatTechnicianLaboratoryRoom(
+                report?.laboratoryRoom || report?.laboratory_room || report?.equipment?.laboratoryRoom || ''
+            );
+            const source = report?.laboratoryName || room;
+            const match = String(source || '').match(/\b(?:com\s*)?lab(?:oratory)?\s*[-#:]?\s*(\d+)\b/i);
+            if (!room && !match) return null;
+            const key = report?.computerLabId
+                ? `lab-id:${report.computerLabId}`
+                : match ? `lab-name:${Number(match[1])}` : `lab-room:${String(source || room).trim().toLowerCase()}`;
+            return { key, label: room || formatTechnicianLaboratoryRoom(source) || 'Unspecified ComLab' };
+        }
+
+        function syncTechnicianMaintenanceLaboratoryFilter(reports) {
+            const select = document.getElementById('requestLaboratoryFilter');
+            if (!select) return;
+            const previousValue = select.value || 'all';
+            const laboratories = new Map();
+            (Array.isArray(reports) ? reports : []).forEach((report) => {
+                const laboratory = getTechnicianMaintenanceLaboratory(report);
+                if (laboratory) laboratories.set(laboratory.key, laboratory.label);
+            });
+            const options = [...laboratories.entries()].sort((first, second) =>
+                first[1].localeCompare(second[1], undefined, { numeric: true })
+            );
+            select.replaceChildren(new Option('All ComLabs', 'all'));
+            options.forEach(([value, label]) => select.add(new Option(label, value)));
+            select.value = laboratories.has(previousValue) ? previousValue : 'all';
         }
 
         function renderRecentReportsTable(reports) {
@@ -3845,10 +3932,12 @@
             currentReporterTab = 'all';
             const statusFilter = document.getElementById('technicianReportStatusFilter');
             const searchInput = document.getElementById('requestSearchInput');
+            const laboratoryFilter = document.getElementById('requestLaboratoryFilter');
             const priorityFilter = document.getElementById('requestPriorityFilter');
             const sortFilter = document.getElementById('requestSortFilter');
             if (statusFilter) statusFilter.value = 'all';
             if (searchInput) searchInput.value = reportId ? String(reportId) : '';
+            if (laboratoryFilter) laboratoryFilter.value = 'all';
             if (priorityFilter) priorityFilter.value = 'all';
             if (sortFilter) sortFilter.value = 'newest';
             document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
@@ -3890,7 +3979,9 @@
                 });
             });
 
+            syncTechnicianMaintenanceLaboratoryFilter(allReports);
             const searchTerm = String(document.getElementById('requestSearchInput')?.value || '').trim().toLowerCase();
+            const laboratoryFilter = String(document.getElementById('requestLaboratoryFilter')?.value || 'all');
             const priorityFilter = String(document.getElementById('requestPriorityFilter')?.value || 'all').toLowerCase();
             const sortFilter = String(document.getElementById('requestSortFilter')?.value || 'newest');
             let filteredReports = allReports.filter((report) => {
@@ -3902,6 +3993,7 @@
                 if (currentReporterTab === 'active' && !reportIsActive(report)) return false;
                 if (currentReporterTab === 'student' && getReporterRole(report) !== 'student') return false;
                 if (currentReporterTab === 'faculty' && !['faculty', 'instructor'].includes(getReporterRole(report))) return false;
+                if (laboratoryFilter !== 'all' && getTechnicianMaintenanceLaboratory(report)?.key !== laboratoryFilter) return false;
 
                 const priority = String(report.priority || '').trim().toLowerCase();
                 if (priorityFilter !== 'all' && (priorityFilter === 'unspecified' ? Boolean(priority) : priority !== priorityFilter)) return false;
@@ -3924,6 +4016,17 @@
                 const second = new Date(b.dateReported || b.created_at || b.createdAt || 0).getTime();
                 return sortFilter === 'oldest' ? first - second : second - first;
             });
+
+            const visibleCounts = {
+                all: filteredReports.length,
+                pending: filteredReports.filter((report) => ['pending', 'new'].includes(getNormalizedStatus(report.status))).length,
+                progress: filteredReports.filter((report) => getNormalizedStatus(report.status).includes('progress')).length,
+                resolved: filteredReports.filter(isResolvedMaintenanceReport).length
+            };
+            document.querySelectorAll('[data-maintenance-total-count]').forEach((element) => { element.textContent = String(visibleCounts.all); });
+            document.querySelectorAll('[data-maintenance-pending-count]').forEach((element) => { element.textContent = String(visibleCounts.pending); });
+            document.querySelectorAll('[data-maintenance-progress-count]').forEach((element) => { element.textContent = String(visibleCounts.progress); });
+            document.querySelectorAll('[data-maintenance-resolved-count]').forEach((element) => { element.textContent = String(visibleCounts.resolved); });
 
             const resultCount = document.querySelector('[data-maintenance-queue-count]');
             if (resultCount) resultCount.textContent = String(filteredReports.length);
@@ -3949,6 +4052,7 @@
             list.innerHTML = '';
             pagedReports.forEach((report) => {
                 const row = document.createElement('tr');
+                if (report.id != null) row.id = `maintenance-report-${String(report.id)}`;
                 const reporterName = report.reporterName || report.reporter?.name || 'Guest Student';
                 const equipmentId = report.equipmentId || report.equipment_id || '—';
                 const equipmentName = report.equipmentName || report.equipment?.name || 'Equipment record';
@@ -3958,10 +4062,11 @@
                     : [report.reporterProgram || report.reporter?.program, report.reporterYear || report.reporter?.year, report.reporterSection || report.reporter?.section].filter(Boolean).join(' · ');
                 const reporterTooltip = [reporterRole ? formatRole(reporterRole) : '', reporterProfile].filter(Boolean).join(' · ');
                 const equipmentLocation = report.equipmentLocation || report.equipment?.location || report.campus || report.equipment?.campus || '';
-                const reportedLab = String(equipmentLocation).match(/\bcom\s*lab\s*[12]\b/i)?.[0] || '';
+                const reportedLab = formatTechnicianLaboratoryRoom(equipmentLocation);
                 const laboratoryRoom = formatTechnicianLaboratoryRoom(report.laboratoryRoom || report.laboratory_room || report.equipment?.laboratoryRoom || reportedLab);
                 const roomMatch = String(equipmentLocation).match(/\b(?:room|rm\.?)\s*[A-Za-z0-9-]+/i);
-                const locationParts = [laboratoryRoom, roomMatch?.[0]].filter((part, index, parts) => part && parts.indexOf(part) === index);
+                const hasRegisteredLaboratory = report.computerLabId != null || ['pc_set', 'equipment', 'report_snapshot'].includes(String(report.reportLocationSource || '').toLowerCase());
+                const locationParts = [laboratoryRoom, !hasRegisteredLaboratory ? roomMatch?.[0] : null].filter((part, index, parts) => part && parts.indexOf(part) === index);
                 const locationDisplay = locationParts.join(' · ') || equipmentLocation || 'Location not specified';
                 const issueTitle = report.category || report.issueTitle || 'Equipment issue';
                 const issueDescription = String(report.description || (report.issueTitle && report.issueTitle !== issueTitle ? report.issueTitle : '')).trim();
@@ -3975,10 +4080,24 @@
                 const normalizedStatus = getNormalizedStatus(status);
                 const isPending = normalizedStatus === 'pending' || normalizedStatus === 'new';
                 const isResolved = isResolvedMaintenanceReport(report);
-                const equipmentStatusCanToggle = ['serviceable', 'unserviceable'].includes(normalizedEquipmentStatus) &&
+                const reportEquipmentKey = String(equipmentId).trim().toLowerCase();
+                const hasOtherActiveEquipmentReport = allReports.some((otherReport) => {
+                    if (String(otherReport.id) === String(report.id)) return false;
+                    const otherEquipmentKey = String(otherReport.equipmentId || otherReport.equipment_id || '').trim().toLowerCase();
+                    const otherStatus = getNormalizedStatus(otherReport.status);
+                    return otherEquipmentKey === reportEquipmentKey &&
+                        otherStatus !== 'resolved' && otherStatus !== 'rejected' && otherStatus !== 'complete' && otherStatus !== 'completed';
+                });
+                const equipmentStatusCanToggle = ['serviceable', 'unserviceable', 'unavailable'].includes(normalizedEquipmentStatus) &&
                     !['resolved', 'rejected'].includes(normalizedStatus) && equipmentId !== '—';
                 const selectedEquipmentStatus = equipmentIsUnavailable ? 'Unserviceable' : 'Serviceable';
-                const equipmentStatusCell = `<select class="report-equipment-status-select${equipmentIsUnavailable ? '' : ' is-serviceable'}" data-equipment-status-select data-equipment-id="${escapeBorrowText(equipmentId)}" title="Set availability for ${escapeBorrowText(equipmentName)} (${escapeBorrowText(equipmentId)})" aria-label="Equipment availability for ${escapeBorrowText(equipmentName)}" ${equipmentStatusCanToggle ? '' : 'disabled'}><option value="Serviceable" ${selectedEquipmentStatus === 'Serviceable' ? 'selected' : ''}>Serviceable</option><option value="Unserviceable" ${selectedEquipmentStatus === 'Unserviceable' ? 'selected' : ''}>Unavailable</option></select>`;
+                const equipmentStatusTitle = isResolved && equipmentIsUnavailable && hasOtherActiveEquipmentReport
+                    ? 'Unavailable because another maintenance report for this equipment is still open.'
+                    : `Set availability for ${equipmentName} (${equipmentId})`;
+                const equipmentStatusNote = isResolved && equipmentIsUnavailable && hasOtherActiveEquipmentReport
+                    ? '<small class="maintenance-equipment-open-report-note">Another report is still open</small>'
+                    : '';
+                const equipmentStatusCell = `<div class="maintenance-equipment-status-wrap"><select class="report-equipment-status-select${equipmentIsUnavailable ? '' : ' is-serviceable'}" data-equipment-status-select data-equipment-id="${escapeBorrowText(equipmentId)}" title="${escapeBorrowText(equipmentStatusTitle)}" aria-label="Equipment availability for ${escapeBorrowText(equipmentName)}" ${equipmentStatusCanToggle ? '' : 'disabled'}><option value="Serviceable" ${selectedEquipmentStatus === 'Serviceable' ? 'selected' : ''}>Serviceable</option><option value="Unserviceable" ${selectedEquipmentStatus === 'Unserviceable' ? 'selected' : ''}>Unavailable</option></select>${equipmentStatusNote}</div>`;
                 const reportedAt = report.dateReported || report.created_at || report.createdAt;
                 const reportedDate = formatCompactDateTime(reportedAt);
                 const resolvedAt = report.dateResolved || report.resolvedDate || '';
@@ -4021,7 +4140,7 @@
             renderPendingReports(reports);
         }
 
-        ['requestSearchInput', 'requestPriorityFilter', 'requestSortFilter'].forEach((id) => {
+        ['requestSearchInput', 'requestLaboratoryFilter', 'requestPriorityFilter', 'requestSortFilter'].forEach((id) => {
             document.getElementById(id)?.addEventListener('input', () => {
                 technicianMaintenancePaginationState.currentPage = 1;
                 renderPendingReports(window.__TECHNICIAN_REQUESTS__ || []);
@@ -4090,29 +4209,12 @@
                 btn.dataset.maintenanceActionBound = 'true';
                 btn.addEventListener('click', async function() {
                     const id = this.getAttribute('data-resolve-id');
-                    const report = (window.__TECHNICIAN_REQUESTS__ || []).find((item) => String(item.id) === String(id));
-                    const equipmentId = report?.equipmentId || report?.equipment_id;
-                    const shouldRestoreEquipment = equipmentId &&
-                        getNormalizedStatus(report?.equipmentStatus || report?.equipment?.status) === 'unserviceable';
-
                     this.disabled = true;
-                    if (shouldRestoreEquipment && !(await updateEquipmentStatusById(equipmentId, 'Serviceable'))) {
-                        this.disabled = false;
-                        return;
-                    }
-
                     const resolved = await updateMaintenanceStatus(id, 'Resolved', {
                         resolvedBy: window.__CURRENT_USER__?.name || window.__CURRENT_USER__?.email || 'Technician'
                     });
                     if (resolved) {
                         await Promise.all([loadTechnicianDashboard(), loadTechnicianEquipmentAvailability()]);
-                    } else if (shouldRestoreEquipment) {
-                        const rollbackSucceeded = await updateEquipmentStatusById(equipmentId, 'Unserviceable');
-                        if (!rollbackSucceeded) {
-                            console.error('Maintenance resolution failed and equipment availability rollback also failed.', { id, equipmentId });
-                            window.alert('The report was not resolved and the equipment status could not be restored. Please refresh and verify the equipment status.');
-                        }
-                        this.disabled = false;
                     } else {
                         this.disabled = false;
                     }
@@ -4161,13 +4263,32 @@
             });
         }
 
+        const requestedDummyMaintenanceReports = new Set([
+            'MON-072|elaiza masilungan|equipment damage|hindi mabuhay',
+            'CPU-091|elaiza masilungan|equipment damage|bdjskks',
+            'MOU-050|glenda p. binay|connectivity|hindi ma click',
+            'KEY-081|elaiza masilungan|equipment missing|2ds'
+        ]);
+
+        function isRequestedDummyMaintenanceReport(report) {
+            const equipmentId = String(report.equipmentId || report.equipment_id || '').trim().toUpperCase();
+            const reporterName = String(report.reporterName || report.reporter?.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+            const category = String(report.category || '').trim().toLowerCase();
+            const description = String(report.description || '').trim().toLowerCase();
+
+            return requestedDummyMaintenanceReports.has(`${equipmentId}|${reporterName}|${category}|${description}`);
+        }
+
         async function loadTechnicianDashboard() {
             const user = window.__CURRENT_USER__ || {};
+            const allRequestsPromise = fetchMaintenanceRequests();
             const [allRequests] = await Promise.all([
-                fetchMaintenanceRequests(),
-                loadTechnicianEquipmentActivity()
+                allRequestsPromise,
+                loadTechnicianEquipmentActivity(allRequestsPromise)
             ]);
-            const visibleAllRequests = Array.isArray(allRequests) ? allRequests : [];
+            const visibleAllRequests = Array.isArray(allRequests)
+                ? allRequests.filter((request) => !isRequestedDummyMaintenanceReport(request))
+                : [];
 
             technicianMaintenancePaginationState.currentPage = 1;
             window.__TECHNICIAN_REQUESTS__ = visibleAllRequests;
@@ -4226,7 +4347,7 @@
 
         async function fetchPendingMaintenanceReports() {
             try {
-                const response = await fetch('/api/maintenance?status=Pending');
+                const response = await fetch('/api/maintenance?status=Pending', { cache: 'no-store' });
                 if (!response.ok) return [];
                 const data = await response.json();
                 return Array.isArray(data) ? data : [];
@@ -4386,7 +4507,7 @@
 
         function getBorrowVisibleRecords() {
             const filtered = borrowRequestState.records.filter((record) => {
-                const searchText = `${record.borrowerName || ''} ${record.borrowerType || ''} ${record.equipmentName || ''} ${record.equipmentId || ''} ${record.laboratoryRoom || record.laboratory || ''}`.toLowerCase();
+                const searchText = `${record.id || ''} ${record.borrowerName || ''} ${record.borrowerType || ''} ${record.equipmentName || ''} ${record.equipmentId || ''} ${record.laboratoryRoom || record.laboratory || ''}`.toLowerCase();
                 const searchMatch = !borrowRequestState.filters.search || searchText.includes(borrowRequestState.filters.search.toLowerCase());
                 const statusMatch = borrowRequestState.filters.status === 'all' || getBorrowStatusText(record) === borrowRequestState.filters.status;
                 const typeMatch = borrowRequestState.filters.type === 'all' || String(record.borrowerType || '').trim() === borrowRequestState.filters.type;
@@ -4508,13 +4629,14 @@
                 const isApproved = String(record.status || '').trim().toLowerCase() === 'approved' && statusText !== 'Overdue';
                 const isBorrowed = String(record.status || '').trim().toLowerCase() === 'borrowed';
                 const isOverdue = statusText === 'Overdue';
+                const technicianCanApprove = !record.requiresFacultyApproval && !['faculty', 'instructor'].includes(String(record.borrowerType || '').trim().toLowerCase());
 
                 const actionHtml = isPending
-                    ? `<div class="technician-borrow-actions"><button type="button" data-borrow-view="${record.id}" class="technician-borrow-action-btn" title="View Details" aria-label="View Details"><i class="fas fa-eye" aria-hidden="true"></i></button><button type="button" data-borrow-approve="${record.id}" class="technician-borrow-action-btn approve" title="Approve Request" aria-label="Approve Request"><i class="fas fa-check" aria-hidden="true"></i></button><button type="button" data-borrow-reject="${record.id}" class="technician-borrow-action-btn reject" title="Reject Request" aria-label="Reject Request"><i class="fas fa-xmark" aria-hidden="true"></i></button></div>`
+                    ? `<div class="technician-borrow-actions"><button type="button" data-borrow-view="${record.id}" class="technician-borrow-action-btn" title="View Details" aria-label="View Details"><i class="fas fa-eye" aria-hidden="true"></i></button>${technicianCanApprove ? `<button type="button" data-borrow-approve="${record.id}" class="technician-borrow-action-btn approve" title="Approve Request" aria-label="Approve Request"><i class="fas fa-check" aria-hidden="true"></i></button><button type="button" data-borrow-reject="${record.id}" class="technician-borrow-action-btn reject" title="Reject Request" aria-label="Reject Request"><i class="fas fa-xmark" aria-hidden="true"></i></button>` : '<span class="px-2 text-xs font-semibold text-amber-200" title="Awaiting accountable MR Faculty approval">Awaiting MR Faculty</span>'}</div>`
                     : `<div class="technician-borrow-actions"><button type="button" data-borrow-view="${record.id}" class="technician-borrow-action-btn" title="View Details" aria-label="View Details"><i class="fas fa-eye" aria-hidden="true"></i></button>${isApproved ? `<button type="button" data-borrow-release="${record.id}" class="technician-borrow-action-btn approve" title="Record Equipment Release" aria-label="Record Equipment Release"><i class="fas fa-hand-holding" aria-hidden="true"></i></button>` : ''}${isBorrowed ? `<button type="button" data-borrow-return="${record.id}" class="technician-borrow-action-btn approve" title="${record.returnRequestedAt ? 'Confirm Borrower Return' : 'Record Equipment Return'}" aria-label="${record.returnRequestedAt ? 'Confirm Borrower Return' : 'Record Equipment Return'}"><i class="fas fa-rotate-left" aria-hidden="true"></i></button>` : ''}${isOverdue && isBorrowed ? `<button type="button" data-borrow-mark-lost="${record.id}" class="technician-borrow-action-btn reject" title="Mark as Lost" aria-label="Mark as Lost"><i class="fas fa-circle-exclamation" aria-hidden="true"></i></button>` : ''}</div>`;
 
                 const statusClass = statusText.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                return `<tr class="align-top">
+                return `<tr id="borrow-request-${escapeBorrowText(record.id)}" class="align-top">
                     <td class="borrower-cell px-3 py-4 !text-[15px]"><strong class="borrower-name-link">${escapeBorrowText(record.borrowerName || '—')}</strong><span class="borrower-type-label">${escapeBorrowText(record.borrowerType || 'Borrower')}</span></td>
                     <td class="px-3 py-4 !text-[15px]">
                         <strong class="borrow-equipment-link">${escapeBorrowText(record.equipmentName || '—')}</strong><span class="borrow-equipment-id">${escapeBorrowText(record.equipmentId || 'ID unavailable')}</span>
@@ -4834,6 +4956,88 @@
                 await loadBorrowNotifications();
             }));
         }
+
+        function highlightTechnicianNotificationRecord(type, recordId, attempts = 0) {
+            const targetId = type === 'maintenance'
+                ? `maintenance-report-${recordId}`
+                : `borrow-request-${recordId}`;
+            const target = document.getElementById(targetId);
+            if (!target) {
+                if (attempts < 30) window.setTimeout(() => highlightTechnicianNotificationRecord(type, recordId, attempts + 1), 100);
+                return;
+            }
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.classList.add('comlab-notification-target-highlight');
+            const firstCell = target.querySelector('td');
+            if (firstCell) {
+                const marker = document.createElement('span');
+                marker.className = 'comlab-notification-target-marker';
+                marker.setAttribute('aria-hidden', 'true');
+                marker.textContent = '➜';
+                firstCell.prepend(marker);
+            }
+            window.setTimeout(() => {
+                target.classList.remove('comlab-notification-target-highlight');
+                target.querySelector('.comlab-notification-target-marker')?.remove();
+            }, 3600);
+        }
+
+        window.addEventListener('comlab:focus-technician-notification', (event) => {
+            const { type, recordId } = event.detail || {};
+            if (!recordId) return;
+            if (type === 'maintenance') {
+                currentReportStatusFilter = 'all';
+                currentReporterTab = 'all';
+                const controls = {
+                    technicianReportStatusFilter: 'all',
+                    requestSearchInput: String(recordId),
+                    requestLaboratoryFilter: 'all',
+                    requestPriorityFilter: 'all',
+                    requestSortFilter: 'newest'
+                };
+                Object.entries(controls).forEach(([id, value]) => {
+                    const control = document.getElementById(id);
+                    if (control) control.value = value;
+                });
+                document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
+                    const selected = tab.getAttribute('data-reporter-tab') === 'all';
+                    tab.classList.toggle('is-active', selected);
+                    tab.setAttribute('aria-selected', String(selected));
+                });
+                document.querySelectorAll('[data-maintenance-summary-filter]').forEach((card) => {
+                    const selected = card.getAttribute('data-maintenance-summary-filter') === 'all';
+                    card.classList.toggle('is-selected', selected);
+                    card.setAttribute('aria-pressed', String(selected));
+                });
+                technicianMaintenancePaginationState.currentPage = 1;
+                renderPendingReports(window.__TECHNICIAN_REQUESTS__ || []);
+                showTechnicianSection('new-reports');
+            } else if (type === 'borrow') {
+                borrowRequestState.activeTab = 'current';
+                borrowRequestState.summaryFilter = null;
+                borrowRequestState.filters = { search: String(recordId), status: 'all', type: 'all', date: '' };
+                borrowRequestState.currentPage = 1;
+                const search = document.getElementById('borrowSearchInput');
+                const status = document.getElementById('borrowStatusFilter');
+                const borrowerType = document.getElementById('borrowTypeFilter');
+                const date = document.getElementById('borrowDateFilter');
+                if (search) search.value = String(recordId);
+                if (status) status.value = 'all';
+                if (borrowerType) borrowerType.value = 'all';
+                if (date) date.value = '';
+                const currentTab = document.getElementById('borrowTabCurrent');
+                const historyTab = document.getElementById('borrowTabHistory');
+                currentTab?.classList.add('is-active');
+                currentTab?.setAttribute('aria-selected', 'true');
+                historyTab?.classList.remove('is-active');
+                historyTab?.setAttribute('aria-selected', 'false');
+                renderBorrowTable();
+                showTechnicianSection('borrow-requests');
+            } else {
+                return;
+            }
+            window.requestAnimationFrame(() => highlightTechnicianNotificationRecord(type, String(recordId)));
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             hydrateTechnicianProfile();
@@ -5809,6 +6013,6 @@
         window.addEventListener('hashchange', () => { if (window.location.hash === '#accomplishments') loadInitialReports(); });
       })();
     </script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=75" defer></script>
 </body>
 </html>

@@ -255,6 +255,31 @@ export async function archiveRecord(req, res) {
         return res.status(403).json({ error: "Only the report owner or an administrator can archive technician reports." });
       }
       entityId = String(report.id);
+    } else if (entityType === "maintenance-report") {
+      archiveStage = "authorizing the maintenance report archive";
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Please log in to archive issue reports." });
+      }
+      const user = await User.findByPk(req.session.userId, { attributes: ["id", "role"] });
+      const role = String(user?.role || "").trim().toLowerCase().replace(/[_-]+/g, "");
+      if (adminRoles.has(role)) {
+        // Administrators retain the existing campus-wide archive workflow.
+      } else if (role === "student") {
+        const report = await MaintenanceRequest.findByPk(entityId, {
+          attributes: ["id", "reportedBy", "student_id", "status"]
+        });
+        if (!report) return res.status(404).json({ error: "Issue report not found." });
+        const ownsReport = Number(report.reportedBy) === Number(user.id) ||
+          Number(report.student_id) === Number(user.id);
+        if (!ownsReport) return res.status(403).json({ error: "You can archive only your own issue reports." });
+        const status = String(report.status || "").trim().toLowerCase();
+        if (!["resolved", "fixed", "done", "complete", "rejected", "cancelled", "canceled"].includes(status)) {
+          return res.status(409).json({ error: "Only resolved, rejected, or cancelled issue reports can be archived." });
+        }
+        entityId = String(report.id);
+      } else {
+        return res.status(403).json({ error: "Only administrators or the student who submitted a closed issue report can archive it." });
+      }
     } else if (entityType === "faculty-account") {
       archiveStage = "authorizing the Faculty account archive";
       if (!await requireAdmin(req, res)) return;

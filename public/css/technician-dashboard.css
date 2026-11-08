@@ -701,6 +701,22 @@ html body.app-shell.technician-dashboard-page #accomplishments .report-summary-p
   margin-top: .5rem;
 }
 
+/* Keep the unread count attached to the technician header's bell button. */
+html body.app-shell.technician-dashboard-page .comlab-slim-page-header .comlab-notification-button {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: visible !important;
+}
+
+html body.app-shell.technician-dashboard-page .comlab-slim-page-header .comlab-notification-button .comlab-notification-badge:not(.hidden) {
+  position: absolute !important;
+  inset-block-start: 0 !important;
+  inset-inline-end: 0 !important;
+  transform: translate(38%, -38%) !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
 html body.app-shell.technician-dashboard-page #accomplishments .accomplishment-report-card span[class*="text-emerald-200"] {
   border-color: #a7d9b8 !important;
   background: #eaf7ee !important;
@@ -2974,7 +2990,7 @@ html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-r
 }
 html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-toolbar {
   display: grid;
-  grid-template-columns: minmax(13rem, 1.5fr) repeat(3, minmax(9rem, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: .55rem;
   margin-bottom: .7rem;
 }
@@ -2989,7 +3005,18 @@ html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-t
   color: #263a2e;
   font-size: .76rem !important;
 }
+html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-toolbar input { grid-column: 1 / -1; }
 html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-toolbar input::placeholder { color: #819087; }
+html body.app-shell.technician-dashboard-page #new-reports .maintenance-equipment-status-wrap {
+  display: grid;
+  justify-items: start;
+  gap: .25rem;
+}
+html body.app-shell.technician-dashboard-page #new-reports .maintenance-equipment-open-report-note {
+  color: #5c6d62;
+  font-size: .62rem;
+  line-height: 1.25;
+}
 html body.app-shell.technician-dashboard-page #new-reports .maintenance-report-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -3280,6 +3307,7 @@ html body.app-shell.technician-dashboard-page .main-container.theme-dark #new-re
   color: #d6e7db;
 }
 html body.app-shell.technician-dashboard-page .main-container.theme-dark #new-reports .maintenance-report-toolbar input::placeholder { color: #829b8a; }
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #new-reports .maintenance-equipment-open-report-note { color: #a9c0b0; }
 html body.app-shell.technician-dashboard-page .main-container.theme-dark #new-reports .maintenance-report-tab { color: #b7ccbe; }
 html body.app-shell.technician-dashboard-page .main-container.theme-dark #new-reports .maintenance-report-tab.is-active {
   border-color: #315642;
@@ -4589,3 +4617,311 @@ html body.app-shell.technician-dashboard-page .main-container.theme-dark #dashbo
   html body.app-shell.technician-dashboard-page #dashboard .recent-reports-table { min-width: 54rem; }
   html body.app-shell.technician-dashboard-page #dashboard .dashboard-recent-action { min-width: 4.8rem; }
 }
+
+/* Borrow requests: keep filters grouped and let the page own vertical scrolling. */
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel {
+  gap: .9rem;
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-header {
+  align-items: center;
+  padding: .25rem .1rem 1rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-title p {
+  max-width: 38rem;
+  font-size: .82rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-tabs {
+  padding: .28rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-tabs button {
+  min-height: 2.45rem;
+  padding-inline: .95rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel > .system-filter-row {
+  display: grid;
+  grid-template-columns: minmax(15rem, 1.8fr) repeat(3, minmax(9rem, 1fr));
+  gap: .8rem;
+  margin-top: 0 !important;
+  padding: .9rem;
+  border: 1px solid #e0eae3;
+  border-radius: .9rem;
+  background: #f6faf7;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-filter-label {
+  margin-bottom: .42rem;
+  font-size: .67rem;
+  letter-spacing: .075em;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-search-control,
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-filter-control {
+  min-height: 2.9rem;
+  border-radius: .68rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin: .1rem 0 -.2rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel-heading h2 {
+  font-size: .82rem !important;
+  letter-spacing: .045em;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-count {
+  font-variant-numeric: tabular-nums;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests #borrowRecordsCount {
+  padding: .35rem .65rem;
+  border: 1px solid #dce8df;
+  border-radius: 999px;
+  background: #f5f9f6;
+  white-space: nowrap;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-scroll {
+  max-height: min(50vh, 22rem);
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-top: .8rem;
+  padding-bottom: .8rem;
+  font-size: .68rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td {
+  padding-top: .9rem;
+  padding-bottom: .9rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody tr:hover {
+  box-shadow: inset 3px 0 #22a45d;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-footer {
+  align-items: center;
+  padding-top: .35rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests #technicianBorrowPagination {
+  gap: .45rem;
+}
+html body.app-shell.technician-dashboard-page #borrow-requests [data-borrow-page] {
+  min-width: 2.45rem;
+  min-height: 2.35rem;
+  border-radius: .65rem;
+}
+
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-panel > .system-filter-row {
+  border-color: rgba(74, 222, 128, .16);
+  background: rgba(2, 10, 14, .34);
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests #borrowRecordsCount {
+  border-color: rgba(74, 222, 128, .18);
+  background: rgba(34, 197, 94, .08);
+  color: #b9d7c2;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll {
+  background: rgba(2, 10, 14, .32);
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-title p,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-filter-label,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-count,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrower-type-label,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-equipment-id,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-date-time {
+  color: #a9bdb0;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-title h2,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-panel-heading h2 {
+  color: #d8e4db;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  color: #b9cbbf !important;
+  background: #153022;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table tbody td {
+  color: #c4d1c8;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table .borrower-name-link,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table .borrow-equipment-link,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-date-primary {
+  color: #bdcbc2;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table .borrower-name-link,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table .borrow-equipment-link,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table .borrow-date-primary {
+  font-family: inherit;
+  font-size: .82rem !important;
+  font-synthesis: none;
+  font-weight: 600 !important;
+  line-height: 1.35;
+  text-shadow: none;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-lab-chip {
+  border-color: rgba(110, 190, 140, .24);
+  background: rgba(34, 120, 68, .12);
+  color: #bed0c4;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll {
+  scrollbar-color: #397f58 #10271b;
+  scrollbar-width: thin;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll::-webkit-scrollbar { width: .65rem; height: .55rem; }
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll::-webkit-scrollbar-track { background: #10271b; border-radius: 999px; }
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll::-webkit-scrollbar-thumb { border: 2px solid #10271b; border-radius: 999px; background: #397f58; }
+html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table {
+  overflow: visible;
+}
+
+@media (max-width: 980px) {
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel > .system-filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel > .system-filter-row > div:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel {
+    padding: .85rem;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-header {
+    gap: .8rem;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel > .system-filter-row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: .75rem;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-panel > .system-filter-row > div:first-child {
+    grid-column: auto;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-scroll {
+    max-height: min(58vh, 25rem);
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 0;
+    border-radius: .8rem;
+    background: #fff;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    table-layout: auto;
+    overflow: visible;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody {
+    display: grid;
+    gap: .7rem;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody tr:not(:has(td[colspan])) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: .45rem;
+    border: 1px solid #dce7df;
+    border-radius: .8rem;
+    background: #fff;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td {
+    display: flex;
+    min-width: 0;
+    width: auto !important;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: .55rem !important;
+    border: 0;
+    font-size: .82rem;
+    overflow-wrap: anywhere;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td::before {
+    margin-bottom: .25rem;
+    color: #718278;
+    content: '';
+    font-size: .61rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(1)::before { content: 'Borrower'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(2)::before { content: 'Equipment'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(3)::before { content: 'Laboratory'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(4)::before { content: 'Borrow date'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(5)::before { content: 'Status'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(6)::before { content: 'Actions'; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(1),
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(2),
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td:nth-child(6) {
+    grid-column: 1 / -1;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td[colspan] {
+    display: block;
+    border: 1px solid #dce7df;
+    border-radius: .8rem;
+    background: #fff;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table tbody td[colspan]::before { content: none; }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-table td:nth-child(6) .technician-borrow-actions { justify-content: flex-start; }
+  html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table tbody tr:not(:has(td[colspan])) {
+    border-color: rgba(74, 222, 128, .2);
+    background: rgba(2, 10, 14, .38);
+  }
+  html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table tbody td::before { color: #9cb5a3; }
+  html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-table tbody td[colspan] {
+    border-color: rgba(74, 222, 128, .2);
+    background: rgba(2, 10, 14, .38);
+  }
+  html body.app-shell.technician-dashboard-page .main-container.theme-dark #borrow-requests .borrow-records-scroll {
+    border: 1px solid rgba(74, 222, 128, .18);
+    background: rgba(2, 10, 14, .32);
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests .borrow-records-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  html body.app-shell.technician-dashboard-page #borrow-requests #technicianBorrowPagination {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Accomplishments: remove the light footer strip and give the form more room. */
+@media (min-width: 1280px) {
+  html body.app-shell.technician-dashboard-page #accomplishments .accomplishments-workspace-grid {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, .96fr) !important;
+  }
+  html body.app-shell.technician-dashboard-page #accomplishments .report-form-section:first-child .report-form-section-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments .accomplishment-form > div:last-child {
+  border-top-color: rgba(110, 231, 183, .16) !important;
+  background: linear-gradient(180deg, #10291d, #0b1e15) !important;
+  box-shadow: 0 -10px 22px rgba(2, 12, 8, .22);
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments .accomplishment-report-fields,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments #accomplishmentList {
+  scrollbar-color: #466b53 #0b1e15;
+  scrollbar-width: thin;
+}
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments .accomplishment-report-fields::-webkit-scrollbar,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments #accomplishmentList::-webkit-scrollbar { width: .55rem; }
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments .accomplishment-report-fields::-webkit-scrollbar-track,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments #accomplishmentList::-webkit-scrollbar-track { border-radius: 1rem; background: #0b1e15; }
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments .accomplishment-report-fields::-webkit-scrollbar-thumb,
+html body.app-shell.technician-dashboard-page .main-container.theme-dark #accomplishments #accomplishmentList::-webkit-scrollbar-thumb { border: 2px solid #0b1e15; border-radius: 1rem; background: #466b53; }

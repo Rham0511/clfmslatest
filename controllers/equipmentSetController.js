@@ -24,6 +24,16 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+function getDisplaySetId(set) {
+  const setId = String(set?.setId || '');
+  const lab = `${set?.location || ''} ${set?.laboratoryRoom || ''}`;
+  const isComputerLab = /\bCOM\s*LAB\s*[12]\b/i.test(lab);
+  const stationNumber = String(set?.setName || '').match(/(?:PC\s*Station|Station)\s*[-#:]?\s*(\d+)\s*$/i)?.[1];
+  return isComputerLab && stationNumber
+    ? `PC-SET-${String(Number(stationNumber)).padStart(3, '0')}`
+    : setId;
+}
+
 /**
  * Recalculate and update PC Set status based on current component statuses.
  * Called whenever a component is added, removed, or changes status.
@@ -84,8 +94,11 @@ export async function getAllPCSets(req, res) {
         COALESCE(componentStats.hasCpu, 0) as hasCpu,
         COALESCE(componentStats.hasMonitor, 0) as hasMonitor,
         componentStats.components,
-        componentStats.campus,
-        componentStats.laboratoryRoom,
+        COALESCE(componentStats.campus, stationLab.campus) as campus,
+        COALESCE(
+          componentStats.laboratoryRoom,
+          CONCAT(stationLab.name, IF(stationLab.roomNumber IS NULL OR TRIM(stationLab.roomNumber) = '', '', CONCAT(' — ', stationLab.roomNumber)))
+        ) as laboratoryRoom,
         COALESCE(componentStats.campusCount, 0) as campusCount,
         componentStats.componentCategories,
         CASE
@@ -122,6 +135,7 @@ export async function getAllPCSets(req, res) {
         WHERE setId IS NOT NULL AND TRIM(setId) <> ''
         GROUP BY setId
       ) componentStats ON BINARY componentStats.setId = BINARY es.setId
+      LEFT JOIN computer_labs stationLab ON stationLab.id = es.computerLabId
       WHERE NOT EXISTS (
         SELECT 1
         FROM archived_records ar
@@ -143,6 +157,7 @@ export async function getAllPCSets(req, res) {
 
     const result = sets.map(s => ({
       ...s,
+      displaySetId: getDisplaySetId(s),
       componentCategories: s.componentCategories ? String(s.componentCategories).split('|||') : [],
       status: s.computedStatus,
       completenessPercent: s.componentCount > 0
@@ -234,7 +249,11 @@ export async function getPCSetDetails(req, res) {
         computedStatus = 'active';
       }
     }
-    const setDetails = { ...sets[0], status: computedStatus };
+    const setDetails = {
+      ...sets[0],
+      displaySetId: getDisplaySetId(sets[0]),
+      status: computedStatus
+    };
 
     res.json({
       success: true,

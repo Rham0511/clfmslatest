@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Facilities | ComLab Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <style>
+    :root { color-scheme: light dark; }
+    body.app-shell.admin-facilities-page {
+      --page-bg: #07130d;
+      --panel-bg: linear-gradient(145deg, rgba(17, 43, 29, .98), rgba(9, 27, 18, .98));
+      --surface: #0b1e14;
+      --text: #edf8f1;
+      --muted: #a5c4b1;
+      --line: rgba(110, 231, 183, .2);
+      --accent: #4ade80;
+      --accent-strong: #16a34a;
+      --soft: rgba(34, 197, 94, .12);
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .11), transparent 38%), var(--page-bg);
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+    html.theme-light body.app-shell.admin-facilities-page {
+      --page-bg: #eef4f0;
+      --surface: #f6faf7;
+      --text: #16271d;
+      --muted: #5c7566;
+      --line: rgba(22, 101, 52, .17);
+      --accent: #168044;
+      --accent-strong: #15803d;
+      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page-bg);
+    }
+    .facilities-main {
+      box-sizing: border-box;
+      min-height: 100vh;
+      margin-left: var(--sidebar-width, 250px);
+      padding: 0 .55rem .35rem;
+    }
+    .facilities-heading {
+      margin: 0 !important;
+      padding: 0 .5rem !important;
+    }
+    html body.app-shell.admin-facilities-page .facilities-main > .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+      margin-bottom: .25rem !important;
+    }
+    .facilities-heading-main {
+      display: flex;
+      min-width: 0;
+      flex: 1 1 auto;
+      align-items: center;
+    }
+    .facilities-workspace {
+      width: 100%;
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .facilities-tabs {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: .18rem;
+      overflow-x: auto;
+      padding: 0;
+      border: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(74, 222, 128, .3) transparent;
+    }
+    .facilities-tab {
+      display: inline-flex;
+      min-height: 2.05rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: .38rem;
+      padding: .34rem .58rem;
+      border: 1px solid transparent;
+      border-radius: .62rem;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: .69rem;
+      font-weight: 750;
+      line-height: 1.1;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color .16s ease, border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+    .facilities-tab i { color: var(--accent); font-size: .72rem; }
+    .facilities-tab:hover { transform: translateY(-1px); background: var(--soft); color: var(--text); }
+    .facilities-tab[aria-selected="true"] {
+      border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+      background: linear-gradient(145deg, color-mix(in srgb, var(--accent-strong) 28%, var(--surface)), color-mix(in srgb, var(--surface) 85%, var(--accent-strong)));
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+    }
+    .facilities-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .facilities-content { padding: 0; }
+    .facilities-frame {
+      display: block;
+      width: 100%;
+      height: calc(100dvh - 3.4rem);
+      min-height: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+    @media (max-width: 1023px) {
+      .facilities-main { margin-left: 0; padding: 0 .5rem .35rem; }
+      .facilities-frame { height: calc(100dvh - 3.4rem - env(safe-area-inset-top, 0px)); }
+    }
+    @media (max-width: 540px) {
+      .facilities-main { padding-right: .35rem; padding-left: .35rem; }
+      .facilities-heading { padding-right: .25rem !important; padding-left: .25rem !important; }
+      .facilities-tabs { gap: .1rem; }
+      .facilities-tab { min-height: 1.9rem; padding: .3rem .43rem; font-size: .64rem; }
+      .facilities-frame { height: calc(100dvh - 3.4rem - env(safe-area-inset-top, 0px)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .facilities-tab { transition-duration: .01ms; }
+    }
+  </style>
+</head>
+<body class="app-shell system-layout-page admin-shell admin-facilities-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
+  <div id="shared-sidebar"></div>
+  <main class="facilities-main">
+    <header id="facilitiesPageHeader" class="system-dashboard-heading facilities-heading" data-comlab-hide-auto-title="true">
+      <div class="system-dashboard-heading-main facilities-heading-main">
+        <nav class="facilities-tabs facilities-header-tabs" role="tablist" aria-label="Facility sections">
+          <button class="facilities-tab" type="button" role="tab" id="inventoryTab" aria-selected="true" aria-controls="facilityFrame" data-facilities-tab="inventory"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>Equipment Inventory</button>
+          <button class="facilities-tab" type="button" role="tab" id="assignmentTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="assignment"><i class="fa-solid fa-user-check" aria-hidden="true"></i>Equipment Assignment</button>
+          <button class="facilities-tab" type="button" role="tab" id="availabilityTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="availability"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>Availability</button>
+          <button class="facilities-tab" type="button" role="tab" id="borrowedTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="borrowed"><i class="fa-solid fa-box-open" aria-hidden="true"></i>Borrowed Equipment</button>
+        </nav>
+      </div>
+      <div class="system-dashboard-heading-actions">
+        <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
+        <div class="system-profile-badge profile-theme-static" aria-label="Administrator profile">
+          <span class="system-profile-badge-avatar" data-user-initials>AD</span>
+          <span class="system-profile-badge-copy">
+            <span class="system-profile-badge-name" data-user-name>Administrator</span>
+            <span class="system-profile-badge-role" data-user-role>Admin</span>
+          </span>
+        </div>
+      </div>
+    </header>
+    <section class="facilities-workspace" aria-label="Facility management sections">
+      <div class="facilities-content" role="tabpanel" aria-labelledby="inventoryTab">
+        <iframe id="facilityFrame" class="facilities-frame" title="Equipment Inventory" loading="eager"></iframe>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const frame = document.getElementById('facilityFrame');
+      const tabs = Array.from(document.querySelectorAll('[data-facilities-tab]'));
+      const routes = {
+        inventory: { href: '/equipment-inventory?embedded=facilities', title: 'Equipment Inventory' },
+        assignment: { href: '/equipment-assignment?embedded=facilities', title: 'Equipment Assignment' },
+        availability: { href: '/admin-dashboard?embedded=facilities#equipment-availability', title: 'Equipment Availability' },
+        borrowed: { href: '/borrow-equipment?embedded=facilities', title: 'Borrowed Equipment' }
+      };
+      const embedStyle = `
+        html, body { width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0 !important; }
+        html body.app-shell.facilities-embedded #shared-sidebar,
+        html body.app-shell.facilities-embedded #sidebar,
+        html body.app-shell.facilities-embedded #sidebarOverlay,
+        html body.app-shell.facilities-embedded .sidebar,
+        html body.app-shell.facilities-embedded .sidebar-overlay,
+        html body.app-shell.facilities-embedded .system-dashboard-heading,
+        html body.app-shell.facilities-embedded .top-header,
+        html body.app-shell.facilities-embedded .comlab-page-header-spacer,
+        html body.app-shell.facilities-embedded .borrow-page-header-spacer,
+        html body.app-shell.facilities-embedded #mobileMenuToggle,
+        html body.app-shell.facilities-embedded #qr-scan-float-btn,
+        html body.app-shell.facilities-embedded #comlab-help-float-btn,
+        html body.app-shell.facilities-embedded #comlab-help-panel { display: none !important; }
+        html body.app-shell.facilities-embedded .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) { display: none !important; }
+        body { overflow: auto !important; }
+        html body.app-shell.facilities-embedded > .main-container,
+        html body.app-shell.facilities-embedded > #mainContainer,
+        html body.app-shell.facilities-embedded > .assignment-container {
+          box-sizing: border-box !important; width: 100% !important; max-width: none !important;
+          margin: 0 !important; padding: .35rem !important; min-height: 100% !important; height: 100% !important;
+        }
+        html body.app-shell.facilities-embedded .main-content,
+        html body.app-shell.facilities-embedded .assignment-content,
+        html body.app-shell.facilities-embedded .page-content { box-sizing: border-box !important; width: 100% !important; max-width: none !important; margin-left: 0 !important; }
+        html body.app-shell.facilities-embedded.admin-shell .assignment-container { height: 100% !important; min-height: 0 !important; overflow: hidden !important; }
+        html body.app-shell.facilities-embedded.admin-shell .assignment-container > .assignment-content { min-height: 0 !important; height: 100% !important; padding: .35rem !important; }
+        @media (min-width: 768px) {
+          html body.app-shell.facilities-embedded.equipment-inventory-page .main-container > .page-content {
+            box-sizing: border-box !important; padding: .2rem .4rem .3rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-summary-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: .35rem !important; margin-bottom: .4rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-summary-card {
+            min-height: 3.1rem !important; gap: .45rem !important; padding: .38rem .5rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-summary-icon {
+            width: 1.9rem !important; height: 1.9rem !important; flex-basis: 1.9rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .top-controls-section {
+            margin-bottom: .4rem !important; padding: .38rem .5rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-filter-row.system-filter-row,
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-filter-controls {
+            gap: .35rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-filter-controls .inventory-filter-field {
+            min-height: 2.25rem !important; gap: .4rem !important; padding: .22rem .5rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-filter-controls select {
+            min-height: 1.9rem !important; font-size: .8rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-toolbar-main {
+            grid-template-columns: minmax(12rem, 1fr) auto !important; gap: .4rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-search-field {
+            min-height: 2.3rem !important; padding: .25rem .6rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-actions-group {
+            gap: .25rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-actions-group button {
+            min-height: 2.3rem !important; padding: .3rem .55rem !important; font-size: .75rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page .inventory-actions-group #openQrExportModal {
+            width: 2.3rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection > .overflow-x-auto {
+            overflow-x: hidden !important; overflow-y: auto !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) {
+            box-sizing: border-box !important; width: 100% !important; min-width: 0 !important;
+            table-layout: fixed !important; border-spacing: 0 !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th,
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td {
+            box-sizing: border-box !important; padding: .4rem .42rem !important;
+            font-size: .72rem !important; line-height: 1.2 !important;
+            white-space: normal !important; overflow-wrap: anywhere !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(1) { width: 21% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(2) { width: 13% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(3) { width: 10% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(4) { width: 12% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(5) { width: 11% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(6) { width: 12% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(7) { width: 11% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(8) { width: 10% !important; }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(8) {
+            padding-inline: .25rem !important; white-space: nowrap !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr > td:nth-child(5) > span {
+            max-width: 100% !important; flex-wrap: wrap !important; padding: .12rem .35rem !important;
+            font-size: .64rem !important; line-height: 1.15 !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) .equipment-row-actions {
+            gap: .15rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) .equipment-row-actions :is(.action-btn-qr, .dropdown-toggle) {
+            width: 1.65rem !important; min-width: 1.65rem !important; height: 1.65rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) #equipmentPaginationFooter {
+            min-height: 2.4rem !important; padding: .25rem .45rem !important; gap: .35rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-content {
+            box-sizing: border-box !important; min-height: 0 !important; height: 100% !important;
+            padding: .2rem .4rem .3rem !important; gap: .55rem !important; row-gap: .55rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-controls {
+            flex: 0 0 auto !important; gap: .45rem !important; margin-bottom: 0 !important;
+            padding: .5rem .65rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-toolbar-heading {
+            align-items: center !important; flex-direction: row !important; gap: .55rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-toolbar-copy {
+            min-width: 13rem !important; flex: 1 1 auto !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-toolbar-copy h2 {
+            font-size: 1rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-toolbar-actions {
+            width: auto !important; min-width: 0 !important; flex: 0 0 auto !important;
+            justify-content: flex-end !important; gap: .35rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-overview-stats {
+            flex-wrap: nowrap !important; gap: .3rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-overview-stat {
+            min-width: 4.3rem !important; padding: .27rem .4rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-refresh-button {
+            min-height: 2.2rem !important; padding: .35rem .55rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-filter-grid {
+            grid-template-columns: minmax(14rem, 1.45fr) minmax(10rem, .9fr) minmax(12rem, 1.1fr) !important;
+            gap: .45rem !important; padding-top: .45rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-search {
+            grid-column: auto !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-search-field,
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-filter-field select {
+            min-height: 2.2rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-search-field input {
+            min-height: 2.1rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-bulk-controls {
+            min-height: 0 !important; margin-bottom: 0 !important; padding: .38rem .55rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-bulk-controls select,
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-bulk-controls button {
+            min-height: 2.05rem !important; padding-block: .3rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-bulk-icon {
+            width: 1.8rem !important; height: 1.8rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table-card {
+            min-height: 0 !important; flex: 1 1 0% !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table-scroll {
+            min-height: 0 !important; max-height: none !important; flex: 1 1 auto !important;
+            overflow-anchor: none !important; scroll-padding-top: 0 !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table {
+            width: 100% !important; min-width: 0 !important; table-layout: fixed !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(1) { width: 4% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(2) { width: 11% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(3) { width: 16% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(4) { width: 11% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(5) { width: 18% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table colgroup col:nth-child(6) { width: 40% !important; }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table thead th {
+            position: sticky !important; top: 0 !important; z-index: 5 !important;
+            padding: .56rem .52rem !important; background: #0b3825 !important;
+            box-shadow: 0 1px 0 rgba(74, 222, 128, .22) !important;
+            font-size: .64rem !important; letter-spacing: .035em !important; line-height: 1.2 !important;
+            white-space: normal !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table tbody tr[data-equipment-id] {
+            height: auto !important; min-height: 3.2rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table tbody td {
+            min-width: 0 !important; padding: .46rem .52rem !important; overflow-wrap: anywhere !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .equipment-id-tooltip-trigger {
+            font-size: .75rem !important; overflow-wrap: anywhere !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .assignment-status-pill {
+            white-space: normal !important; overflow-wrap: anywhere !important; padding: .18rem .36rem !important;
+            font-size: .62rem !important; line-height: 1.15 !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .assignment-faculty-email {
+            font-size: .61rem !important; line-height: 1.2 !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table tbody td:last-child > .flex {
+            width: 100% !important; min-width: 0 !important; gap: .28rem !important; flex-wrap: nowrap !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .faculty-select {
+            width: 0 !important; min-width: 0 !important; min-height: 2rem !important;
+            flex: 1 1 0% !important; padding: .28rem .35rem !important; font-size: .64rem !important;
+            text-overflow: ellipsis !important; white-space: nowrap !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .save-assignment {
+            min-width: 3rem !important; min-height: 2rem !important; padding: .25rem .42rem !important; font-size: .68rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell .assignment-table .show-history {
+            width: 1.9rem !important; min-width: 1.9rem !important; min-height: 2rem !important; padding: .2rem !important;
+          }
+          html body.app-shell.facilities-embedded.equipment-assignment-page.admin-shell #assignmentPaginationFooter {
+            min-height: 2.7rem !important; padding: .3rem .6rem !important;
+          }
+        }
+        html body.app-shell.facilities-embedded.system-layout-page.equipment-inventory-page .main-container { min-height: 0 !important; height: 100% !important; }
+        html body.app-shell.facilities-embedded.system-layout-page.equipment-inventory-page .page-content { min-height: 0 !important; }
+        html body.app-shell.facilities-embedded.system-layout-page #mainContainer:has(#equipment-availability-view.active) > .main-content { padding: .25rem !important; }
+        html body.app-shell.facilities-embedded.system-layout-page #mainContainer:has(#equipment-availability-view.active) .equipment-availability-page { margin-top: 0 !important; }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .main-container { margin: 0 !important; padding: .35rem !important; }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .page-card { margin-top: 0 !important; }
+      `;
+      const applyEmbeddedLayout = () => {
+        try {
+          const doc = frame.contentDocument;
+          if (!doc?.head || !doc.body) return;
+          doc.body.classList.add('facilities-embedded');
+          doc.defaultView.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__ = true;
+          doc.querySelectorAll('#shared-sidebar, #sidebar, #sidebarOverlay, #qr-scan-float-btn, #comlab-help-float-btn, #comlab-help-panel').forEach((element) => element.remove());
+          let style = doc.getElementById('facilities-embed-layout');
+          if (!style) {
+            style = doc.createElement('style');
+            style.id = 'facilities-embed-layout';
+            style.textContent = embedStyle;
+            doc.head.append(style);
+          }
+          if (doc.body.classList.contains('equipment-assignment-page')) {
+            const assignmentTableScroll = doc.querySelector('.assignment-table-scroll');
+            if (assignmentTableScroll) assignmentTableScroll.scrollTop = 0;
+          }
+        } catch (error) {
+          console.warn('Unable to apply the embedded facilities layout.', error);
+        }
+      };
+      const setActiveTab = (key, updateAddress = true) => {
+        const route = routes[key] || routes.inventory;
+        tabs.forEach((tab) => {
+          const active = tab.dataset.facilitiesTab === key;
+          tab.setAttribute('aria-selected', String(active));
+          tab.tabIndex = active ? 0 : -1;
+        });
+        document.querySelector('.facilities-content').setAttribute('aria-labelledby', tabs.find((tab) => tab.dataset.facilitiesTab === key)?.id || 'inventoryTab');
+        frame.title = route.title;
+        frame.src = route.href;
+        if (updateAddress) {
+          const nextUrl = new URL(window.location.href);
+          if (key === 'inventory') nextUrl.hash = '';
+          else nextUrl.hash = key;
+          window.history.replaceState(null, '', nextUrl);
+        }
+      };
+      frame.addEventListener('load', applyEmbeddedLayout);
+      tabs.forEach((tab) => tab.addEventListener('click', () => setActiveTab(tab.dataset.facilitiesTab)));
+      document.querySelector('.facilities-header-tabs').addEventListener('keydown', (event) => {
+        if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const currentIndex = tabs.indexOf(document.activeElement);
+        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (currentIndex + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+        tabs[nextIndex].focus();
+        setActiveTab(tabs[nextIndex].dataset.facilitiesTab);
+      });
+      const requestedTab = window.location.hash.slice(1);
+      setActiveTab(routes[requestedTab] ? requestedTab : 'inventory', false);
+    })();
+  </script>
+  <script src="/js/sidebar-component.js?v=77" defer></script>
+</body>
+</html>

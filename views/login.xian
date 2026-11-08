@@ -676,7 +676,7 @@
           <section class="login-intro">
             <p class="login-eyebrow">Welcome to</p>
             <h1>Computer Laboratory Facilities Management System</h1>
-            <p>Efficiently manage laboratory schedules, attendance, equipment inventory, and maintenance requests in one centralized platform.</p>
+            <p>Manage laboratory logs, equipment reports, inventory, and borrow requests in one centralized platform.</p>
           </section>
 
           <section class="login-card" aria-labelledby="loginTitle">

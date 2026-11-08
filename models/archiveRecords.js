@@ -50,3 +50,12 @@ export async function getArchivedEntityIds(entityType) {
   );
   return rows.map(({ entityId }) => String(entityId));
 }
+
+export async function isEntityArchived(entityType, entityId) {
+  await ensureArchiveRecordsTable();
+  const rows = await sequelize.query(
+    "SELECT 1 AS archived FROM archived_records WHERE entityType = ? AND BINARY entityId = BINARY ? LIMIT 1",
+    { replacements: [entityType, String(entityId)], type: QueryTypes.SELECT }
+  );
+  return rows.length > 0;
+}

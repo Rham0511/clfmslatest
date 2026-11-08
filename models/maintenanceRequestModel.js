@@ -80,6 +80,11 @@ export const MaintenanceRequest = sequelize.define("MaintenanceRequest", {
     allowNull: true,
     comment: "Serial number of the equipment tied to this maintenance record"
   },
+  computerLabId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: "Computer lab where the reported equipment was located"
+  },
   campus: {
     type: DataTypes.STRING,
     allowNull: true

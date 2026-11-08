@@ -6,7 +6,7 @@
     <title>Report Equipment Issue | ComLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         :root { --bg: #020617; --bg-secondary: #07111f; }
         body {
@@ -54,46 +54,47 @@
             padding: 1.75rem;
         }
         body.faculty-report-equipment-page #reportHeading {
-            margin-bottom: 0.75rem;
-            font-size: 1.45rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
             line-height: 1.3;
         }
         body.faculty-report-equipment-page #reportIntro {
-            margin-bottom: 1.25rem;
-            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
         }
         body.faculty-report-equipment-page #step1,
         body.faculty-report-equipment-page #equipmentIdPanel,
         body.faculty-report-equipment-page #pcStationPanel,
         body.faculty-report-equipment-page #pcSetScopePanel {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
         body.faculty-report-equipment-page .report-form-card > div.mb-5 {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
         body.faculty-report-equipment-page #step1 .space-y-2,
         body.faculty-report-equipment-page #pcSetScopePanel .space-y-2 {
             display: grid;
-            gap: 0.75rem;
+            gap: 0.6rem;
         }
         body.faculty-report-equipment-page #step1 > p,
         body.faculty-report-equipment-page #pcSetScopePanel > p {
-            margin-bottom: 0.85rem;
-            font-size: 1.15rem;
-            font-weight: 750;
+            margin-bottom: 0.6rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
             line-height: 1.4;
         }
         body.faculty-report-equipment-page #step1 > p {
-            font-size: 1.25rem;
+            font-size: 0.9375rem;
         }
         body.faculty-report-equipment-page .radio-card {
-            min-height: 4.5rem;
-            align-items: center;
-            padding: 1rem 1.1rem;
+            min-height: auto;
+            align-items: flex-start;
+            padding: 0.75rem 0.9rem;
         }
         body.faculty-report-equipment-page .radio-card p.text-sm {
-            font-size: 1.08rem;
-            font-weight: 700;
+            font-size: 0.875rem;
+            font-weight: 600;
             line-height: 1.4;
         }
         body.faculty-report-equipment-page .radio-card p.text-xs,
@@ -102,37 +103,37 @@
         body.faculty-report-equipment-page #pcEntireList,
         body.faculty-report-equipment-page #equipmentInfo .text-xs,
         body.faculty-report-equipment-page #issueDescription + p {
-            font-size: 0.92rem;
-            line-height: 1.5;
+            font-size: 0.75rem;
+            line-height: 1.4;
         }
         body.faculty-report-equipment-page .report-form-label,
         body.faculty-report-equipment-page #equipmentIdPanel > label,
         body.faculty-report-equipment-page #pcStationPanel > label,
         body.faculty-report-equipment-page #pcComponentPicker > label {
             display: block;
-            margin-bottom: 0.6rem;
-            font-size: 1.08rem;
-            font-weight: 750;
+            margin-bottom: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
             line-height: 1.4;
         }
         body.faculty-report-equipment-page .form-input,
         body.faculty-report-equipment-page .form-select {
-            min-height: 3.35rem;
-            padding: 0.9rem 1.05rem;
-            font-size: 1.05rem;
-            line-height: 1.5;
+            min-height: 2.75rem;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.875rem;
+            line-height: 1.4;
         }
         body.faculty-report-equipment-page .form-input::placeholder {
             color: #94a3b8;
-            font-size: 1rem;
+            font-size: 0.875rem;
             opacity: 1;
         }
         body.faculty-report-equipment-page #issueDescription {
-            min-height: 8rem;
+            min-height: 6rem;
         }
         body.faculty-report-equipment-page #submitBtn {
-            min-height: 3.5rem;
-            font-size: 1.08rem;
+            min-height: 2.75rem;
+            font-size: 0.875rem;
         }
         .equipment-suggestion-list {
             position: absolute;
@@ -796,6 +797,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=75" defer></script>
 </body>
 </html>

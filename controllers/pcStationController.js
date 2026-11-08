@@ -55,9 +55,117 @@ const writeStationAudit = async (transaction, user, station, action, description
 const stationAuditDescription = (action, station, reason) =>
   `${action} at PC station ${station.setName} (${station.setId}). ${reason}`;
 
+const startStudentPCStationUsage = async ({ user, station, attendanceId = null, transaction }) => {
+  if (getSupportedRole(user?.role) !== "student") return;
+
+  const activeUsage = await sequelize.query(
+    `SELECT id
+     FROM equipment_usage_logs
+     WHERE userId = ? AND BINARY pcSetId = BINARY ? AND usageEndTime IS NULL
+     LIMIT 1
+     FOR UPDATE`,
+    { replacements: [user.id, station.setId], type: QueryTypes.SELECT, transaction }
+  );
+  if (activeUsage.length) return;
+
+  await sequelize.query(
+    `INSERT INTO equipment_usage_logs
+       (attendanceId, userId, campusId, laboratoryId, pcSetId, computerLabId, usageStartTime, sessionNotes)
+     VALUES (?, ?, ?, ?, ?, ?,
+       COALESCE((
+         SELECT stationSession.startedAt
+         FROM pc_station_sessions stationSession
+         WHERE BINARY stationSession.setId = BINARY ? AND stationSession.activeUserId = ?
+         LIMIT 1
+       ), UTC_TIMESTAMP()),
+       ?)`,
+    {
+      replacements: [
+        attendanceId,
+        user.id,
+        station.campusId ?? user.campus ?? null,
+        station.laboratoryId ?? station.location ?? null,
+        station.setId,
+        station.computerLabId ?? null,
+        station.setId,
+        user.id,
+        `PC station session at ${station.setName || station.setId}.`
+      ],
+      type: QueryTypes.INSERT,
+      transaction
+    }
+  );
+};
+
+const toSqlUtcDateTime = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return toUtcSqlDateTime(value);
+  const text = String(value).trim();
+  const match = text.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/);
+  return match ? `${match[1]} ${match[2]}` : toUtcSqlDateTime(value);
+};
+
+const finishStudentPCStationUsage = async ({ userId, station, startedAt = null, scheduledEndAt = null, transaction }) => {
+  const endAt = toSqlUtcDateTime(scheduledEndAt);
+  const [, metadata] = await sequelize.query(
+    `UPDATE equipment_usage_logs
+     SET usageEndTime = COALESCE(?, UTC_TIMESTAMP()),
+         durationMinutes = GREATEST(ROUND(TIMESTAMPDIFF(SECOND, usageStartTime, COALESCE(?, UTC_TIMESTAMP())) / 60), 1)
+     WHERE userId = ? AND BINARY pcSetId = BINARY ? AND usageEndTime IS NULL`,
+    { replacements: [endAt, endAt, userId, station.setId], type: QueryTypes.UPDATE, transaction }
+  );
+  const affectedRows = typeof metadata === "number"
+    ? metadata
+    : Number(metadata?.affectedRows || 0);
+  if (affectedRows) return;
+
+  if (startedAt) {
+    const completedUsage = await sequelize.query(
+      `SELECT id
+       FROM equipment_usage_logs
+       WHERE userId = ? AND BINARY pcSetId = BINARY ?
+         AND usageStartTime = ? AND usageEndTime IS NOT NULL
+       LIMIT 1
+       FOR UPDATE`,
+      { replacements: [userId, station.setId, startedAt], type: QueryTypes.SELECT, transaction }
+    );
+    if (completedUsage.length) return;
+  }
+
+  const sessionStartedAt = toSqlUtcDateTime(startedAt) || toUtcSqlDateTime(new Date());
+  await sequelize.query(
+    `INSERT INTO equipment_usage_logs
+       (userId, campusId, laboratoryId, pcSetId, computerLabId, usageStartTime, usageEndTime, durationMinutes, sessionNotes)
+       VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, UTC_TIMESTAMP()), GREATEST(ROUND(TIMESTAMPDIFF(SECOND, ?, COALESCE(?, UTC_TIMESTAMP())) / 60), 1), ?)`,
+    {
+      replacements: [
+        userId,
+        station.campusId ?? null,
+        station.laboratoryId ?? station.location ?? null,
+        station.setId,
+        station.computerLabId ?? null,
+        sessionStartedAt,
+        endAt,
+        sessionStartedAt,
+        endAt,
+        `PC station session at ${station.setName || station.setId}.`
+      ],
+      type: QueryTypes.INSERT,
+      transaction
+    }
+  );
+};
+
 const getValidSetId = (value) => {
   const setId = String(value || "").trim();
   return setId.length > 0 && setId.length <= 50 ? setId : null;
+};
+
+const getDisplaySetId = (station) => {
+  const localNumber = String(station?.setName || "").match(/(?:PC\s*Station|Station)\s*[-#:]?\s*(\d+)\s*$/i)?.[1];
+  return localNumber
+    ? `PC-SET-${String(Number(localNumber)).padStart(3, "0")}`
+    : station?.setId;
 };
 
 const toUtcSqlDateTime = (value) => {
@@ -102,6 +210,7 @@ export const getPCStationQr = async (req, res) => {
       success: true,
       station: {
         setId: station.setId,
+        displaySetId: getDisplaySetId(station),
         setName: station.setName,
         location: station.location
       },
@@ -111,6 +220,61 @@ export const getPCStationQr = async (req, res) => {
   } catch (error) {
     console.error("[PCStation] Failed to generate station QR code:", error);
     return res.status(500).json({ error: "Failed to generate PC station QR code." });
+  }
+};
+
+export const getPCStationScanAvailability = async (req, res) => {
+  const setId = getValidSetId(readQrLinkToken(req.params.token, "pc-station"));
+  if (!setId) return res.status(400).json({ success: false, error: "Invalid PC station QR code." });
+  if (!req.session?.userId) {
+    return res.status(401).json({ success: false, error: "Please sign in before scanning a PC station." });
+  }
+
+  try {
+    if ((await getArchivedEntityIds("pc-set")).includes(setId)) {
+      return res.status(404).json({ success: false, error: "PC station not found." });
+    }
+
+    const user = await getSessionUser(req);
+    const role = getSupportedRole(user?.role);
+    if (!user || !role) {
+      return res.status(403).json({ success: false, error: "Your account cannot use PC station sign-in." });
+    }
+
+    const [station] = await sequelize.query(
+      "SELECT setId, setName, status FROM equipment_sets WHERE BINARY setId = BINARY ? LIMIT 1",
+      { replacements: [setId], type: QueryTypes.SELECT }
+    );
+    if (!station) return res.status(404).json({ success: false, error: "PC station not found." });
+
+    const [session] = await sequelize.query(
+      `SELECT activeUserId,
+              (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+       FROM pc_station_sessions
+       WHERE BINARY setId = BINARY ?
+       LIMIT 1`,
+      { replacements: [station.setId], type: QueryTypes.SELECT }
+    );
+    const activeUserId = session?.activeUserId == null ? null : Number(session.activeUserId);
+    const sessionExpired = Number(session?.sessionExpired || 0) === 1;
+    const isMine = activeUserId === Number(user.id) && !sessionExpired;
+    const isOccupied = activeUserId !== null && activeUserId !== Number(user.id) && !sessionExpired;
+    const isActive = String(station.status || "").toLowerCase() === "active";
+
+    res.set({ "Cache-Control": "no-store, private" });
+    return res.json({
+      success: true,
+      station: {
+        setId: station.setId,
+        displaySetId: getDisplaySetId(station),
+        setName: station.setName || station.setId
+      },
+      state: !isActive ? "unavailable" : isOccupied ? "occupied" : isMine ? "mine" : "available",
+      occupied: isOccupied
+    });
+  } catch (error) {
+    console.error("[PCStation] Unable to check station availability during QR scan:", error);
+    return res.status(500).json({ success: false, error: "Unable to check this PC station. Please try again." });
   }
 };
 
@@ -153,10 +317,17 @@ export const scanPCStationQr = async (req, res) => {
   if (getSupportedRole(user?.role) === "student") {
     try {
       const activeSessions = await sequelize.query(
-        "SELECT activeUserId FROM pc_station_sessions WHERE BINARY setId = BINARY ? LIMIT 1",
+        `SELECT activeUserId,
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+         FROM pc_station_sessions
+         WHERE BINARY setId = BINARY ?
+         LIMIT 1`,
         { replacements: [setId], type: QueryTypes.SELECT }
       );
-      const activeUserId = activeSessions[0]?.activeUserId == null ? null : Number(activeSessions[0].activeUserId);
+      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1;
+      const activeUserId = sessionExpired || activeSessions[0]?.activeUserId == null
+        ? null
+        : Number(activeSessions[0].activeUserId);
       if (activeUserId === Number(user.id)) {
         req.body = { ...(req.body || {}), action: "logout", autoScan: "1" };
         return submitPCStationAction(req, res);
@@ -199,7 +370,7 @@ export const submitPCStationAction = async (req, res) => {
 
     const result = await sequelize.transaction(async (transaction) => {
       const stations = await sequelize.query(
-        "SELECT setId, setName, location, status FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
+        "SELECT setId, setName, location, status, campusId, laboratoryId, computerLabId FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
         { replacements: [setId], type: QueryTypes.SELECT, transaction }
       );
       const station = stations[0];
@@ -211,21 +382,47 @@ export const submitPCStationAction = async (req, res) => {
         { replacements: [station.setId], type: QueryTypes.INSERT, transaction }
       );
       const activeSessions = await sequelize.query(
-        "SELECT activeUserId FROM pc_station_sessions WHERE BINARY setId = BINARY ? FOR UPDATE",
+        `SELECT activeUserId, startedAt,
+                DATE_FORMAT(autoLogoutAt, '%Y-%m-%d %H:%i:%s') AS autoLogoutAt,
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+         FROM pc_station_sessions
+         WHERE BINARY setId = BINARY ?
+         FOR UPDATE`,
         { replacements: [station.setId], type: QueryTypes.SELECT, transaction }
       );
-      const activeUserId = activeSessions[0]?.activeUserId == null
+      let activeUserId = activeSessions[0]?.activeUserId == null
         ? null
         : Number(activeSessions[0].activeUserId);
 
-      if (
-        requestedAction === "login" &&
-        role === "student" &&
-        req.body?.autoScan === "1" &&
-        activeUserId !== null &&
-        activeUserId !== Number(user.id)
-      ) {
-        return { station, action: "confirm", role };
+      if (activeUserId !== null && Number(activeSessions[0]?.sessionExpired || 0) === 1) {
+        const expiredUserId = activeUserId;
+        const expiredUser = await User.findByPk(expiredUserId, {
+          attributes: ["id", "name", "role", "campus"],
+          transaction
+        });
+        await sequelize.query(
+          `UPDATE pc_station_sessions
+           SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+           WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
+          { replacements: [station.setId, expiredUserId], type: QueryTypes.UPDATE, transaction }
+        );
+        if (getSupportedRole(expiredUser?.role) === "student") {
+          await finishStudentPCStationUsage({
+            userId: expiredUserId,
+            station,
+            startedAt: activeSessions[0]?.startedAt,
+            scheduledEndAt: activeSessions[0]?.autoLogoutAt,
+            transaction
+          });
+        }
+        await writeStationAudit(
+          transaction,
+          expiredUser || { id: expiredUserId },
+          station,
+          "Logout",
+          stationAuditDescription("Automatically logged out", station, "The scheduled PC station session had expired.")
+        );
+        activeUserId = null;
       }
 
       if (requestedAction === "logout") {
@@ -238,6 +435,14 @@ export const submitPCStationAction = async (req, res) => {
            WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
           { replacements: [station.setId, user.id], type: QueryTypes.UPDATE, transaction }
         );
+        if (role === "student") {
+          await finishStudentPCStationUsage({
+            userId: user.id,
+            station,
+            startedAt: activeSessions[0]?.startedAt,
+            transaction
+          });
+        }
         await writeStationAudit(
           transaction,
           user,
@@ -253,10 +458,26 @@ export const submitPCStationAction = async (req, res) => {
       if (String(station.status || "").toLowerCase() !== "active") {
         return { error: "This PC station is not currently available for use.", status: 409 };
       }
+      if (activeUserId !== null && activeUserId !== Number(user.id)) {
+        return {
+          station,
+          stationOccupied: true,
+          error: `${station.setName} is currently in use. Please choose another PC station.`,
+          status: 409
+        };
+      }
       if (activeUserId === Number(user.id)) {
         const attendanceResult = role === "student"
           ? await recordPCStationAttendance({ student: user, station, transaction })
           : null;
+        if (role === "student") {
+          await startStudentPCStationUsage({
+            user,
+            station: { ...station, startedAt: activeSessions[0]?.startedAt },
+            attendanceId: attendanceResult?.attendanceId || null,
+            transaction
+          });
+        }
         if (attendanceResult?.autoLogoutAt) {
           await sequelize.query(
             `UPDATE pc_station_sessions SET autoLogoutAt = ? WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
@@ -266,35 +487,27 @@ export const submitPCStationAction = async (req, res) => {
         return { station, action: "login", role, attendanceResult };
       }
 
-      if (activeUserId !== null) {
-        const previousUser = await User.findByPk(activeUserId, {
-          attributes: ["id", "name", "role", "campus"],
-          transaction
-        });
-        await sequelize.query(
-          `UPDATE pc_station_sessions
-           SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
-           WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
-          { replacements: [station.setId, activeUserId], type: QueryTypes.UPDATE, transaction }
-        );
-        await writeStationAudit(
-          transaction,
-          previousUser || { id: activeUserId },
-          station,
-          "Logout",
-          stationAuditDescription("Automatically logged out", station, "A different user scanned this station QR code.")
-        );
-      }
-
       const attendanceResult = role === "student"
         ? await recordPCStationAttendance({ student: user, station, transaction })
         : null;
       await sequelize.query(
         `UPDATE pc_station_sessions
-         SET activeUserId = ?, startedAt = CURRENT_TIMESTAMP, autoLogoutAt = ?
+         SET activeUserId = ?, startedAt = UTC_TIMESTAMP(), autoLogoutAt = ?
          WHERE BINARY setId = BINARY ?`,
         { replacements: [user.id, toUtcSqlDateTime(attendanceResult?.autoLogoutAt), station.setId], type: QueryTypes.UPDATE, transaction }
       );
+      if (role === "student") {
+        const [session] = await sequelize.query(
+          "SELECT startedAt FROM pc_station_sessions WHERE BINARY setId = BINARY ? AND activeUserId = ?",
+          { replacements: [station.setId, user.id], type: QueryTypes.SELECT, transaction }
+        );
+        await startStudentPCStationUsage({
+          user,
+          station: { ...station, startedAt: session?.startedAt },
+          attendanceId: attendanceResult?.attendanceId || null,
+          transaction
+        });
+      }
       await writeStationAudit(
         transaction,
         user,
@@ -305,8 +518,8 @@ export const submitPCStationAction = async (req, res) => {
       return { station, action: "login", role, attendanceResult };
     });
 
+    if (result.error && result.stationOccupied) return res.redirect(303, getStationResultPath(token));
     if (result.error) return res.status(result.status).send(escapeHtml(result.error));
-    if (result.action === "confirm") return res.redirect(303, getStationResultPath(token));
     if (result.attendanceResult && role === "student") {
       const attendance = result.attendanceResult;
       const subject = attendance.schedule?.subject || "the scheduled class";
@@ -347,7 +560,7 @@ export const showPCStationScanResult = async (req, res) => {
     if (!user || !role) return res.redirect("/login");
 
     const stations = await sequelize.query(
-      "SELECT setId, setName, location FROM equipment_sets WHERE BINARY setId = BINARY ? LIMIT 1",
+      "SELECT setId, setName, location, status FROM equipment_sets WHERE BINARY setId = BINARY ? LIMIT 1",
       { replacements: [setId], type: QueryTypes.SELECT }
     );
     const station = stations[0];
@@ -362,16 +575,22 @@ export const showPCStationScanResult = async (req, res) => {
     }
     let pendingAction = "login";
     let stationOccupied = false;
+    const stationUnavailable = String(station.status || "").toLowerCase() !== "active";
     if (!isComplete) {
       const activeSessions = await sequelize.query(
-        "SELECT activeUserId FROM pc_station_sessions WHERE BINARY setId = BINARY ? LIMIT 1",
+        `SELECT activeUserId,
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+         FROM pc_station_sessions
+         WHERE BINARY setId = BINARY ?
+         LIMIT 1`,
         { replacements: [station.setId], type: QueryTypes.SELECT }
       );
       const activeUserId = activeSessions[0]?.activeUserId == null
         ? null
         : Number(activeSessions[0].activeUserId);
-      if (activeUserId === Number(user.id)) pendingAction = "logout";
-      else if (activeUserId !== null) stationOccupied = true;
+      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1;
+      if (activeUserId === Number(user.id) && !sessionExpired) pendingAction = "logout";
+      else if (activeUserId !== null && !sessionExpired) stationOccupied = true;
     }
     const isLogin = (result || pendingAction) === "login";
     const auditUrl = role === "admin"
@@ -391,11 +610,15 @@ export const showPCStationScanResult = async (req, res) => {
       : pendingAction === "logout"
         ? `You are currently signed in at ${station.setName}. Confirm below when you are ready to log out.`
         : stationOccupied
-          ? `${station.setName} is currently in use. Confirm below to sign in and end the previous station session.`
-          : `Confirm below to sign in at ${station.setName}.`;
+          ? `${station.setName} is currently occupied by another signed-in user. This station is locked until they sign out. Please choose another PC station.`
+          : stationUnavailable
+            ? `${station.setName} is not currently available for sign-in. Please choose another PC station.`
+            : `Confirm below to sign in at ${station.setName}.`;
     const heading = isComplete
       ? isLogin ? "PC station login recorded" : "PC station logout recorded"
-      : pendingAction === "logout" ? "Sign out of this PC station" : "Sign in to this PC station";
+      : stationOccupied ? "PC station currently in use"
+        : stationUnavailable && pendingAction !== "logout" ? "PC station unavailable"
+          : pendingAction === "logout" ? "Sign out of this PC station" : "Sign in to this PC station";
     const actionsHtml = isComplete
       ? `<a class="action action-primary" href="${escapeHtml(auditUrl)}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -409,6 +632,8 @@ export const showPCStationScanResult = async (req, res) => {
         </svg>
         <span>Go to dashboard</span>
       </a>`
+      : stationOccupied || (stationUnavailable && pendingAction !== "logout")
+        ? `<a class="action action-secondary" href="${escapeHtml(dashboardUrl)}">Return to dashboard</a>`
       : `<form method="post" action="${escapeHtml(`${getOpaqueStationPath(token)}/action`)}">
         <input type="hidden" name="action" value="${escapeHtml(pendingAction)}">
         <button class="action action-primary" type="submit">${pendingAction === "login" ? "Login to this PC" : "Logout from this PC"}</button>
@@ -567,10 +792,12 @@ export const getMyPCStationSessions = async (req, res) => {
 
     const sessions = await sequelize.query(
       `SELECT ps.setId, COALESCE(es.setName, ps.setId) AS setName,
-              es.location, ps.startedAt, ps.autoLogoutAt
+              es.location, ps.startedAt, ps.autoLogoutAt,
+              es.campusId, es.laboratoryId, es.computerLabId
        FROM pc_station_sessions ps
        LEFT JOIN equipment_sets es ON BINARY es.setId = BINARY ps.setId
        WHERE ps.activeUserId = ?
+         AND (ps.autoLogoutAt IS NULL OR ps.autoLogoutAt > UTC_TIMESTAMP())
        ORDER BY ps.startedAt DESC, ps.setId ASC`,
       { replacements: [user.id], type: QueryTypes.SELECT }
     );
@@ -618,7 +845,7 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
 
   return sequelize.transaction(async (transaction) => {
     const activeSessions = await sequelize.query(
-      `SELECT setId
+      `SELECT setId, startedAt
        FROM pc_station_sessions
        WHERE activeUserId = ?${setId ? " AND BINARY setId = BINARY ?" : ""}
        ORDER BY setId`,
@@ -634,7 +861,7 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
 
     for (const session of activeSessions) {
       const stations = await sequelize.query(
-        "SELECT setId, setName FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
+        "SELECT setId, setName, location, campusId, laboratoryId, computerLabId FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
         { replacements: [session.setId], type: QueryTypes.SELECT, transaction }
       );
       const activeSession = await sequelize.query(
@@ -668,6 +895,14 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
         "Logout",
         stationAuditDescription("Logged out", station, reason)
       );
+      if (getSupportedRole(user?.role) === "student") {
+        await finishStudentPCStationUsage({
+          userId,
+          station: { ...station, ...stations[0] },
+          startedAt: session.startedAt,
+          transaction
+        });
+      }
       endedCount += 1;
     }
 
@@ -677,7 +912,8 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
 
 export const expirePCStationSessions = async () => sequelize.transaction(async (transaction) => {
   const dueSessions = await sequelize.query(
-    `SELECT setId, activeUserId
+    `SELECT setId, activeUserId, startedAt,
+            DATE_FORMAT(autoLogoutAt, '%Y-%m-%d %H:%i:%s') AS autoLogoutAt
      FROM pc_station_sessions
      WHERE activeUserId IS NOT NULL AND autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()
      ORDER BY setId`,
@@ -687,7 +923,7 @@ export const expirePCStationSessions = async () => sequelize.transaction(async (
 
   for (const due of dueSessions) {
     const stations = await sequelize.query(
-      "SELECT setId, setName FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
+      "SELECT setId, setName, location, campusId, laboratoryId, computerLabId FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
       { replacements: [due.setId], type: QueryTypes.SELECT, transaction }
     );
     const sessionRows = await sequelize.query(
@@ -725,6 +961,15 @@ export const expirePCStationSessions = async () => sequelize.transaction(async (
       "Logout",
       stationAuditDescription("Automatically logged out", station, "The scheduled class ended.")
     );
+    if (getSupportedRole(user?.role) === "student") {
+      await finishStudentPCStationUsage({
+        userId: due.activeUserId,
+        station: { ...station, ...stations[0] },
+        startedAt: due.startedAt,
+        scheduledEndAt: due.autoLogoutAt,
+        transaction
+      });
+    }
     endedCount += 1;
   }
 

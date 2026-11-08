@@ -40,6 +40,24 @@
    curl --fail --silent --show-error http://127.0.0.1:3000/ >/dev/null
    ```
 
+## SMTP credentials rejected
+
+For Gmail SMTP, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, and use the
+full Gmail address for both `SMTP_USER` and `MAIL_FROM`. `SMTP_PASS` must be a
+Google App Password for that account; a regular account password will be
+rejected. The mailer removes grouping spaces from Gmail App Passwords, so the
+four groups Google displays can be pasted as-is.
+
+Update the environment on the production server, then reload the PM2 process:
+
+```bash
+pm2 restart xianfires --update-env
+```
+
+If authentication still fails, generate a new App Password for the configured
+Google account and replace `SMTP_PASS` in the production environment before
+restarting the app.
+
 ## First PM2 setup
 
 If the app has not yet been registered with PM2, run these commands from the

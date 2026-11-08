@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Faculty Management | ComLab</title>
-  <link rel="stylesheet" href="/css/sidebar.css?v=70">
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -177,6 +177,12 @@
     .edit-dialog-actions button { min-width: 6rem; }
     .edit-dialog-actions .primary { width: auto; margin-top: 0; }
     .secondary { border: 1px solid var(--line); color: var(--text); background: var(--surface); }
+    .archive-dialog-icon { display: grid; width: 2.8rem; height: 2.8rem; place-items: center; margin-bottom: .85rem; border: 1px solid rgba(251, 191, 36, .3); border-radius: 14px; color: #fbbf24; background: color-mix(in srgb, #fbbf24 10%, var(--surface)); }
+    .archive-dialog-copy { margin: .55rem 0 0; color: var(--muted); font-size: .88rem; line-height: 1.6; }
+    .archive-dialog-copy strong { color: var(--text); overflow-wrap: anywhere; }
+    .archive-confirm { border: 1px solid rgba(251, 191, 36, .42); color: #fbbf24; background: color-mix(in srgb, #fbbf24 12%, var(--surface)); }
+    .archive-confirm:hover:not(:disabled) { border-color: #fbbf24; background: color-mix(in srgb, #fbbf24 20%, var(--surface)); }
+    .archive-confirm:disabled { opacity: .6; cursor: wait; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 
     @media (max-width: 900px) {
@@ -258,6 +264,16 @@
       <div class="edit-dialog-actions"><button class="secondary" type="button" id="cancelEditFaculty">Cancel</button><button class="primary" type="submit" id="saveFacultyChanges">Save Changes</button></div>
     </form>
   </dialog>
+  <dialog id="archiveFacultyDialog" class="edit-dialog" aria-labelledby="archiveFacultyTitle" aria-describedby="archiveFacultyDescription">
+    <div class="archive-dialog-icon"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></div>
+    <h2 id="archiveFacultyTitle">Archive Faculty Account?</h2>
+    <p class="archive-dialog-copy" id="archiveFacultyDescription">You are about to archive <strong id="archiveFacultyName"></strong>. This account will no longer be able to sign in. You can restore it later from Archived Records.</p>
+    <p class="notice" id="archiveFacultyNotice" role="status" aria-live="polite"></p>
+    <div class="edit-dialog-actions">
+      <button class="secondary" type="button" id="cancelArchiveFaculty">Cancel</button>
+      <button class="archive-confirm" type="button" id="confirmArchiveFaculty"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Archive Account</button>
+    </div>
+  </dialog>
   <script>
     (() => {
       const user = window.__CURRENT_USER__ || {};
@@ -268,7 +284,10 @@
       const editDialog = document.getElementById('editFacultyDialog');
       const editForm = document.getElementById('editFacultyForm');
       const editNotice = document.getElementById('editFacultyNotice');
+      const archiveDialog = document.getElementById('archiveFacultyDialog');
+      const archiveNotice = document.getElementById('archiveFacultyNotice');
       let faculty = [];
+      let pendingArchiveFacultyId = null;
       document.getElementById('campusName').textContent = String(user.campus || 'No campus assigned').replace(/\s*Campus\s*$/i, '');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
       const setNotice = (message, type = '') => { notice.textContent = message; notice.className = `notice ${type}`; };
@@ -323,10 +342,23 @@
         const button = event.target.closest('.archive-faculty');
         if (!button) return;
         const person = faculty.find((item) => String(item.id) === button.dataset.facultyId);
-        if (!person || !window.confirm(`Archive ${person.name}'s account? They will no longer be able to sign in. You can restore the account from Archived Records.`)) return;
-        button.disabled = true;
+        if (!person) return;
+        pendingArchiveFacultyId = String(person.id);
+        document.getElementById('archiveFacultyName').textContent = person.name;
+        archiveNotice.textContent = '';
+        archiveNotice.className = 'notice';
+        archiveDialog.showModal();
+        document.getElementById('cancelArchiveFaculty').focus();
+      });
+      document.getElementById('cancelArchiveFaculty').addEventListener('click', () => archiveDialog.close());
+      document.getElementById('confirmArchiveFaculty').addEventListener('click', async (event) => {
+        if (!pendingArchiveFacultyId) return;
+        const confirmButton = event.currentTarget;
+        confirmButton.disabled = true;
+        archiveNotice.textContent = 'Archiving account…';
+        archiveNotice.className = 'notice';
         try {
-          const response = await fetch(`/api/archive/faculty-account/${encodeURIComponent(person.id)}`, {
+          const response = await fetch(`/api/archive/faculty-account/${encodeURIComponent(pendingArchiveFacultyId)}`, {
             method: 'POST',
             credentials: 'same-origin',
             headers: { Accept: 'application/json' }
@@ -334,12 +366,17 @@
           const payload = await readApiResponse(response);
           if (!response.ok) throw new Error(payload.error || 'Unable to archive Faculty account.');
           await loadFaculty();
-          setNotice(`${person.name}’s account was archived. Restore it from Archived Records if needed.`, 'success');
+          const archivedName = document.getElementById('archiveFacultyName').textContent;
+          archiveDialog.close();
+          setNotice(`${archivedName}’s account was archived. Restore it from Archived Records if needed.`, 'success');
         } catch (error) {
-          setNotice(error.message, 'error');
-          button.disabled = false;
+          archiveNotice.textContent = error.message;
+          archiveNotice.className = 'notice error';
+        } finally {
+          confirmButton.disabled = false;
         }
       });
+      archiveDialog.addEventListener('close', () => { pendingArchiveFacultyId = null; });
       const closeEditDialog = () => editDialog.close();
       document.getElementById('closeEditFaculty').addEventListener('click', closeEditDialog);
       document.getElementById('cancelEditFaculty').addEventListener('click', closeEditDialog);
@@ -405,6 +442,6 @@
       loadFaculty().catch((error) => { list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; document.getElementById('facultyCount').textContent = 'Unable to load accounts'; });
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  <script src="/js/sidebar-component.js?v=77" defer></script>
 </body>
 </html>

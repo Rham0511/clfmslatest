@@ -40,11 +40,13 @@ const {
 export const sequelize = DATABASE_URL
   ? new Sequelize(DATABASE_URL, {
       dialect: DB_DIALECT,
+      timezone: "+00:00",
       logging: false
     })
   : new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
       host: DB_HOST,
       port: Number(DB_PORT) || 3306,
       dialect: DB_DIALECT,
+      timezone: "+00:00",
       logging: false
     });

@@ -66,9 +66,9 @@ export const canBypassAuditAccessForDev = (req) => {
   return devRole === "admin" || devBypass;
 };
 
-export const logAuditEntry = async (req, { action, module, resourceId = null, description = null, actorName = null, actorRole = null }) => {
+export const logAuditEntry = async (req, { action, module, resourceId = null, description = null, actorName = null, actorRole = null, actorUserId = null }) => {
   try {
-    const userId = req?.session?.userId || null;
+    const userId = req?.session?.userId || actorUserId || null;
     const sessionRole = req?.session?.userRole || null;
     const roleValue = actorRole || sessionRole || null;
     let nameValue = actorName || null;
@@ -139,11 +139,19 @@ export const getAuditLogs = async (req, res) => {
     const canViewAllAuditLogs = isAdminRole(authenticatedRole) || isCentralAdminRole(authenticatedRole);
     const isUserScopedRequest = !canViewAllAuditLogs;
     const selectedScope = String(scope || "authentication").trim().toLowerCase();
-    if (!["authentication", "pc-station", "system"].includes(selectedScope)) {
+    if (!["authentication", "pc-station", "system", "student-activity"].includes(selectedScope)) {
       return res.status(400).json({ error: "Select a valid audit log scope." });
     }
     if (selectedScope === "system" && !canViewAllAuditLogs && !developmentBypass) {
       return res.status(403).json({ error: "System audit logs are only available to administrators." });
+    }
+    if (selectedScope === "student-activity" && authenticatedRole !== "student") {
+      return res.status(403).json({ error: "Student activity logs are only available to the signed-in student." });
+    }
+    const studentActivityCategory = String(req.query.category || "all").trim().toLowerCase();
+    const studentActivityCategories = new Set(["all", "access", "profile", "borrow", "reports", "attendance", "security", "other"]);
+    if (selectedScope === "student-activity" && !studentActivityCategories.has(studentActivityCategory)) {
+      return res.status(400).json({ error: "Select a valid student activity category." });
     }
     const roleGroups = {
       admin: ["admin", "administrator"],
@@ -202,8 +210,37 @@ export const getAuditLogs = async (req, res) => {
       if (selectedRole) {
         where[Op.and].push({ actorRole: { [Op.in]: roleGroups[selectedRole] } });
       }
+    } else if (selectedScope === "student-activity") {
+      // Students can only read their own general audit events. PC station QR
+      // sessions stay in the dedicated PC Logs tab and are excluded here.
+      where[Op.and].push({
+        [Op.or]: [
+          { module: { [Op.ne]: "Authentication" } },
+          { action: { [Op.notIn]: ["Login", "Logout"] } },
+          { resourceId: null },
+          { description: { [Op.notLike]: "%PC station%" } }
+        ]
+      });
+
+      const categoryConditions = {
+        access: { module: "Authentication", action: { [Op.in]: ["Login", "Logout"] } },
+        profile: { module: "User Management", action: "User Updated" },
+        borrow: { module: "Borrow Management" },
+        reports: { module: "Maintenance Monitoring" },
+        attendance: { module: "Attendance Monitoring" },
+        security: { module: "Authentication", action: { [Op.notIn]: ["Login", "Logout"] } },
+        other: { module: { [Op.notIn]: ["Authentication", "User Management", "Borrow Management", "Maintenance Monitoring", "Attendance Monitoring"] } }
+      };
+      if (studentActivityCategory !== "all") {
+        where[Op.and].push(categoryConditions[studentActivityCategory]);
+      }
     } else {
-      where.module = { [Op.ne]: "Authentication" };
+      // Keep regular authentication events in PC Logs, while exposing completed
+      // password resets in System Logs for account-security auditing.
+      where[Op.or] = [
+        { module: { [Op.ne]: "Authentication" } },
+        { module: "Authentication", action: "Password Reset" }
+      ];
     }
 
     const userCampus = authenticatedUser?.campus || null;
@@ -300,15 +337,31 @@ export const getAuditLogs = async (req, res) => {
         : Math.min(100, requestedPageSize);
     const offset = (resolvedPage - 1) * resolvedPageSize;
     const addActorCollege = async (rows) => {
-      const userIds = [...new Set(rows.map((row) => Number(row.userId)).filter(Number.isInteger))];
+      const userIds = [...new Set(rows.flatMap((row) => {
+        const ids = [Number(row.userId)];
+        if (row.module === "Authentication" && row.action === "Password Reset") {
+          ids.push(Number(row.resourceId));
+        }
+        return ids.filter((id) => Number.isInteger(id) && id > 0);
+      }))];
       const users = userIds.length
-        ? await User.findAll({ where: { id: { [Op.in]: userIds } }, attributes: ["id", "college"] })
+        ? await User.findAll({ where: { id: { [Op.in]: userIds } }, attributes: ["id", "name", "role", "college"] })
         : [];
-      const collegeByUserId = new Map(users.map((user) => [Number(user.id), user.college]));
-      return rows.map((row) => ({
-        ...row.toJSON(),
-        actorCollege: collegeByUserId.get(Number(row.userId)) || null
-      }));
+      const userById = new Map(users.map((user) => [Number(user.id), user]));
+      return rows.map((row) => {
+        const record = row.toJSON();
+        const actor = userById.get(Number(row.userId)) || (
+          row.module === "Authentication" && row.action === "Password Reset"
+            ? userById.get(Number(row.resourceId))
+            : null
+        );
+        return {
+          ...record,
+          actorName: record.actorName || actor?.name || null,
+          actorRole: record.actorRole || actor?.role || null,
+          actorCollege: actor?.college || null
+        };
+      });
     };
     const enrichAuditRows = async (rows) => {
       const enrichedRows = await addActorCollege(rows);

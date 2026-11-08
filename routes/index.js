@@ -25,9 +25,10 @@ import { listEquipmentAvailability, getEquipmentBorrowingHistory } from "../cont
 import { listEquipmentAssignments, updateEquipmentAssignment, getEquipmentAssignmentHistory, listMyEquipmentAssignments, getMyEquipmentAssignmentHistory } from "../controllers/equipmentAssignmentController.js";
 import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, getFacultyScheduleAttendanceHistory, exportFacultyScheduleAttendanceHistory, scanAttendance, createAttendanceSession, getStudentAttendanceQrRoster, createStudentAttendanceQrs } from "../controllers/attendanceController.js";
 import { getAuditLogs, logAuditEntry } from "../controllers/auditController.js";
-import { getPCStationQr, getMyPCStationSessions, logoutMyPCStationSession, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
+import { getPCStationQr, getPCStationScanAvailability, getMyPCStationSessions, logoutMyPCStationSession, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
 import { getAuditTrail } from "../controllers/auditTrailController.js";
 import { getPCAvailability, assignPC, endPCSession, getCurrentPCAssignment } from "../controllers/pcAssignmentController.js";
+import { answerRoleHelp, createRoleHelpChat, getRoleHelpChatMessages, listRoleHelpChats } from "../controllers/roleHelpController.js";
 import { getScheduleSeatingChart } from "../controllers/seatingChartController.js";
 import { getUserAuthContext, getUserCampusFromSession, canManageRecord, isAdminRole as isCampusAdminRole } from "../controllers/campusAuthController.js";
 import { LaboratorySchedule } from "../models/laboratoryScheduleModel.js";
@@ -79,7 +80,9 @@ const staticHtmlPages = [
   "admin-dashboard",
   "admin-profile",
   "admin-computer-labs",
+  "admin-facilities",
   "admin-faculty-management",
+  "admin-user-management",
   "admin-technician-accomplishments",
   "equipment-assignment",
   "faculty-dashboard",
@@ -1434,10 +1437,17 @@ const pageConfigs = {
         }
         .schedule-day-column {
           position: relative;
+          display: grid;
           grid-row: 1 / -1;
           border-left: 1px solid rgba(110,231,183,.1);
           background-color: rgba(14,38,26,.15);
-          background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 39px, rgba(110,231,183,.105) 39px, rgba(110,231,183,.105) 40px);
+          background-image: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent calc(var(--schedule-row-height, 40px) - 1px),
+            rgba(110,231,183,.105) calc(var(--schedule-row-height, 40px) - 1px),
+            rgba(110,231,183,.105) var(--schedule-row-height, 40px)
+          );
         }
         .schedule-day-column:nth-of-type(even) { background-color: rgba(20,49,34,.19); }
         .schedule-day-column.is-today {
@@ -1461,6 +1471,13 @@ const pageConfigs = {
           text-align: center;
           box-shadow: 0 7px 18px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.14);
           box-sizing: border-box;
+        }
+        .schedule-event--hardcoded {
+          position: relative;
+          min-width: 0;
+          min-height: 0;
+          margin: 1px 2px;
+          cursor: default;
         }
         .schedule-event:hover,
         .schedule-event:focus-visible {
@@ -1530,6 +1547,12 @@ const pageConfigs = {
           font-size: .88rem !important;
           font-style: normal;
           font-weight: 700 !important;
+        }
+        .schedule-event-location {
+          font-size: .68rem;
+          line-height: 1.1;
+          white-space: normal;
+          overflow-wrap: anywhere;
         }
         .schedule-context-menu {
           position: fixed;
@@ -1900,8 +1923,7 @@ const pageConfigs = {
             </label>
           </div>
           <div class="schedule-lab-filters" role="group" aria-label="Filter by laboratory">
-            <button type="button" class="schedule-lab-filter is-active" data-lab-filter="" aria-pressed="true">All Laboratories</button>
-            <button type="button" class="schedule-lab-filter" data-lab-filter="1" aria-pressed="false">COMLAB 1</button>
+            <button type="button" class="schedule-lab-filter is-active" data-lab-filter="1" aria-pressed="true">COMLAB 1</button>
             <button type="button" class="schedule-lab-filter" data-lab-filter="2" aria-pressed="false">COMLAB 2</button>
           </div>
           <span id="scheduleCount" class="schedule-count" aria-live="polite">Loading schedules…</span>
@@ -2201,7 +2223,8 @@ const pageConfigs = {
         </style>
 
         <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.3/dist/xlsx.full.min.js"></script>
-        <script src="/js/laboratory-schedules-page.js?v=20261104"></script>
+        <script src="/js/comlab1-weekly-schedule.js?v=20261107-1"></script>
+        <script src="/js/laboratory-schedules-page.js?v=20261107-comlab1-5"></script>
 
         <!-- Seating Chart Modal -->
         <div id="seatingChartModal" class="seating-chart-modal hidden fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -4575,7 +4598,7 @@ const serveHtmlPage = (req, res) => {
 
     if (user) {
       const normalizedRole = normalizeRoleName(user.role);
-      const adminPages = new Set(["admin-dashboard", "admin-profile", "admin-computer-labs", "admin-faculty-management", "admin-technician-accomplishments", "attendance", "maintenance-reports", "equipment-assignment"]);
+      const adminPages = new Set(["admin-dashboard", "admin-profile", "admin-computer-labs", "admin-facilities", "admin-faculty-management", "admin-user-management", "admin-technician-accomplishments", "attendance", "maintenance-reports", "equipment-assignment"]);
       if (page === "student-dashboard" && ["faculty", "instructor"].includes(normalizedRole)) {
         return res.redirect("/faculty-dashboard");
       }
@@ -4641,7 +4664,7 @@ const serveHtmlPage = (req, res) => {
   });
 };
 
-const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "", currentUserRole = "") => {
+const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "", currentUserRole = "", embeddedSchedule = false) => {
   const hideTopHeaderPages = ["user-management", "reports", "audit-logs"];
   const showTopHeader = !hideTopHeaderPages.includes(pageName);
   const pageContentStyle = hideTopHeaderPages.includes(pageName) ? ' style="padding-top: 0.35rem !important;"' : "";
@@ -4656,6 +4679,13 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     : "";
   const scheduleStylesheet = pageName === "laboratory-schedules"
     ? '<link rel="stylesheet" href="/css/laboratory-schedules.css?v=7">'
+    : "";
+  const embeddedScheduleStyles = embeddedSchedule && pageName === "laboratory-schedules"
+    ? `<style>
+        html, body.laboratory-schedules-page { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+        body.laboratory-schedules-page .main-container { width: 100%; height: 100vh; height: 100dvh; min-height: 0 !important; margin: 0 !important; padding: 0 !important; }
+        body.laboratory-schedules-page .page-content { padding: .55rem !important; }
+      </style>`
     : "";
   const reportsStylesheet = pageName === "reports"
     ? '<link rel="stylesheet" href="/css/reports.css?v=2">'
@@ -4692,6 +4722,40 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
           <p class="text-sm text-gray-400 mt-1">${config.description}</p>
         </div>`;
 
+  // The Computer Labs page hosts this document in an iframe. Return a dedicated
+  // content-only document so it can never inherit or inject a second app shell.
+  if (embeddedSchedule && pageName === "laboratory-schedules") {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${config.title} | ComLab</title>
+  ${scheduleCreationStyles}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  ${scheduleStylesheet}
+  ${adminMobilePolishStyles}
+  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <style>
+    html { height: 100%; }
+    html body.laboratory-schedules-page.schedule-embedded { width: 100%; height: 100% !important; min-height: 0 !important; margin: 0; overflow: hidden !important; }
+    html body.laboratory-schedules-page.schedule-embedded { background: transparent !important; }
+    html body.laboratory-schedules-page.schedule-embedded .main-container { box-sizing: border-box; display: flex; width: 100%; max-width: none; height: 100% !important; min-height: 0 !important; margin: 0; padding: 0; overflow: hidden !important; background: transparent !important; }
+    html body.laboratory-schedules-page.schedule-embedded .page-content { box-sizing: border-box; display: flex; width: 100%; height: 100%; min-height: 0 !important; margin: 0; padding: 0 !important; overflow: hidden !important; border-radius: 0; background: transparent !important; box-shadow: none !important; }
+    html body.laboratory-schedules-page.schedule-embedded :is(#shared-sidebar, .sidebar, .sidebar-overlay, .top-header, .comlab-slim-page-header, .comlab-page-header-spacer) { display: none !important; }
+    html body.laboratory-schedules-page.schedule-embedded .schedule-manager-card { width: 100%; min-width: 0; min-height: 0; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+  </style>
+</head>
+<body class="app-shell laboratory-schedules-page schedule-embedded">
+  <script>window.__CURRENT_USER__ = ${currentUserJson};</script>
+  <script>window.__CURRENT_USER_NAME__ = ${inlineJson(currentUserName)}; window.__CURRENT_USER_CAMPUS__ = ${inlineJson(currentUserCampus || "")}; window.__CURRENT_USER_ROLE__ = ${inlineJson(normalizeRoleName(currentUserRole))};</script>
+  <div class="main-container"><main class="page-content">${config.content}</main></div>
+</body>
+</html>`;
+  }
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4701,7 +4765,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=70">
+  <link rel="stylesheet" href="/css/sidebar.css?v=74">
   ${dashboardHeaderStylesheet}
   ${scheduleStylesheet}
   ${reportsStylesheet}
@@ -4709,14 +4773,15 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   ${auditLogsStylesheet}
   ${auditLogsScript}
+  ${embeddedScheduleStyles}
 </head>
-<body class="app-shell${portalClass}${laboratorySchedulesPageClass}${dashboardHeaderPageClass}${reportsPageClass}${auditLogsPageClass}">
+<body class="app-shell${portalClass}${laboratorySchedulesPageClass}${dashboardHeaderPageClass}${reportsPageClass}${auditLogsPageClass}${embeddedSchedule ? " schedule-embedded" : ""}">
   <script>window.__CURRENT_USER__ = ${currentUserJson};</script>
   <script>window.__CURRENT_USER_NAME__ = ${inlineJson(currentUserName)}; window.__CURRENT_USER_CAMPUS__ = ${inlineJson(currentUserCampus || "")}; window.__CURRENT_USER_ROLE__ = ${inlineJson(normalizeRoleName(currentUserRole))};</script>
   ${portalClass ? '<style>.faculty-portal #scheduleModal,.faculty-portal button[onclick^="openEditScheduleModal"],.faculty-portal button[onclick^="confirmScheduleArchive"]{display:none!important}</style>' : ""}
-  <div id="shared-sidebar"></div>
+  ${embeddedSchedule ? "" : '<div id="shared-sidebar"></div>'}
   <div class="main-container">
-    ${showTopHeader ? `<div class="top-header">
+    ${showTopHeader && !embeddedSchedule ? `<div class="top-header">
       <div class="header-left flex items-center space-x-3 pl-14 lg:pl-0">
         <button id="mobileMenuToggle" class="menu-toggle fixed left-4 top-4 z-50 block lg:hidden" onclick="toggleSidebar()" aria-label="Open navigation">
           <i class="fas fa-bars"></i>
@@ -4742,7 +4807,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     </main>
   </div>
   ${facultySidebarScripts}
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  ${embeddedSchedule ? "" : '<script src="/js/sidebar-component.js?v=77" defer></script>'}
 </body>
 </html>`;
 };
@@ -4829,7 +4894,14 @@ const serveFeaturePage = async (req, res) => {
     }
   }
 
-  res.send(renderFeaturePage(config, currentUserName, page, currentUserCampus, currentUserRole));
+  res.send(renderFeaturePage(
+    config,
+    currentUserName,
+    page,
+    currentUserCampus,
+    currentUserRole,
+    page === "laboratory-schedules" && ["1", "standalone-v2"].includes(String(req.query.embedded || ""))
+  ));
 };
 
 // ==================== Laboratory Schedule Helper Functions ====================
@@ -5200,6 +5272,10 @@ router.get("/faculty-management", (req, res) => {
   req.params.page = "admin-faculty-management";
   return serveHtmlPage(req, res);
 });
+router.get("/user-management", (req, res) => {
+  req.params.page = "admin-user-management";
+  return serveHtmlPage(req, res);
+});
 router.get("/technician-accomplishments", (req, res) => {
   req.params.page = "admin-technician-accomplishments";
   return serveHtmlPage(req, res);
@@ -5210,6 +5286,10 @@ router.get("/page/faculty-management", (req, res) => {
 });
 router.get("/page/computer-labs", (req, res) => {
   req.params.page = "admin-computer-labs";
+  return serveHtmlPage(req, res);
+});
+router.get("/page/facilities", (req, res) => {
+  req.params.page = "admin-facilities";
   return serveHtmlPage(req, res);
 });
 router.get("/maintenance-monitoring", (req, res) => {
@@ -5305,8 +5385,13 @@ router.get("/page/:page", serveFeaturePage);
 
 router.get("/login", loginPage);
 router.post("/login", loginUser);
+router.get("/api/pc-stations/qr/:token/status", getPCStationScanAvailability);
 router.get("/api/pc-stations/my-sessions", getMyPCStationSessions);
 router.post("/api/pc-stations/my-sessions/logout", logoutMyPCStationSession);
+router.get("/api/help/chats", listRoleHelpChats);
+router.post("/api/help/chats", createRoleHelpChat);
+router.get("/api/help/chats/:chatId/messages", getRoleHelpChatMessages);
+router.post("/api/help/chat", answerRoleHelp);
 router.post("/pc-station/uid/:token/action", submitPCStationAction);
 router.get("/pc-station/s/:token/status", showPCStationScanResult);
 router.get("/pc-station/s/:token", scanPCStationQr);
@@ -5450,16 +5535,16 @@ router.get("/api/equipment/usage-history/:userId", async (req, res) => {
        INNER JOIN attendance_sessions ats ON ats.token = a.sessionToken
        SET eul.usageEndTime = GREATEST(eul.usageStartTime, ats.expiresAt),
            eul.durationMinutes = GREATEST(
-             TIMESTAMPDIFF(
-               MINUTE,
+             ROUND(TIMESTAMPDIFF(
+               SECOND,
                eul.usageStartTime,
                GREATEST(eul.usageStartTime, ats.expiresAt)
-             ),
-             0
+             ) / 60),
+             1
            )
        WHERE eul.userId = ?
          AND eul.usageEndTime IS NULL
-         AND ats.expiresAt <= NOW()`,
+         AND ats.expiresAt <= UTC_TIMESTAMP()`,
       { replacements: [userId] }
     );
 
@@ -5467,16 +5552,63 @@ router.get("/api/equipment/usage-history/:userId", async (req, res) => {
     // including sessions started outside a scheduled class.
     const history = await sequelize.query(
       `SELECT eul.id as usageLogId, eul.equipmentId, eul.serialNumber,
-              eul.usageStartTime, eul.usageEndTime, eul.durationMinutes,
+              eul.usageEndTime,
+              CASE
+                WHEN eul.usageEndTime IS NOT NULL
+                  AND eul.usageStartTime > eul.usageEndTime
+                  AND stationLoginAudit.createdAt IS NOT NULL
+                  THEN GREATEST(ROUND(TIMESTAMPDIFF(SECOND, stationLoginAudit.createdAt, eul.usageEndTime) / 60), 1)
+                WHEN eul.usageEndTime IS NOT NULL AND eul.usageStartTime IS NOT NULL
+                  AND eul.usageStartTime <= eul.usageEndTime
+                  THEN GREATEST(ROUND(TIMESTAMPDIFF(SECOND, eul.usageStartTime, eul.usageEndTime) / 60), 1)
+                WHEN eul.usageEndTime IS NOT NULL AND eul.usageStartTime > eul.usageEndTime
+                  THEN NULL
+                ELSE eul.durationMinutes
+              END AS durationMinutes,
+              CASE
+                WHEN eul.usageEndTime IS NOT NULL
+                  AND eul.usageStartTime > eul.usageEndTime
+                  AND stationLoginAudit.createdAt IS NOT NULL
+                  THEN stationLoginAudit.createdAt
+                ELSE eul.usageStartTime
+              END AS usageStartTime,
               COALESCE(eul.pcSetId, e.setId) as pcSetId,
-              e.name as equipmentName, e.assetNumber, e.laboratoryRoom,
+              stationSet.setName as stationName,
+              e.name as equipmentName, e.assetNumber,
+              COALESCE(
+                NULLIF(CONCAT_WS(
+                  ' — ',
+                  NULLIF(TRIM(historyLab.name), ''),
+                  NULLIF(TRIM(historyLab.roomNumber), '')
+                ), ''),
+                NULLIF(TRIM(e.laboratoryRoom), ''),
+                NULLIF(TRIM(eul.laboratoryId), '')
+              ) as laboratoryRoom,
               a.id as attendanceId, a.date as attendanceDate, a.timeIn as attendanceTime,
               a.status as attendanceStatus, a.subject, a.lab as attendanceLab,
               a.courseSection, a.instructor, a.sessionToken,
               CASE WHEN a.id IS NULL THEN 'No class schedule' ELSE 'Linked to attendance' END as traceStatus
        FROM equipment_usage_logs eul
        LEFT JOIN equipment e ON e.id = eul.equipmentId
+       LEFT JOIN equipment_sets stationSet
+         ON BINARY stationSet.setId = BINARY COALESCE(eul.pcSetId, e.setId)
+       LEFT JOIN computer_labs historyLab
+         ON historyLab.id = COALESCE(eul.computerLabId, stationSet.computerLabId)
        LEFT JOIN attendance a ON a.id = eul.attendanceId
+       LEFT JOIN audit_logs stationLoginAudit
+         ON eul.usageEndTime IS NOT NULL
+         AND eul.usageStartTime > eul.usageEndTime
+         AND stationLoginAudit.id = (
+           SELECT al.id
+           FROM audit_logs al
+           WHERE al.userId = eul.userId
+             AND BINARY al.resourceId = BINARY COALESCE(eul.pcSetId, e.setId)
+             AND al.module = 'Authentication'
+             AND al.action = 'Login'
+             AND al.createdAt <= eul.usageEndTime
+           ORDER BY al.createdAt DESC, al.id DESC
+           LIMIT 1
+         )
        WHERE eul.userId = ?
        ORDER BY eul.usageStartTime DESC
        LIMIT 50`,
@@ -7328,6 +7460,93 @@ router.get("/api/faculty", async (req, res) => {
   } catch (error) {
     console.error("Failed to list campus faculty.", error);
     return res.status(500).json({ error: "Failed to load Faculty accounts." });
+  }
+});
+
+const CENTRAL_ADMIN_ROLES = new Set(["superadmin", "centraladmin", "systemadmin"]);
+const isCentralAccountAdmin = (role) => CENTRAL_ADMIN_ROLES.has(
+  normalizeRoleName(role).replace(/[\s_-]+/g, "")
+);
+const STAFF_ACCOUNT_CAMPUSES = new Set(["Bongabong", "Victoria", "Calapan"]);
+
+router.post("/api/staff-accounts", async (req, res) => {
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Please log in to create staff accounts." });
+    }
+
+    const admin = await User.findByPk(req.session.userId, {
+      attributes: ["id", "name", "email", "role", "campus"]
+    });
+    if (!admin || !isAdminRole(admin.role)) {
+      return res.status(403).json({ error: "Only administrators can create staff accounts." });
+    }
+
+    const isCentralAdmin = isCentralAccountAdmin(admin.role);
+    const role = normalizeRoleName(req.body?.role);
+    if (!["technician", "admin"].includes(role)) {
+      return res.status(400).json({ error: "Select Technician or Administrator." });
+    }
+    if (role === "admin" && !isCentralAdmin) {
+      return res.status(403).json({ error: "Only a central administrator can create Administrator accounts." });
+    }
+
+    const name = String(req.body?.name || "").trim().replace(/\s+/g, " ");
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const password = String(req.body?.password || "");
+    if (!name || name.length > 120) {
+      return res.status(400).json({ error: "Enter the account holder’s full name (up to 120 characters)." });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 190) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
+    if (password.length < 8 || password.length > 128) {
+      return res.status(400).json({ error: "Set a temporary password with 8 to 128 characters." });
+    }
+
+    let campus;
+    if (isCentralAdmin) {
+      campus = normalizeCampus(req.body?.campus);
+      if (!campus || !STAFF_ACCOUNT_CAMPUSES.has(campus)) {
+        return res.status(400).json({ error: "Select a valid campus for this account." });
+      }
+    } else {
+      campus = normalizeCampus(admin.campus) ||
+        normalizeCampus(String(admin.campus || "").replace(/\s*Campus\s*$/i, ""));
+      if (!campus || !STAFF_ACCOUNT_CAMPUSES.has(campus)) {
+        return res.status(403).json({ error: "Your administrator account must have a valid assigned campus." });
+      }
+    }
+
+    const duplicate = await User.findOne({ where: { email }, attributes: ["id"] });
+    if (duplicate) {
+      return res.status(409).json({ error: "An account already uses this email address." });
+    }
+
+    const account = await User.create({
+      name,
+      email,
+      password: await bcryptjs.hash(password, 10),
+      role,
+      campus,
+      email_verified: true,
+      last_login_at: null
+    });
+    await logAuditEntry(req, {
+      action: "Staff Account Created",
+      module: "User Management",
+      resourceId: account.id,
+      description: `Created a ${role === "admin" ? "Administrator" : "Technician"} account for ${account.name} at ${campus}.`
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `${role === "admin" ? "Administrator" : "Technician"} account created successfully.`,
+      account: { id: account.id, name: account.name, email: account.email, role: account.role, campus: account.campus }
+    });
+  } catch (error) {
+    console.error("Failed to create staff account.", error);
+    return res.status(500).json({ error: "Failed to create the staff account." });
   }
 });
 

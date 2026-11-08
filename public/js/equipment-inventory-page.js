@@ -33,7 +33,10 @@
         let equipmentCategories = [];
         let addInventorySets = [];
         let equipmentCampusSummary = {};
+        let equipmentFilterSummary = null;
         let inventoryAssignmentFilter = '';
+        let inventorySummaryRequestId = 0;
+        let inventorySummaryRefreshTimer = null;
         let currentEquipmentPage = 1;
         let equipmentViewStartPage = 1;
         const equipmentRowsPerPage = 10;
@@ -49,25 +52,85 @@
         const qrExportType = document.getElementById('qrExportType');
         const qrExportCategory = document.getElementById('qrExportCategory');
         const qrExportCampus = document.getElementById('qrExportCampus');
+        const qrExportLab = document.getElementById('qrExportLab');
         const qrExportStatus = document.getElementById('qrExportStatus');
+        const qrExportSearch = document.getElementById('qrExportSearch');
+        const qrExportSelectionList = document.getElementById('qrExportSelectionList');
+        const qrExportSelectionSummary = document.getElementById('qrExportSelectionSummary');
+        const qrExportSelectVisibleButton = document.getElementById('qrExportSelectVisible');
+        const qrExportClearSelectionButton = document.getElementById('qrExportClearSelection');
         const qrExportCount = document.getElementById('qrExportCount');
         const qrExportError = document.getElementById('qrExportError');
         const downloadQrExportButton = document.getElementById('downloadQrExport');
+        const qrExportSelectedKeys = new Set();
+        const QR_EXPORT_MAX_VISIBLE_CHOICES = 250;
 
-        function getFilteredQrExportRecords() {
+        function getQrExportRecordKey(record) {
+            return `${record.type}:${record.id}`;
+        }
+
+        function getQrExportSelectionCandidates() {
             if (!qrExportCatalog) return [];
             const type = qrExportType.value;
             const category = qrExportCategory.value.trim().toLowerCase();
             const campus = normalizeCampusKey(qrExportCampus.value);
+            const lab = normalizeComLabKey(qrExportLab?.value);
             const status = qrExportStatus.value.trim().toLowerCase();
+            const search = qrExportSearch.value.trim().toLowerCase();
 
             return qrExportCatalog.filter((record) => {
                 if (type !== 'all' && record.type !== type) return false;
                 if (category && (record.type !== 'equipment' || String(record.category || '').trim().toLowerCase() !== category)) return false;
                 if (campus && normalizeCampusKey(record.campus) !== campus) return false;
+                if (lab && normalizeComLabKey(record.laboratoryRoom || record.location) !== lab) return false;
                 if (status && String(record.status || '').trim().toLowerCase() !== status) return false;
+                if (search && ![record.id, record.displayId, record.name, record.serialNumber, record.category, record.campus, record.laboratoryRoom, record.location].some((value) => String(value || '').toLowerCase().includes(search))) return false;
                 return true;
             });
+        }
+
+        function getFilteredQrExportRecords() {
+            if (!qrExportCatalog) return [];
+            if (qrExportSelectedKeys.size) {
+                return qrExportCatalog.filter((record) => qrExportSelectedKeys.has(getQrExportRecordKey(record)));
+            }
+            return getQrExportSelectionCandidates();
+        }
+
+        function renderQrExportSelectionList() {
+            if (!qrExportSelectionList) return;
+            if (!qrExportCatalog) {
+                qrExportSelectionList.innerHTML = '<p class="p-3 text-xs text-emerald-100/60">Loading items…</p>';
+                qrExportSelectVisibleButton.disabled = true;
+                return;
+            }
+
+            const matches = getQrExportSelectionCandidates();
+            const visible = matches.slice(0, QR_EXPORT_MAX_VISIBLE_CHOICES);
+            if (!visible.length) {
+                qrExportSelectionList.innerHTML = '<p class="p-3 text-xs text-emerald-100/60">No matching equipment or PC sets. Change the filters or search for an ID.</p>';
+                qrExportSelectVisibleButton.disabled = true;
+                return;
+            }
+
+            qrExportSelectionList.innerHTML = visible.map((record) => {
+                const key = getQrExportRecordKey(record);
+                const typeLabel = record.type === 'equipment' ? (record.category || 'Equipment') : 'PC Set';
+                const campusLabel = record.campus || 'Campus not set';
+                const rawLab = record.laboratoryRoom || record.location;
+                const labLabel = normalizeComLabKey(rawLab) || rawLab;
+                const selected = qrExportSelectedKeys.has(key) ? ' checked' : '';
+                return `<label class="qr-export-choice">
+                    <input type="checkbox" data-qr-export-key="${escapeHtml(key)}"${selected}>
+                    <span class="qr-export-choice-copy">
+                        <span class="qr-export-choice-title">${escapeHtml(record.displayId || record.id)} · ${escapeHtml(record.name || record.displayId || record.id)}</span>
+                        <span class="qr-export-choice-meta">${escapeHtml(typeLabel)} · ${escapeHtml(campusLabel)}${labLabel ? ` · ${escapeHtml(labLabel)}` : ''}</span>
+                    </span>
+                </label>`;
+            }).join('') + (matches.length > visible.length
+                ? `<p class="p-2 text-center text-[11px] text-emerald-100/50">Showing ${visible.length} of ${matches.length}. Search to narrow the list.</p>`
+                : '');
+            qrExportSelectVisibleButton.disabled = !matches.length;
         }
 
         function updateQrExportPreview() {
@@ -80,16 +143,28 @@
                 qrExportStatus.value = '';
             }
             const records = getFilteredQrExportRecords();
-            qrExportCount.textContent = qrExportCatalog
-                ? `${records.length.toLocaleString()} QR code${records.length === 1 ? '' : 's'} will be included`
-                : 'Loading equipment and PC sets…';
+            if (!qrExportCatalog) {
+                qrExportCount.textContent = 'Loading equipment and PC sets…';
+            } else if (qrExportSelectedKeys.size) {
+                qrExportCount.textContent = `${records.length.toLocaleString()} specific QR code${records.length === 1 ? '' : 's'} selected; only these will be included`;
+            } else {
+                qrExportCount.textContent = `${records.length.toLocaleString()} QR code${records.length === 1 ? '' : 's'} match the filters`;
+            }
+            qrExportSelectionSummary.textContent = qrExportSelectedKeys.size
+                ? `${qrExportSelectedKeys.size} specific record${qrExportSelectedKeys.size === 1 ? '' : 's'} selected. Download will include only checked records.`
+                : 'Check one or more records to download only those QR codes. If none are checked, Download uses the filters above.';
             downloadQrExportButton.disabled = !records.length;
             qrExportCategory.disabled = qrExportType.value === 'pc-sets';
+            qrExportClearSelectionButton.disabled = !qrExportSelectedKeys.size;
+            renderQrExportSelectionList();
         }
 
         async function loadQrExportCatalog() {
+            qrExportCatalog = null;
             qrExportCount.textContent = 'Loading equipment and PC sets…';
             downloadQrExportButton.disabled = true;
+            qrExportSelectionList.innerHTML = '<p class="p-3 text-xs text-emerald-100/60">Refreshing equipment and PC sets…</p>';
+            qrExportSelectVisibleButton.disabled = true;
             qrExportError.classList.add('hidden');
             const [equipmentResponse, setsResponse, categories] = await Promise.all([
                 fetch('/api/equipment', { cache: 'no-store' }),
@@ -109,6 +184,8 @@
                     name: String(item.name || 'Equipment'),
                     category: String(item.category || ''),
                     campus: String(item.campus || ''),
+                    laboratoryRoom: String(item.laboratoryRoom || ''),
+                    location: String(item.location || ''),
                     status: String(item.status || ''),
                     dateAdded: item.dateAdded || '',
                     qrImage: item.qrImage || ''
@@ -116,14 +193,22 @@
                 ...(Array.isArray(setsPayload.sets) ? setsPayload.sets : []).map((set) => ({
                     type: 'pc-sets',
                     id: String(set.setId || ''),
+                    displayId: String(set.displaySetId || set.setId || ''),
                     name: String(set.setName || set.setId || 'PC Set'),
                     category: '',
                     campus: String(set.campus || ''),
+                    laboratoryRoom: String(set.laboratoryRoom || ''),
+                    location: String(set.location || set.laboratoryRoom || ''),
                     status: String(set.status || ''),
                     dateAdded: set.createdAt || '',
                     qrImage: ''
                 })).filter((item) => item.id)
             ];
+
+            const availableKeys = new Set(qrExportCatalog.map(getQrExportRecordKey));
+            qrExportSelectedKeys.forEach((key) => {
+                if (!availableKeys.has(key)) qrExportSelectedKeys.delete(key);
+            });
 
             const categorySelect = document.getElementById('qrExportCategory');
             const categoryNames = [...new Set([
@@ -145,16 +230,14 @@
         async function openQrExport() {
             openModal('qrExportModal');
             qrExportError.classList.add('hidden');
-            if (qrExportCatalog) {
-                updateQrExportPreview();
-                return;
-            }
             try {
                 await loadQrExportCatalog();
             } catch (error) {
                 qrExportCount.textContent = 'QR list could not be loaded';
                 qrExportError.textContent = error.message || 'Unable to prepare QR export.';
                 qrExportError.classList.remove('hidden');
+                qrExportSelectionList.innerHTML = `<p class="p-3 text-xs text-rose-300">${escapeHtml(error.message || 'Unable to load equipment and PC sets.')}</p>`;
+                qrExportSelectVisibleButton.disabled = true;
             }
         }
 
@@ -242,7 +325,7 @@
         }
 
         function getQrExportLabel(record) {
-            return record.type === 'pc-sets' ? (record.name || record.id) : record.id;
+            return record.displayId || record.id;
         }
 
         async function exportQrPdf(records) {
@@ -344,12 +427,35 @@
         qrExportModal?.addEventListener('click', (event) => {
             if (event.target === qrExportModal) closeModal('qrExportModal');
         });
-        [qrExportType, qrExportCategory, qrExportCampus, qrExportStatus]
+        [qrExportType, qrExportCategory, qrExportCampus, qrExportLab, qrExportStatus]
             .forEach((control) => control?.addEventListener('change', updateQrExportPreview));
+        qrExportSearch?.addEventListener('input', updateQrExportPreview);
+        qrExportSelectionList?.addEventListener('change', (event) => {
+            const checkbox = event.target.closest('[data-qr-export-key]');
+            if (!checkbox) return;
+            if (checkbox.checked) qrExportSelectedKeys.add(checkbox.dataset.qrExportKey);
+            else qrExportSelectedKeys.delete(checkbox.dataset.qrExportKey);
+            updateQrExportPreview();
+        });
+        qrExportSelectVisibleButton?.addEventListener('click', () => {
+            getQrExportSelectionCandidates().slice(0, QR_EXPORT_MAX_VISIBLE_CHOICES).forEach((record) => {
+                qrExportSelectedKeys.add(getQrExportRecordKey(record));
+            });
+            updateQrExportPreview();
+        });
+        qrExportClearSelectionButton?.addEventListener('click', () => {
+            qrExportSelectedKeys.clear();
+            updateQrExportPreview();
+        });
         downloadQrExportButton?.addEventListener('click', downloadQrExport);
 
         function normalizeCampusKey(value) {
             return String(value || '').trim().replace(/\s*Campus\s*$/i, '').trim().toLowerCase();
+        }
+
+        function normalizeComLabKey(value) {
+            const match = String(value || '').match(/\bCOM\s*LAB\s*([12])\b/i);
+            return match ? `COMLAB ${match[1]}` : '';
         }
 
         function getCampusSummary(campusName) {
@@ -483,14 +589,37 @@
             };
         }
 
+        async function fetchEquipmentFilterSummary() {
+            const url = new URL('/api/equipment', window.location.origin);
+            const search = document.getElementById('searchInput')?.value?.trim() || '';
+            const status = document.getElementById('statusFilter')?.value || '';
+            const laboratory = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
+            const campus = document.getElementById('campusFilter')?.value || '';
+            if (search) url.searchParams.set('search', search);
+            if (status) url.searchParams.set('status', status);
+            if (laboratory) url.searchParams.set('laboratory', laboratory);
+            if (campus) url.searchParams.set('campus', campus);
+            if (inventoryAssignmentFilter) url.searchParams.set('assignment', inventoryAssignmentFilter);
+
+            const response = await fetch(url.toString(), { cache: 'no-store' });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Failed to update inventory counts.');
+            if (!Array.isArray(payload)) throw new Error('Inventory count response was invalid.');
+            return payload;
+        }
+
         async function refreshInventorySummary() {
+            const requestId = ++inventorySummaryRequestId;
             try {
-                const [summary, setsResponse] = await Promise.all([
+                const [summary, setsResponse, equipmentRecords] = await Promise.all([
                     fetchEquipmentCampusSummary(),
-                    fetch('/api/equipment-sets', { cache: 'no-store' })
+                    fetch('/api/equipment-sets', { cache: 'no-store' }),
+                    fetchEquipmentFilterSummary()
                 ]);
+                if (requestId !== inventorySummaryRequestId) return;
                 equipmentCampusSummary = summary.campusCounts || {};
                 equipmentCampusSummary.allCampuses = summary.allCampuses || getAllCampusSummary();
+                equipmentFilterSummary = equipmentRecords;
                 const setsPayload = await setsResponse.json().catch(() => ({}));
                 equipmentPCSets = setsResponse.ok && setsPayload.success && Array.isArray(setsPayload.sets)
                     ? setsPayload.sets
@@ -529,8 +658,10 @@
             }
             const search = document.getElementById('searchInput')?.value?.trim() || '';
             const status = document.getElementById('statusFilter')?.value || '';
+            const laboratory = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
             if (search) url.searchParams.set('search', search);
             if (status) url.searchParams.set('status', status);
+            if (laboratory) url.searchParams.set('laboratory', laboratory);
             if (inventoryAssignmentFilter) url.searchParams.set('assignment', inventoryAssignmentFilter);
             url.searchParams.set('sortBy', 'name');
             url.searchParams.set('page', String(page));
@@ -682,9 +813,18 @@
 
         function renderStats() {
             const selectedCampus = document.getElementById('campusFilter')?.value || '';
-            const summaryTarget = !selectedCampus
+            const fallbackSummary = !selectedCampus
                 ? (equipmentCampusSummary.allCampuses || getAllCampusSummary())
                 : getCampusSummary(selectedCampus);
+            const summaryTarget = Array.isArray(equipmentFilterSummary)
+                ? equipmentFilterSummary.reduce((summary, item) => {
+                    summary.total += 1;
+                    summary.assigned += String(item.setId || '').trim() ? 1 : 0;
+                    summary.unassigned += String(item.setId || '').trim() ? 0 : 1;
+                    if (Object.prototype.hasOwnProperty.call(summary, item.status)) summary[item.status] += 1;
+                    return summary;
+                }, { total: 0, assigned: 0, unassigned: 0, Serviceable: 0, Unserviceable: 0, Lost: 0, Missing: 0 })
+                : fallbackSummary;
 
             const stats = {
                 totalCount: summaryTarget.total || 0,
@@ -698,8 +838,19 @@
             });
 
             const campusKey = normalizeCampusKey(selectedCampus);
+            const pcSetLabKey = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
+            const hasEquipmentFilters = Boolean(
+                document.getElementById('searchInput')?.value?.trim() ||
+                document.getElementById('statusFilter')?.value ||
+                inventoryAssignmentFilter
+            );
+            const matchingSetIds = new Set((equipmentFilterSummary || [])
+                .map((item) => String(item.setId || '').trim())
+                .filter(Boolean));
             const visibleSets = equipmentPCSets.filter((set) =>
-                !campusKey || normalizeCampusKey(set.campus) === campusKey
+                (!campusKey || normalizeCampusKey(set.campus) === campusKey) &&
+                (!pcSetLabKey || normalizeComLabKey(set.location || set.laboratoryRoom) === pcSetLabKey) &&
+                (!hasEquipmentFilters || matchingSetIds.has(String(set.setId || '').trim()))
             );
             const inventoryCards = {
                 inventoryCountEquipment: summaryTarget.total || 0,
@@ -800,7 +951,11 @@
                 const safeLab    = escapeHtml(item.laboratoryRoom || '');
                 const safeSN     = escapeHtml(item.serialNumber || '');
                 const safeEquipmentDetails = escapeHtml([item.name, item.serialNumber ? `SN ${item.serialNumber}` : ''].filter(Boolean).join(' · ') || 'Equipment details unavailable');
-                const safeSetId  = escapeHtml(item.setId || '');
+                const rawSetId = String(item.setId || '');
+                const safeSetId = escapeHtml(rawSetId);
+                const displaySetId = escapeHtml(
+                    equipmentPCSets.find((set) => String(set.setId || '') === rawSetId)?.displaySetId || rawSetId
+                );
                 const safeLastBorrower = escapeHtml(item.lastBorrower?.name || '—');
                 const formattedDate = item.dateAdded ? new Date(item.dateAdded).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
                 const isMissing = item.status === 'Missing';
@@ -813,7 +968,7 @@
                         <td class="px-3 py-2 text-sm font-mono text-slate-300">${safeSN || '<span class="text-slate-600 text-xs italic">—</span>'}</td>
                         <td class="px-3 py-2 text-sm">
                             ${safeSetId
-                                ? `<span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold" style="background:rgba(74,222,128,.12);color:#6ee7b7;border:1px solid rgba(74,222,128,.2);">${safeSetId}</span>`
+                                ? `<span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold" style="background:rgba(74,222,128,.12);color:#6ee7b7;border:1px solid rgba(74,222,128,.2);">${displaySetId}</span>`
                                 : '<span class="text-slate-600 text-xs italic">—</span>'}
                         </td>
                         <td class="px-3 py-2 text-sm text-slate-300">${safeCampus}</td>
@@ -1023,7 +1178,7 @@
             getComponentSetOptions(category).forEach((set) => {
                 const lab = normalizeSetLaboratory(set.location);
                 const campus = getCampusOption(set.campus || getCurrentUserCampus());
-                const option = new Option(`${set.setId} — ${set.setName || 'PC set'}${lab ? ` · ComLab ${lab.slice(-1)}` : ''}`, set.setId);
+                const option = new Option(`${set.displaySetId || set.setId} — ${set.setName || 'PC set'}${lab ? ` · ComLab ${lab.slice(-1)}` : ''}`, set.setId);
                 option.dataset.campus = campus;
                 option.dataset.laboratoryRoom = lab;
                 select.add(option);
@@ -1210,23 +1365,34 @@
             }
         }
 
-        async function filterEquipment() {
+        async function filterEquipment(event) {
             if (document.getElementById('viewModeFilter')?.value === 'pc-sets') {
                 await loadPCSetsTable();
-                return;
+            } else {
+                await loadEquipment(1);
             }
-            // Reload equipment data when campus filter changes
-            await loadEquipment(1);
+
+            if (event?.target?.id === 'searchInput') {
+                window.clearTimeout(inventorySummaryRefreshTimer);
+                inventorySummaryRefreshTimer = window.setTimeout(() => {
+                    void refreshInventorySummary();
+                }, 250);
+            } else {
+                await refreshInventorySummary();
+            }
         }
 
         async function changeViewMode() {
             const viewMode = document.getElementById('viewModeFilter')?.value || 'all';
+            const filterRow = document.querySelector('.inventory-filter-row.system-filter-row');
+            filterRow?.classList.toggle('pc-set-filter-mode', viewMode === 'pc-sets');
             
             if (viewMode === 'pc-sets') {
                 inventoryAssignmentFilter = '';
                 currentEquipmentPage = 1;
                 // Show PC sets in table with expandable rows
                 await loadPCSetsTable();
+                await refreshInventorySummary();
             } else {
                 // Show regular equipment view - restore headers
                 document.getElementById('equipmentTableSection')?.classList.remove('pc-sets-view');
@@ -1307,7 +1473,7 @@
                     <div class="flex items-start justify-between mb-3">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="text-lg font-bold text-emerald-400 font-mono">${escapeHtml(set.setId)}</h3>
+                                <h3 class="text-lg font-bold text-emerald-400 font-mono">${escapeHtml(set.displaySetId || set.setId)}</h3>
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border" style="${sc}">${escapeHtml(set.status||'unknown')}</span>
                                 ${missing > 0 ? `<span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold" style="background:rgb(133, 77, 14);color:#fcd34d;border:1px solid rgba(251,191,36,.3);"><i class="fas fa-exclamation-triangle" style="font-size:0.6rem;"></i>${missing} missing</span>` : ''}
                             </div>
@@ -1423,7 +1589,7 @@
                     <div class="flex items-start justify-between mb-6">
                         <div>
                             <h3 class="text-2xl font-bold text-white">${set.setName}</h3>
-                            <p class="text-slate-400 mt-1">${set.setId} - Components</p>
+                            <p class="text-slate-400 mt-1">${escapeHtml(set.displaySetId || set.setId)} - Components</p>
                         </div>
                         <button onclick="this.closest('.modal').remove()" class="text-2xl text-emerald-400 hover:text-emerald-200">
                             <i class="fas fa-times"></i>
@@ -2227,6 +2393,8 @@ document.getElementById('equipmentTable').addEventListener('click', handleEquipm
             if (requestedStatus && statusFilter && [...statusFilter.options].some((option) => option.value === requestedStatus)) {
                 statusFilter.value = requestedStatus;
             }
+            const showLabFilter = viewModeFilter?.value === 'pc-sets';
+            document.querySelector('.inventory-filter-row.system-filter-row')?.classList.toggle('pc-set-filter-mode', showLabFilter);
             await loadCategories();
             await loadEquipment(1, true);
             window.setInterval(refreshLastBorrowers, 30000);

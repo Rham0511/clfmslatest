@@ -557,7 +557,12 @@ export const resolveEquipmentQrToken = async (req, res) => {
 };
 
 export const getEquipment = async (req, res) => {
-  const { search = "", status, campus, sortBy, assignment } = req.query;
+  const { search = "", status, campus, sortBy, assignment, laboratory } = req.query;
+  const getLaboratoryKey = (value) => {
+    const match = String(value || "").match(/\bCOM\s*LAB\s*([12])\b/i);
+    return match ? `COMLAB ${match[1]}` : "";
+  };
+  const normalizedLaboratory = getLaboratoryKey(laboratory);
   const isPaginatedRequest = req.query.page !== undefined || req.query.pageSize !== undefined;
   const parsePositiveInteger = (value, fallback) => {
     const parsed = Number.parseInt(String(value), 10);
@@ -621,18 +626,19 @@ export const getEquipment = async (req, res) => {
           .toString()
           .toLowerCase()
           .split(" ")
-          .every((token) =>
-            token === "" ||
-            item.equipmentId.toLowerCase().includes(token) ||
-            item.name.toLowerCase().includes(token) ||
-            String(item.campus || "").toLowerCase().includes(token)
-          );
+          .every((token) => token === "" || [
+            item.equipmentId,
+            item.name,
+            item.serialNumber,
+            item.campus
+          ].some((value) => String(value || "").toLowerCase().includes(token)));
         const matchesStatus = !status || item.status === status;
+        const matchesLaboratory = !normalizedLaboratory || getLaboratoryKey(item.laboratoryRoom || item.location) === normalizedLaboratory;
         const matchesAssignment = !["assigned", "unassigned"].includes(String(assignment || "").toLowerCase()) ||
           (String(assignment).toLowerCase() === "assigned"
             ? Boolean(String(item.setId || "").trim())
             : !String(item.setId || "").trim());
-        return matchesSearch && matchesStatus && matchesAssignment;
+        return matchesSearch && matchesStatus && matchesAssignment && matchesLaboratory;
       });
 
     if (String(sortBy || "").trim().toLowerCase() === "name") {

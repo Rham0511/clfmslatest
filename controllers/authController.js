@@ -91,8 +91,9 @@ const getSmtpErrorMessage = (error) => {
 // ─── Role helpers ────────────────────────────────────────────────────────────
 
 export const normalizeUserRole = (role) => {
-  const normalized = String(role || "").trim().toLowerCase();
+  const normalized = String(role || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (["admin", "administrator"].includes(normalized)) return "admin";
+  if (["superadmin", "centraladmin", "systemadmin"].includes(normalized)) return "admin";
   if (["faculty", "faculties", "instructor", "instructors"].includes(normalized)) return "faculty";
   if (normalized === "technician") return "technician";
   if (normalized === "student") return "student";
@@ -126,10 +127,8 @@ export const loginPage = (req, res) => res.render("login", {
 });
 export const registerPage     = (req, res) => {
   const isEquipmentRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
-  const isFacultyRegistration = String(req.query.role || "").trim().toLowerCase() === "faculty";
   return res.render("register", {
     title: "Register",
-    isFacultyRegistration,
     isEquipmentRegistration
   });
 };
@@ -227,7 +226,10 @@ export const loginUser = async (req, res) => {
   req.session.userCampus = user.campus || null;
   setRememberMeCookie(req, rememberMe);
   console.log("[LOGIN] Session userId:", req.session.userId);
-  await user.update({ last_login_at: new Date(), role: normalizedRole });
+  const storedRole = ["superadmin", "centraladmin", "systemadmin"].includes(
+    String(user.role || "").trim().toLowerCase().replace(/[\s_-]+/g, "")
+  ) ? user.role : normalizedRole;
+  await user.update({ last_login_at: new Date(), role: storedRole });
   await logAuditEntry(req, {
     action: "Login",
     module: "Authentication",
@@ -253,33 +255,21 @@ export const loginUser = async (req, res) => {
 // ─── Registration with OTP ───────────────────────────────────────────────────
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role, student_number, college, program, year, section, campus } = req.body;
+  const { name, email, password, confirmPassword, role, student_number, program, year, section, campus } = req.body;
   const equipmentQrRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
-  const normalizedRole = normalizeUserRole(role || "student");
-  const isStudent = normalizedRole === "student";
-  const officialStudentId = isStudent ? String(student_number || "").trim() : "";
-  const normalizedCollege = String(college || "").trim().toUpperCase();
+  const requestedRole = String(role || "").trim();
+  if (requestedRole && normalizeUserRole(requestedRole) !== "student") {
+    req.flash("error_msg", "Public registration is limited to Student accounts. Please contact an administrator for staff access.");
+    return res.redirect("/register");
+  }
+  const normalizedRole = "student";
+  const officialStudentId = String(student_number || "").trim();
   const normalizedProgram = String(program || "").trim();
   const normalizedYear = normalizeStudentYear(year);
   const normalizedSection = normalizeStudentSection(section);
 
-  if (!["student", "faculty"].includes(normalizedRole)) {
-    req.flash("error_msg", "Only Student and Faculty accounts can be registered here.");
-    return res.redirect("/register");
-  }
-
   if (!String(name || "").trim() || !String(email || "").trim() || !password || !confirmPassword || !campus) {
     req.flash("error_msg", "Please complete all required registration fields.");
-    return res.redirect("/register");
-  }
-
-  if (!isStudent && !normalizedCollege) {
-    req.flash("error_msg", "Please select a college or institute.");
-    return res.redirect("/register");
-  }
-
-  if (!isStudent && !ALLOWED_COLLEGES.has(normalizedCollege)) {
-    req.flash("error_msg", "Please select a valid college or institute.");
     return res.redirect("/register");
   }
 
@@ -294,21 +284,21 @@ export const registerUser = async (req, res) => {
     return res.redirect("/register");
   }
 
-  if (normalizedRole === "student" && !officialStudentId) {
+  if (!officialStudentId) {
     req.flash("error_msg", "Student ID is required for student registration.");
     return res.redirect("/register");
   }
 
-  if (isStudent && !ALLOWED_STUDENT_PROGRAMS.has(normalizedProgram.toUpperCase())) {
+  if (!ALLOWED_STUDENT_PROGRAMS.has(normalizedProgram.toUpperCase())) {
     req.flash("error_msg", "Please select BSIT or BSCPE as your program.");
     return res.redirect("/register");
   }
 
-  if (isStudent && (!normalizedYear || !normalizedSection)) {
+  if (!normalizedYear || !normalizedSection) {
     req.flash("error_msg", "Students must provide their program, a valid year level, and a section from F1 to F3.");
     return res.redirect("/register");
   }
-  const storedProgram = isStudent ? normalizedProgram.toUpperCase() : null;
+  const storedProgram = normalizedProgram.toUpperCase();
 
   const normalizedEmail = String(email).trim().toLowerCase();
   const existingUser = await User.findOne({ where: { email: normalizedEmail } });
@@ -342,10 +332,10 @@ export const registerUser = async (req, res) => {
       password: hashed,
       role: normalizedRole,
       student_number: officialStudentId || null,
-      college: isStudent ? null : normalizedCollege,
+      college: null,
       program: storedProgram,
-      year: isStudent ? normalizedYear : null,
-      section: isStudent ? normalizedSection : null,
+      year: normalizedYear,
+      section: normalizedSection,
       campus: normalizedCampus,
       otp_code: otp,
       otp_expires_at: otpExpiresAt,
@@ -359,10 +349,10 @@ export const registerUser = async (req, res) => {
       password: hashed,
       role: normalizedRole,
       student_number: officialStudentId || null,
-      college: isStudent ? null : normalizedCollege,
+      college: null,
       program: storedProgram,
-      year: isStudent ? normalizedYear : null,
-      section: isStudent ? normalizedSection : null,
+      year: normalizedYear,
+      section: normalizedSection,
       campus: normalizedCampus,
       last_login_at: null,
       email_verified: false,
@@ -377,7 +367,7 @@ export const registerUser = async (req, res) => {
     module: "User Management",
     resourceId: user.id,
     description: `New user account created for ${user.email} (${normalizedRole}) — OTP verification required.`,
-    details: { email: user.email, role: normalizedRole, campus: normalizedCampus, college: isStudent ? null : normalizedCollege, program: storedProgram }
+    details: { email: user.email, role: normalizedRole, campus: normalizedCampus, college: null, program: storedProgram }
   });
 
   console.log(`[auth] OTP generated for registration: ${normalizedEmail}`);
@@ -411,7 +401,13 @@ export const verifyOtpPage = (req, res) => {
     return res.redirect('/register');
   }
   const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
-  return res.render('verify-otp', { title: 'Verify Your Email', maskedEmail, purpose });
+  const isPasswordReset = purpose === 'password_reset';
+  return res.render('verify-otp', {
+    title: isPasswordReset ? 'Verify Reset Code' : 'Verify Your Email',
+    maskedEmail,
+    purpose,
+    isPasswordReset
+  });
 };
 
 export const verifyOtp = async (req, res) => {
@@ -508,10 +504,12 @@ export const verifyOtp = async (req, res) => {
   }
 
   if (purpose === 'password_reset') {
-    // OTP is valid — let them set a new password
+    // A valid reset OTP proves access to this email address. Mark it verified
+    // so the login guard does not reject the account after the reset flow.
     // Clear the OTP so it can't be reused, keep a reset token in session
     const resetToken = crypto.randomBytes(32).toString('hex');
     await user.update({
+      email_verified: true,
       otp_code: null,
       otp_expires_at: null,
       otp_purpose: null,
@@ -645,6 +643,7 @@ export const resetPassword = async (req, res) => {
   const hashed = await bcryptjs.hash(password, 8);
   await user.update({
     password: hashed,
+    email_verified: true,
     verification_token: null,
     verification_expires_at: null
   });
@@ -653,7 +652,10 @@ export const resetPassword = async (req, res) => {
     action: 'Password Reset',
     module: 'Authentication',
     resourceId: user.id,
-    description: `User ${user.email} successfully reset their password.`
+    actorUserId: user.id,
+    actorName: user.name,
+    actorRole: user.role,
+    description: `User ${user.email} successfully reset their password and verified their email through OTP.`
   });
 
   delete req.session.resetToken;
@@ -697,7 +699,7 @@ export const updateProfile = async (req, res) => {
     return res.status(401).json({ success: false, error: "Please log in to update your profile." });
   }
 
-  const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role", "student_number", "college", "year", "section"] });
+  const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role", "student_number", "college", "program", "year", "section"] });
   if (!user) {
     return res.status(404).json({ success: false, error: "User account was not found." });
   }
@@ -707,10 +709,10 @@ export const updateProfile = async (req, res) => {
     const name = String(req.body.name || "").trim().replace(/\s+/g, " ");
     const nameParts = name.split(" ").filter(Boolean);
     const genericNames = new Set(["technician", "lab technician", "laboratory technician", "n/a"]);
-    if (name.length > 120 || nameParts.length < 3 || genericNames.has(name.toLocaleLowerCase())) {
+    if (name.length > 120 || nameParts.length < 2 || genericNames.has(name.toLocaleLowerCase())) {
       return res.status(400).json({
         success: false,
-        error: "Enter your full name: first name, middle initial, and last name."
+        error: "Enter your full name with at least a first name and last name."
       });
     }
     payload.name = name;
@@ -720,6 +722,17 @@ export const updateProfile = async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
       payload[field] = String(req.body[field] || "").trim() || null;
     }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(req.body, "program")) {
+    if (normalizeUserRole(user.role) !== "student") {
+      return res.status(403).json({ success: false, error: "Only Student accounts can update a course." });
+    }
+    const program = String(req.body.program || "").trim().toUpperCase();
+    if (!ALLOWED_STUDENT_PROGRAMS.has(program)) {
+      return res.status(400).json({ success: false, error: "Please select a valid course." });
+    }
+    payload.program = program;
   }
 
   if (normalizeUserRole(user.role) === "student" &&
@@ -773,9 +786,23 @@ export const updateProfile = async (req, res) => {
     payload.student_number = officialStudentId || null;
   }
 
+  const fieldLabels = {
+    name: "Full name",
+    student_number: "Student ID",
+    program: "Course",
+    year: "Year",
+    section: "Section",
+    college: "College / Institute"
+  };
+  const changedPayload = Object.fromEntries(Object.entries(payload).filter(([field, value]) => {
+    const existingValue = user[field] ?? null;
+    const nextValue = value ?? null;
+    return String(existingValue ?? "").trim() !== String(nextValue ?? "").trim();
+  }));
+
   try {
-    if (Object.keys(payload).length) {
-      await User.update(payload, { where: { id: user.id } });
+    if (Object.keys(changedPayload).length) {
+      await User.update(changedPayload, { where: { id: user.id } });
     }
   } catch (error) {
     if (error?.name === "SequelizeUniqueConstraintError") {
@@ -783,13 +810,15 @@ export const updateProfile = async (req, res) => {
     }
     throw error;
   }
-  await logAuditEntry(req, {
-    action: "User Updated",
-    module: "User Management",
-    resourceId: user.id,
-    description: `User profile updated for ${user.id}.`,
-    details: payload
-  });
+  if (Object.keys(changedPayload).length) {
+    const changedLabels = Object.keys(changedPayload).map((field) => fieldLabels[field] || field);
+    await logAuditEntry(req, {
+      action: "User Updated",
+      module: "User Management",
+      resourceId: user.id,
+      description: `Profile updated for user ${user.id}. Changed fields: ${changedLabels.join(", ")}.`
+    });
+  }
 
   if (req.accepts("html")) {
     req.flash("success_msg", "Profile updated successfully.");
@@ -798,10 +827,13 @@ export const updateProfile = async (req, res) => {
   return res.json({
     success: true,
     profile: {
-      ...payload,
+      ...changedPayload,
       name: payload.name ?? user.name ?? "",
       student_number: payload.student_number ?? user.student_number ?? null,
-      college: payload.college ?? user.college ?? null
+      college: payload.college ?? user.college ?? null,
+      program: payload.program ?? user.program ?? "",
+      year: payload.year ?? user.year ?? "",
+      section: payload.section ?? user.section ?? ""
     }
   });
 };

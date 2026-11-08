@@ -39,7 +39,7 @@
 
   const fetchSummary = async () => {
     try {
-      const res = await fetch('/api/maintenance-summary');
+      const res = await fetch('/api/maintenance-summary', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load summary');
       const data = await res.json();
       setText(totalRequestsCount, data.totalRequests);
@@ -89,7 +89,7 @@
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('/api/maintenance');
+      const res = await fetch('/api/maintenance', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load requests');
       const data = await res.json();
       currentRequests = Array.isArray(data) ? data : [];

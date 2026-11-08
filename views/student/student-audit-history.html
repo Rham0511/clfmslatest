@@ -6,8 +6,8 @@
   <title>Audit History | ComLab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
-  <link rel="stylesheet" href="/css/sidebar.css?v=70">
-  <script src="/js/sidebar-component.js?v=69" defer></script>
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <script src="/js/sidebar-component.js?v=75" defer></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -61,36 +61,128 @@
       color: #91ad9c;
       font-size: .92rem;
     }
-    .audit-tabs { margin-top: 1.25rem; }
+    .audit-overview {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 1rem;
+      margin-top: .65rem;
+      overflow: hidden;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: 1.15rem;
+      padding: clamp(1rem, 2vw, 1.45rem);
+      background:
+        radial-gradient(ellipse at 92% 8%, rgba(16, 185, 129, .13), transparent 38%),
+        linear-gradient(120deg, rgba(12, 44, 29, .98), rgba(7, 25, 18, .98));
+      box-shadow: 0 18px 45px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+    .audit-overview-icon {
+      display: grid;
+      width: 3.4rem;
+      height: 3.4rem;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid rgba(110, 231, 183, .27);
+      border-radius: 1rem;
+      background: linear-gradient(145deg, rgba(16, 185, 129, .2), rgba(16, 91, 58, .25));
+      color: #6ee7b7;
+      font-size: 1.25rem;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 24px rgba(16, 185, 129, .08);
+    }
+    .audit-overview-copy { min-width: 0; }
+    .audit-overview-kicker {
+      margin: 0 0 .1rem;
+      color: #6ee7b7;
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .audit-overview h1 {
+      margin: 0;
+      color: #f0fdf4;
+      font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+      font-weight: 780;
+      letter-spacing: -.04em;
+      line-height: 1.2;
+    }
+    .audit-overview-description {
+      margin: .3rem 0 0;
+      color: #9bb6a5;
+      font-size: .83rem;
+    }
+    .audit-overview-note {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: .45rem;
+      margin-left: auto;
+      border: 1px solid rgba(110, 231, 183, .18);
+      border-radius: 999px;
+      padding: .48rem .75rem;
+      background: rgba(5, 24, 16, .48);
+      color: #a8c3b2;
+      font-size: .7rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .audit-overview-note i { color: #6ee7b7; }
+    .audit-tabs {
+      display: flex;
+      gap: .45rem;
+      margin-top: 1rem;
+      overflow-x: auto;
+      border: 1px solid rgba(74, 222, 128, .12);
+      border-radius: 1rem;
+      padding: .5rem;
+      background: rgba(5, 22, 15, .82);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(74, 222, 128, .35) transparent;
+    }
     .audit-tab {
       display: inline-flex;
-      min-height: 2.6rem;
+      min-height: 2.75rem;
+      flex: 0 0 auto;
       align-items: center;
       gap: .55rem;
-      border: 1px solid rgba(52, 211, 153, .3);
-      border-radius: .8rem;
-      padding: .55rem .95rem;
-      background: linear-gradient(135deg, rgba(16, 91, 58, .9), rgba(10, 62, 41, .9));
-      color: #d1fae5;
+      border: 1px solid transparent;
+      border-radius: .72rem;
+      padding: .55rem .85rem;
+      background: transparent;
+      color: #a8c3b2;
       font-size: .88rem;
       font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
     }
     .audit-tab i { color: #6ee7b7; }
+    .audit-tab:hover { background: rgba(16, 91, 58, .3); color: #e7fff1; }
+    .audit-tab:active { transform: translateY(1px); }
+    .audit-tab[aria-selected="true"] {
+      border-color: rgba(52, 211, 153, .28);
+      background: linear-gradient(135deg, rgba(16, 115, 70, .84), rgba(8, 74, 47, .86));
+      color: #e7fff1;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 16px rgba(0, 0, 0, .14);
+    }
+    .audit-tab:focus-visible { outline: 2px solid #6ee7b7; outline-offset: 2px; }
     .audit-card {
-      margin-top: 1rem;
+      margin-top: .8rem;
       overflow: hidden;
       border: 1px solid rgba(52, 211, 153, .2);
-      border-radius: 1.1rem;
-      background: linear-gradient(145deg, rgba(9, 31, 21, .98), rgba(7, 25, 18, .98));
-      box-shadow: 0 18px 50px rgba(0, 0, 0, .17);
+      border-radius: 1.15rem;
+      background: linear-gradient(145deg, rgba(10, 34, 23, .98), rgba(7, 24, 17, .99));
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .17), inset 0 1px 0 rgba(255, 255, 255, .025);
     }
     .audit-card-header {
       display: flex;
       min-height: 5.1rem;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
+      align-items: stretch;
+      flex-direction: column;
+      gap: .9rem;
+      padding: 1.15rem 1.25rem;
       border-bottom: 1px solid rgba(52, 211, 153, .13);
     }
     .audit-title-wrap {
@@ -124,9 +216,19 @@
     }
     .audit-filter {
       display: grid;
-      flex: 1 1 42rem;
-      grid-template-columns: minmax(9rem, 1.5fr) repeat(3, minmax(0, 1fr));
+      flex: 1 1 auto;
+      grid-template-columns: minmax(12rem, 1.6fr) repeat(2, minmax(9rem, .75fr));
       gap: .55rem;
+    }
+    .audit-search { position: relative; min-width: 0; }
+    .audit-search i {
+      position: absolute;
+      top: 50%;
+      left: .85rem;
+      color: #6ee7b7;
+      font-size: .85rem;
+      pointer-events: none;
+      transform: translateY(-50%);
     }
     .audit-filter input,
     .audit-filter select {
@@ -142,6 +244,7 @@
       font-size: .78rem;
       font-weight: 600;
     }
+    .audit-filter .audit-search input { padding-left: 2.3rem; }
     .audit-filter select { cursor: pointer; }
     .audit-filter input::placeholder { color: #779484; }
     .audit-filter input:focus-visible,
@@ -179,27 +282,27 @@
     .audit-table thead th {
       padding: .7rem 1rem;
       border-bottom: 1px solid rgba(52, 211, 153, .15);
-      background: rgba(11, 43, 29, .86);
-      color: #8fbda2;
+      background: rgba(11, 43, 29, .94);
+      color: #a4cdb5;
       font-size: .7rem;
       font-weight: 750;
       letter-spacing: .09em;
       text-transform: uppercase;
       white-space: nowrap;
     }
-    .audit-table tbody tr { transition: background-color 140ms ease; }
-    .audit-table tbody tr:hover { background: rgba(52, 211, 153, .055); }
+    .audit-table tbody tr { transition: background-color 140ms ease, box-shadow 140ms ease; }
+    .audit-table tbody tr:hover { background: rgba(52, 211, 153, .055); box-shadow: inset 3px 0 rgba(52, 211, 153, .42); }
     .audit-table tbody td {
       padding: .8rem 1rem;
-      border-bottom: 1px solid rgba(74, 222, 128, .09);
+      border-bottom: 1px solid rgba(74, 222, 128, .105);
       color: #dcebe1;
       font-size: .82rem;
       vertical-align: middle;
     }
     .audit-table tbody tr:last-child td { border-bottom: 0; }
-    .audit-table th:first-child, .audit-table td:first-child { width: 8rem; }
-    .audit-table th:nth-child(2), .audit-table td:nth-child(2) { width: 13rem; }
-    .audit-table th:last-child, .audit-table td:last-child { width: 12rem; }
+    .audit-table th:first-child, .audit-table td:first-child { width: 15rem; }
+    .audit-table th:nth-child(2), .audit-table td:nth-child(2) { width: auto; }
+    .audit-table th:last-child, .audit-table td:last-child { width: 13rem; }
     .action-badge {
       display: inline-flex;
       align-items: center;
@@ -237,7 +340,7 @@
       justify-content: space-between;
       gap: .75rem;
       border-top: 1px solid rgba(74, 222, 128, .1);
-      padding: .75rem 1rem;
+      padding: .85rem 1rem;
       color: #91ad9c;
       font-size: .75rem;
     }
@@ -286,7 +389,7 @@
     body.student-pc-audit-page .sidebar .nav-item[aria-current="page"] {
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 3px 0 0 #4ade80, 0 5px 14px rgba(34,197,94,.08) !important;
     }
-    @media (max-width: 720px) {
+    @media (max-width: 767px) {
       .main-container {
         width: 100%;
         margin-left: 0;
@@ -411,8 +514,12 @@
       }
       .page-heading { font-size: clamp(1.5rem, 6vw, 1.9rem); line-height: 1.12; }
       .page-description { margin-top: .4rem; font-size: .84rem; line-height: 1.4; }
-      .audit-tabs { margin-top: .9rem; }
-      .audit-tab { min-height: 2.45rem; padding: .48rem .8rem; }
+      .audit-overview { align-items: flex-start; gap: .7rem; margin-top: .5rem; border-radius: .95rem; padding: .95rem; }
+      .audit-overview-icon { width: 2.8rem; height: 2.8rem; border-radius: .8rem; font-size: 1rem; }
+      .audit-overview-description { max-width: 30rem; font-size: .76rem; line-height: 1.45; }
+      .audit-overview-note { display: none; }
+      .audit-tabs { margin-top: .75rem; border-radius: .85rem; padding: .4rem; }
+      .audit-tab { min-height: 2.45rem; padding: .45rem .7rem; font-size: .79rem; }
       .audit-card-header {
         align-items: stretch;
         flex-direction: column;
@@ -425,11 +532,14 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: .5rem;
       }
-      .audit-filter > input,
-      .audit-filter > select { grid-column: 1 / -1; }
+      .audit-search { grid-column: 1 / -1; }
       .audit-filter-date { grid-column: span 1; min-width: 0; }
       .audit-filter-date input[type="date"] {
         grid-column: auto;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
         min-height: 2.45rem;
         padding: .4rem .3rem;
         font-size: .7rem;
@@ -446,7 +556,8 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas:
-          "action station"
+          "activity activity"
+          "details details"
           "time time";
         gap: .45rem;
         min-width: 0;
@@ -460,22 +571,22 @@
         display: block;
         width: auto !important;
         min-width: 0;
-        border: 0;
+        border: 0 !important;
         padding: 0;
         overflow-wrap: anywhere;
         font-size: .78rem;
       }
-      .audit-table tbody td:first-child { grid-area: action; align-self: center; }
-      .audit-table tbody td:nth-child(2) { grid-area: station; text-align: right; }
+      .audit-table tbody td:first-child { grid-area: activity; align-self: center; }
+      .audit-table tbody td:nth-child(2) { grid-area: details; text-align: left; }
       .audit-table tbody td:last-child {
         grid-area: time;
-        border-top: 1px solid rgba(74, 222, 128, .1);
+        border-top: 1px solid rgba(74, 222, 128, .1) !important;
         padding-top: .4rem;
       }
       .audit-table .audit-time { display: flex; justify-content: space-between; font-size: .72rem; }
       .audit-table .audit-time-date { font-size: .7rem; }
       .audit-table .station-name { font-size: .78rem; }
-      .audit-table .station-id { display: inline; margin-left: .35rem; font-size: .68rem; }
+      .audit-table .station-id { display: block; margin: .2rem 0 0; font-size: .68rem; }
       .audit-table .action-badge { padding: .27rem .55rem; font-size: .7rem; }
       .audit-table tbody td.table-message {
         grid-column: 1 / -1;
@@ -486,7 +597,7 @@
       }
       .audit-results { align-items: flex-start; flex-direction: column; }
       .audit-pagination { width: 100%; justify-content: space-between; }
-      .audit-card { margin-top: .75rem; border-radius: .9rem; }
+      .audit-card { margin-top: .7rem; border-radius: .9rem; }
       .audit-title-wrap { gap: .65rem; }
       .audit-title-icon { width: 2.35rem; height: 2.35rem; border-radius: .7rem; }
       .audit-card h2 { font-size: .95rem; }
@@ -494,10 +605,10 @@
     }
   </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=3">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=16">
 </head>
 <body class="app-shell student-portal system-layout-page student-pc-audit-page">
-  <script>window.__CURRENT_USER__ = { role: 'student' };</script>
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
   <div id="shared-sidebar"></div>
   <main class="main-container">
     <header class="audit-page-heading" data-comlab-hide-auto-title="true">
@@ -508,42 +619,53 @@
         <div data-theme-toggle-anchor></div>
       </div>
     </header>
+    <section class="audit-overview" aria-label="Student audit history overview">
+      <span class="audit-overview-icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
+      <div class="audit-overview-copy">
+        <p class="audit-overview-kicker">Student account</p>
+        <h1>Audit History</h1>
+        <p class="audit-overview-description">Review your system access, equipment activity, and PC station sessions.</p>
+      </div>
+      <span class="audit-overview-note"><i class="fas fa-lock" aria-hidden="true"></i>Private to your account</span>
+    </section>
     <div class="audit-tabs" role="tablist" aria-label="Student audit history">
-      <button class="audit-tab" type="button" role="tab" aria-selected="true"><i class="fas fa-desktop" aria-hidden="true"></i>PC Logs</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="true" data-category="pc-station"><i class="fas fa-desktop" aria-hidden="true"></i>PC Logs</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="all"><i class="fas fa-list-check" aria-hidden="true"></i>All Activity</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="access"><i class="fas fa-right-to-bracket" aria-hidden="true"></i>System Access</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="profile"><i class="fas fa-user-pen" aria-hidden="true"></i>Profile Updates</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="scans"><i class="fas fa-qrcode" aria-hidden="true"></i>Item QR Scans</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="borrow"><i class="fas fa-box-open" aria-hidden="true"></i>Borrowing</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="reports"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i>Issue Reports</button>
+      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="security"><i class="fas fa-shield-halved" aria-hidden="true"></i>Account Security</button>
     </div>
     <section class="audit-card" aria-live="polite">
       <header class="audit-card-header">
         <div class="audit-title-wrap">
-          <span class="audit-title-icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+          <span class="audit-title-icon" aria-hidden="true"><i id="auditTitleIcon" class="fas fa-desktop"></i></span>
           <div>
-            <h2>PC station log activity</h2>
-            <p class="audit-subtitle">Login and logout records for your PC sessions</p>
+            <h2 id="auditTitle">PC station logs</h2>
+            <p id="auditSubtitle" class="audit-subtitle">Sign-ins and sign-outs at your PC workstations.</p>
           </div>
         </div>
-        <div class="audit-filter" aria-label="Search and filter PC logs">
-          <input id="studentPcLogSearch" type="search" placeholder="Search station or activity" aria-label="Search PC station or activity">
-          <select id="studentPcLogActionFilter" aria-label="Filter PC logs by action">
-            <option value="">All actions</option>
-            <option value="login">Login</option>
-            <option value="logout">Logout</option>
-          </select>
-          <label class="audit-filter-date"><span>From</span><input id="studentPcLogDateFrom" type="date" aria-label="Filter PC logs from date"></label>
-          <label class="audit-filter-date"><span>To</span><input id="studentPcLogDateTo" type="date" aria-label="Filter PC logs to date"></label>
+        <div class="audit-filter" aria-label="Search and filter student activity">
+          <label class="audit-search"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><input id="studentAuditSearch" type="search" placeholder="Search activity or details" aria-label="Search activity or details"></label>
+          <label class="audit-filter-date"><span>From</span><input id="studentAuditDateFrom" type="date" aria-label="Filter activity from date"></label>
+          <label class="audit-filter-date"><span>To</span><input id="studentAuditDateTo" type="date" aria-label="Filter activity to date"></label>
         </div>
       </header>
       <div class="audit-table-wrap">
         <table class="audit-table">
           <thead>
-            <tr><th scope="col">Action</th><th scope="col">PC station</th><th scope="col">Date &amp; time</th></tr>
+            <tr><th scope="col">Activity</th><th scope="col">Details</th><th scope="col">Date &amp; time</th></tr>
           </thead>
           <tbody id="auditHistory" aria-live="polite">
-            <tr><td colspan="3" class="table-message"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Loading PC station logs…</td></tr>
+            <tr><td colspan="3" class="table-message"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Loading activity…</td></tr>
           </tbody>
         </table>
       </div>
       <footer class="audit-results">
         <span id="auditResultsSummary" aria-live="polite">Loading activity…</span>
-        <nav class="audit-pagination" aria-label="PC log pages">
+        <nav class="audit-pagination" aria-label="Activity pages">
           <button id="auditPreviousPage" type="button" disabled>Previous</button>
           <span id="auditPageSummary">Page 1</span>
           <button id="auditNextPage" type="button" disabled>Next</button>
@@ -554,17 +676,33 @@
 
   <script>
     const auditHistory = document.getElementById('auditHistory');
-    const actionFilter = document.getElementById('studentPcLogActionFilter');
-    const stationSearch = document.getElementById('studentPcLogSearch');
-    const dateFromFilter = document.getElementById('studentPcLogDateFrom');
-    const dateToFilter = document.getElementById('studentPcLogDateTo');
+    const searchInput = document.getElementById('studentAuditSearch');
+    const dateFromFilter = document.getElementById('studentAuditDateFrom');
+    const dateToFilter = document.getElementById('studentAuditDateTo');
     const resultsSummary = document.getElementById('auditResultsSummary');
     const pageSummary = document.getElementById('auditPageSummary');
     const previousPageButton = document.getElementById('auditPreviousPage');
     const nextPageButton = document.getElementById('auditNextPage');
+    const title = document.getElementById('auditTitle');
+    const subtitle = document.getElementById('auditSubtitle');
+    const titleIcon = document.getElementById('auditTitleIcon');
+    const tabs = [...document.querySelectorAll('.audit-tab[data-category]')];
     const pageSize = 25;
+    const dataCache = new Map();
+    const tabCopy = {
+      all: ['All student activity', 'Your account activity, item scans, requests, and PC sessions.', 'fa-list-check'],
+      access: ['System access', 'Sign-ins and sign-outs from your ComLab account.', 'fa-right-to-bracket'],
+      profile: ['Profile updates', 'Changes saved to your student profile.', 'fa-user-pen'],
+      scans: ['Item QR scans', 'Equipment QR codes scanned by your account.', 'fa-qrcode'],
+      borrow: ['Borrowing activity', 'Borrow requests, approvals, returns, and QR handoffs.', 'fa-box-open'],
+      reports: ['Issue reports', 'Maintenance and equipment issues reported by you.', 'fa-screwdriver-wrench'],
+      security: ['Account security', 'Email verification, password resets, and other security events.', 'fa-shield-halved'],
+      'pc-station': ['PC station logs', 'Sign-ins and sign-outs at your PC workstations.', 'fa-desktop']
+    };
+    let activeCategory = 'pc-station';
     let currentPage = 1;
     let totalPages = 1;
+    let requestVersion = 0;
     let searchTimeout;
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -576,68 +714,196 @@
         ? 'Date not recorded'
         : date.toLocaleString(undefined, options);
     };
-    const getManilaDateBoundary = (date, endOfDay = false) =>
-      `${date}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}+08:00`;
+    const manilaDateKey = (value) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(date).reduce((result, part) => {
+        if (part.type !== 'literal') result[part.type] = part.value;
+        return result;
+      }, {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    };
     const showTableMessage = (message, icon) => {
       auditHistory.innerHTML = `<tr><td colspan="3" class="table-message"><i class="fas ${icon}" aria-hidden="true"></i>${escapeHtml(message)}</td></tr>`;
     };
 
-    async function fetchPcLogs(params) {
-      const response = await fetch('/api/audit-logs?' + params.toString(), {
+    async function fetchJson(url) {
+      const response = await fetch(url, {
         cache: 'no-store',
         credentials: 'same-origin',
         headers: { Accept: 'application/json' }
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || 'Unable to load audit history.');
-      if (!Array.isArray(payload.data) || !payload.meta) {
-        throw new Error('The PC log service returned an unexpected response.');
-      }
+      if (!response.ok) throw new Error(payload.error || 'Unable to load your audit history.');
       return payload;
     }
 
-    function getStationDetails(entry) {
-      const description = String(entry.description || '');
-      const match = description.match(/PC station (.+?) \(([^)]+)\)/i);
-      return {
-        name: match?.[1] || 'PC station',
-        id: entry.resourceId || match?.[2] || ''
-      };
+    async function fetchAuditCategory(category) {
+      const params = new URLSearchParams({ scope: 'student-activity', category, exportAll: 'true', pageSize: '5000' });
+      const payload = await fetchJson('/api/audit-logs?' + params.toString());
+      if (!Array.isArray(payload.data)) throw new Error('The activity service returned an unexpected response.');
+      return payload.data.map((entry) => ({
+        id: `audit-${entry.id}`,
+        action: entry.action || 'Activity',
+        module: entry.module || 'ComLab',
+        details: entry.description || entry.module || 'Activity recorded',
+        timestamp: entry.createdAt,
+        source: 'audit'
+      }));
     }
 
-    function renderPcLogRows(entries) {
+    async function fetchPcEntries() {
+      const params = new URLSearchParams({ scope: 'pc-station', exportAll: 'true', pageSize: '5000' });
+      const payload = await fetchJson('/api/audit-logs?' + params.toString());
+      if (!Array.isArray(payload.data)) throw new Error('The PC log service returned an unexpected response.');
+      return payload.data.map((entry) => {
+        const description = String(entry.description || '');
+        const match = description.match(/PC station (.+?) \(([^)]+)\)/i);
+        const stationName = match?.[1] || 'PC station';
+        const stationId = entry.resourceId || match?.[2] || '';
+        return {
+          id: `pc-${entry.id}`,
+          action: `PC ${String(entry.action || 'activity').toLowerCase()}`,
+          module: 'PC station',
+          details: `${stationName}${stationId ? ` (${stationId})` : ''}`,
+          timestamp: entry.createdAt,
+          source: 'pc'
+        };
+      });
+    }
+
+    async function fetchScanEntries() {
+      const payload = await fetchJson('/api/equipment-scan-history');
+      if (!Array.isArray(payload.data)) throw new Error('The item scan service returned an unexpected response.');
+      return payload.data
+        .filter((entry) => entry.actionType === 'equipment_scanned')
+        .map((entry) => ({
+          id: `scan-${entry.id}`,
+          action: 'Item QR scanned',
+          module: 'Equipment',
+          details: entry.equipmentName
+            ? `${entry.equipmentName}${entry.equipmentAssetId ? ` (${entry.equipmentAssetId})` : ''}`
+            : (entry.actionDescription || 'Equipment QR code scanned'),
+          timestamp: entry.actionTimestamp,
+          source: 'scan'
+        }));
+    }
+
+    async function loadCategoryData(category) {
+      if (dataCache.has(category)) return dataCache.get(category);
+      let entries;
+      if (category === 'scans') {
+        entries = await fetchScanEntries();
+      } else if (category === 'pc-station') {
+        entries = await fetchPcEntries();
+      } else if (category === 'all') {
+        const [audits, scans, pcEntries] = await Promise.all([
+          fetchAuditCategory('all'), fetchScanEntries(), fetchPcEntries()
+        ]);
+        entries = [...audits, ...scans, ...pcEntries];
+      } else {
+        entries = await fetchAuditCategory(category);
+      }
+      entries.sort((left, right) => new Date(right.timestamp || 0) - new Date(left.timestamp || 0));
+      dataCache.set(category, entries);
+      return entries;
+    }
+
+    function filterEntries(entries) {
+      const term = searchInput.value.trim().toLocaleLowerCase();
+      const from = dateFromFilter.value;
+      const to = dateToFilter.value;
+      return entries.filter((entry) => {
+        const searchable = `${entry.action} ${entry.module} ${entry.details}`.toLocaleLowerCase();
+        if (term && !searchable.includes(term)) return false;
+        const dateKey = manilaDateKey(entry.timestamp);
+        if (from && (!dateKey || dateKey < from)) return false;
+        if (to && (!dateKey || dateKey > to)) return false;
+        return true;
+      });
+    }
+
+    function getDisplayDetails(entry) {
+      const details = String(entry.details || '').trim();
+      const action = String(entry.action || '').toLocaleLowerCase();
+
+      if (entry.module === 'Authentication' && action === 'login') {
+        return details.match(/^User (.+?) logged in successfully\.?$/i)?.[1] || details;
+      }
+      if (entry.module === 'Authentication' && action === 'logout') {
+        return details.match(/^User (.+?) logged out\.?$/i)?.[1] || details;
+      }
+      if (action.includes('cancel')) {
+        return details.replace(/^(?:Student|User .+?|Technician) cancel(?:led|ed)\s+/i, '');
+      }
+      if (action.includes('created')) {
+        return details.replace(/^(?:Maintenance request|Issue report) created\s+(?:for\s+)?/i, '');
+      }
+      return details;
+    }
+
+    function shouldShowModule(entry) {
+      const module = String(entry.module || '').toLocaleLowerCase();
+      const action = String(entry.action || '').toLocaleLowerCase();
+      if (entry.source === 'pc' || entry.source === 'scan') return false;
+      if (['authentication', 'pc station', 'equipment'].includes(module)) return false;
+      if (module === 'maintenance monitoring' && /maintenance|request|report|issue/.test(action)) return false;
+      if (module === 'borrow management' && /borrow|return/.test(action)) return false;
+      if (module === 'user management' && /profile|user updated/.test(action)) return false;
+      return Boolean(entry.module);
+    }
+
+    function renderRows(entries) {
       if (!entries.length) {
-        showTableMessage('No PC station activity matches these filters.', 'fa-inbox');
+        showTableMessage('No activity matches these filters.', 'fa-inbox');
         return;
       }
       auditHistory.innerHTML = entries.map((entry) => {
-        const action = String(entry.action || '').trim().toLowerCase();
-        const isLogin = action === 'login';
-        const actionLabel = isLogin ? 'Login' : action === 'logout' ? 'Logout' : (entry.action || 'Activity');
-        const actionClass = isLogin ? 'login' : action === 'logout' ? 'logout' : '';
-        const actionIcon = isLogin ? 'fa-arrow-right-to-bracket' : action === 'logout' ? 'fa-arrow-right-from-bracket' : 'fa-clock';
-        const station = getStationDetails(entry);
+        const lowerAction = String(entry.action || '').toLowerCase();
+        const actionClass = lowerAction.includes('login') ? 'login' : lowerAction.includes('logout') ? 'logout' : '';
+        const actionIcon = entry.source === 'scan' ? 'fa-qrcode'
+          : lowerAction.includes('login') ? 'fa-arrow-right-to-bracket'
+            : lowerAction.includes('logout') ? 'fa-arrow-right-from-bracket'
+              : 'fa-clock';
+        const moduleLabel = shouldShowModule(entry)
+          ? `<span class="station-id">${escapeHtml(entry.module)}</span>`
+          : '';
         return `
           <tr>
-            <td><span class="action-badge ${actionClass}"><i class="fas ${actionIcon}" aria-hidden="true"></i>${escapeHtml(actionLabel)}</span></td>
-            <td><span class="station-name">${escapeHtml(station.name)}</span>${station.id ? `<span class="station-id">${escapeHtml(station.id)}</span>` : ''}</td>
-            <td><time class="audit-time" datetime="${escapeHtml(entry.createdAt || '')}"><span>${escapeHtml(formatDate(entry.createdAt, { dateStyle: 'medium' }))}</span><span class="audit-time-date">${escapeHtml(formatDate(entry.createdAt, { timeStyle: 'short' }))}</span></time></td>
+            <td><span class="action-badge ${actionClass}"><i class="fas ${actionIcon}" aria-hidden="true"></i>${escapeHtml(entry.action)}</span></td>
+            <td><span class="station-name">${escapeHtml(getDisplayDetails(entry))}</span>${moduleLabel}</td>
+            <td><time class="audit-time" datetime="${escapeHtml(entry.timestamp || '')}"><span>${escapeHtml(formatDate(entry.timestamp, { dateStyle: 'medium' }))}</span><span class="audit-time-date">${escapeHtml(formatDate(entry.timestamp, { timeStyle: 'short' }))}</span></time></td>
           </tr>
         `;
       }).join('');
     }
 
-    async function loadStudentPcLogs() {
-      showTableMessage('Loading PC station logs…', 'fa-spinner fa-spin');
-      const params = new URLSearchParams({
-        scope: 'pc-station',
-        page: String(currentPage),
-        pageSize: String(pageSize)
-      });
-      if (actionFilter.value) params.set('action', actionFilter.value);
-      if (stationSearch.value.trim()) params.set('q', stationSearch.value.trim());
-      if (dateFromFilter.value) params.set('dateFrom', getManilaDateBoundary(dateFromFilter.value));
-      if (dateToFilter.value) params.set('dateTo', getManilaDateBoundary(dateToFilter.value, true));
+    function renderPage(filteredEntries) {
+      totalPages = Math.max(1, Math.ceil(filteredEntries.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const pageEntries = filteredEntries.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+      renderRows(pageEntries);
+      const firstResult = filteredEntries.length ? (currentPage - 1) * pageSize + 1 : 0;
+      const lastResult = Math.min(currentPage * pageSize, filteredEntries.length);
+      resultsSummary.textContent = filteredEntries.length
+        ? `Showing ${firstResult}–${lastResult} of ${filteredEntries.length} activities`
+        : 'No activity found.';
+      pageSummary.textContent = `Page ${currentPage} of ${totalPages}`;
+      previousPageButton.disabled = currentPage <= 1;
+      nextPageButton.disabled = currentPage >= totalPages;
+    }
+
+    async function loadActiveCategory() {
+      const thisRequest = ++requestVersion;
+      const [heading, description, icon] = tabCopy[activeCategory];
+      title.textContent = heading;
+      subtitle.textContent = description;
+      titleIcon.className = `fas ${icon}`;
+      showTableMessage('Loading activity…', 'fa-spinner fa-spin');
+      resultsSummary.textContent = 'Loading activity…';
+
       if (dateFromFilter.value && dateToFilter.value && dateFromFilter.value > dateToFilter.value) {
         showTableMessage('The start date must be on or before the end date.', 'fa-calendar-xmark');
         resultsSummary.textContent = 'Check the selected date range.';
@@ -645,31 +911,23 @@
       }
 
       try {
-        const payload = await fetchPcLogs(params);
-        totalPages = Math.max(1, Number(payload.meta.totalPages) || 1);
-        const total = Number(payload.meta.total) || 0;
-        renderPcLogRows(payload.data);
-        const firstResult = total ? (currentPage - 1) * pageSize + 1 : 0;
-        const lastResult = Math.min(currentPage * pageSize, total);
-        resultsSummary.textContent = total
-          ? `Showing ${firstResult}–${lastResult} of ${total} PC station logs`
-          : 'No PC station logs found.';
-        pageSummary.textContent = `Page ${currentPage} of ${totalPages}`;
-        previousPageButton.disabled = currentPage <= 1;
-        nextPageButton.disabled = currentPage >= totalPages;
+        const allEntries = await loadCategoryData(activeCategory);
+        if (thisRequest !== requestVersion) return;
+        renderPage(filterEntries(allEntries));
       } catch (error) {
+        if (thisRequest !== requestVersion) return;
         console.error('Failed to load student audit history:', error);
-        showTableMessage(error.message || 'Unable to load audit history. Please try again.', 'fa-triangle-exclamation');
-        resultsSummary.textContent = 'PC station logs could not be loaded.';
-        pageSummary.textContent = 'Page 1';
+        showTableMessage(error.message || 'Unable to load activity. Please try again.', 'fa-triangle-exclamation');
+        resultsSummary.textContent = 'Activity could not be loaded.';
+        pageSummary.textContent = 'Page 1 of 1';
         previousPageButton.disabled = true;
         nextPageButton.disabled = true;
       }
     }
 
-    function resetAndLoadPcLogs() {
+    function resetAndRender() {
       currentPage = 1;
-      loadStudentPcLogs();
+      loadActiveCategory();
     }
 
     function syncDateFilterLimits() {
@@ -677,32 +935,37 @@
       dateFromFilter.max = dateToFilter.value;
     }
 
-    actionFilter.addEventListener('change', resetAndLoadPcLogs);
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      activeCategory = tab.dataset.category;
+      tabs.forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
+      currentPage = 1;
+      loadActiveCategory();
+    }));
     dateFromFilter.addEventListener('change', () => {
       syncDateFilterLimits();
-      resetAndLoadPcLogs();
+      resetAndRender();
     });
     dateToFilter.addEventListener('change', () => {
       syncDateFilterLimits();
-      resetAndLoadPcLogs();
+      resetAndRender();
     });
-    stationSearch.addEventListener('input', () => {
+    searchInput.addEventListener('input', () => {
       window.clearTimeout(searchTimeout);
-      searchTimeout = window.setTimeout(resetAndLoadPcLogs, 250);
+      searchTimeout = window.setTimeout(resetAndRender, 180);
     });
     previousPageButton.addEventListener('click', () => {
       if (currentPage > 1) {
         currentPage -= 1;
-        loadStudentPcLogs();
+        loadActiveCategory();
       }
     });
     nextPageButton.addEventListener('click', () => {
       if (currentPage < totalPages) {
         currentPage += 1;
-        loadStudentPcLogs();
+        loadActiveCategory();
       }
     });
-    loadStudentPcLogs();
+    loadActiveCategory();
   </script>
 </body>
 </html>

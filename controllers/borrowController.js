@@ -42,12 +42,14 @@ async function getBorrowAccessScope(req) {
 }
 
 function canAccessBorrowRecord(scope, recordCampus) {
+  if (scope.centralAdministrator) return true;
   return Boolean(scope.campus) &&
     Boolean(String(recordCampus || "").trim()) &&
     canManageRecord(scope.campus, recordCampus);
 }
 
 function getStrictBorrowWhere(scope) {
+  if (scope.centralAdministrator) return {};
   if (!scope.campus) return null;
   return { campus: { [Op.in]: getCampusVariants(scope.campus) } };
 }
@@ -215,6 +217,23 @@ function buildBorrowerDepartmentInfo(record, college) {
   return `${collegePrefix} • ${departmentInfo}`;
 }
 
+function resolveBorrowerType(record, requesterRole) {
+  const storedType = String(record?.borrowerType || "").trim();
+  if (storedType && !["type not recorded", "unknown"].includes(storedType.toLowerCase())) {
+    return storedType;
+  }
+
+  const normalizedRole = String(requesterRole || "").trim();
+  if (normalizedRole && !["type not recorded", "unknown"].includes(normalizedRole.toLowerCase())) {
+    return normalizedRole;
+  }
+
+  const profileDetails = String(record?.departmentInfo || "");
+  const hasAcademicYear = /(?:\b[1-6](?:st|nd|rd|th)?\s*year\b|\byear\s*[1-6]\b)/i.test(profileDetails);
+  const hasSection = /(?:\bsection\s*)?\b[a-z]\s*-?\s*\d{1,2}\b/i.test(profileDetails);
+  return hasAcademicYear && hasSection ? "Student" : "Borrower";
+}
+
 export const listBorrowNotifications = async (req, res) => {
   const scope = await getBorrowAccessScope(req);
   if (!scope.authenticated) return res.status(401).json({ error: "Please log in to view borrow notifications." });
@@ -242,13 +261,21 @@ export const listBorrowNotifications = async (req, res) => {
         order: [["created_at", "DESC"], ["id", "DESC"]]
       })
     : [];
+  const [archivedBorrowRecords, archivedBorrowRequests] = await Promise.all([
+    getArchivedEntityIds("borrow-record"),
+    getArchivedEntityIds("borrow-request")
+  ]);
+  const archivedRecordIds = new Set([...archivedBorrowRecords, ...archivedBorrowRequests].map(String));
+  const visiblePendingRecords = records.filter((record) => !archivedRecordIds.has(String(record.id)));
+  const visibleBorrowedRecords = borrowedRecords.filter((record) => !archivedRecordIds.has(String(record.id)));
+  const visibleRecordIds = new Set(visibleBorrowedRecords.map((record) => String(record.id)));
   const returnEventByRecord = new Map();
-  returnEvents.forEach((event) => {
+  returnEvents.filter((event) => visibleRecordIds.has(String(event.recordId))).forEach((event) => {
     if (!returnEventByRecord.has(String(event.recordId))) {
       returnEventByRecord.set(String(event.recordId), event);
     }
   });
-  const pendingNotifications = records.map((record) => ({
+  const pendingNotifications = visiblePendingRecords.map((record) => ({
     id: `borrow-${record.id}`,
     type: "borrow_request",
     title: "New Borrow Request",
@@ -257,7 +284,7 @@ export const listBorrowNotifications = async (req, res) => {
     campus: record.campus,
     readAt: null
   }));
-  const returnNotifications = borrowedRecords
+  const returnNotifications = visibleBorrowedRecords
     .filter((record) => returnEventByRecord.has(String(record.id)))
     .map((record) => {
       const event = returnEventByRecord.get(String(record.id));
@@ -330,7 +357,7 @@ export const listBorrowAudit = async (req, res) => {
     const involvedUsers = involvedUserIds.length
       ? await User.findAll({
           where: { id: { [Op.in]: involvedUserIds } },
-          attributes: ["id", "name", "college"]
+          attributes: ["id", "name", "college", "role"]
         })
       : [];
     const userById = new Map(involvedUsers.map((person) => [Number(person.id), person]));
@@ -391,6 +418,8 @@ export const listBorrowAudit = async (req, res) => {
       .filter((event) => !isPersonalBrowse || visibleRecordIds.has(String(event.recordId)))
       .map((event) => {
       const record = recordsById.get(String(event.recordId));
+      const requesterId = Number(identityByRecord.get(String(event.recordId))?.requesterUserId);
+      const requester = userById.get(requesterId);
       const key = equipmentKeyFor(record || event);
       const holders = currentHolders.get(key) || [];
       const lastBorrower = lastBorrowers.get(key);
@@ -403,6 +432,7 @@ export const listBorrowAudit = async (req, res) => {
         serialNumber: event.serialNumber || null,
         campus: record?.campus || null,
         borrowerName: event.borrowerName,
+        borrowerType: resolveBorrowerType(record, requester?.role),
         borrowerCollege: collegeByRequesterId.get(Number(identityByRecord.get(String(event.recordId))?.requesterUserId)) || null,
         departmentInfo: record
           ? buildBorrowerDepartmentInfo(

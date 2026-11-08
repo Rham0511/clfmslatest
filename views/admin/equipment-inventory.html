@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="/css/sidebar.css?v=70">
+    <link rel="stylesheet" href="/css/sidebar.css?v=75">
     <style>
         :root {
             color-scheme: dark;
@@ -199,6 +199,10 @@
             grid-template-columns: minmax(12rem, 1.25fr) minmax(10rem, 1fr) minmax(8.5rem, .9fr) minmax(9.5rem, 1fr) auto;
             align-items: center;
             gap: 0.65rem;
+        }
+
+        body.system-layout-page .inventory-filter-row.system-filter-row.pc-set-filter-mode {
+            grid-template-columns: minmax(11rem, 1.2fr) minmax(9rem, .9fr) minmax(8rem, .8fr) repeat(2, minmax(8.5rem, .9fr)) auto;
         }
 
         .inventory-search-field {
@@ -574,6 +578,31 @@
             border-color: #34d399;
             box-shadow: 0 0 0 2px rgba(52, 211, 153, .12);
         }
+
+        .qr-export-selection-list {
+            max-height: 15rem;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+        }
+
+        .qr-export-search-field { min-width: min(100%, 18rem); flex: 1; }
+
+        .qr-export-choice {
+            display: flex;
+            align-items: flex-start;
+            gap: .65rem;
+            padding: .55rem .7rem;
+            border-bottom: 1px solid rgba(52, 211, 153, .12);
+            color: #ecfdf5;
+            cursor: pointer;
+        }
+
+        .qr-export-choice:last-child { border-bottom: 0; }
+        .qr-export-choice:hover { background: rgba(16, 185, 129, .08); }
+        .qr-export-choice input { margin-top: .2rem; accent-color: #10b981; }
+        .qr-export-choice-copy { min-width: 0; }
+        .qr-export-choice-title { display: block; overflow-wrap: anywhere; font-size: .78rem; font-weight: 700; }
+        .qr-export-choice-meta { display: block; margin-top: .12rem; color: rgba(167, 243, 208, .62); font-size: .68rem; }
 
         .qr-export-format { grid-column: 1 / -1; }
 
@@ -2237,6 +2266,308 @@
         gap: .35rem;
       }
     }
+
+    /* Keep inventory search/actions separate from the filter dropdowns. */
+    body.app-shell.equipment-inventory-page .top-controls-section {
+      overflow: visible;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-filter-row.system-filter-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: .75rem;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-toolbar-main {
+      display: grid;
+      grid-template-columns: minmax(14rem, 1fr) auto;
+      align-items: center;
+      gap: .75rem;
+      min-width: 0;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-search-field {
+      min-height: 2.75rem;
+      margin: 0;
+      padding: .35rem .75rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-search-field > i {
+      flex: 0 0 auto;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-filter-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+      align-items: stretch;
+      gap: .6rem;
+      min-width: 0;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-filter-controls .inventory-filter-field {
+      min-height: 2.75rem;
+      padding: .35rem .7rem !important;
+      gap: .55rem;
+      cursor: pointer;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-filter-controls .inventory-filter-field > i {
+      flex: 0 0 1rem;
+      text-align: center;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-filter-controls select {
+      min-height: 2rem !important;
+      padding: .25rem .2rem !important;
+      font-size: .86rem !important;
+      cursor: pointer;
+    }
+
+    body.app-shell.equipment-inventory-page #campusFilterWrap[hidden] {
+      display: none !important;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-actions-group {
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: .5rem;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-actions-group button {
+      min-height: 2.65rem !important;
+      padding: .5rem .85rem !important;
+      font-size: .84rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page .inventory-actions-group #openQrExportModal {
+      width: 2.65rem;
+      padding: 0 !important;
+    }
+
+    @media (max-width: 820px) {
+      body.app-shell.equipment-inventory-page .inventory-toolbar-main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-actions-group {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body.app-shell.equipment-inventory-page .inventory-filter-row.system-filter-row {
+        gap: .55rem;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-filter-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .45rem;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-filter-controls .inventory-filter-field {
+        padding: .3rem .45rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-filter-controls select {
+        font-size: .76rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-actions-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.65rem;
+        width: 100%;
+        gap: .4rem;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-actions-group > button {
+        width: 100%;
+        padding-inline: .5rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page .inventory-actions-group #openQrExportModal {
+        width: 2.65rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      body.app-shell.equipment-inventory-page .inventory-filter-controls {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* Keep PC set and expanded component tables inside the available panel width. */
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view {
+      padding: 0 !important;
+      border: 1px solid rgba(74, 222, 128, .2) !important;
+      border-radius: .9rem !important;
+      box-shadow: 0 3px 12px rgba(6, 64, 43, .12) !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto {
+      min-width: 0;
+      padding: 0 !important;
+      overflow-x: hidden !important;
+      overflow-y: auto;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100%;
+      table-layout: fixed !important;
+      border-spacing: 0 1px !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead {
+      border-bottom-width: 1px !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(1) { width: 4% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(2) { width: 15% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(3) { width: 16% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(4) { width: 15% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(5) { width: 17% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(6) { width: 19% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th:nth-child(7) { width: 14% !important; }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) th,
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) td {
+      min-width: 0;
+      padding: .55rem .5rem !important;
+      overflow-wrap: anywhere;
+      vertical-align: middle;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th {
+      font-size: .68rem !important;
+      line-height: 1.25 !important;
+      letter-spacing: .025em !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td {
+      padding: .45rem .5rem !important;
+      font-size: .82rem !important;
+      line-height: 1.35 !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td .text-xs,
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td .text-sm,
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td .text-base {
+      font-size: .8rem !important;
+      line-height: 1.3 !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view .pc-set-qr-button,
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view .pc-set-actions-toggle {
+      flex: 0 0 2rem;
+      width: 2rem;
+      min-width: 2rem;
+      height: 2rem;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td:nth-child(7) > div {
+      justify-content: center;
+      gap: .3rem;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[id^="expanded-"] > td {
+      padding: .25rem .4rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[id^="expanded-"] > td > div {
+      min-width: 0;
+      padding-left: .35rem;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view tr[id^="expanded-"] > td > div > div:first-child {
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view #equipmentTable [id^="components-list-"] {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100%;
+      table-layout: fixed;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th,
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td {
+      min-width: 0;
+      padding: .24rem .38rem !important;
+      overflow-wrap: anywhere;
+      vertical-align: middle;
+      font-size: .72rem !important;
+      line-height: 1.2 !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th:nth-child(1) { width: 28% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th:nth-child(2) { width: 12% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th:nth-child(3) { width: 19% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th:nth-child(4) { width: 18% !important; }
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table th:nth-child(5) { width: 23% !important; }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(1) > div {
+      min-width: 0;
+      gap: .35rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(5) > div {
+      flex-wrap: nowrap;
+      gap: .25rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(5) button {
+      padding: .2rem .35rem !important;
+      font-size: .62rem !important;
+      white-space: nowrap;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(2),
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(3) {
+      font-size: .74rem !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(1) > div > span {
+      font-size: .78rem !important;
+      line-height: 1.2 !important;
+    }
+
+    body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view table.pc-components-table td:nth-child(4) > span {
+      padding: .2rem .4rem !important;
+      font-size: .7rem !important;
+    }
+
+    @media (max-width: 760px) {
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) th,
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) td {
+        padding: .42rem .3rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > thead > tr > th {
+        font-size: .61rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr[data-set-id] > td {
+        font-size: .7rem !important;
+      }
+
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view .pc-set-qr-button,
+      body.app-shell.equipment-inventory-page #equipmentTableSection.pc-sets-view .pc-set-actions-toggle {
+        flex-basis: 1.7rem;
+        width: 1.7rem;
+        min-width: 1.7rem;
+        height: 1.7rem;
+      }
+    }
   </style>
 </head>
 <body class="app-shell system-layout-page equipment-inventory-page">
@@ -2289,55 +2620,63 @@
             <!-- Top Controls -->
             <section class="card sm mb-3 p-3 top-controls-section">
                 <div class="inventory-filter-row system-filter-row">
-                    <!-- Search Bar -->
-                    <div class="inventory-search-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5">
-                        <i class="fas fa-search text-emerald-400"></i>
-                        <input id="searchInput" type="text" placeholder="Search equipment..." oninput="filterEquipment()" class="w-full min-w-0 bg-transparent text-white placeholder-emerald-200/70 focus:outline-none text-sm">
+                    <div class="inventory-filter-controls" role="group" aria-label="Inventory filters">
+                        <label class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="viewModeFilter">
+                            <i class="fas fa-eye text-emerald-400" aria-hidden="true"></i>
+                            <select id="viewModeFilter" onchange="changeViewMode()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
+                                <option value="all" selected>All Equipment</option>
+                                <option value="pc-sets">PC Sets Only</option>
+                            </select>
+                        </label>
+                        <label class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="statusFilter">
+                            <i class="fas fa-filter text-emerald-400" aria-hidden="true"></i>
+                            <select id="statusFilter" onchange="filterEquipment()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
+                                <option value="">All Status</option>
+                                <option value="Serviceable">Serviceable</option>
+                                <option value="Unserviceable">Unserviceable</option>
+                                <option value="Lost">Lost</option>
+                                <option value="Missing">Missing</option>
+                                <option value="Under Maintenance">Under Maintenance</option>
+                                <option value="In Use">In Use</option>
+                                <option value="For Repair">For Repair</option>
+                                <option value="For Disposal">For Disposal</option>
+                            </select>
+                        </label>
+                        <label id="campusFilterWrap" class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="campusFilter" hidden>
+                            <i class="fas fa-school text-emerald-400" aria-hidden="true"></i>
+                            <select id="campusFilter" onchange="filterEquipment()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
+                                <option value="">All Campuses</option>
+                                <option>Bongabong Campus</option>
+                                <option>Calapan Campus</option>
+                                <option>Victoria Campus</option>
+                            </select>
+                        </label>
+                        <label id="pcSetLabFilterWrap" class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="pcSetLabFilter">
+                            <i class="fas fa-door-open text-emerald-400" aria-hidden="true"></i>
+                            <select id="pcSetLabFilter" onchange="filterEquipment()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm" aria-label="Filter by computer laboratory">
+                                <option value="">All ComLabs</option>
+                                <option value="COMLAB 1">ComLab 1</option>
+                                <option value="COMLAB 2">ComLab 2</option>
+                            </select>
+                        </label>
                     </div>
 
-                    <!-- Filters - 3 Dropdowns -->
-                    <div class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5">
-                        <i class="fas fa-eye text-emerald-400"></i>
-                        <select id="viewModeFilter" onchange="changeViewMode()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
-                            <option value="all" selected>All Equipment</option>
-                            <option value="pc-sets">PC Sets Only</option>
-                        </select>
-                    </div>
-                    
-                    <div class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5">
-                        <i class="fas fa-filter text-emerald-400"></i>
-                        <select id="statusFilter" onchange="filterEquipment()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
-                            <option value="">All Status</option>
-                            <option value="Serviceable">Serviceable</option>
-                            <option value="Unserviceable">Unserviceable</option>
-                            <option value="Lost">Lost</option>
-                            <option value="Missing">Missing</option>
-                            <option value="Under Maintenance">Under Maintenance</option>
-                            <option value="In Use">In Use</option>
-                            <option value="For Repair">For Repair</option>
-                            <option value="For Disposal">For Disposal</option>
-                        </select>
-                    </div>
-                    
-                    <div class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5">
-                        <i class="fas fa-school text-emerald-400"></i>
-                        <select id="campusFilter" onchange="filterEquipment()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
-                            <option value="">All Campuses</option>
-                            <option>Bongabong Campus</option>
-                            <option>Calapan Campus</option>
-                            <option>Victoria Campus</option>
-                        </select>
-                    </div>
-                    <div class="inventory-actions-group">
-                        <button type="button" onclick="openCategoryModal()" class="rounded-lg border border-emerald-800/40 bg-emerald-950/30 px-2.5 py-1.5 text-sm font-medium text-emerald-300 hover:bg-emerald-900/30">
-                            <i class="fas fa-tags mr-1"></i>Manage Types
-                        </button>
-                        <button onclick="openAddInventoryModal()" class="btn-primary rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all">
-                            <i class="fas fa-plus mr-1"></i>Add Inventory
-                        </button>
-                        <button type="button" id="openQrExportModal" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-700/50 bg-emerald-950/50 text-emerald-200 hover:bg-emerald-900/60" aria-haspopup="dialog" aria-controls="qrExportModal" aria-label="Export QR codes" title="Export QR codes">
-                            <i class="fas fa-download" aria-hidden="true"></i>
-                        </button>
+                    <div class="inventory-toolbar-main">
+                        <label class="inventory-search-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="searchInput">
+                            <i class="fas fa-search text-emerald-400" aria-hidden="true"></i>
+                            <input id="searchInput" type="text" placeholder="Search equipment..." oninput="filterEquipment(event)" class="w-full min-w-0 bg-transparent text-white placeholder-emerald-200/70 focus:outline-none text-sm">
+                        </label>
+                        <div class="inventory-actions-group" aria-label="Inventory actions">
+                            <button type="button" onclick="openCategoryModal()" class="rounded-lg border border-emerald-800/40 bg-emerald-950/30 px-2.5 py-1.5 text-sm font-medium text-emerald-300 hover:bg-emerald-900/30">
+                                <i class="fas fa-tags mr-1" aria-hidden="true"></i>Manage Types
+                            </button>
+                            <button onclick="openAddInventoryModal()" class="btn-primary rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-plus mr-1" aria-hidden="true"></i>Add Inventory
+                            </button>
+                            <button type="button" id="openQrExportModal" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-700/50 bg-emerald-950/50 text-emerald-200 hover:bg-emerald-900/60" aria-haspopup="dialog" aria-controls="qrExportModal" aria-label="Export QR codes" title="Export QR codes">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -2656,6 +2995,9 @@
                 <label class="qr-export-field"><span>Campus</span>
                     <select id="qrExportCampus"><option value="">All campuses</option><option value="Bongabong Campus">Bongabong Campus</option><option value="Calapan Campus">Calapan Campus</option><option value="Victoria Campus">Victoria Campus</option></select>
                 </label>
+                <label class="qr-export-field"><span>Computer laboratory</span>
+                    <select id="qrExportLab"><option value="">All ComLabs</option><option value="COMLAB 1">ComLab 1</option><option value="COMLAB 2">ComLab 2</option></select>
+                </label>
                 <label class="qr-export-field"><span>Status</span>
                     <select id="qrExportStatus"><option value="">All statuses</option><option>Serviceable</option><option>Unserviceable</option><option>Lost</option><option>Missing</option><option>Under Maintenance</option><option>In Use</option><option>For Repair</option><option>For Disposal</option><option>active</option><option>incomplete</option><option>maintenance</option><option>retired</option></select>
                 </label>
@@ -2663,6 +3005,22 @@
                     <select id="qrExportFormat"><option value="pdf">PDF</option><option value="doc">Word document (.doc)</option></select>
                 </label>
             </div>
+            <section class="mt-4 rounded-xl border border-emerald-800/50 bg-emerald-950/20 p-3" aria-labelledby="qrExportSpecificTitle">
+                <div class="flex flex-wrap items-end justify-between gap-2">
+                    <label class="qr-export-field qr-export-search-field" for="qrExportSearch">
+                        <span id="qrExportSpecificTitle">Select specific items or PC sets</span>
+                        <input id="qrExportSearch" type="search" placeholder="Search by ID or name" autocomplete="off">
+                    </label>
+                    <div class="flex gap-2">
+                        <button type="button" id="qrExportSelectVisible" class="rounded-lg border border-emerald-700/60 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40">Select shown</button>
+                        <button type="button" id="qrExportClearSelection" class="rounded-lg border border-emerald-700/60 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40" disabled>Clear</button>
+                    </div>
+                </div>
+                <div id="qrExportSelectionList" class="qr-export-selection-list mt-3 rounded-lg border border-emerald-800/40 bg-[#06140d]" role="group" aria-label="Specific QR records">
+                    <p class="p-3 text-xs text-emerald-100/60">Loading items…</p>
+                </div>
+                <p id="qrExportSelectionSummary" class="mt-2 text-xs text-emerald-100/60" role="status" aria-live="polite">Check specific records to download only those QR codes.</p>
+            </section>
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-800/50 bg-emerald-950/30 px-3 py-2.5">
                 <p id="qrExportCount" class="text-sm font-semibold text-emerald-100" role="status">Loading equipment and PC sets…</p>
                 <p class="text-xs text-emerald-100/60">The bold ID appears below each QR image.</p>
@@ -2754,7 +3112,7 @@
     </div>
 
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
-    <script src="/js/equipment-inventory-page.js?v=20261104"></script>
+    <script src="/js/equipment-inventory-page.js?v=20261107-facilities-embed"></script>
     <!-- ===== REPORT MISSING MODAL ===== -->
     <div id="reportMissingModal" class="modal">
         <div class="modal-content mx-auto w-full max-w-xl rounded-2xl p-6">
@@ -3036,8 +3394,8 @@
 
     <script src="/js/equipment-inventory-modals.js?v=20261104"></script>
 
-    <script src="/js/pc-sets-table.js?v=38"></script>
+    <script src="/js/pc-sets-table.js?v=43"></script>
     <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-    <script src="/js/sidebar-component.js?v=68" defer></script>
+    <script src="/js/sidebar-component.js?v=77" defer></script>
 </body>
 </html>

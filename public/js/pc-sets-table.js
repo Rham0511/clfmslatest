@@ -13,6 +13,11 @@ function escapePCSetHtml(value) {
     })[character]);
 }
 
+function normalizePCSetLab(value) {
+    const match = String(value || '').match(/\bCOM\s*LAB\s*([12])\b/i);
+    return match ? `COMLAB ${match[1]}` : '';
+}
+
 function closePCSetActionsMenu() {
     activePCSetActionsMenu?.remove();
     activePCSetActionsMenu = null;
@@ -107,10 +112,10 @@ async function openPCStationQr(setId) {
 
         const stationName = payload.station?.setName || payload.station?.setId || setId;
         const safeName = escapePCSetHtml(stationName);
-        const safeSetId = escapePCSetHtml(payload.station?.setId || setId);
+        const safeSetId = escapePCSetHtml(payload.station?.displaySetId || payload.station?.setId || setId);
         const safeUrl = escapePCSetHtml(payload.url || '');
         const safeQr = escapePCSetHtml(payload.qrCode || '');
-        const fileName = String(payload.station?.setId || setId).replace(/[^a-z0-9_-]+/gi, '-');
+        const fileName = String(payload.station?.displaySetId || payload.station?.setId || setId).replace(/[^a-z0-9_-]+/gi, '-');
         modal.querySelector('.modal-content').innerHTML = `
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-xl font-bold text-white">PC Station Login QR</h3>
@@ -167,32 +172,35 @@ function getCategoryIcon(component) {
 
 async function loadPCSetsTable() {
     try {
-        const response = await fetch('/api/equipment-sets');
+        const response = await fetch('/api/equipment-sets', { cache: 'no-store' });
         const data = await response.json().catch(() => ({}));
         const selectedCampus = document.getElementById('campusFilter')?.value || '';
+        const selectedLab = normalizePCSetLab(document.getElementById('pcSetLabFilter')?.value);
         const normalizeCampus = (value) => String(value || '').trim().replace(/\s*Campus\s*$/i, '').toLowerCase();
-        const scopeToSelectedCampus = (sets) => selectedCampus
-            ? sets.filter((set) => normalizeCampus(set.campus) === normalizeCampus(selectedCampus))
-            : sets;
+        const scopeToSelectedFilters = (sets) => sets.filter((set) => {
+            const setLab = normalizePCSetLab(set.location) || normalizePCSetLab(set.laboratoryRoom);
+            return (!selectedCampus || normalizeCampus(set.campus) === normalizeCampus(selectedCampus)) &&
+                (!selectedLab || setLab === selectedLab);
+        });
 
         if (response.ok && data.success) {
             currentPCSetsPage = 1;
-            renderPCSetsTable(scopeToSelectedCampus(Array.isArray(data.sets) ? data.sets : []), data.unassigned || {});
+            renderPCSetsTable(scopeToSelectedFilters(Array.isArray(data.sets) ? data.sets : []), data.unassigned || {});
             window.refreshInventorySummaryCards?.();
             return;
         }
 
         // Older databases may not have the equipment_sets table yet. Build the
         // same view from equipment assignments so the inventory filter remains usable.
-        const fallbackResponse = await fetch('/api/equipment/pc-sets');
+        const fallbackResponse = await fetch('/api/equipment/pc-sets', { cache: 'no-store' });
         if (!fallbackResponse.ok) throw new Error('Failed to fetch PC sets');
 
         const fallbackSets = await fallbackResponse.json();
         currentPCSetsPage = 1;
-        renderPCSetsTable(scopeToSelectedCampus((Array.isArray(fallbackSets) ? fallbackSets : []).map((set) => ({
+        renderPCSetsTable(scopeToSelectedFilters((Array.isArray(fallbackSets) ? fallbackSets : []).map((set) => ({
             ...set,
             setName: set.setName || set.setId,
-            location: set.location || set.campus || '',
+            location: set.location || set.laboratoryRoom || '',
             componentCount: Array.isArray(set.components) ? set.components.length : 0,
             serviceableCount: 0,
             missingCount: 0,
@@ -223,6 +231,8 @@ function renderPCSetsTable(sets, unassigned = {}) {
     const pagination = document.getElementById('equipmentPagination');
     const paginationInfo = document.getElementById('equipmentPaginationInfo');
     document.getElementById('equipmentTableSection')?.classList.add('pc-sets-view');
+    const tableScroller = document.querySelector('#equipmentTableSection > .overflow-x-auto');
+    if (tableScroller) tableScroller.scrollTop = 0;
 
     currentPCSetRows = Array.isArray(sets) ? sets : [];
     currentPCSetUnassigned = unassigned || {};
@@ -288,13 +298,37 @@ function renderPCSetsTable(sets, unassigned = {}) {
     tbody.innerHTML = pageSets.map((set) => {
         const statusMap = {
             'active':      { label: '✔ Ready to Use', style: 'background:rgba(34,197,94,.2);color:#bbf7d0;border:1px solid rgba(74,222,128,.5);' },
-            'incomplete':  { label: '⚠ Missing Component', style: 'background:rgba(4,106,56,.24);color:#a7f3d0;border:1px solid rgba(74,222,128,.38);' },
-            'maintenance': { label: '🔧 Under Maintenance', style: 'background:rgba(4,106,56,.32);color:#d1fae5;border:1px solid rgba(74,222,128,.42);' },
-            'retired':     { label: '✕ Retired', style: 'background:rgba(4,106,56,.16);color:#86efac;border:1px solid rgba(74,222,128,.28);' },
+            'incomplete':  { label: '⚠ Needs Review', style: 'background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.38);' },
+            'maintenance': { label: '🔧 Under Maintenance', style: 'background:rgba(139,92,246,.18);color:#ddd6fe;border:1px solid rgba(167,139,250,.4);' },
+            'retired':     { label: '✕ Retired', style: 'background:rgba(107,114,128,.16);color:#d1d5db;border:1px solid rgba(156,163,175,.3);' },
         };
-        const st = statusMap[set.status] || statusMap['incomplete'];
         const missing = Number(set.missingCount || 0);
+        const unserviceable = Number(set.unserviceableCount || 0);
+        const underMaintenance = Number(set.underMaintenanceCount || 0);
         const total   = Number(set.componentCount || 0);
+        const labLocation = set.location || set.laboratoryRoom || '';
+        const componentCategories = Array.isArray(set.componentCategories) ? set.componentCategories : [];
+        const hasCpu = Number(set.hasCpu || 0) > 0 || componentCategories.some((category) =>
+            ['cpu', 'computer', 'system unit'].includes(String(category || '').trim().toLowerCase())
+        );
+        const hasMonitor = Number(set.hasMonitor || 0) > 0 || componentCategories.some((category) =>
+            String(category || '').trim().toLowerCase() === 'monitor'
+        );
+        const setStatus = String(set.status || 'incomplete').toLowerCase();
+        let availability = statusMap[setStatus] || statusMap['incomplete'];
+        if (setStatus !== 'retired') {
+            if (missing > 0) {
+                availability = { label: `⚠ ${missing} Missing Equipment`, style: 'background:rgba(239,68,68,.16);color:#fecaca;border:1px solid rgba(248,113,113,.4);' };
+            } else if (unserviceable > 0) {
+                availability = { label: `⚠ ${unserviceable} Unserviceable Component${unserviceable === 1 ? '' : 's'}`, style: 'background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.38);' };
+            } else if (underMaintenance > 0 || setStatus === 'maintenance') {
+                availability = statusMap['maintenance'];
+            } else if (!total || !hasCpu || !hasMonitor) {
+                availability = { label: '⚠ Missing Component', style: 'background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.38);' };
+            } else if (setStatus === 'active') {
+                availability = statusMap['active'];
+            }
+        }
 
         return `
             <tr class="group hover:bg-emerald-950/30 transition-colors border-b border-emerald-900/20" data-set-id="${set.setId}">
@@ -306,15 +340,15 @@ function renderPCSetsTable(sets, unassigned = {}) {
                     </button>
                 </td>
                 <td class="px-3 py-3">
-                    <span class="font-mono text-white font-medium text-sm">${set.setId}</span>
+                    <span class="font-mono text-white font-medium text-sm">${escapePCSetHtml(set.displaySetId || set.setId)}</span>
                 </td>
                 <td class="px-3 py-3">
-                    <div class="font-medium text-sm text-white">${set.setName}</div>
+                    <div class="font-medium text-sm text-white">${escapePCSetHtml(set.setName || set.displaySetId || set.setId)}</div>
                     ${set.description ? `<div class="text-sm text-emerald-200/80">${set.description}</div>` : ''}
                 </td>
                 <td class="px-3 py-3 text-sm font-medium text-white">
-                    ${set.location
-                        ? `<span class="flex items-center gap-1"><i class="fas fa-map-marker-alt text-emerald-400 text-sm"></i>${set.location}</span>`
+                    ${labLocation
+                        ? `<span>${escapePCSetHtml(labLocation)}</span>`
                         : '<span class="text-emerald-300/70 italic text-sm">Not specified</span>'}
                 </td>
                 <td class="px-3 py-3">
@@ -322,12 +356,14 @@ function renderPCSetsTable(sets, unassigned = {}) {
                         <span class="text-sm text-white font-medium">${total} piece${total !== 1 ? 's' : ''}</span>
                         ${missing > 0
                             ? `<span class="text-sm font-medium text-white"><i class="fas fa-exclamation-triangle mr-1 text-emerald-400"></i>${missing} missing</span>`
-                            : `<span class="text-sm font-medium text-white">All accounted for</span>`}
+                            : unserviceable > 0
+                                ? `<span class="text-sm font-medium text-amber-200">${unserviceable} unserviceable</span>`
+                                : `<span class="text-sm font-medium text-white">All accounted for</span>`}
                     </div>
                 </td>
                 <td class="px-3 py-3">
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold" style="${st.style}">
-                        ${st.label}
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold" style="${availability.style}">
+                        ${availability.label}
                     </span>
                 </td>
                 <td class="px-3 py-3">
@@ -391,7 +427,10 @@ function renderPCSetsTable(sets, unassigned = {}) {
 async function togglePCSetExpand(setId) {
     const expandedRow = document.getElementById(`expanded-${setId}`);
     const expandBtn = document.getElementById(`expand-btn-${setId}`);
+    if (!expandedRow || !expandBtn) return;
+
     const icon = expandBtn.querySelector('i');
+    const stationRow = expandBtn.closest('tr[data-set-id]');
     
     if (expandedRow.classList.contains('hidden')) {
         // Expand - load components
@@ -399,6 +438,24 @@ async function togglePCSetExpand(setId) {
         icon.classList.remove('fa-chevron-right');
         icon.classList.add('fa-chevron-down');
         await loadPCSetComponents(setId);
+
+        // Keep the station summary visible below the sticky table header.
+        requestAnimationFrame(() => {
+            const scroller = document.querySelector('#equipmentTableSection > .overflow-x-auto');
+            const header = scroller?.querySelector('thead');
+            if (!scroller || !header || !stationRow) return;
+
+            const scrollerRect = scroller.getBoundingClientRect();
+            const rowRect = stationRow.getBoundingClientRect();
+            const stickyHeaderBottom = scrollerRect.top + header.getBoundingClientRect().height;
+            const visibleBottom = scrollerRect.bottom;
+
+            if (rowRect.top < stickyHeaderBottom) {
+                scroller.scrollTop -= stickyHeaderBottom - rowRect.top + 8;
+            } else if (rowRect.bottom > visibleBottom) {
+                scroller.scrollTop += rowRect.bottom - visibleBottom + 8;
+            }
+        });
     } else {
         // Collapse
         expandedRow.classList.add('hidden');
@@ -442,15 +499,21 @@ async function loadPCSetComponents(setId) {
                         <tbody>
                             ${data.components.map(comp => {
                                 const icon = getCategoryIcon(comp.category);
-                                const isMissing = comp.status === 'Missing';
-                                const isUnderMaint = comp.status === 'Under Maintenance';
+                                const componentStatus = String(comp.status || 'Unknown').trim();
+                                const normalizedStatus = componentStatus.toLowerCase();
+                                const isMissing = normalizedStatus === 'missing';
                                 const hasDuplicateType = (categoryCounts.get(String(comp.category || '').trim().toLowerCase()) || 0) > 1;
-
-                                const conditionBadge = isMissing
-                                    ? `<span style="background:rgba(4,106,56,.24);color:#a7f3d0;padding:4px 9px;border-radius:999px;font-size:0.85rem;font-weight:700;">MISSING</span>`
-                                    : isUnderMaint
-                                        ? `<span style="background:rgba(4,106,56,.32);color:#d1fae5;padding:4px 9px;border-radius:999px;font-size:0.85rem;font-weight:700;">MAINTENANCE</span>`
-                                        : `<span style="background:rgba(34,197,94,.15);color:#bbf7d0;padding:4px 9px;border-radius:999px;font-size:0.85rem;font-weight:600;">Serviceable</span>`;
+                                const conditionStyles = {
+                                    serviceable: 'background:rgba(34,197,94,.15);color:#bbf7d0;border:1px solid rgba(74,222,128,.3);',
+                                    'in use': 'background:rgba(20,184,166,.15);color:#99f6e4;border:1px solid rgba(45,212,191,.3);',
+                                    'under maintenance': 'background:rgba(139,92,246,.18);color:#ddd6fe;border:1px solid rgba(167,139,250,.35);',
+                                    'for repair': 'background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.35);',
+                                    unserviceable: 'background:rgba(239,68,68,.15);color:#fecaca;border:1px solid rgba(248,113,113,.35);',
+                                    missing: 'background:rgba(239,68,68,.15);color:#fecaca;border:1px solid rgba(248,113,113,.35);',
+                                    lost: 'background:rgba(239,68,68,.15);color:#fecaca;border:1px solid rgba(248,113,113,.35);',
+                                    'for disposal': 'background:rgba(107,114,128,.18);color:#d1d5db;border:1px solid rgba(156,163,175,.35);'
+                                };
+                                const conditionBadge = `<span style="${conditionStyles[normalizedStatus] || 'background:rgba(107,114,128,.18);color:#d1d5db;border:1px solid rgba(156,163,175,.35);'}padding:4px 9px;border-radius:999px;font-size:0.85rem;font-weight:600;">${escapePCSetHtml(componentStatus)}</span>`;
 
                                 return `
                                     <tr style="border-bottom:1px solid rgba(74,222,128,.12);">
@@ -459,11 +522,11 @@ async function loadPCSetComponents(setId) {
                                                 <div style="width:18px;height:18px;border-radius:5px;background:rgba(34,197,94,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                                     <i class="${icon}" style="color:#6ee7b7;font-size:0.8rem;"></i>
                                                 </div>
-                                                <span style="font-size:0.95rem;font-weight:600;color:#ecfdf5;${isMissing ? 'text-decoration:line-through;' : ''}">${comp.name}</span>
+                                                <span style="font-size:0.95rem;font-weight:600;color:#ecfdf5;${isMissing ? 'text-decoration:line-through;' : ''}">${escapePCSetHtml(comp.name)}</span>
                                             </div>
                                         </td>
-                                        <td style="padding:10px 12px;font-size:0.9rem;color:#a7f3d0;">${comp.category}${hasDuplicateType ? ' <span style="color:#fca5a5;font-size:0.8rem;font-weight:700;">DUPLICATE TYPE</span>' : ''}</td>
-                                        <td style="padding:10px 12px;font-size:0.9rem;font-family:monospace;color:#d1fae5;">${comp.serialNumber || '—'}</td>
+                                        <td style="padding:10px 12px;font-size:0.9rem;color:#a7f3d0;">${escapePCSetHtml(comp.category)}${hasDuplicateType ? ' <span style="color:#fca5a5;font-size:0.8rem;font-weight:700;">DUPLICATE TYPE</span>' : ''}</td>
+                                        <td style="padding:10px 12px;font-size:0.9rem;font-family:monospace;color:#d1fae5;">${escapePCSetHtml(comp.serialNumber || '—')}</td>
                                         <td style="padding:10px 12px;">${conditionBadge}</td>
                                         <td style="padding:10px 12px;text-align:right;">
                                             ${!isMissing

@@ -6,7 +6,7 @@
   <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css?v=70" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=75" />
   <style>
     :root {
       color-scheme: dark;
@@ -813,9 +813,22 @@
       background: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), transparent 38%), #06130c;
     }
 
-    body.qr-borrow-focus #shared-sidebar,
+    /* Keep the shared mobile navigation available while a scanned item is focused. */
+    body.qr-borrow-focus #shared-sidebar {
+      display: block !important;
+    }
+
     body.qr-borrow-focus .page-shell {
+      display: block !important;
+      min-height: 0;
+    }
+
+    body.qr-borrow-focus .page-shell > :not(.student-page-header) {
       display: none !important;
+    }
+
+    body.qr-borrow-focus #qrBorrowFocused {
+      margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
     }
 
     .borrow-qr-result-error {
@@ -1162,7 +1175,7 @@
   </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=3">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=10">
 </head>
 <body class="app-shell student-portal system-layout-page student-borrow-equipment-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -2104,7 +2117,7 @@
 
   <script src="/js/qr-equipment-report.js?v=1" defer></script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  <script src="/js/sidebar-component.js?v=75" defer></script>
   <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
 </body>
 </html>

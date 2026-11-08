@@ -34,7 +34,8 @@ import {
   deleteMaintenanceRequest,
   getMaintenanceSummary,
   getTechnicianActivities,
-  getStudentMaintenanceContextRoute
+  getStudentMaintenanceContextRoute,
+  cancelStudentMaintenanceRequest
 } from "../controllers/maintenanceController.js";
 
 const router = express.Router();
@@ -54,6 +55,7 @@ router.get("/api/maintenance/:id", getMaintenanceRequestById);
 
 // PUT - Update maintenance request status
 router.put("/api/maintenance/:id/status", updateMaintenanceStatus);
+router.post("/api/maintenance/:id/cancel", cancelStudentMaintenanceRequest);
 
 // PUT - Assign technician to maintenance request
 router.put("/api/maintenance/:id/assign", assignTechnician);

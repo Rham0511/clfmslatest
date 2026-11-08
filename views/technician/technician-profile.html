@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Technician Profile | ComLab</title>
-  <link rel="stylesheet" href="/css/sidebar.css?v=70">
+  <link rel="stylesheet" href="/css/sidebar.css?v=75">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body.technician-profile-page { min-height: 100vh; }
@@ -160,6 +160,25 @@
       border-radius: .9rem;
       background: #f5f9f6;
     }
+    .technician-name-form[hidden] { display: none; }
+    .technician-edit-info-button,
+    .technician-name-form button {
+      padding: .65rem .9rem;
+      border: 1px solid #118553;
+      border-radius: .65rem;
+      background: #118553;
+      color: #fff;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .technician-edit-info-button:hover,
+    .technician-name-form button:hover:not(:disabled) { background: #0b7045; }
+    .technician-name-form .technician-cancel-edit {
+      border-color: #bed2c4;
+      background: #fff;
+      color: #244333;
+    }
+    .technician-name-form .technician-cancel-edit:hover { background: #edf5ef; }
 
     .technician-name-form label { color: #244333; font-size: .82rem; font-weight: 700; }
     .technician-name-form input {
@@ -174,18 +193,9 @@
     }
     .technician-name-form input:focus { outline: 2px solid #20aa69; outline-offset: 2px; }
     .technician-name-form small { color: #5a7163; line-height: 1.5; }
-    .technician-name-form button {
-      justify-self: start;
-      padding: .65rem .9rem;
-      border: 1px solid #118553;
-      border-radius: .65rem;
-      background: #118553;
-      color: #fff;
-      font-weight: 750;
-      cursor: pointer;
-    }
-    .technician-name-form button:hover:not(:disabled) { background: #0b7045; }
+    .technician-name-form button { justify-self: start; }
     .technician-name-form button:disabled { cursor: wait; opacity: .65; }
+    .technician-name-form-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
     #technicianNameMessage { min-height: 1.25rem; margin: 0; color: #08774f; font-size: .8rem; }
     #technicianNameMessage[data-state="error"] { color: #b42332; }
 
@@ -244,6 +254,11 @@
       border-color: #315d43;
       background: #0e281b;
       color: #f0fdf4;
+    }
+    .main-container.theme-dark .technician-name-form .technician-cancel-edit {
+      border-color: #315d43;
+      background: #0e281b;
+      color: #d1fae5;
     }
     .main-container.theme-dark .technician-name-form small { color: #a8c7b2; }
     .main-container.theme-dark #technicianNameMessage { color: #a7f3d0; }
@@ -331,13 +346,17 @@
             <i class="fas fa-envelope" aria-hidden="true"></i>
             <div><p class="technician-profile-label">Email</p><p class="technician-profile-value" data-tech-profile-email>—</p></div>
           </div>
-          <form id="technicianNameForm" class="technician-name-form" novalidate>
+          <button id="technicianEditInfoButton" class="technician-edit-info-button" type="button" aria-expanded="false" aria-controls="technicianNameForm">Edit info</button>
+          <form id="technicianNameForm" class="technician-name-form" hidden novalidate>
             <label for="technicianFullName">Full name for maintenance reports</label>
             <input id="technicianFullName" name="name" type="text" maxlength="120" autocomplete="name" required aria-describedby="technicianNameHelp technicianNameMessage">
             <small id="technicianNameHelp">Enter your first name, middle initial, and last name. This name will appear in the Technician and Prepared by fields.</small>
-            <button type="submit">Save full name</button>
-            <p id="technicianNameMessage" role="status" aria-live="polite"></p>
+            <div class="technician-name-form-actions">
+              <button type="submit">Save info</button>
+              <button id="technicianCancelEditButton" class="technician-cancel-edit" type="button">Cancel</button>
+            </div>
           </form>
+          <p id="technicianNameMessage" role="status" aria-live="polite"></p>
         </div>
       </section>
     </main>
@@ -358,8 +377,25 @@
     const fullNameForm = document.getElementById('technicianNameForm');
     const fullNameInput = document.getElementById('technicianFullName');
     const fullNameMessage = document.getElementById('technicianNameMessage');
+    const editInfoButton = document.getElementById('technicianEditInfoButton');
+    const cancelEditButton = document.getElementById('technicianCancelEditButton');
     const fullNameButton = fullNameForm.querySelector('button[type="submit"]');
     fullNameInput.value = displayName !== 'Technician' ? displayName : '';
+    editInfoButton.addEventListener('click', () => {
+      fullNameForm.hidden = false;
+      editInfoButton.setAttribute('aria-expanded', 'true');
+      fullNameMessage.textContent = '';
+      fullNameMessage.removeAttribute('data-state');
+      fullNameInput.focus();
+    });
+    cancelEditButton.addEventListener('click', () => {
+      fullNameInput.value = user.name || '';
+      fullNameForm.hidden = true;
+      editInfoButton.setAttribute('aria-expanded', 'false');
+      fullNameMessage.textContent = '';
+      fullNameMessage.removeAttribute('data-state');
+      editInfoButton.focus();
+    });
     fullNameForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const name = fullNameInput.value.trim().replace(/\s+/g, ' ');
@@ -391,8 +427,11 @@
         document.querySelectorAll('[data-tech-profile-role], [data-tech-role], [data-tech-header-role]').forEach(element => { element.textContent = role; });
         document.querySelectorAll('.system-profile-badge, .technician-profile-identity').forEach(element => { element.setAttribute('aria-label', `${user.name}, ${role}`); });
         if (window.sidebarConfig) window.sidebarConfig.user = { ...user, name: user.name, initials: updatedInitials };
+        fullNameForm.hidden = true;
+        editInfoButton.setAttribute('aria-expanded', 'false');
+        editInfoButton.focus();
         fullNameMessage.removeAttribute('data-state');
-        fullNameMessage.textContent = 'Full name saved. You can now download your maintenance reports.';
+        fullNameMessage.textContent = 'Profile updated. Your name will appear in maintenance reports.';
       } catch (error) {
         fullNameMessage.dataset.state = 'error';
         fullNameMessage.textContent = error.message || 'Unable to update your name.';
@@ -401,6 +440,6 @@
       }
     });
   </script>
-  <script src="/js/sidebar-component.js?v=68" defer></script>
+  <script src="/js/sidebar-component.js?v=75" defer></script>
 </body>
 </html>

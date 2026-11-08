@@ -4325,7 +4325,7 @@ html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-spec
 html body.app-shell #qr-scan-float-btn {
     position: fixed !important;
     right: max(1rem, env(safe-area-inset-right, 0px)) !important;
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(4.85rem + env(safe-area-inset-bottom, 0px)) !important;
     z-index: 1000 !important;
     display: inline-flex !important;
     width: 3.25rem !important;
@@ -4362,10 +4362,464 @@ html body.app-shell #qr-scan-float-btn i {
     font-size: 1.15rem !important;
 }
 
-@media (max-width: 768px) {
-    html body.app-shell.sidebar-open #qr-scan-float-btn {
+html body.app-shell #comlab-help-float-btn {
+    position: fixed !important;
+    right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1002 !important;
+    display: inline-flex !important;
+    width: 3.25rem !important;
+    min-width: 3.25rem !important;
+    height: 3.25rem !important;
+    min-height: 3.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid rgba(167, 243, 208, .48) !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #163d2b, #0b281b) !important;
+    color: #d1fae5 !important;
+    box-shadow: 0 12px 28px rgba(2, 18, 12, .36), 0 0 0 4px rgba(34, 197, 94, .08) !important;
+    font: inherit !important;
+    font-size: .88rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease !important;
+}
+
+html body.app-shell #comlab-help-float-btn:hover {
+    filter: brightness(1.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+html body.app-shell #comlab-help-float-btn:focus-visible {
+    outline: 3px solid #a7f3d0 !important;
+    outline-offset: 3px !important;
+}
+
+html body.app-shell #comlab-help-float-btn i {
+    font-size: 1.12rem !important;
+}
+
+html body.app-shell #comlab-help-panel {
+    position: fixed !important;
+    right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(8.65rem + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1003 !important;
+    display: flex;
+    box-sizing: border-box !important;
+    width: min(22rem, calc(100vw - 2rem)) !important;
+    max-height: min(32rem, 70vh) !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(110, 231, 183, .28) !important;
+    border-radius: 1rem !important;
+    background: #0b1d15 !important;
+    color: #e8f4ed !important;
+    box-shadow: 0 20px 55px rgba(0, 0, 0, .45) !important;
+}
+
+html body.app-shell #comlab-help-panel[hidden] {
+    display: none !important;
+}
+
+html body.app-shell #comlab-help-panel [hidden] {
+    display: none !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .75rem !important;
+    padding: .85rem 1rem !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .16) !important;
+    background: rgba(16, 55, 37, .82) !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header h2,
+html body.app-shell #comlab-help-panel .comlab-help-header p {
+    margin: 0 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header h2 {
+    color: #ecfdf5 !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header p {
+    margin-top: .15rem !important;
+    color: #9dcab1 !important;
+    font-size: .72rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: .35rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header-actions button {
+    display: inline-flex !important;
+    min-height: 2rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: .3rem !important;
+    padding: .35rem .5rem !important;
+    border: 1px solid rgba(167, 243, 208, .2) !important;
+    border-radius: .6rem !important;
+    background: rgba(2, 18, 12, .28) !important;
+    color: #d1fae5 !important;
+    font: inherit !important;
+    font-size: .7rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header-actions .comlab-help-close {
+    width: 2rem !important;
+    padding: 0 !important;
+    font-size: .9rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-header-actions button:disabled {
+    cursor: wait !important;
+    opacity: .6 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history {
+    display: flex !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history[hidden] {
+    display: none !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-heading {
+    display: flex !important;
+    align-items: center !important;
+    gap: .6rem !important;
+    padding: .65rem .85rem !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .12) !important;
+    color: #dcebe1 !important;
+    font-size: .8rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-back {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: .3rem !important;
+    padding: .35rem .5rem !important;
+    border: 1px solid rgba(167, 243, 208, .18) !important;
+    border-radius: .55rem !important;
+    background: transparent !important;
+    color: #a7f3d0 !important;
+    font: inherit !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-list {
+    display: flex !important;
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    gap: .4rem !important;
+    overflow-y: auto !important;
+    padding: .65rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: .2rem .5rem !important;
+    width: 100% !important;
+    padding: .65rem .7rem !important;
+    border: 1px solid rgba(110, 231, 183, .12) !important;
+    border-radius: .7rem !important;
+    background: rgba(20, 42, 31, .75) !important;
+    color: #e1f4e8 !important;
+    text-align: left !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-item:hover,
+html body.app-shell #comlab-help-panel .comlab-help-history-item.is-active {
+    border-color: rgba(52, 211, 153, .5) !important;
+    background: rgba(16, 68, 43, .76) !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-item strong {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    color: #ecfdf5 !important;
+    font-size: .78rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-item span {
+    grid-column: 1 / -1 !important;
+    overflow: hidden !important;
+    color: #a9c5b3 !important;
+    font-size: .7rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-item time {
+    color: #8eb69b !important;
+    font-size: .65rem !important;
+    white-space: nowrap !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-history-empty {
+    margin: auto !important;
+    padding: 1rem !important;
+    color: #9dcab1 !important;
+    font-size: .8rem !important;
+    text-align: center !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-close {
+    display: inline-grid !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    place-items: center !important;
+    border: 1px solid rgba(167, 243, 208, .2) !important;
+    border-radius: .6rem !important;
+    background: rgba(2, 18, 12, .35) !important;
+    color: #d1fae5 !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-messages {
+    display: flex !important;
+    min-height: 7rem !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    gap: .55rem !important;
+    overflow-y: auto !important;
+    padding: .85rem !important;
+    overscroll-behavior: contain !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-message {
+    max-width: 88% !important;
+    margin: 0 !important;
+    padding: .6rem .72rem !important;
+    border-radius: .8rem !important;
+    font-size: .82rem !important;
+    line-height: 1.45 !important;
+    overflow-wrap: anywhere !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-answer {
+    align-self: flex-start !important;
+    border: 1px solid rgba(110, 231, 183, .14) !important;
+    border-top-left-radius: .25rem !important;
+    background: #142a1f !important;
+    color: #e1f4e8 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-question {
+    align-self: flex-end !important;
+    border-top-right-radius: .25rem !important;
+    background: #087a4c !important;
+    color: #f0fdf4 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-error {
+    border-color: rgba(248, 113, 113, .32) !important;
+    color: #fecaca !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form {
+    display: flex !important;
+    gap: .5rem !important;
+    padding: .7rem !important;
+    border-top: 1px solid rgba(110, 231, 183, .16) !important;
+    background: rgba(5, 23, 15, .95) !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form input {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    min-height: 2.65rem !important;
+    flex: 1 1 auto !important;
+    padding: .55rem .7rem !important;
+    border: 1px solid rgba(110, 231, 183, .24) !important;
+    border-radius: .7rem !important;
+    outline: none !important;
+    background: #0b1d15 !important;
+    color: #f0fdf4 !important;
+    font: inherit !important;
+    font-size: .84rem !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form input:focus {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, .15) !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form input::placeholder {
+    color: #83a994 !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form button {
+    display: inline-grid !important;
+    width: 2.65rem !important;
+    min-width: 2.65rem !important;
+    height: 2.65rem !important;
+    place-items: center !important;
+    border: 0 !important;
+    border-radius: .7rem !important;
+    background: #087a4c !important;
+    color: #f0fdf4 !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #comlab-help-panel .comlab-help-form button:disabled {
+    cursor: wait !important;
+    opacity: .6 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-float-btn {
+    border-color: #b7d9c2 !important;
+    background: linear-gradient(135deg, #eaf5ed, #d9ecdf) !important;
+    color: #12663f !important;
+    box-shadow: 0 10px 24px rgba(31, 75, 48, .2), 0 0 0 4px rgba(34, 197, 94, .08) !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel {
+    border-color: #c8dfce !important;
+    background: #ffffff !important;
+    color: #20392b !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-header {
+    border-color: #deebe1 !important;
+    background: #f0f7f2 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-header h2 {
+    color: #174b31 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-header p {
+    color: #587663 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-header-actions button {
+    border-color: #c8dfce !important;
+    background: #ffffff !important;
+    color: #245c3c !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-heading {
+    border-color: #deebe1 !important;
+    color: #294839 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-back {
+    border-color: #c8dfce !important;
+    color: #12663f !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item {
+    border-color: #deebe1 !important;
+    background: #f5faf6 !important;
+    color: #294839 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item:hover,
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item.is-active {
+    border-color: #91c9a1 !important;
+    background: #eaf5ed !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item strong {
+    color: #174b31 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item span,
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-item time,
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-history-empty {
+    color: #587663 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-close {
+    border-color: #c8dfce !important;
+    background: #ffffff !important;
+    color: #245c3c !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-answer {
+    border-color: #deebe1 !important;
+    background: #f2f8f3 !important;
+    color: #294839 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-form {
+    border-color: #deebe1 !important;
+    background: #f7faf7 !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-form input {
+    border-color: #c8dfce !important;
+    background: #ffffff !important;
+    color: #20392b !important;
+}
+
+html.theme-light body.app-shell #comlab-help-panel .comlab-help-form input::placeholder {
+    color: #718b79 !important;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+    html body.app-shell #comlab-help-panel .comlab-help-form input {
+        font-size: 16px !important;
+    }
+
+    html body.app-shell.sidebar-open #qr-scan-float-btn,
+    html body.app-shell.sidebar-open #comlab-help-float-btn,
+    html body.app-shell.sidebar-open #comlab-help-panel {
         opacity: 0 !important;
         pointer-events: none !important;
+    }
+
+    html body.app-shell.comlab-help-keyboard-open #qr-scan-float-btn,
+    html body.app-shell.comlab-help-keyboard-open #comlab-help-float-btn {
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    html body.app-shell #comlab-help-panel {
+        max-width: calc(100vw - 1rem) !important;
+        border-radius: .85rem !important;
+    }
+
+    html body.app-shell #comlab-help-panel .comlab-help-messages {
+        min-height: 2rem !important;
+    }
+}
+
+@media (max-width: 768px) and (max-height: 480px), (pointer: coarse) and (max-height: 480px) {
+    html body.app-shell #comlab-help-panel .comlab-help-header {
+        padding: .5rem .75rem !important;
+    }
+
+    html body.app-shell #comlab-help-panel .comlab-help-messages {
+        padding: .5rem !important;
+    }
+
+    html body.app-shell #comlab-help-panel .comlab-help-form {
+        padding: .45rem !important;
     }
 }
 
@@ -4421,6 +4875,12 @@ html body.app-shell #qr-scanner-modal .qr-scanner-close {
     background: rgba(14, 67, 43, .56) !important;
     color: #d1fae5 !important;
     cursor: pointer !important;
+}
+
+html body.app-shell #qr-scanner-modal .qr-reader-frame {
+    position: relative !important;
+    overflow: hidden !important;
+    border-radius: .9rem !important;
 }
 
 html body.app-shell #qr-reader {
@@ -4571,6 +5031,74 @@ html body.app-shell .qr-admin-cycle-empty {
 }
 
 html body.app-shell #qr-admin-scan-again {
+    display: inline-flex !important;
+    min-height: 2.65rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: .5rem !important;
+    border: 1px solid rgba(110, 231, 183, .25) !important;
+    border-radius: .8rem !important;
+    background: rgba(14, 67, 43, .66) !important;
+    color: #d1fae5 !important;
+    font: inherit !important;
+    font-size: .86rem !important;
+    font-weight: 750 !important;
+    cursor: pointer !important;
+}
+
+html body.app-shell #qr-pc-station-result {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 4 !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: .8rem !important;
+    padding: 1rem !important;
+    border-radius: .9rem !important;
+    background: rgba(2, 14, 9, .9) !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+html body.app-shell .qr-pc-station-result-card {
+    padding: .95rem 1rem !important;
+    border: 1px solid rgba(248, 113, 113, .4) !important;
+    border-radius: .9rem !important;
+    background: rgba(69, 10, 10, .34) !important;
+}
+
+html body.app-shell .qr-pc-station-result-card[data-state="unavailable"] {
+    border-color: rgba(251, 191, 36, .42) !important;
+    background: rgba(69, 39, 10, .3) !important;
+}
+
+html body.app-shell #qr-pc-station-result-label {
+    display: block !important;
+    margin-bottom: .35rem !important;
+    color: #fca5a5 !important;
+    font-size: .68rem !important;
+    font-weight: 850 !important;
+    letter-spacing: .1em !important;
+}
+
+html body.app-shell .qr-pc-station-result-card[data-state="unavailable"] #qr-pc-station-result-label {
+    color: #fcd34d !important;
+}
+
+html body.app-shell #qr-pc-station-result-name {
+    margin: 0 !important;
+    color: #fff7f7 !important;
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+}
+
+html body.app-shell #qr-pc-station-result-message {
+    margin: .3rem 0 0 !important;
+    color: #fee2e2 !important;
+    font-size: .86rem !important;
+    line-height: 1.45 !important;
+}
+
+html body.app-shell #qr-pc-station-scan-again {
     display: inline-flex !important;
     min-height: 2.65rem !important;
     align-items: center !important;

@@ -4,10 +4,56 @@ import { User } from "../models/userModel.js";
 import { LaboratorySchedule } from "../models/laboratoryScheduleModel.js";
 import { canManageRecord } from "./campusAuthController.js";
 
+const getManilaDateKey = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
+
+const buildPastScheduleDates = (createdLocalDate, weekdayIndex, todayKey, sessionCounts) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(createdLocalDate || "")) || weekdayIndex < 0) return [];
+  const cursor = new Date(`${createdLocalDate}T00:00:00Z`);
+  const today = new Date(`${todayKey}T00:00:00Z`);
+  const pastDates = [];
+  while (cursor <= today) {
+    const weekday = (cursor.getUTCDay() + 6) % 7;
+    if (weekday === weekdayIndex) {
+      const sessionDate = cursor.toISOString().slice(0, 10);
+      const sessionCount = Number(sessionCounts.get(sessionDate) || 0);
+      if (cursor < today || sessionCount > 0) pastDates.push({ sessionDate, sessionCount });
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return pastDates.reverse();
+};
+
+const parseScheduleClockMinutes = (value) => {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (minutes > 59) return null;
+  const meridiem = match[3]?.toUpperCase();
+  if (meridiem) {
+    if (hours < 1 || hours > 12) return null;
+    hours = (hours % 12) + (meridiem === "PM" ? 12 : 0);
+  } else if (hours > 23) {
+    return null;
+  }
+  return hours * 60 + minutes;
+};
+
+const toSqlClock = (minutes) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}:00`;
+
 /**
- * Get seating chart for a specific laboratory schedule session
- * Shows which students ACTUALLY ATTENDED and which PCs they're using
- * Based on real attendance records, not theoretical class enrollment
+ * Get live occupancy or completed PC sessions for a laboratory schedule.
+ * Historical sessions are limited to occurrences on the schedule weekday after creation.
  */
 export async function getScheduleSeatingChart(req, res) {
   const { scheduleId } = req.params;
@@ -48,7 +94,9 @@ export async function getScheduleSeatingChart(req, res) {
         instructor,
         campus,
         yearLevel,
-        section
+        section,
+        createdAt,
+        DATE_FORMAT(DATE_ADD(createdAt, INTERVAL 8 HOUR), '%Y-%m-%d') AS createdLocalDate
       FROM laboratory_schedules
       WHERE id = ?`,
       {
@@ -62,73 +110,6 @@ export async function getScheduleSeatingChart(req, res) {
     }
 
     const schedule = scheduleRows[0];
-    const todayInManila = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
-
-    // 2. Get all students who ACTUALLY ATTENDED this schedule session (not just enrolled)
-    // This shows real attendance, not theoretical class roster
-    const students = await sequelize.query(
-      `SELECT attendanceId, studentId, studentNumber, fullName, email, timeIn, status
-       FROM (
-         SELECT
-           a.id as attendanceId,
-           u.id as studentId,
-           a.studentId as studentNumber,
-           a.fullName as fullName,
-           u.email,
-           a.timeIn,
-           a.status,
-           ROW_NUMBER() OVER (
-             PARTITION BY COALESCE(CAST(u.id AS CHAR), a.studentId)
-             ORDER BY a.createdAt DESC, a.id DESC
-           ) as rowNumber
-         FROM attendance a
-         LEFT JOIN users u ON u.student_number = a.studentId
-         WHERE a.laboratoryScheduleId = ?
-           AND a.date = ?
-           AND a.timeIn IS NOT NULL
-           AND a.timeIn <> 'Not recorded'
-           AND a.status IN ('Present', 'Late')
-       ) latestStudents
-       WHERE rowNumber = 1
-       ORDER BY fullName`,
-      {
-        replacements: [scheduleId, todayInManila],
-        type: QueryTypes.SELECT
-      }
-    );
-
-    const stationAttendance = await sequelize.query(
-      `SELECT attendanceId, userId, setId, fullName, email, timeIn, status, scannedAt, isActive
-       FROM (
-         SELECT
-           a.id AS attendanceId,
-           u.id AS userId,
-           a.pcStationSetId AS setId,
-           COALESCE(NULLIF(a.fullName, ''), u.name) AS fullName,
-           u.email,
-           a.timeIn,
-           a.status,
-           a.createdAt AS scannedAt,
-           CASE WHEN ps.activeUserId = u.id THEN 1 ELSE 0 END AS isActive,
-           ROW_NUMBER() OVER (
-             PARTITION BY a.pcStationSetId
-             ORDER BY a.createdAt DESC, a.id DESC
-           ) AS rowNumber
-         FROM attendance a
-         LEFT JOIN users u ON u.student_number = a.studentId
-         LEFT JOIN pc_station_sessions ps ON BINARY ps.setId = BINARY a.pcStationSetId
-         WHERE a.laboratoryScheduleId = ?
-           AND a.date = ?
-           AND a.pcStationSetId IS NOT NULL
-           AND a.timeIn IS NOT NULL
-           AND a.timeIn <> 'Not recorded'
-           AND a.status IN ('Present', 'Late')
-       ) latestStationAttendance
-       WHERE rowNumber = 1
-       ORDER BY scannedAt DESC`,
-      { replacements: [scheduleId, todayInManila], type: QueryTypes.SELECT }
-    );
-
     // PC station ownership is stored on the PC set, while individual
     // components can retain older room labels from before set assembly.
     const scheduleRoom = String(schedule.laboratoryRoom || '').trim();
@@ -167,64 +148,181 @@ export async function getScheduleSeatingChart(req, res) {
       }
     );
 
-    // 4. Get PC assignments ONLY for students enrolled in this schedule
-    // Must have attendance record linked to this schedule
-    const assignments = await sequelize.query(
-      `SELECT 
-        eul.id,
-        eul.userId,
-        eul.equipmentId,
-        eul.serialNumber,
-        eul.usageStartTime,
-        eul.usageEndTime,
-        eul.attendanceId,
-        e.setId,
-        COALESCE(NULLIF(a.fullName, ''), u.name) as fullName,
-        u.email,
-        a.studentId,
-        ats.expiresAt,
-        a.laboratoryScheduleId
-      FROM equipment_usage_logs eul
-      JOIN users u ON eul.userId = u.id
-      JOIN equipment e ON eul.equipmentId = e.id
-      JOIN attendance a ON eul.attendanceId = a.id
-      LEFT JOIN attendance_sessions ats ON ats.token = a.sessionToken
-      JOIN equipment_sets es ON BINARY es.setId = BINARY e.setId
-      INNER JOIN equipment setCampusEquipment ON BINARY setCampusEquipment.setId = BINARY es.setId
-        AND LOWER(TRIM(REPLACE(setCampusEquipment.campus, ' Campus', ''))) = ?
-      WHERE es.status = 'active'
-        AND UPPER(REPLACE(REPLACE(TRIM(es.location), ' ', ''), '-', '')) = ?
-        AND e.setId IS NOT NULL
-        AND a.laboratoryScheduleId = ?
-        AND a.date = ?
-      ORDER BY eul.usageStartTime DESC, eul.id DESC`,
-      {
-        replacements: [campusName, `COMLAB${labNumber}`, scheduleId, todayInManila],
-        type: QueryTypes.SELECT
-      }
-    );
+    const stationSetIds = pcSets.map((pc) => pc.setId);
 
-    // 5. Map assignments to PC sets
-    // Build a map of PC assignments (setId -> assignment)
-    const pcAssignmentMap = {};
-    stationAttendance.forEach((assignment) => {
-      if (assignment.setId && !pcAssignmentMap[assignment.setId]) {
-        pcAssignmentMap[assignment.setId] = {
-          ...assignment,
-          usageStartTime: assignment.scannedAt,
-          attendanceStation: true
-        };
-      }
-    });
-    assignments.forEach((assignment) => {
-      if (assignment.setId && !pcAssignmentMap[assignment.setId]) {
-        pcAssignmentMap[assignment.setId] = assignment;
-      }
-    });
+    const schedulePayload = {
+      id: schedule.id,
+      subject: schedule.subject,
+      day: schedule.dayOfWeek,
+      time: `${schedule.startTime} - ${schedule.endTime}`,
+      room: schedule.laboratoryRoom,
+      instructor: schedule.instructor,
+      campus: schedule.campus,
+      yearLevel: schedule.yearLevel,
+      section: schedule.section,
+      createdAt: schedule.createdAt,
+      createdLocalDate: schedule.createdLocalDate,
+    };
 
-    // 6. Build seating chart data structure
+    if (String(req.query.view || '').toLowerCase() === 'history') {
+      const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const scheduleWeekday = weekdays.findIndex((day) =>
+        day.toLowerCase() === String(schedule.dayOfWeek || '').trim().toLowerCase() ||
+        day.slice(0, 3).toLowerCase() === String(schedule.dayOfWeek || '').trim().slice(0, 3).toLowerCase()
+      );
+      const replacements = {
+        stationSetIds,
+        scheduleId: schedule.id,
+        scheduleCreatedAt: schedule.createdAt,
+        scheduleWeekday,
+      };
+      const startMinutes = parseScheduleClockMinutes(schedule.startTime);
+      const endMinutes = parseScheduleClockMinutes(schedule.endTime);
+      const scheduleStartTime = startMinutes === null ? null : toSqlClock(Math.max(0, startMinutes - 15));
+      const scheduleEndTime = endMinutes === null ? null : toSqlClock(endMinutes);
+      const hasScheduleTimeRange = startMinutes !== null && endMinutes !== null && startMinutes !== endMinutes;
+      const nullAttendanceTimeFilter = hasScheduleTimeRange
+        ? endMinutes > startMinutes
+          ? `AND TIME(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) >= :scheduleStartTime
+             AND TIME(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) < :scheduleEndTime`
+          : `AND (TIME(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) >= :scheduleStartTime
+             OR TIME(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) < :scheduleEndTime)`
+        : "";
+      const scheduleSessionMatch = `(a.laboratoryScheduleId = :scheduleId OR
+        (eul.attendanceId IS NULL ${nullAttendanceTimeFilter}))`;
+      const historyReplacements = {
+        ...replacements,
+        scheduleStartTime,
+        scheduleEndTime,
+      };
+      const dateFilter = String(req.query.date || '').trim();
+      const sessionDateRows = stationSetIds.length && scheduleWeekday >= 0
+        ? await sequelize.query(
+            `SELECT
+               DATE_FORMAT(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR), '%Y-%m-%d') AS sessionDate,
+               COUNT(*) AS sessionCount
+             FROM equipment_usage_logs eul
+             INNER JOIN users u ON u.id = eul.userId
+             LEFT JOIN attendance a ON a.id = eul.attendanceId
+             WHERE BINARY eul.pcSetId IN (:stationSetIds)
+               AND LOWER(TRIM(COALESCE(u.role, ''))) = 'student'
+               AND ${scheduleSessionMatch}
+               AND eul.usageStartTime >= :scheduleCreatedAt
+               AND eul.usageStartTime < UTC_TIMESTAMP()
+               AND eul.usageEndTime IS NOT NULL
+               AND WEEKDAY(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) = :scheduleWeekday
+             GROUP BY sessionDate
+             ORDER BY sessionDate DESC`,
+            { replacements: historyReplacements, type: QueryTypes.SELECT }
+          )
+        : [];
+      const sessionCounts = new Map(sessionDateRows.map((item) => [item.sessionDate, Number(item.sessionCount || 0)]));
+      const availableDates = buildPastScheduleDates(
+        schedule.createdLocalDate,
+        scheduleWeekday,
+        getManilaDateKey(),
+        sessionCounts
+      );
+
+      let historyBySet = new Map();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateFilter) && availableDates.some((item) => item.sessionDate === dateFilter)) {
+        const sessions = await sequelize.query(
+          `SELECT
+             eul.id,
+             eul.pcSetId AS setId,
+             eul.userId,
+             COALESCE(a.fullName, u.name) AS fullName,
+             u.role AS userRole,
+             DATE_FORMAT(eul.usageStartTime, '%Y-%m-%dT%H:%i:%sZ') AS startedAt,
+             DATE_FORMAT(eul.usageEndTime, '%Y-%m-%dT%H:%i:%sZ') AS endedAt,
+             COALESCE(
+               eul.durationMinutes,
+               GREATEST(ROUND(TIMESTAMPDIFF(SECOND, eul.usageStartTime, eul.usageEndTime) / 60), 1)
+             ) AS durationMinutes
+           FROM equipment_usage_logs eul
+           INNER JOIN users u ON u.id = eul.userId
+           LEFT JOIN attendance a ON a.id = eul.attendanceId
+           WHERE BINARY eul.pcSetId IN (:stationSetIds)
+             AND LOWER(TRIM(COALESCE(u.role, ''))) = 'student'
+             AND ${scheduleSessionMatch}
+             AND eul.usageStartTime >= :scheduleCreatedAt
+             AND eul.usageStartTime < UTC_TIMESTAMP()
+             AND eul.usageEndTime IS NOT NULL
+             AND DATE(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) = :sessionDate
+             AND WEEKDAY(DATE_ADD(eul.usageStartTime, INTERVAL 8 HOUR)) = :scheduleWeekday
+           ORDER BY eul.usageStartTime ASC, eul.id ASC`,
+          { replacements: { ...historyReplacements, sessionDate: dateFilter }, type: QueryTypes.SELECT }
+        );
+        historyBySet = new Map();
+        sessions.forEach((session) => {
+          const key = String(session.setId);
+          const records = historyBySet.get(key) || [];
+          records.push({
+            id: session.id,
+            userId: session.userId,
+            fullName: session.fullName,
+            role: session.userRole,
+            startTime: session.startedAt,
+            endTime: session.endedAt,
+            durationMinutes: Number(session.durationMinutes || 0),
+          });
+          historyBySet.set(key, records);
+        });
+      }
+
+      const seatingChart = pcSets.map((pc) => ({
+        setId: pc.setId,
+        setName: pc.setName,
+        location: pc.location,
+        setStatus: pc.setStatus,
+        components: pc.components,
+        componentCount: pc.componentCount,
+        sessions: historyBySet.get(String(pc.setId)) || [],
+      }));
+      const recordedSessions = [...historyBySet.values()].flat();
+      const uniqueStudents = new Set(recordedSessions.map((session) => String(session.userId)));
+
+      res.set({ "Cache-Control": "no-store, private" });
+      return res.json({
+        schedule: schedulePayload,
+        sessionDates: availableDates,
+        selectedDate: dateFilter || null,
+        seatingChart,
+        statistics: {
+          totalPCs: pcSets.length,
+          usedPCs: historyBySet.size,
+          totalSessions: recordedSessions.length,
+          totalStudents: uniqueStudents.size,
+        },
+      });
+    }
+
+    const activeSessions = stationSetIds.length
+      ? await sequelize.query(
+          `SELECT
+             ps.setId,
+             ps.activeUserId AS userId,
+             DATE_FORMAT(ps.startedAt, '%Y-%m-%dT%H:%i:%sZ') AS startedAt,
+             DATE_FORMAT(ps.autoLogoutAt, '%Y-%m-%dT%H:%i:%sZ') AS autoLogoutAt,
+             u.name AS fullName,
+             u.role AS userRole
+           FROM pc_station_sessions ps
+           LEFT JOIN users u ON u.id = ps.activeUserId
+             AND LOWER(TRIM(REPLACE(COALESCE(u.campus, ''), ' Campus', ''))) = :campusName
+           WHERE BINARY ps.setId IN (:stationSetIds)
+             AND ps.activeUserId IS NOT NULL
+             AND (ps.autoLogoutAt IS NULL OR ps.autoLogoutAt > UTC_TIMESTAMP())
+           ORDER BY ps.startedAt DESC`,
+          { replacements: { stationSetIds, campusName }, type: QueryTypes.SELECT }
+        )
+      : [];
+    const activeSessionBySet = new Map(activeSessions.map((session) => [String(session.setId), session]));
+    const studentSessions = activeSessions.filter((session) => String(session.userRole || '').trim().toLowerCase() === 'student');
+
+    // The seat map reflects only currently signed-in users. Old attendance and
+    // usage records remain available in attendance and PC logs, not as occupants.
     const seatingChart = pcSets.map((pc) => {
-      const assignment = pcAssignmentMap[pc.setId];
+      const session = activeSessionBySet.get(String(pc.setId));
 
       return {
         setId: pc.setId,
@@ -233,60 +331,30 @@ export async function getScheduleSeatingChart(req, res) {
         setStatus: pc.setStatus,
         components: pc.components,
         componentCount: pc.componentCount,
-        status: assignment ? "occupied" : "available",
-        student: assignment
+        status: session ? "occupied" : "available",
+        student: session
           ? {
-              id: assignment.userId,
-              fullName: assignment.fullName,
-              email: assignment.email,
-              startTime: assignment.usageStartTime,
-              isActive: assignment.attendanceStation
-                ? Boolean(Number(assignment.isActive))
-                : assignment.usageEndTime === null &&
-                  assignment.expiresAt &&
-                  new Date(assignment.expiresAt) > new Date(),
-              attendanceStatus: assignment.status || null,
-              scannedAt: assignment.scannedAt || null,
+              id: session.userId,
+              fullName: session.fullName,
+              role: session.userRole,
+              startTime: session.startedAt,
+              autoLogoutAt: session.autoLogoutAt,
+              isActive: true,
             }
           : null,
       };
     });
 
-    // 7. Get list of students who ATTENDED but are NOT assigned to any PC
-    const assignedUserIds = new Set([...assignments, ...stationAttendance].map(a => String(a.userId)).filter(Boolean));
-    const unassignedStudents = students.filter(
-      (student) => !assignedUserIds.has(String(student.studentId || ''))
-    );
-
-    // 8. Return comprehensive seating chart with ACTUAL ATTENDANCE stats
-    res.json({
-      schedule: {
-        id: schedule.id,
-        subject: schedule.subject,
-        day: schedule.dayOfWeek,
-        time: `${schedule.startTime} - ${schedule.endTime}`,
-        room: schedule.laboratoryRoom,
-        instructor: schedule.instructor,
-        campus: schedule.campus,
-        yearLevel: schedule.yearLevel,
-        section: schedule.section,
-      },
+    res.set({ "Cache-Control": "no-store, private" });
+    return res.json({
+      schedule: schedulePayload,
       seatingChart,
       statistics: {
         totalPCs: pcSets.length,
-        occupiedPCs: seatingChart.filter((pc) => pc.student?.isActive).length,
-        availablePCs: seatingChart.filter((pc) => !pc.student?.isActive).length,
-        totalStudents: students.length, // Students who actually attended this session
-        assignedStudents: students.length - unassignedStudents.length,
-        unassignedStudents: unassignedStudents.length,
+        occupiedPCs: activeSessions.length,
+        availablePCs: Math.max(0, pcSets.length - activeSessions.length),
+        totalStudents: studentSessions.length,
       },
-      unassignedStudents: unassignedStudents.map((s) => ({
-        id: s.studentId,
-        fullName: s.fullName,
-        email: s.email,
-        timeIn: s.timeIn,
-        hasPC: false,
-      })),
     });
   } catch (error) {
     console.error("Error fetching seating chart:", error);

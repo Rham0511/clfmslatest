@@ -49,6 +49,7 @@ import { sequelize } from "./models/db.js";
 import { ensureArchiveRecordsTable } from "./models/archiveRecords.js";
 import { ensureAttendancePcStationColumn } from "./models/attendanceModel.js";
 import { ensurePCStationAutoLogoutColumn } from "./models/pcStationSessionModel.js";
+import { ensureRoleHelpChatTables } from "./models/roleHelpChatModel.js";
 import { expirePCStationSessions } from "./controllers/pcStationController.js";
 import fs from 'fs';
 import hbs from "hbs";
@@ -220,6 +221,7 @@ export default app;
           await ensureArchiveRecordsTable();
           await ensureAttendancePcStationColumn();
           await ensurePCStationAutoLogoutColumn();
+          await ensureRoleHelpChatTables();
           // await sequelize.sync({ force: false, alter: false, logging: false });
           console.log("✅ Database tables are ready");
         } catch (syncError) {

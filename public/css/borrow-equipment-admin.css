@@ -296,7 +296,257 @@ html body.admin-borrow-equipment-page .table-wrap thead th {
 }
 
 html body.admin-borrow-equipment-page .table-wrap > table {
+  width: 100%;
+  min-width: 760px;
   height: 100%;
+  table-layout: fixed;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(1) { width: 16%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(2) { width: 17%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(3) { width: 12%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(4) { width: 13%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(5) { width: 15%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(6) { width: 13%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(7) { width: 14%; }
+
+/* Audit rows show only a quick summary; the View action opens the full event. */
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(1) { width: 17%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(2) { width: 22%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(3) { width: 19%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(4) { width: 15%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(5) { width: 17%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table th:nth-child(6) { width: 10%; }
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) thead th {
+  white-space: normal;
+  vertical-align: middle;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) tbody td {
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
+  vertical-align: middle;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] thead th,
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] tbody td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  vertical-align: middle;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] time,
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-time {
+  display: block;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-time,
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-secondary {
+  margin-top: .16rem;
+  color: #a9c8b6;
+  font-size: .68rem;
+  font-weight: 550;
+  line-height: 1.3;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .status-badge {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] tbody td:last-child {
+  text-align: center;
+  white-space: nowrap;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-view-btn {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .38rem .62rem;
+  border: 1px solid rgba(74,222,128,.3);
+  border-radius: .62rem;
+  background: rgba(16,87,55,.34);
+  color: #d1fae5;
+  font-size: .72rem;
+  font-weight: 750;
+  transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-view-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74,222,128,.58);
+  background: rgba(22,131,74,.52);
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal #closeAuditDetailsBtn {
+  width: 2.65rem;
+  height: 2.65rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(110,231,183,.18);
+  border-radius: 50%;
+  background: rgba(2,18,11,.44);
+  color: #d1fae5;
+}
+
+html body.admin-borrow-equipment-page #auditDetailsModalOverlay {
+  padding: .75rem !important;
+}
+
+html body.admin-borrow-equipment-page #auditDetailsModalOverlay .audit-details-modal {
+  box-sizing: border-box;
+  width: min(1080px, 100%) !important;
+  max-width: 100%;
+  max-height: min(86dvh, 820px) !important;
+  border-radius: 1.1rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .modal-header {
+  gap: .75rem;
+  padding: .8rem 1.1rem !important;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .modal-header > div:first-child > p {
+  margin-bottom: .2rem;
+  font-size: .78rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal #auditDetailsTitle {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  line-height: 1.2;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .modal-body {
+  padding: .85rem 1.1rem 1rem !important;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid {
+  gap: .6rem !important;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid > .glass-card {
+  padding: .7rem;
+  border-radius: .85rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid .card-title {
+  margin-bottom: .5rem;
+  font-size: .84rem;
+  letter-spacing: .035em;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid .card-grid {
+  gap: .45rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid .card-item {
+  padding: .5rem .55rem;
+  border-radius: .65rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid .card-label {
+  margin-bottom: .12rem;
+  font-size: .7rem;
+  line-height: 1.25;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid .card-value {
+  font-size: .86rem;
+  line-height: 1.3;
+}
+
+html body.admin-borrow-equipment-page .audit-details-grid .card-value {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+html body.admin-borrow-equipment-page .audit-details-grid > .glass-card:last-child {
+  grid-column: 1 / -1;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal #auditDetailsStatus {
+  padding: .42rem .7rem;
+  font-size: .78rem;
+}
+
+html body.admin-borrow-equipment-page .audit-details-modal #closeAuditDetailsBtn {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+@media (max-width: 760px) {
+  html body.admin-borrow-equipment-page #auditDetailsModalOverlay .audit-details-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+  }
+
+  html body.admin-borrow-equipment-page .audit-details-modal .modal-header,
+  html body.admin-borrow-equipment-page .audit-details-modal .modal-body {
+    padding: .75rem !important;
+  }
+
+  html body.admin-borrow-equipment-page .audit-details-modal .record-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html body.admin-borrow-equipment-page .audit-details-grid > .glass-card:last-child {
+    grid-column: auto;
+  }
+
+  html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] > table {
+    min-width: 700px;
+  }
+
+  html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-view-btn {
+    width: 2.1rem;
+    padding: 0;
+    font-size: 0;
+  }
+
+  html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] .audit-view-btn i {
+    font-size: .8rem;
+  }
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) .status-badge {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  max-width: 100%;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) tbody td:nth-child(3),
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) tbody td:last-child {
+  white-space: nowrap;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) tbody td:last-child .action-btn {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  margin: .1rem .12rem .1rem 0;
+  padding: .34rem .52rem;
+  border-radius: .62rem;
+  font-size: .72rem;
+  vertical-align: middle;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) tbody td:last-child .action-btn[aria-label] {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
 }
 
 html body.admin-borrow-equipment-page .table-wrap tbody {
@@ -311,7 +561,7 @@ html body.admin-borrow-equipment-page .table-wrap .empty-state {
 }
 
 html body.admin-borrow-equipment-page .table-wrap tbody td {
-  padding: .58rem .62rem !important;
+  padding: .62rem .72rem !important;
   font-size: .78rem !important;
   line-height: 1.4 !important;
 }

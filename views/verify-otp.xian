@@ -7,11 +7,11 @@
     <div class="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-cyan-900/10 blur-[90px]"></div>
   </div>
 
-  <div class="relative flex min-h-screen items-center justify-center px-4 py-12">
+  <div class="relative flex min-h-[100dvh] items-center justify-center px-4 py-8 sm:py-12">
     <div class="w-full max-w-md">
 
       <!-- Card -->
-      <div class="rounded-[28px] border border-[rgba(34,197,94,0.18)] bg-[rgba(10,24,18,0.88)] p-8 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-[18px]">
+      <div class="rounded-[28px] border border-emerald-400/20 bg-[rgba(10,24,18,0.92)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-[18px] sm:p-8">
 
         <!-- Icon -->
         <div class="mb-6 flex justify-center">
@@ -24,9 +24,14 @@
 
         <!-- Title -->
         <div class="mb-2 text-center">
-          <h1 class="text-2xl font-bold tracking-tight text-white">Verify your email</h1>
+          <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400">
+            {{#if isPasswordReset}}Password reset{{else}}Email verification{{/if}}
+          </p>
+          <h1 class="text-2xl font-bold tracking-tight text-white">
+            {{#if isPasswordReset}}Enter your reset code{{else}}Verify your email{{/if}}
+          </h1>
           <p class="mt-2 text-sm text-slate-400">
-            We sent a 6-digit code to
+            {{#if isPasswordReset}}We sent a reset code to{{else}}We sent a 6-digit code to{{/if}}
             <span class="font-semibold text-emerald-300">{{maskedEmail}}</span>
           </p>
         </div>
@@ -40,36 +45,37 @@
         {{/if}}
 
         <!-- OTP Form -->
-        <form id="otpForm" method="POST" action="/verify-otp" class="mt-7" autocomplete="off">
+        <form id="otpForm" method="POST" action="/verify-otp" class="mt-7">
 
           <!-- 6 individual digit boxes -->
-          <div class="flex justify-center gap-3" role="group" aria-label="Enter the 6-digit verification code">
-            <input id="d1" name="d1" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
-              aria-label="Digit 1" autocomplete="one-time-code" />
+          <div class="flex justify-center gap-2 sm:gap-3" role="group" aria-label="Enter the 6-digit verification code">
+            <input id="d1" name="d1" type="text" inputmode="numeric" maxlength="6"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
+              aria-label="6-digit verification code" autocomplete="one-time-code" />
             <input id="d2" name="d2" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
               aria-label="Digit 2" />
             <input id="d3" name="d3" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
               aria-label="Digit 3" />
             <input id="d4" name="d4" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
               aria-label="Digit 4" />
             <input id="d5" name="d5" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
               aria-label="Digit 5" />
             <input id="d6" name="d6" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]"
-              class="otp-box h-14 w-11 rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30"
+              class="otp-box h-12 w-10 rounded-xl border border-white/10 bg-white/[0.06] text-center text-xl font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,0.3)] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 sm:h-14 sm:w-11 sm:rounded-[14px]"
               aria-label="Digit 6" />
           </div>
 
+
           <!-- Countdown timer -->
-          <p id="timerText" class="mt-4 text-center text-xs text-slate-500">Code expires in <span id="countdown" class="font-semibold text-slate-300">10:00</span></p>
+          <p id="timerText" class="mt-5 text-center text-xs text-slate-400">Code expires in <span id="countdown" class="font-semibold text-slate-200">10:00</span></p>
 
           <!-- Submit -->
           <button id="submitBtn" type="submit"
-            class="mt-6 w-full rounded-[16px] bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_12px_28px_rgba(34,197,94,0.25)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(34,197,94,0.35)] disabled:cursor-not-allowed disabled:opacity-50">
+            class="mt-6 flex w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_12px_28px_rgba(34,197,94,0.25)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(34,197,94,0.35)] disabled:cursor-not-allowed disabled:opacity-60">
             Verify &amp; Complete
           </button>
         </form>
@@ -87,6 +93,19 @@
   <script>
     // ── Auto-advance OTP boxes ────────────────────────────────────────────────
     const boxes = Array.from(document.querySelectorAll('.otp-box'));
+    const otpForm = document.getElementById('otpForm');
+
+    function fillOtp(rawCode, submitWhenComplete = false) {
+      const digits = String(rawCode || '').replace(/\D/g, '').slice(0, 6);
+      boxes.forEach((box, index) => { box.value = digits[index] || ''; });
+      if (digits.length === 6) {
+        boxes[5].focus();
+        if (submitWhenComplete) otpForm.requestSubmit();
+      } else {
+        boxes[digits.length]?.focus();
+      }
+      return digits.length;
+    }
 
     boxes.forEach((box, i) => {
       box.addEventListener('keydown', (e) => {
@@ -96,29 +115,35 @@
       });
 
       box.addEventListener('input', () => {
-        // Allow only digits
-        box.value = box.value.replace(/\D/g, '').slice(-1);
+        const entered = box.value.replace(/\D/g, '');
+        // Browsers may autofill the full code into the first segmented field.
+        if (i === 0 && entered.length > 1) {
+          fillOtp(entered, true);
+          return;
+        }
+        box.value = entered.slice(-1);
         if (box.value && i < boxes.length - 1) {
           boxes[i + 1].focus();
         }
         // Auto-submit when all filled
         if (boxes.every(b => b.value)) {
-          document.getElementById('otpForm').requestSubmit();
+          otpForm.requestSubmit();
         }
       });
 
       // Handle paste on any box
       box.addEventListener('paste', (e) => {
         e.preventDefault();
-        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
-        pasted.split('').forEach((ch, idx) => {
-          if (boxes[idx]) boxes[idx].value = ch;
-        });
-        const nextEmpty = boxes.findIndex(b => !b.value);
-        if (nextEmpty !== -1) boxes[nextEmpty].focus();
-        else boxes[boxes.length - 1].focus();
-        if (pasted.length === 6) document.getElementById('otpForm').requestSubmit();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+        fillOtp(pasted, true);
       });
+    });
+
+    otpForm.addEventListener('submit', () => {
+      const submitButton = document.getElementById('submitBtn');
+      submitButton.disabled = true;
+      submitButton.setAttribute('aria-busy', 'true');
+      submitButton.textContent = 'Verifying code…';
     });
 
     // Focus first box on load

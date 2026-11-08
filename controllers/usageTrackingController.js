@@ -126,7 +126,7 @@ async function endUsageSession(req, res) {
         
         const endTime = new Date();
         const startTime = new Date(usageLog.usageStartTime);
-        const durationMinutes = Math.round((endTime - startTime) / 60000);
+        const durationMinutes = Math.max(1, Math.round((endTime - startTime) / 60000));
         
         await usageLog.update({
             usageEndTime: endTime,

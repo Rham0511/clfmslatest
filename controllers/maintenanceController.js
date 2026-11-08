@@ -23,10 +23,11 @@
     SOFTWARE.
 */
 
-import { DataTypes, Op } from "sequelize";
+import { DataTypes, Op, QueryTypes } from "sequelize";
 import { MaintenanceRequest, sequelize } from "../models/maintenanceRequestModel.js";
 import { User } from "../models/userModel.js";
 import { Equipment } from "../models/equipmentModel.js";
+import { recalculateSetStatus } from "./equipmentController.js";
 import { logAuditEntry } from "./auditController.js";
 import { getUserCampusFromSession, canManageRecord } from "./campusAuthController.js";
 import EquipmentAuditTrail from "../models/equipmentAuditTrailModel.js";
@@ -40,9 +41,11 @@ const normalizeStatus = (status) => {
   if (["pending", "new"].includes(value)) return "Pending";
   if (["under repair", "in progress", "in-progress", "repair", "working"].includes(value)) return "In Progress";
   if (["fixed", "resolved", "done", "complete"].includes(value)) return "Resolved";
-  if (["rejected", "declined", "cancelled", "canceled"].includes(value)) return "Rejected";
+  if (["cancelled", "canceled"].includes(value)) return "Cancelled";
+  if (["rejected", "declined"].includes(value)) return "Rejected";
   return normalized;
 };
+const CANCELLED_MAINTENANCE_STATUSES = ["Cancelled", "Canceled", "cancelled", "canceled"];
 
 const ensureMaintenanceRequestColumns = async () => {
   try {
@@ -66,6 +69,19 @@ const ensureMaintenanceRequestColumns = async () => {
       } catch (indexError) {
         if (!/duplicate|exists/i.test(String(indexError.message || ""))) {
           console.warn("Serial number index could not be created:", indexError.message);
+        }
+      }
+    }
+    if (!tableDefinition.computerLabId) {
+      await queryInterface.addColumn("maintenance_requests", "computerLabId", {
+        type: DataTypes.INTEGER,
+        allowNull: true
+      });
+      try {
+        await sequelize.query("CREATE INDEX idx_maintenance_requests_computerLabId ON maintenance_requests (computerLabId)");
+      } catch (indexError) {
+        if (!/duplicate|exists/i.test(String(indexError.message || ""))) {
+          console.warn("Computer lab index could not be created:", indexError.message);
         }
       }
     }
@@ -110,6 +126,34 @@ const getCampusVariants = (campus) => {
   const normalizedCampus = String(campus || "").trim();
   const campusName = normalizedCampus.replace(/\s*Campus\s*$/i, "").trim();
   return [...new Set([normalizedCampus, campusName, `${campusName} Campus`].filter(Boolean))];
+};
+
+const getEquipmentLaboratoryContexts = async (equipmentRecordIds = []) => {
+  const ids = [...new Set(equipmentRecordIds.map(Number).filter((id) => Number.isInteger(id) && id > 0))];
+  if (!ids.length) return new Map();
+
+  const rows = await sequelize.query(`
+    SELECT
+      equipment.id AS equipmentRecordId,
+      equipment.setId,
+      COALESCE(setLab.id, equipmentLab.id) AS computerLabId,
+      COALESCE(setLab.name, equipmentLab.name) AS laboratoryName,
+      CASE
+        WHEN setLab.id IS NOT NULL THEN CONCAT(setLab.name, IF(setLab.roomNumber IS NULL OR TRIM(setLab.roomNumber) = '', '', CONCAT(' — ', setLab.roomNumber)))
+        WHEN equipmentLab.id IS NOT NULL THEN CONCAT(equipmentLab.name, IF(equipmentLab.roomNumber IS NULL OR TRIM(equipmentLab.roomNumber) = '', '', CONCAT(' — ', equipmentLab.roomNumber)))
+        ELSE equipment.laboratoryRoom
+      END AS laboratoryRoom,
+      COALESCE(setLab.campus, equipmentLab.campus) AS registeredCampus,
+      equipment.location AS equipmentLocation,
+      CASE WHEN setLab.id IS NOT NULL THEN 'pc_set' WHEN equipmentLab.id IS NOT NULL THEN 'equipment' ELSE 'legacy' END AS locationSource
+    FROM equipment
+    LEFT JOIN equipment_sets station ON BINARY station.setId = BINARY equipment.setId
+    LEFT JOIN computer_labs setLab ON setLab.id = station.computerLabId
+    LEFT JOIN computer_labs equipmentLab ON equipmentLab.id = equipment.computerLabId
+    WHERE equipment.id IN (:ids)
+  `, { replacements: { ids }, type: QueryTypes.SELECT });
+
+  return new Map(rows.map((row) => [Number(row.equipmentRecordId), row]));
 };
 
 const getStudentReportAccessForEquipment = async (student, equipmentId) => {
@@ -194,14 +238,16 @@ const getStudentMaintenanceContext = async (req, equipmentId = null) => {
           equipmentId: { [Op.notIn]: archivedEquipmentIds },
           campus: { [Op.in]: getCampusVariants(studentCampus) }
         },
-        attributes: ["equipmentId", "name", "laboratoryRoom"],
+        attributes: ["id", "equipmentId", "name", "laboratoryRoom"],
         order: [["name", "ASC"], ["equipmentId", "ASC"]]
       })
     : [];
+  const laboratoryContexts = await getEquipmentLaboratoryContexts(equipmentRows.map((item) => item.id));
   const equipment = equipmentRows.map((item) => ({
     equipmentId: item.equipmentId,
     name: item.name,
-    laboratoryRoom: item.laboratoryRoom || null
+    laboratoryRoom: laboratoryContexts.get(Number(item.id))?.laboratoryRoom || item.laboratoryRoom || null,
+    computerLabId: laboratoryContexts.get(Number(item.id))?.computerLabId || null
   }));
 
   const studentIdentifier = student?.student_number || String(req.session.userId);
@@ -341,24 +387,27 @@ export const createMaintenanceRequest = async (req, res) => {
       }
     }
 
+    const equipmentLaboratory = (await getEquipmentLaboratoryContexts([equipment.id])).get(Number(equipment.id));
+
     const reportCategory = ["Equipment Damage", "Equipment Missing", "Connectivity", "Other"].includes(category)
       ? category
       : "Equipment Damage";
     const reportPriority = ["Low", "Medium", "High", "Critical"].includes(priority) ? priority : "Medium";
     const equipmentCampus = equipment?.campus || "Main";
     const maintenance = await MaintenanceRequest.create({
-      student_id: req.session?.userId || null,
+      student_id: student.id,
       student_name: student.name || null,
       equipment_id: resolvedEquipmentId,
       serialNumber: equipment.serialNumber || null,
       laboratory_id: null,
       subject_id: null,
       instructor_id: null,
-      laboratory_room: equipment?.laboratoryRoom || null,
+      laboratory_room: equipmentLaboratory?.laboratoryRoom || equipment?.laboratoryRoom || null,
+      computerLabId: equipmentLaboratory?.computerLabId || equipment?.computerLabId || null,
       subject: null,
       instructor: null,
       equipmentId: resolvedEquipmentId,
-      reportedBy: req.session?.userId || null,
+      reportedBy: student.id,
       campus: equipmentCampus,
       issueTitle: `${reportCategory}: ${resolvedEquipmentId}`,
       description: resolvedDescription,
@@ -416,7 +465,7 @@ export const createMaintenanceRequest = async (req, res) => {
         maintenanceId: maintenance.id,
         equipmentId: resolvedEquipmentId,
         issueTitle: maintenance.issueTitle,
-        reportedBy: req.session?.userId || null
+        reportedBy: student.id
       }
     });
 
@@ -487,15 +536,19 @@ export const getMaintenanceHistoryForEquipment = async (req, res) => {
   }
 };
 
-const buildMaintenanceWhereClause = (req, extra = {}) => {
-  const role = String(req.session?.userRole || "").toLowerCase();
+const buildMaintenanceWhereClause = (req, extra = {}, resolvedCampus = undefined) => {
+  const role = String(req.session?.userRole || "").trim().toLowerCase();
   const userId = req.session?.userId;
-  const userCampus = req.session?.userCampus;
+  const userCampus = resolvedCampus === undefined ? req.session?.userCampus : resolvedCampus;
   const whereClause = { ...extra };
+  const andConditions = Array.isArray(whereClause[Op.and]) ? [...whereClause[Op.and]] : [];
+  const isReporter = ["student", "faculty", "instructor"].includes(role);
 
-  // Normalize the user campus before filtering so campus aliases like
-  // "Bongabong" and "Bongabong Campus" match the stored report campus values.
-  if (userCampus) {
+  // Student and faculty reports are scoped by reporter ID below. Don't let a
+  // stale/missing campus value hide their own submissions from My Reports.
+  // Staff views remain campus-scoped, with equipment campus as a fallback for
+  // older requests that were saved before the request campus was populated.
+  if (userCampus && !isReporter) {
     const aliases = new Set();
     const values = [String(userCampus).trim()];
     values.forEach((value) => {
@@ -509,21 +562,25 @@ const buildMaintenanceWhereClause = (req, extra = {}) => {
 
     const campusValues = Array.from(aliases).filter(Boolean);
     if (campusValues.length) {
-      whereClause.campus = { [Op.in]: campusValues };
+      andConditions.push({
+        [Op.or]: [
+          { campus: { [Op.in]: campusValues } },
+          { "$equipment.campus$": { [Op.in]: campusValues } }
+        ]
+      });
     }
   }
 
-  if (role === "technician") {
-    return whereClause;
+  if (isReporter && userId) {
+    andConditions.push({
+      [Op.or]: [
+        { student_id: userId },
+        { reportedBy: userId }
+      ]
+    });
   }
 
-  if (role === "student" || role === "faculty" || role === "instructor") {
-    whereClause[Op.or] = [
-      { student_id: userId },
-      { reportedBy: userId }
-    ];
-  }
-
+  if (andConditions.length) whereClause[Op.and] = andConditions;
   return whereClause;
 };
 
@@ -531,15 +588,45 @@ export const getAllMaintenanceRequests = async (req, res) => {
   if (!req.session?.userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
 
-  const { status, priority, equipmentId, unassigned } = req.query;
+  const { status, priority, equipmentId, unassigned, mine } = req.query;
 
   try {
     await ensureMaintenanceTables();
     await ensureMaintenanceRequestColumns();
 
-    const whereClause = buildMaintenanceWhereClause(req);
+    const userCampus = mine === "true" ? null : await getUserCampusFromSession(req);
+    let whereClause;
+    if (mine === "true") {
+      const reportAuditEntries = await EquipmentAuditTrail.findAll({
+        where: {
+          performedBy: req.session.userId,
+          actionType: "equipment_issue_reported"
+        },
+        attributes: ["afterState"],
+        raw: true
+      });
+      const auditedReportIds = reportAuditEntries.flatMap(({ afterState }) => {
+        const state = typeof afterState === "string" ? JSON.parse(afterState) : afterState;
+        const reportId = Number(state?.maintenanceRequestId);
+        return Number.isInteger(reportId) && reportId > 0 ? [reportId] : [];
+      });
+
+      whereClause = {
+        [Op.or]: [
+          { student_id: req.session.userId },
+          { reportedBy: req.session.userId },
+          ...(auditedReportIds.length ? [{ id: { [Op.in]: auditedReportIds } }] : [])
+        ]
+      };
+    } else {
+      whereClause = buildMaintenanceWhereClause(req, {}, userCampus);
+    }
     whereClause.id = { [Op.notIn]: await getArchivedEntityIds("maintenance-report") };
+    if (String(req.session.userRole || "").trim().toLowerCase() === "technician") {
+      whereClause.status = { [Op.notIn]: CANCELLED_MAINTENANCE_STATUSES };
+    }
 
     if (priority) whereClause.priority = priority;
     if (equipmentId) whereClause.equipmentId = equipmentId;
@@ -562,7 +649,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
         {
           model: Equipment,
           as: "equipment",
-          attributes: ["equipmentId", "name", "campus", "laboratoryRoom", "location", "status"]
+          attributes: ["id", "equipmentId", "name", "campus", "laboratoryRoom", "location", "status", "serialNumber", "setId", "computerLabId"]
         }
       ]
     });
@@ -605,6 +692,10 @@ export const getAllMaintenanceRequests = async (req, res) => {
       return [Number(data.id), data];
     }));
 
+    const equipmentLaboratories = await getEquipmentLaboratoryContexts(
+      filtered.map((record) => record.equipment?.id).filter(Boolean)
+    );
+
     const pendingCount = filtered.filter(r => normalizeStatus(r.status) === 'Pending').length;
     console.log('[maintenance] pending count', pendingCount);
 
@@ -619,6 +710,8 @@ export const getAllMaintenanceRequests = async (req, res) => {
       const timestamp = data.created_at || data.createdAt || data.dateReported;
       const equipmentStatus = data.equipment?.status || data.equipmentStatus || "Serviceable";
       const recordCampus = data.campus || data.equipment?.campus || null;
+      const equipmentLaboratory = equipmentLaboratories.get(Number(data.equipment?.id));
+      const laboratoryRoom = equipmentLaboratory?.laboratoryRoom || data.laboratory_room || data.equipment?.laboratoryRoom || null;
 
       return {
         ...data,
@@ -637,8 +730,12 @@ export const getAllMaintenanceRequests = async (req, res) => {
         technicianEmail: data.technician?.email || null,
         equipmentName: data.equipment?.name || data.equipment_id || "Unknown Equipment",
         equipmentId: data.equipment_id || data.equipmentId || null,
-        laboratoryRoom: data.equipment?.laboratoryRoom || data.laboratory_room || null,
-        equipmentLocation: data.equipment?.location || null,
+        laboratoryRoom,
+        computerLabId: equipmentLaboratory?.computerLabId || data.computerLabId || data.equipment?.computerLabId || null,
+        laboratoryName: equipmentLaboratory?.laboratoryName || null,
+        equipmentSetId: equipmentLaboratory?.setId || data.equipment?.setId || null,
+        reportLocationSource: equipmentLaboratory?.locationSource || (data.computerLabId ? "report_snapshot" : "legacy"),
+        equipmentLocation: equipmentLaboratory?.equipmentLocation || data.equipment?.location || null,
         resolvedBy: data.resolvedBy || null,
         resolvedDate: data.dateResolved || null,
         dateReported: data.dateReported || data.created_at || data.createdAt || null,
@@ -786,6 +883,68 @@ export const updateMaintenanceStatus = async (req, res) => {
       );
     }
 
+    let equipmentStatusRestored = false;
+    let otherActiveEquipmentReports = 0;
+    if (normalizedStatus === "Resolved") {
+      const equipmentIdentifiers = [...new Set([
+        maintenance.equipmentId,
+        maintenance.equipment_id
+      ].map((value) => String(value || "").trim()).filter(Boolean))];
+      const equipment = equipmentIdentifiers.length
+        ? await Equipment.findOne({
+            where: {
+              equipmentId: { [Op.in]: equipmentIdentifiers },
+              campus: { [Op.in]: getCampusVariants(maintenance.campus) }
+            }
+          })
+        : null;
+
+      if (equipment) {
+        const activeReports = await MaintenanceRequest.findAll({
+          where: {
+            id: { [Op.ne]: maintenance.id, [Op.notIn]: await getArchivedEntityIds("maintenance-report") },
+            campus: { [Op.in]: getCampusVariants(maintenance.campus) },
+            [Op.or]: [
+              { equipmentId: equipment.equipmentId },
+              { equipment_id: equipment.equipmentId }
+            ]
+          },
+          attributes: ["id", "status"]
+        });
+        otherActiveEquipmentReports = activeReports.filter((request) =>
+          !["Resolved", "Rejected", "Cancelled"].includes(normalizeStatus(request.status))
+        ).length;
+
+        const currentEquipmentStatus = String(equipment.status || "").trim().toLowerCase();
+        const canRestoreServiceability = ["unserviceable", "unavailable", "for repair", "under maintenance"].includes(currentEquipmentStatus);
+        if (!otherActiveEquipmentReports && canRestoreServiceability) {
+          const previousEquipmentStatus = equipment.status;
+          await equipment.update({ status: "Serviceable" });
+          if (equipment.setId) await recalculateSetStatus(equipment.setId);
+          equipmentStatusRestored = true;
+
+          try {
+            await EquipmentAuditTrail.create({
+              equipmentId: equipment.id,
+              serialNumber: equipment.serialNumber || null,
+              actionType: "status_changed",
+              actionDescription: `Equipment ${equipment.equipmentId} was automatically marked Serviceable after maintenance report ${maintenance.id} was resolved and no other active reports remained.`,
+              performedBy: req.session.userId,
+              performedByName: req.session?.user?.name || req.session?.userName || null,
+              userRole: role,
+              ipAddress: req.ip || null,
+              userAgent: req.get("user-agent") || null,
+              beforeState: { status: previousEquipmentStatus },
+              afterState: { status: "Serviceable", maintenanceRequestId: Number(maintenance.id) },
+              actionTimestamp: new Date()
+            });
+          } catch (auditError) {
+            console.warn("Resolved equipment status changed, but its equipment audit event could not be recorded:", auditError.message);
+          }
+        }
+      }
+    }
+
     const refreshedMaintenance = await MaintenanceRequest.findByPk(id);
     await logAuditEntry(req, {
       action: "Maintenance Status Updated",
@@ -795,14 +954,18 @@ export const updateMaintenanceStatus = async (req, res) => {
       details: {
         status: normalizedStatus,
         resolvedBy: updateData.resolvedBy || null,
-        campus: maintenance.campus
+        campus: maintenance.campus,
+        equipmentStatusRestored,
+        otherActiveEquipmentReports
       }
     });
 
     return res.json({
       success: true,
       message: "Maintenance request status updated successfully.",
-      data: refreshedMaintenance
+      data: refreshedMaintenance,
+      equipmentStatusRestored,
+      otherActiveEquipmentReports
     });
   } catch (error) {
     console.error("Failed to update maintenance status:", error);
@@ -858,12 +1021,21 @@ export const getMaintenanceSummary = async (req, res) => {
   if (!req.session?.userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
 
   try {
-    const whereClause = buildMaintenanceWhereClause(req);
+    const userCampus = await getUserCampusFromSession(req);
+    const whereClause = buildMaintenanceWhereClause(req, {}, userCampus);
     whereClause.id = { [Op.notIn]: await getArchivedEntityIds("maintenance-report") };
+    if (String(req.session.userRole || "").trim().toLowerCase() === "technician") {
+      whereClause.status = { [Op.notIn]: CANCELLED_MAINTENANCE_STATUSES };
+    }
 
-    const allRequests = await MaintenanceRequest.findAll({ where: whereClause, attributes: ["id", "status"] });
+    const allRequests = await MaintenanceRequest.findAll({
+      where: whereClause,
+      attributes: ["id", "status"],
+      include: [{ model: Equipment, as: "equipment", attributes: ["campus"], required: false }]
+    });
     console.log('[maintenance] dashboard query result count', Array.isArray(allRequests) ? allRequests.length : 0);
 
     // Deduplicate by id then compute status counts
@@ -930,5 +1102,104 @@ export const getTechnicianActivities = async (req, res) => {
 };
 
 export const deleteMaintenanceRequest = async (req, res) => {
-  return res.status(410).json({ error: "Permanent deletion is disabled. Use Archive instead." });
+  if (!req.session?.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    await ensureMaintenanceTables();
+    const user = await User.findByPk(req.session.userId, { attributes: ["id", "role"] });
+    if (String(user?.role || "").trim().toLowerCase() !== "student") {
+      return res.status(403).json({ error: "Only students can delete their own pending issue reports." });
+    }
+
+    const archivedIds = await getArchivedEntityIds("maintenance-report");
+    if (archivedIds.includes(String(req.params.id))) {
+      return res.status(404).json({ error: "Maintenance request not found." });
+    }
+
+    const maintenance = await MaintenanceRequest.findByPk(req.params.id);
+    if (!maintenance) return res.status(404).json({ error: "Maintenance request not found." });
+
+    const ownsReport = Number(maintenance.reportedBy) === Number(user.id) ||
+      Number(maintenance.student_id) === Number(user.id);
+    if (!ownsReport) return res.status(403).json({ error: "You can delete only your own issue reports." });
+    if (normalizeStatus(maintenance.status) !== "Pending" || maintenance.assignedTo) {
+      return res.status(409).json({ error: "Only unassigned pending reports can be deleted. Cancel or archive the report when its status allows." });
+    }
+
+    const reportId = String(maintenance.id);
+    const equipmentId = maintenance.equipmentId || maintenance.equipment_id || "unknown equipment";
+    const deletedCount = await MaintenanceRequest.destroy({
+      where: {
+        id: maintenance.id,
+        assignedTo: null,
+        status: { [Op.in]: ["Pending", "New", "pending", "new"] }
+      }
+    });
+    if (!deletedCount) {
+      return res.status(409).json({ error: "This report is no longer an unassigned pending report and cannot be deleted." });
+    }
+    await logAuditEntry(req, {
+      action: "Maintenance Request Deleted",
+      module: "Maintenance Monitoring",
+      resourceId: reportId,
+      description: `Student deleted pending issue report ${reportId} for equipment ${equipmentId}.`
+    });
+
+    return res.json({ success: true, message: "Pending issue report deleted." });
+  } catch (error) {
+    console.error("Failed to delete student maintenance request:", error);
+    return res.status(500).json({ error: "Failed to delete issue report." });
+  }
+};
+
+export const cancelStudentMaintenanceRequest = async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    await ensureMaintenanceTables();
+    const user = await User.findByPk(req.session.userId, { attributes: ["id", "role"] });
+    if (String(user?.role || "").trim().toLowerCase() !== "student") {
+      return res.status(403).json({ error: "Only students can cancel their own issue reports." });
+    }
+
+    const archivedIds = await getArchivedEntityIds("maintenance-report");
+    if (archivedIds.includes(String(req.params.id))) {
+      return res.status(404).json({ error: "Maintenance request not found." });
+    }
+
+    const maintenance = await MaintenanceRequest.findByPk(req.params.id);
+    if (!maintenance) return res.status(404).json({ error: "Maintenance request not found." });
+
+    const ownsReport = Number(maintenance.reportedBy) === Number(user.id) ||
+      Number(maintenance.student_id) === Number(user.id);
+    if (!ownsReport) return res.status(403).json({ error: "You can cancel only your own issue reports." });
+    if (normalizeStatus(maintenance.status) !== "Pending" || maintenance.assignedTo) {
+      return res.status(409).json({ error: "Only unassigned pending reports can be cancelled." });
+    }
+
+    const [updatedCount] = await MaintenanceRequest.update(
+      { status: "Cancelled" },
+      {
+        where: {
+          id: maintenance.id,
+          assignedTo: null,
+          status: { [Op.in]: ["Pending", "New", "pending", "new"] }
+        }
+      }
+    );
+    if (!updatedCount) {
+      return res.status(409).json({ error: "This report is no longer an unassigned pending report and cannot be cancelled." });
+    }
+    await logAuditEntry(req, {
+      action: "Maintenance Request Cancelled",
+      module: "Maintenance Monitoring",
+      resourceId: maintenance.id,
+      description: `Student cancelled pending issue report ${maintenance.id} for equipment ${maintenance.equipmentId || maintenance.equipment_id || "unknown equipment"}.`
+    });
+
+    return res.json({ success: true, message: "Issue report cancelled." });
+  } catch (error) {
+    console.error("Failed to cancel student maintenance request:", error);
+    return res.status(500).json({ error: "Failed to cancel issue report." });
+  }
 };
