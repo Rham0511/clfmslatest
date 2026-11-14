@@ -750,7 +750,9 @@ export const getStudentEquipment = async (req, res) => {
           where: {
             equipmentRecordId: { [Op.in]: records.map((item) => item.id) }
           },
-          order: [["assignedAt", "ASC"], ["id", "ASC"]]
+          // Keep the full history for faculty views, while making the newest
+          // active assignment deterministic if legacy data contains duplicates.
+          order: [["assignedAt", "DESC"], ["id", "DESC"]]
         })
       : [];
     const activeByEquipment = new Map();
@@ -760,7 +762,7 @@ export const getStudentEquipment = async (req, res) => {
       const history = assignmentsByEquipment.get(key) || [];
       history.push(assignment);
       assignmentsByEquipment.set(key, history);
-      if (!assignment.unassignedAt) {
+      if (!assignment.unassignedAt && !activeByEquipment.has(key)) {
         activeByEquipment.set(key, assignment);
       }
     });
@@ -810,6 +812,11 @@ export const getStudentEquipment = async (req, res) => {
         activeBorrowStatus: activeBorrowStatusByEquipment.get(Number(record.id)) || null,
         accountableFacultyUserId: assignment ? Number(assignment.facultyUserId) : null,
         accountableFacultyName: assignment ? facultyById.get(Number(assignment.facultyUserId)) || null : null,
+        isAssignedToCurrentFaculty: Boolean(
+          assignment &&
+          canViewAccountabilityTrail &&
+          Number(assignment.facultyUserId) === Number(authContext.userId)
+        ),
         lastBorrower: canViewAccountabilityTrail
           ? lastBorrowerByEquipment.get(Number(record.id)) || null
           : null,
@@ -854,7 +861,7 @@ export const getEquipmentCampusTotals = async (req, res) => {
 
     const where = {
       equipmentId: { [Op.notIn]: await getArchivedEntityIds("equipment") },
-      ...(isTechnicianRole(normalizedRole)
+      ...(userCampus
         ? {
           campus: {
             [Op.in]: [campusName, `${campusName} Campus`]
@@ -883,8 +890,14 @@ export const getEquipmentCampusTotals = async (req, res) => {
     const allCampuses = { total: 0, assigned: 0, unassigned: 0, Serviceable: 0, Unserviceable: 0, Lost: 0, Missing: 0 };
 
     for (const row of rows) {
-      const campusName = String(row.campus || "").trim();
-      if (!campusName) continue;
+      const rawCampus = String(row.campus || "").trim();
+      const campusBase = rawCampus.replace(/\s*Campus\s*$/i, "").trim();
+      if (!campusBase) continue;
+      const campusName = `${({
+        calapan: "Calapan",
+        victoria: "Victoria",
+        bongabong: "Bongabong"
+      }[campusBase.toLowerCase()] || campusBase)} Campus`;
 
       const summary = {
         total: Number(row.total || 0),
@@ -896,7 +909,18 @@ export const getEquipmentCampusTotals = async (req, res) => {
         Missing: Number(row.missing || 0)
       };
 
-      campusCounts[campusName] = summary;
+      const existing = campusCounts[campusName];
+      if (existing) {
+        existing.total += summary.total;
+        existing.assigned += summary.assigned;
+        existing.unassigned += summary.unassigned;
+        existing.Serviceable += summary.Serviceable;
+        existing.Unserviceable += summary.Unserviceable;
+        existing.Lost += summary.Lost;
+        existing.Missing += summary.Missing;
+      } else {
+        campusCounts[campusName] = summary;
+      }
       allCampuses.total += summary.total;
       allCampuses.assigned += summary.assigned;
       allCampuses.unassigned += summary.unassigned;
@@ -1008,6 +1032,9 @@ export const createEquipment = async (req, res) => {
 
     // --- PC SET VALIDATION ---
     if (setId && String(setId).trim()) {
+      if (nextStatus !== "Serviceable") {
+        return res.status(409).json({ error: "Only Serviceable equipment can be assigned to a PC Set." });
+      }
       const trimmedSetId = String(setId).trim();
       const [setRows] = await sequelize.query(
         'SELECT id, location, computerLabId, createdBy FROM equipment_sets WHERE setId = ? LIMIT 1',
@@ -1175,6 +1202,18 @@ export const updateEquipment = async (req, res) => {
       );
       if (!setRows) {
         return res.status(404).json({ error: `Target PC Set '${nextSetId}' does not exist.` });
+      }
+      if (nextSetId !== equipment.setId && (requestedStatus || equipment.status || "Serviceable") !== "Serviceable") {
+        return res.status(409).json({ error: "Only Serviceable equipment can be assigned to a PC Set." });
+      }
+      if (nextSetId !== equipment.setId) {
+        const existingSetComponent = await Equipment.findOne({
+          where: { setId: nextSetId },
+          attributes: ["campus"]
+        });
+        if (existingSetComponent && !canManageRecord(equipment.campus, existingSetComponent.campus)) {
+          return res.status(409).json({ error: "A PC Set cannot contain equipment from different campuses." });
+        }
       }
       const duplicateType = await Equipment.findOne({
         where: {
@@ -1374,20 +1413,17 @@ export async function recalculateSetStatus(setId) {
 
     const statuses = components.map(c => String(c.status || "").toLowerCase());
     const categories = components.map(c => String(c.category || "").toLowerCase());
+    const hasSystemUnit = categories.some(c => c === "cpu" || c === "computer" || c === "system unit");
+    const hasMonitor = categories.some(c => c === "monitor");
 
     let newStatus = "active";
 
-    if (statuses.some(s => s === "missing")) {
+    if (statuses.some(s => ["missing", "unserviceable", "lost", "for disposal"].includes(s)) || !hasSystemUnit || !hasMonitor) {
       newStatus = "incomplete";
-    } else if (statuses.some(s => s === "under maintenance")) {
+    } else if (statuses.some(s => ["under maintenance", "for repair"].includes(s))) {
       newStatus = "maintenance";
-    } else if (statuses.some(s => s === "unserviceable")) {
-      newStatus = "incomplete";
-    } else {
-      // All serviceable — check essentials
-      const hasSystemUnit = categories.some(c => c === "cpu" || c === "computer" || c === "system unit");
-      const hasMonitor = categories.some(c => c === "monitor");
-      if (!hasSystemUnit || !hasMonitor) newStatus = "incomplete";
+    } else if (statuses.some(s => s === "in use")) {
+      newStatus = "in_use";
     }
 
     await sequelize.query(

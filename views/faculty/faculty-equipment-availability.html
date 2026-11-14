@@ -231,6 +231,7 @@
               : 'border-rose-400/30 bg-rose-400/10 text-rose-200';
           badge.className = `status-badge inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${badgeStyle}`;
           badge.textContent = state;
+          if (item.availabilityReason) badge.title = item.availabilityReason;
           stateCell.appendChild(badge);
           row.appendChild(stateCell);
 

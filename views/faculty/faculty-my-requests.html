@@ -1778,7 +1778,7 @@
                                             <div class="mt-1 text-xs text-slate-400">${escapeBorrowRequestText(programDetails || 'Program details unavailable')}</div>
                                         </td>
                                         <td class="equipment-cell" data-label="Equipment"><div class="equipment-name">${escapeBorrowRequestText(record.equipmentName || '—')}</div><div class="equipment-id">${escapeBorrowRequestText(record.equipmentId || '—')}</div></td>
-                                        <td data-label="Take over from">${escapeBorrowRequestText(record.takenOverFrom || (String(record.status || '').toLowerCase() === 'pending' ? record.currentBorrowerName : '') || '')}</td>
+                                        <td data-label="Take over from">${escapeBorrowRequestText(record.takenOverFrom || (record.isStudentQrHandoff && String(record.status || '').toLowerCase() === 'pending' ? record.currentBorrowerName : '') || '')}</td>
                                         <td data-label="Requested date &amp; time">${escapeBorrowRequestText(record.borrowDate || '—')} ${escapeBorrowRequestText(record.borrowStartTime || '')}</td>
                                         <td data-label="Reason">${escapeBorrowRequestText(record.purpose || '—')}</td>
                                         <td data-label="Status"><span class="status-badge ${getStatusClass(record.status)}">${escapeBorrowRequestText(record.status || 'Pending')}</span></td>

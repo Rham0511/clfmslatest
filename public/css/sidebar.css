@@ -1177,6 +1177,21 @@ body.student-portal .student-page-user-initials {
     font-weight: 800;
 }
 
+body.student-portal .student-page-user-initials.has-profile-photo,
+body.student-portal .system-profile-badge-avatar.has-profile-photo {
+    overflow: hidden;
+    padding: 0;
+    background: #e5f3e9;
+}
+
+body.student-portal .profile-avatar-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
 body.student-portal .student-page-user-role {
     color: #86c9a5;
     font-size: 0.58rem;
@@ -3450,6 +3465,130 @@ body.student-portal header:has(> .student-page-header) {
     padding: 0 !important;
     background: transparent !important;
     border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Admin light mode: keep the workspace genuinely white and free of dark/green surfaces. */
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal) {
+    --bg: #ffffff;
+    --bg-secondary: #ffffff;
+    --card-bg: #ffffff;
+    --card-bg-solid: #ffffff;
+    --card-hover: #f8fafc;
+    --borders: #e5e7eb;
+    --text: #111827;
+    --text-secondary: #64748b;
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)::before,
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)::after {
+    display: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(.main-container, .main-content, .page-content, main, .page-shell, .audit-page-content) {
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(
+        .card,
+        .glass-card,
+        .glass,
+        .panel,
+        .panel-card,
+        .section-shell,
+        .table-card,
+        .table-shell,
+        .table-wrapper,
+        .table-wrap,
+        .table-container,
+        .table-responsive,
+        .summary-card,
+        .chart-card,
+        .info-card,
+        .equipment-card,
+        .equipment-summary-card,
+        .availability-laboratory-section,
+        .assignment-table-card,
+        .top-controls-section,
+        .system-dashboard-heading,
+        .page-heading,
+        .page-header-card,
+        .top-header,
+        .modal-content,
+        .details-modal,
+        .dialog
+    ) {
+    border-color: #e5e7eb !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(table, table tbody, table tbody tr, table tbody tr:nth-child(even), table tbody tr:hover) {
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    border-color: #d1d5db !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(h1, h2, h3, h4, h5, h6, p, label, th, td, .page-title, .card-title, .table-title) {
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(.text-white, .text-emerald-50, .text-emerald-100, .text-emerald-200, .text-emerald-300, .text-green-100, .text-green-200, .text-green-300) {
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(.theme-locked-table-header, table thead th, .assignment-table thead th) {
+    border-color: #e5e7eb !important;
+    background: #f8fafc !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(.system-profile-badge.profile-theme-static, .student-page-user, .campus-chip, .profile-theme-toggle) {
+    border-color: #d1d5db !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+    :is(.system-profile-badge-copy, .system-profile-badge-name, .system-profile-badge-role, .campus-chip strong) {
+    background: transparent !important;
+    color: #111827 !important;
+}
+
+html.theme-light body.app-shell.system-layout-page.admin-dashboard-page #mainContainer #maintenance-monitoring {
+    border-color: #e5e7eb !important;
+    background: #ffffff !important;
+    background-image: none !important;
     box-shadow: none !important;
 }
 

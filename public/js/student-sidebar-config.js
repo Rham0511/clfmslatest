@@ -27,8 +27,6 @@ window.studentSidebarConfig = isFaculty ? {
     { label: 'My PC Station', href: '/my-pc-station', icon: 'fas fa-desktop' },
     { label: 'Borrow Equipment', href: '/student/borrow-equipment', icon: 'fas fa-people-carry' },
     { label: 'Report Issue', href: '/student/report-issue', icon: 'fas fa-exclamation-triangle' },
-    { label: 'My Reports', href: '/student/my-requests', icon: 'fas fa-list-check' },
-    { label: 'My Profile', href: '/student-profile', icon: 'fas fa-user' },
     { label: 'Audit History', href: '/student-audit-history', icon: 'fas fa-clock-rotate-left' },
     { label: 'Logout', href: '/logout', icon: 'fas fa-right-from-bracket' }
   ]

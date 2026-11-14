@@ -68,6 +68,99 @@
             border-radius: 1.25rem;
             box-shadow: 0 12px 32px rgba(2,10,8,.25);
         }
+        .report-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 2px solid #648472;
+            border-radius: 1.55rem;
+            background: #edf7f0;
+        }
+        .report-tab {
+            min-height: 3.7rem;
+            border: 0;
+            background: transparent;
+            color: #111827;
+            font: inherit;
+            font-size: clamp(1rem, 4.8vw, 1.35rem);
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .report-tab + .report-tab { border-left: 1px solid #c8d9ce; }
+        .report-tab.is-active {
+            background: #ffffff;
+            color: #14251c;
+            box-shadow: inset 0 -4px #18884d;
+        }
+        .report-tab:focus-visible { outline: 3px solid #4ade80; outline-offset: -3px; }
+        .report-method-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; overflow: hidden; border: 1px solid #c8d9ce; border-radius: .85rem; background: #f7fbf8; }
+        .report-method-options .radio-card { display: flex; min-height: 3.2rem; align-items: center; justify-content: center; padding: .7rem .55rem; border: 0; border-radius: 0; background: transparent; color: #536c5c; text-align: center; }
+        .report-method-options .radio-card + .radio-card { border-left: 1px solid #c8d9ce; }
+        .report-method-options .radio-card.selected { background: #ffffff; box-shadow: inset 0 -3px #18884d; color: #173326; }
+        .report-method-options .radio-card input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .report-method-options .radio-card p { margin: 0; font-size: .86rem; font-weight: 800; }
+        .report-method-options .radio-card p:last-child { display: none; }
+        .my-reports-tab-panel iframe {
+            display: block;
+            width: 100%;
+            min-height: 42rem;
+            border: 0;
+        }
+        .my-reports-tab-panel[hidden] { display: none !important; }
+        .my-reports-panel {
+            padding: clamp(1.15rem, 4vw, 1.7rem);
+            border-color: #d5e5da;
+            background: #ffffff;
+            box-shadow: none;
+        }
+        .my-reports-heading {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+        .my-reports-heading-icon {
+            display: grid;
+            width: 2.5rem;
+            height: 2.5rem;
+            place-items: center;
+            border: 1px solid rgba(34,197,94,.2);
+            border-radius: .8rem;
+            background: rgba(34,197,94,.12);
+            color: #16834a;
+        }
+        .my-reports-heading h2 { margin: 0; color: #173326; font-size: clamp(1.35rem, 6vw, 1.8rem); font-weight: 800; }
+        .my-reports-controls { display: grid; grid-template-columns: minmax(0, 1fr) 9rem; gap: .65rem; margin-bottom: .8rem; }
+        .my-reports-control { display: flex; min-height: 3rem; align-items: center; gap: .55rem; padding: 0 .85rem; border: 1px solid #cde2d4; border-radius: .9rem; background: #f8fbf9; color: #16834a; }
+        .my-reports-control input, .my-reports-control select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #173326; font: inherit; }
+        .my-reports-list { display: grid; gap: .55rem; }
+        .my-report-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: .7rem; min-height: 4.8rem; padding: .85rem 1rem; border: 2px solid #d5e5da; border-radius: 1.35rem; background: #ffffff; }
+        .my-report-row strong { display: block; color: #173326; font-size: clamp(.92rem, 3.8vw, 1.05rem); font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+        .my-report-equipment-id { color: #71877a; font-weight: 500; }
+        .my-report-row small { display: block; margin-top: .2rem; overflow: hidden; color: #71877a; font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+        .my-report-actions { display: flex; min-width: 5.9rem; flex-direction: column; align-items: flex-end; justify-content: space-between; }
+        .my-report-status { display: inline-flex; align-items: center; gap: .35rem; color: #8a6200; font-size: clamp(.75rem, 3.5vw, .95rem); font-weight: 800; white-space: nowrap; }
+        .my-report-status::before { content: ''; width: .75rem; height: .75rem; flex: 0 0 .75rem; border-radius: 50%; background: #f5bd17; }
+        .my-report-status.cancelled { color: #536c5c; }
+        .my-report-status.cancelled::before { background: #cbd0d3; }
+        .my-report-status.resolved { color: #16834a; }
+        .my-report-status.resolved::before { background: #1ca45a; }
+        .my-report-arrow { color: #16834a; font-size: 1.65rem; font-weight: 800; line-height: .8; }
+        .my-report-row { cursor: pointer; transition: border-color .16s, box-shadow .16s; }
+        .my-report-row:hover, .my-report-row:focus-visible { border-color: #8bc9a5; box-shadow: 0 4px 14px rgba(22,131,74,.1); outline: none; }
+        .my-report-row.is-expanded { border-color: #8bc9a5; }
+        .my-report-row.is-expanded .my-report-arrow { transform: rotate(90deg); }
+        .my-report-details { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding-top: .75rem; border-top: 1px solid #dce8df; }
+        .my-report-detail { min-width: 0; padding: .55rem .65rem; border-radius: .7rem; background: #f5faf6; }
+        .my-report-detail.full { grid-column: 1 / -1; }
+        .my-report-detail-label { display: block; margin-bottom: .2rem; color: #71877a; font-size: .65rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+        .my-report-detail-value { color: #173326; font-size: .82rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .my-reports-empty { padding: 2rem 1rem; color: #71877a; text-align: center; }
+        @media (max-width: 520px) { .my-reports-controls { grid-template-columns: minmax(0, 1fr) 7rem; } .my-report-row { gap: .45rem; padding: .75rem; } .my-report-status { font-size: .7rem; } .my-report-details { grid-template-columns: minmax(0, 1fr); } .my-report-detail.full { grid-column: auto; } }
+        html.theme-light .report-tabs { border-color: #648472; background: #edf7f0; }
+        html.theme-light .report-tab { color: #111827; }
         .radio-card {
             border: 1.5px solid rgba(74,222,128,.16);
             background: rgba(6, 17, 24, 0.45);
@@ -293,7 +386,91 @@
     </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=10">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=39">
+    <style>
+        .report-tabs {
+            display: flex !important;
+            width: 100% !important;
+            gap: 0 !important;
+            margin: 0 0 1rem !important;
+            padding: 0 !important;
+            border: 3px solid #dce8df !important;
+            border-radius: 1.35rem !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+        }
+        .report-tabs .report-tab {
+            display: inline-flex !important;
+            min-height: 2.85rem !important;
+            flex: 1 1 0 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: .5rem !important;
+            border: 0 !important;
+            border-right: 2px solid #dce8df !important;
+            border-radius: 0 !important;
+            padding: .5rem .85rem !important;
+            background: #ffffff !important;
+            color: #17613b !important;
+            font-size: 1rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: background .16s ease, color .16s ease, box-shadow .16s ease !important;
+        }
+        .report-tabs .report-tab:last-child {
+            border-right-color: transparent !important;
+        }
+        .report-tabs .report-tab.is-active {
+            border: 3px solid #16834a !important;
+            border-right: 3px solid #16834a !important;
+            border-radius: 1.1rem !important;
+            background: #ffffff !important;
+            color: #17613b !important;
+            box-shadow: 0 1px 3px rgba(22, 131, 74, .08) !important;
+        }
+        .report-method-options {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: .75rem !important;
+            margin: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        .report-method-options .radio-card {
+            position: relative;
+            min-height: 3.4rem !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid rgba(17, 90, 55, 0.28) !important;
+            border-radius: 1rem !important;
+            background: #f4f9f5 !important;
+            color: #173326 !important;
+            text-align: center !important;
+            box-shadow: inset 0 0 0 1px rgba(17, 90, 55, 0.02) !important;
+        }
+        .report-method-options .radio-card + .radio-card { border-left: 1px solid rgba(17, 90, 55, 0.28) !important; }
+        .report-method-options .radio-card.selected {
+            background: #edf7f0 !important;
+            color: #0f6b3f !important;
+            box-shadow: inset 0 -4px 0 #18884d !important;
+        }
+        .report-method-options .radio-card.selected::after {
+            content: '✓';
+            position: absolute;
+            right: .9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #18884d;
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+        .report-method-options .radio-card > div { min-width: 0; }
+        .report-method-options .radio-card p:first-child { color: inherit !important; }
+        .report-method-options .radio-card p:last-child { color: rgba(23, 51, 38, 0.7) !important; }
+        @media (max-width: 640px) {
+            .report-method-options { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }    </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-report-equipment-page">
     <div id="shared-sidebar"></div>
@@ -321,6 +498,12 @@
         </header>
 
         <main class="px-3 pt-4 pb-8">
+            <nav class="report-tabs" aria-label="Report issue navigation">
+                <button type="button" class="report-tab is-active" data-report-tab="issue" aria-selected="true">Report Issue</button>
+                <button type="button" class="report-tab" data-report-tab="reports" aria-selected="false">My Reports</button>
+            </nav>
+
+            <div id="reportIssuePanel">
             <section class="glass-card p-6">
                 <!-- STEP 1: Choose Report Method -->
                 <div id="step1" class="mb-5">
@@ -329,14 +512,14 @@
                         <label class="radio-card flex items-start gap-3" id="methodCard1">
                             <input type="radio" name="reportMethod" value="by-equipment" onchange="onMethodChange()" style="margin-top:2px;accent-color:#22c55e;">
                             <div>
-                                <p class="text-sm font-semibold text-white">By Equipment ID</p>
+                                <p class="text-sm font-semibold text-white">Equipment ID</p>
                                 <p class="text-xs text-slate-400 mt-0.5">Enter equipment ID directly</p>
                             </div>
                         </label>
                         <label class="radio-card flex items-start gap-3" id="methodCard2">
                             <input type="radio" name="reportMethod" value="by-pc-station" onchange="onMethodChange()" style="margin-top:2px;accent-color:#22c55e;">
                             <div>
-                                <p class="text-sm font-semibold text-white">By PC Station</p>
+                                <p class="text-sm font-semibold text-white">PC Station</p>
                                 <p class="text-xs text-slate-400 mt-0.5">Select a PC station, then pick what to report</p>
                             </div>
                         </label>
@@ -431,11 +614,125 @@
                     <i class="fas fa-paper-plane"></i> Submit Report
                 </button>
             </section>
+            </div>
+
+            <section id="myReportsPanel" class="my-reports-tab-panel" hidden aria-label="My Reports">
+                <div class="glass-card my-reports-panel">
+                    <div class="my-reports-controls">
+                        <label class="my-reports-control"><i class="fas fa-search" aria-hidden="true"></i><input id="myReportsSearch" type="search" placeholder="Search reports" aria-label="Search reports"></label>
+                        <label class="my-reports-control"><i class="fas fa-filter" aria-hidden="true"></i><select id="myReportsStatus" aria-label="Filter reports"><option value="all">All</option><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Resolved">Resolved</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option></select></label>
+                    </div>
+                    <div id="myReportsList" class="my-reports-list" aria-live="polite"><div class="my-reports-empty">Loading reports…</div></div>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+
+        const reportTabs = document.querySelectorAll('[data-report-tab]');
+        const reportIssuePanel = document.getElementById('reportIssuePanel');
+        const myReportsPanel = document.getElementById('myReportsPanel');
+        reportTabs.forEach((tab) => tab.addEventListener('click', () => {
+            const showReports = tab.dataset.reportTab === 'reports';
+            reportTabs.forEach((item) => {
+                const active = item === tab;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-selected', String(active));
+            });
+            reportIssuePanel.hidden = showReports;
+            myReportsPanel.hidden = !showReports;
+            if (showReports) loadMyReports();
+        }));
+
+        const myReportsList = document.getElementById('myReportsList');
+        const myReportsSearch = document.getElementById('myReportsSearch');
+        const myReportsStatus = document.getElementById('myReportsStatus');
+        let myReports = [];
+        let myReportsLoaded = false;
+        const escapeReportText = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+        const formatReportDate = (value) => {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? String(value || '—') : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        };
+        const renderMyReports = () => {
+            const query = myReportsSearch.value.trim().toLowerCase();
+            const status = myReportsStatus.value;
+            const rows = myReports.filter((report) => {
+                const reportStatus = String(report.status || 'Pending');
+                const text = `${report.equipmentName || ''} ${report.equipmentId || report.equipment_id || ''} ${report.description || ''} ${report.issueTitle || ''}`.toLowerCase();
+                return (status === 'all' || reportStatus.toLowerCase() === status.toLowerCase()) && (!query || text.includes(query));
+            });
+            if (!rows.length) {
+                myReportsList.innerHTML = '<div class="my-reports-empty">No reports found.</div>';
+                return;
+            }
+            myReportsList.innerHTML = rows.map((report) => {
+                const reportStatus = String(report.status || 'Pending');
+                const statusClass = ['resolved', 'approved'].includes(reportStatus.toLowerCase()) ? ' resolved' : '';
+                const name = report.equipmentName || report.equipment_id || report.equipmentId || 'Equipment report';
+                const equipmentId = report.equipmentId || report.equipment_id || '';
+                const issue = report.description || report.issueTitle || 'Equipment issue';
+                const date = formatReportDate(report.dateReported || report.date || report.created_at || report.createdAt);
+                const statusName = reportStatus.toLowerCase().replace(/\s+/g, '-');
+                const detail = (label, value, full = false) => value ? `<div class="my-report-detail${full ? ' full' : ''}"><span class="my-report-detail-label">${label}</span><span class="my-report-detail-value">${escapeReportText(value)}</span></div>` : '';
+                const details = [
+                    detail('Equipment', `${name}${equipmentId ? ` · ${equipmentId}` : ''}`),
+                    detail('Status', reportStatus),
+                    detail('Issue type', report.category || report.issueTitle),
+                    detail('Submitted', date),
+                    detail('Location', [report.laboratoryName, report.laboratoryRoom, report.campus].filter(Boolean).join(' · ')),
+                    detail('Assigned to', report.assignedTo || report.assigneeName),
+                    detail('Description', report.description || report.summary, true),
+                    detail('Remarks', report.remarks || report.adminRemarks, true)
+                ].join('');
+                return `<article class="my-report-row" data-report-id="${escapeReportText(report.id || report.reportId || equipmentId)}" tabindex="0" aria-expanded="false"><div><strong>${escapeReportText(name)}</strong><small>${equipmentId ? `<span class="my-report-equipment-id">${escapeReportText(equipmentId)} · </span>` : ''}${escapeReportText(issue)} · ${escapeReportText(date)}</small></div><div class="my-report-actions"><span class="my-report-status ${statusName}${statusClass}">${escapeReportText(reportStatus)}</span><span class="my-report-arrow" aria-hidden="true">›</span></div><div class="my-report-details" hidden>${details}</div></article>`;
+            }).join('');
+        };
+        async function loadMyReports() {
+            if (myReportsLoaded) return;
+            myReportsLoaded = true;
+            try {
+                const response = await fetch('/api/maintenance?mine=true', { cache: 'no-store' });
+                const payload = await response.json();
+                if (!response.ok) throw new Error('Unable to load reports');
+                myReports = Array.isArray(payload) ? payload : [];
+                renderMyReports();
+            } catch (error) {
+                myReportsList.innerHTML = '<div class="my-reports-empty">Unable to load your reports right now.</div>';
+            }
+        }
+        myReportsSearch.addEventListener('input', renderMyReports);
+        myReportsStatus.addEventListener('change', renderMyReports);
+        myReportsList.addEventListener('click', (event) => {
+            const row = event.target.closest('.my-report-row');
+            if (!row) return;
+            const details = row.querySelector('.my-report-details');
+            const expanded = row.getAttribute('aria-expanded') === 'true';
+            row.setAttribute('aria-expanded', String(!expanded));
+            row.classList.toggle('is-expanded', !expanded);
+            if (details) details.hidden = expanded;
+        });
+        myReportsList.addEventListener('keydown', (event) => {
+            if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('.my-report-row')) {
+                event.preventDefault();
+                event.target.closest('.my-report-row').click();
+            }
+        });
+
+        // Keep the old standalone My Reports item out of this combined page,
+        // including when an older cached sidebar bundle is still present.
+        const removeStandaloneReportsNav = () => {
+            document.querySelectorAll('#shared-sidebar .nav-item').forEach((item) => {
+                const label = item.querySelector('.sidebar-nav-label')?.textContent.trim().toLowerCase();
+                const path = item.getAttribute('href')?.split(/[?#]/, 1)[0];
+                if (label === 'my reports' || path === '/student/my-requests' || path === '/student-my-requests') item.remove();
+            });
+        };
+        new MutationObserver(removeStandaloneReportsNav).observe(document.getElementById('shared-sidebar'), { childList: true, subtree: true });
+        removeStandaloneReportsNav();
+
         const user = window.__CURRENT_USER__ || {};
         const name = user.name || '';
         const userRole = String(user.role || 'student').trim().toLowerCase();
@@ -475,6 +772,9 @@
             }
             document.getElementById('submitBtn').disabled = true;
         }
+
+        document.querySelector('input[name="reportMethod"][value="by-equipment"]').checked = true;
+        onMethodChange();
 
         async function loadPCStations() {
             const select = document.getElementById('pcStationSelect');
@@ -839,7 +1139,7 @@
             }
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=75" defer></script>
+    <script src="/js/student-sidebar-config.js?v=32" defer></script>
+    <script src="/js/sidebar-component.js?v=79" defer></script>
 </body>
 </html>

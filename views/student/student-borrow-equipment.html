@@ -138,37 +138,43 @@
     .borrow-tab-switcher {
       display: flex;
       width: 100%;
-      gap: .5rem;
+      gap: 0;
       margin: 1rem 0;
-      padding: .35rem;
-      border: 1px solid rgba(74, 222, 128, .16);
-      border-radius: 1rem;
-      background: rgba(3, 18, 12, .72);
+      padding: 0;
+      border: 2px solid rgba(17, 90, 55, 0.55);
+      border-radius: 1.2rem;
+      overflow: hidden;
+      background: #e5efe8;
+      box-shadow: inset 0 0 0 1px rgba(17, 90, 55, 0.06);
     }
 
     .borrow-tab-button {
       display: inline-flex;
-      min-height: 2.8rem;
+      min-height: 3.2rem;
       flex: 1 1 0;
       align-items: center;
       justify-content: center;
       gap: .5rem;
-      border: 1px solid transparent;
-      border-radius: .75rem;
-      padding: .65rem 1rem;
-      background: transparent;
-      color: #b6d7c8;
-      font-size: .9rem;
-      font-weight: 750;
+      border: 0;
+      border-right: 1px solid rgba(17, 90, 55, 0.35);
+      border-radius: 0;
+      padding: .9rem 1rem;
+      background: #e5efe8;
+      color: #173326;
+      font-size: 1.05rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: background .16s ease, border-color .16s ease, color .16s ease;
+      transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+    }
+
+    .borrow-tab-button:last-child {
+      border-right: 0;
     }
 
     .borrow-tab-button[aria-selected="true"] {
-      border-color: rgba(4, 106, 56, .85);
-      background: #046A38;
-      color: #fff;
-      box-shadow: 0 6px 18px rgba(4, 106, 56, .22);
+      background: #f7faf8;
+      color: #173326;
+      box-shadow: inset 0 -4px 0 #16834a;
     }
 
     .borrow-tab-button:focus-visible {
@@ -392,6 +398,38 @@
       font-size: 0.875rem;
     }
 
+    .borrow-pull-refresh {
+      display: grid;
+      place-items: center;
+      height: 0;
+      overflow: hidden;
+      color: #176c3f;
+      font-size: 0.78rem;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(-0.25rem);
+      transition: height 160ms ease, opacity 160ms ease, transform 160ms ease;
+    }
+
+    .borrow-pull-refresh.is-visible {
+      height: 2.4rem;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .borrow-pull-refresh i {
+      margin-right: 0.4rem;
+      transition: transform 160ms ease;
+    }
+
+    .borrow-pull-refresh.is-ready i {
+      transform: rotate(180deg);
+    }
+
+    .borrow-request-filter-select {
+      cursor: pointer;
+    }
+
     @media (max-width: 640px) {
       .borrow-request-filters {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -595,9 +633,44 @@
       min-width: 0;
     }
 
+    .equipment-search-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(8rem, 10rem);
+      gap: 0.6rem;
+      align-items: end;
+    }
+
+    .equipment-search-controls select {
+      min-width: 0;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 0.75rem;
+      background: rgba(7, 21, 15, 0.55);
+      color: #bbf7d0;
+      font-size: 0.875rem;
+      font-weight: 700;
+      min-height: 3.1rem;
+    }
+
+    .equipment-search-controls select:focus-visible {
+      outline: 2px solid #6ee7b7;
+      outline-offset: 2px;
+    }
+
+    .equipment-selection-results {
+      min-height: 1.2rem;
+      margin: 0;
+      color: rgba(209, 250, 229, 0.72);
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+
     @media (max-width: 640px) {
       .borrow-equipment-quick-actions {
         grid-template-columns: minmax(0, 1fr);
+      }
+
+      .equipment-search-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 9rem);
       }
     }
 
@@ -1172,10 +1245,349 @@
         max-width: none;
       }
     }
+    /* Compact, information-dense borrow layout */
+    body.student-borrow-equipment-page .page-shell {
+      padding-top: .75rem;
+    }
+
+    body.student-borrow-equipment-page .panel-body {
+      padding: 1rem;
+    }
+
+    body.student-borrow-equipment-page .borrow-tab-switcher {
+      margin: .55rem 0 .75rem;
+    }
+
+    body.student-borrow-equipment-page .borrow-form-grid {
+      gap: .65rem;
+    }
+
+    body.student-borrow-equipment-page .section-title {
+      margin-bottom: 0;
+      padding: .48rem .65rem;
+      font-size: .78rem;
+    }
+
+    body.student-borrow-equipment-page #equipmentSelectionList {
+      max-height: min(52dvh, 34rem);
+      gap: .45rem;
+      padding: .5rem;
+    }
+
+    body.student-borrow-equipment-page .borrow-equipment-option {
+      grid-template-columns: 1.15rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: .55rem;
+      padding: .58rem .62rem;
+      border-radius: .72rem;
+    }
+
+    body.student-borrow-equipment-page .borrow-equipment-option-details .borrow-equipment-name {
+      font-size: .88rem;
+      line-height: 1.2;
+    }
+
+    body.student-borrow-equipment-page .borrow-equipment-option-details > span {
+      margin-top: .18rem;
+      font-size: .68rem;
+      line-height: 1.25;
+    }
+
+    body.student-borrow-equipment-page .borrow-equipment-option-status {
+      max-width: 7rem;
+      font-size: .68rem;
+      line-height: 1.2;
+    }
+
+    body.student-borrow-equipment-page #selectedEquipmentCount {
+      margin: 0;
+      font-size: .72rem;
+      line-height: 1.25;
+    }
+
+    body.student-borrow-equipment-page .borrow-requests-table th,
+    body.student-borrow-equipment-page .borrow-requests-table td {
+      padding: .45rem .42rem;
+    }
+
+    body.student-borrow-equipment-page .borrow-request-explanation {
+      margin-top: .12rem;
+      font-size: .68rem;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 640px) {
+      body.student-borrow-equipment-page .page-shell {
+        padding: .35rem .55rem 1rem;
+      }
+
+      body.student-borrow-equipment-page .panel-body {
+        padding: .68rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-tab-switcher {
+        gap: .25rem;
+        padding: .2rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-tab-button {
+        min-height: 2.25rem;
+        padding: .45rem .55rem;
+        font-size: .78rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-equipment-quick-actions {
+        gap: .55rem;
+      }
+
+      body.student-borrow-equipment-page #equipmentSelectionList {
+        max-height: 52dvh;
+        padding: .38rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-equipment-option {
+        grid-template-columns: 1.05rem minmax(0, 1fr) auto;
+        gap: .45rem;
+        padding: .5rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-equipment-option-status {
+        grid-column: auto;
+        justify-self: end;
+        max-width: 5.6rem;
+        text-align: right;
+      }
+
+      body.student-borrow-equipment-page .borrow-equipment-option input[type="checkbox"] {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+        min-height: 1rem;
+      }
+
+      body.student-borrow-equipment-page .borrow-form-field textarea {
+        min-height: 5.5rem;
+      }
+    }
   </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=10">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=39">
+    <style>
+      /* Borrow equipment: compact mobile-first selection flow. */
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-section-title {
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        font-size: 1.35rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-switcher {
+        margin: 1rem 0 !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        border: 3px solid #dce8df !important;
+        border-radius: 1.35rem !important;
+        overflow: hidden !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button {
+        min-height: 2.85rem !important;
+        flex: 1 1 0 !important;
+        border: 0 !important;
+        border-right: 2px solid #dce8df !important;
+        border-radius: 0 !important;
+        padding: .5rem .85rem !important;
+        background: #ffffff !important;
+        color: #17613b !important;
+        font-size: 1rem !important;
+        font-weight: 800 !important;
+        box-shadow: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button:last-child {
+        border-right-color: transparent !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button[aria-selected="true"] {
+        border-bottom: 0 !important;
+        border: 3px solid #16834a !important;
+        border-right: 3px solid #16834a !important;
+        border-radius: 1.1rem !important;
+        background: #ffffff !important;
+        color: #17613b !important;
+        box-shadow: 0 1px 3px rgba(22, 131, 74, .08) !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-quick-actions {
+        display: block !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: stretch !important;
+        gap: .55rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-input-wrap {
+        position: relative !important;
+        min-width: 0 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls input {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding-right: 3.25rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls select {
+        width: 8.5rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-qr-scan-button {
+        position: absolute !important;
+        top: 50% !important;
+        right: .35rem !important;
+        transform: translateY(-50%) !important;
+        width: 2.45rem !important;
+        min-height: 2.45rem !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: .75rem !important;
+        background: transparent !important;
+        color: #61e1b0 !important;
+        font-size: 0 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-qr-scan-button i {
+        font-size: 1.05rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionResults {
+        display: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page #selectedEquipmentCount {
+        margin: .55rem 0 .35rem !important;
+        color: #173326 !important;
+        font-size: .82rem !important;
+        line-height: 1.2 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList {
+        max-height: min(52dvh, 30rem) !important;
+        display: grid !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        scrollbar-gutter: stable !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList::-webkit-scrollbar { width: .42rem; }
+      html body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList::-webkit-scrollbar-track { background: #eef7f0; border-radius: 99px; }
+      html body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList::-webkit-scrollbar-thumb { background: #a7cdb3; border-radius: 99px; }
+      html.theme-light body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList { max-height: min(52dvh, 30rem) !important; overflow-y: auto !important; overflow-x: hidden !important; }
+      html.theme-light body.app-shell.student-portal.student-borrow-equipment-page #equipmentSelectionList {
+        gap: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option {
+        grid-template-columns: 1.35rem minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: .7rem !important;
+        min-height: 3.65rem !important;
+        padding: .5rem .75rem !important;
+        border: 0 !important;
+        border-bottom: 1px solid #dce8df !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+        transition: background .16s ease, padding .16s ease !important;
+      }
+      html.theme-light body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option {
+        border: 0 !important;
+        border-bottom: 1px solid #dce8df !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option:last-child {
+        border-bottom: 0 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option input[type="checkbox"] {
+        width: 1.1rem !important;
+        min-width: 1.1rem !important;
+        height: 1.1rem !important;
+        min-height: 1.1rem !important;
+        align-self: center !important;
+      }
+      html.theme-light body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option input[type="checkbox"] {
+        width: 1.1rem !important;
+        min-width: 1.1rem !important;
+        height: 1.1rem !important;
+        min-height: 1.1rem !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: .08rem !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details .borrow-equipment-name {
+        color: #20392b !important;
+        font-size: .94rem !important;
+        font-weight: 800 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details > span:not(.borrow-equipment-name) {
+        color: #60776a !important;
+        font-size: .82rem !important;
+        font-weight: 500 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details .borrow-equipment-mr-faculty {
+        display: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-status {
+        display: none !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option:has(input:checked) {
+        padding-left: .75rem !important;
+        border-radius: .55rem !important;
+        background: #edf8f0 !important;
+        box-shadow: inset 3px 0 0 #159653 !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page #borrowPurpose {
+        min-height: 4.6rem !important;
+        resize: vertical !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-action-row {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 4 !important;
+        display: flex !important;
+        gap: .7rem !important;
+        margin: 1rem -1rem -1rem !important;
+        padding: .75rem 1rem !important;
+        border-top: 1px solid #dce8df !important;
+        background: rgba(255,255,255,.96) !important;
+        backdrop-filter: blur(8px) !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-action-row .secondary {
+        min-width: auto !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: #17613b !important;
+      }
+      html body.app-shell.student-portal.student-borrow-equipment-page .borrow-action-row button[type="submit"] {
+        flex: 1 !important;
+        min-height: 3rem !important;
+      }
+      @media (max-width: 640px) {
+        html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls {
+          grid-template-columns: minmax(0, 1fr) auto !important;
+        }
+        html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls select {
+          width: 7.25rem !important;
+        }
+      }
+    </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-borrow-equipment-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -1189,7 +1601,6 @@
         </button>
         <div class="student-page-heading-copy">
           <h1 class="student-page-title">Equipment Borrowed</h1>
-          <p class="student-page-subtitle">Mindoro State University</p>
         </div>
       </div>
       <div class="borrow-header-actions" data-theme-toggle-anchor>
@@ -1201,7 +1612,7 @@
     </header>
     <div class="borrow-tab-switcher" role="tablist" aria-label="Borrow equipment sections">
       <button id="borrowEquipmentTab" class="borrow-tab-button" type="button" role="tab" aria-selected="true" aria-controls="borrowEquipmentPanel">
-        <i class="fas fa-box-open" aria-hidden="true"></i>Equipment Information
+        <i class="fas fa-box-open" aria-hidden="true"></i>Borrow
       </button>
       <button id="borrowRequestsTab" class="borrow-tab-button" type="button" role="tab" aria-selected="false" aria-controls="studentBorrowRequestsSection">
         <i class="fas fa-list-check" aria-hidden="true"></i>My Requests
@@ -1220,22 +1631,25 @@
           <span id="borrow-request" class="sidebar-section-anchor" aria-hidden="true"></span>
           <div class="borrow-form-grid">
             <div class="borrow-form-field full">
-              <div class="section-title borrow-equipment-section-title"><i class="fas fa-tools"></i> Equipment Information</div>
+              <div class="section-title borrow-equipment-section-title"><i class="fas fa-tools"></i> Select equipment</div>
             </div>
 
             <div class="borrow-equipment-quick-actions borrow-form-field full">
               <div class="borrow-form-field">
-                <label>Borrow using QR code</label>
-                <button id="scanEquipmentQr" class="borrow-qr-scan-button" type="button">
-                  <i class="fas fa-qrcode" aria-hidden="true"></i>
-                  Scan equipment QR
-                </button>
+                <label class="sr-only" for="equipmentSearch">Search equipment</label>
+                <div class="equipment-search-controls">
+                  <div class="equipment-search-input-wrap">
+                    <input id="equipmentSearch" type="search" placeholder="Search equipment name or ID" autocomplete="off">
+                    <button id="scanEquipmentQr" class="borrow-qr-scan-button" type="button" aria-label="Scan equipment QR" title="Scan equipment QR"><i class="fas fa-qrcode" aria-hidden="true"></i></button>
+                  </div>
+                  <select id="equipmentViewSelect" aria-label="Equipment view">
+                    <option value="available" selected>Available</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
                 <span id="borrowQrResultPlaceholder" hidden aria-hidden="true"></span>
                 <div id="borrowQrResult" class="borrow-qr-result" aria-live="polite" hidden></div>
-              </div>
-              <div class="borrow-form-field">
-                <label for="equipmentSearch">Search equipment</label>
-                <input id="equipmentSearch" type="search" placeholder="Search equipment name or ID" autocomplete="off">
+                <p id="equipmentSelectionResults" class="equipment-selection-results" aria-live="polite"></p>
               </div>
             </div>
 
@@ -1247,12 +1661,6 @@
             </div>
 
             <div class="borrow-form-field full">
-              <p class="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3 text-sm text-emerald-100/80">
-                Date/time are recorded automatically. MR Faculty approval is required; approved QR handoffs are marked Borrowed.
-              </p>
-            </div>
-
-            <div class="borrow-form-field full">
               <label for="borrowPurpose">Purpose / Reason</label>
               <textarea id="borrowPurpose" placeholder="Describe how you will use the equipment." required></textarea>
             </div>
@@ -1260,7 +1668,7 @@
 
           <div class="borrow-action-row">
             <button type="button" id="cancelBorrowEquipmentRequest" class="borrow-btn secondary">Cancel</button>
-            <button type="submit" class="borrow-btn">Submit Borrow Request</button>
+            <button type="submit" class="borrow-btn">Submit request</button>
           </div>
         </form>
       </div>
@@ -1271,14 +1679,15 @@
         <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 class="borrow-requests-heading text-white">My Borrow Requests</h2>
-            <p class="mt-1 text-sm text-emerald-100/70">Track approvals, due dates, and returns.</p>
           </div>
-          <button type="button" id="refreshStudentBorrowRequests" class="borrow-btn secondary">Refresh</button>
+        </div>
+        <div id="borrowPullRefresh" class="borrow-pull-refresh" role="status" aria-live="polite" aria-hidden="true">
+          <span><i class="fas fa-arrow-down" aria-hidden="true"></i><span id="borrowPullRefreshText">Pull down to refresh</span></span>
         </div>
         <div id="studentBorrowRequestsMessage" class="hidden mb-3 text-sm" role="status"></div>
         <div class="borrow-request-filters" aria-label="Filter and sort borrow requests">
           <input id="borrowRequestSearch" class="borrow-request-filter borrow-request-filter-search" type="search" placeholder="Search equipment or serial number" aria-label="Search equipment or serial number" autocomplete="off">
-          <select id="borrowRequestStatusFilter" class="borrow-request-filter" aria-label="Filter requests by status">
+          <select id="borrowRequestStatusFilter" class="borrow-request-filter borrow-request-filter-select" aria-label="Filter requests by status">
             <option value="all">All statuses</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
@@ -1290,7 +1699,7 @@
             <option value="lost">Lost</option>
             <option value="pending-replacement">Pending replacement</option>
           </select>
-          <select id="borrowRequestSort" class="borrow-request-filter" aria-label="Sort borrow requests">
+          <select id="borrowRequestSort" class="borrow-request-filter borrow-request-filter-select" aria-label="Sort borrow requests">
             <option value="newest">Newest request</option>
             <option value="due-date">Due date</option>
             <option value="status">Status</option>
@@ -1326,7 +1735,62 @@
 
   <script>
     window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
-    const state = { equipment: [], borrowRequests: null, selectedEquipmentIds: new Set() };
+    const state = {
+      equipment: [],
+      borrowRequests: null,
+      selectedEquipmentIds: new Set(),
+      equipmentView: 'available'
+    };
+    let borrowRequestsLoading = false;
+    let pullStartY = 0;
+    let pullDistance = 0;
+    let pullTracking = false;
+
+    function updateBorrowPullRefresh(distance, isRefreshing = false) {
+      const indicator = document.getElementById('borrowPullRefresh');
+      const text = document.getElementById('borrowPullRefreshText');
+      if (!indicator) return;
+      const visible = isRefreshing || distance > 0;
+      indicator.classList.toggle('is-visible', visible);
+      indicator.classList.toggle('is-ready', distance >= 64);
+      indicator.setAttribute('aria-hidden', String(!visible));
+      if (text) text.textContent = isRefreshing
+        ? 'Refreshing requests…'
+        : distance >= 64 ? 'Release to refresh' : 'Pull down to refresh';
+    }
+
+    function finishBorrowPullRefresh() {
+      pullTracking = false;
+      pullDistance = 0;
+      if (!borrowRequestsLoading) updateBorrowPullRefresh(0);
+    }
+
+    function setupBorrowPullRefresh() {
+      if (!('ontouchstart' in window)) return;
+      document.addEventListener('touchstart', (event) => {
+        const requestsSection = document.getElementById('studentBorrowRequestsSection');
+        if (window.scrollY > 0 || requestsSection?.hidden || borrowRequestsLoading || event.touches.length !== 1) return;
+        pullStartY = event.touches[0].clientY;
+        pullTracking = true;
+      }, { passive: true });
+      document.addEventListener('touchmove', (event) => {
+        if (!pullTracking || borrowRequestsLoading || event.touches.length !== 1) return;
+        const distance = event.touches[0].clientY - pullStartY;
+        if (distance <= 0 || window.scrollY > 0) {
+          finishBorrowPullRefresh();
+          return;
+        }
+        pullDistance = Math.min(distance, 120);
+        updateBorrowPullRefresh(pullDistance);
+      }, { passive: true });
+      document.addEventListener('touchend', async () => {
+        if (!pullTracking) return;
+        const shouldRefresh = pullDistance >= 64;
+        finishBorrowPullRefresh();
+        if (shouldRefresh) await loadStudentBorrowRequests();
+      }, { passive: true });
+      document.addEventListener('touchcancel', finishBorrowPullRefresh, { passive: true });
+    }
     const currentRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
     const isFacultyBorrower = ['faculty', 'instructor'].includes(currentRole);
     const focusedBorrowPage = document.getElementById('qrBorrowFocused');
@@ -1525,7 +1989,9 @@
       if (isFacultyBorrower) return;
       const section = document.getElementById('studentBorrowRequestsSection');
       const body = document.getElementById('studentBorrowRequestsBody');
-      if (!section || !body) return;
+      if (!section || !body || borrowRequestsLoading) return;
+      borrowRequestsLoading = true;
+      updateBorrowPullRefresh(0, true);
       if (state.borrowRequests === null) {
         body.innerHTML = '<tr><td colspan="7" class="px-3 py-6 text-center text-emerald-100/60"><i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>Loading your borrow requests...</td></tr>';
       }
@@ -1558,7 +2024,10 @@
         if (state.borrowRequests === null) {
           body.innerHTML = `<tr><td colspan="7" class="px-3 py-6 text-center text-rose-300"><i class="fas fa-triangle-exclamation mr-2" aria-hidden="true"></i>${escapeBorrowText(errorMessage)}</td></tr>`;
         }
-        setBorrowRequestsMessage(`${errorMessage} Use Refresh to try again.`, true);
+        setBorrowRequestsMessage(`${errorMessage} Pull down to try again.`, true);
+      } finally {
+        borrowRequestsLoading = false;
+        updateBorrowPullRefresh(0);
       }
     }
 
@@ -1681,27 +2150,91 @@
         !types.some((type) => excludedTypes.some((excluded) => type === excluded || (excluded !== 'ac' && type.includes(excluded))));
     }
 
+    function getEquipmentAvailabilityRank(item) {
+      if (isEquipmentSelectable(item)) return 0;
+      return item.accountableFacultyUserId || item.accountableFacultyName ? 1 : 2;
+    }
+
+    function compareBorrowEquipment(left, right) {
+      const availabilityDifference = getEquipmentAvailabilityRank(left) - getEquipmentAvailabilityRank(right);
+      if (availabilityDifference) return availabilityDifference;
+
+      const nameDifference = String(left.name || '').localeCompare(
+        String(right.name || ''),
+        undefined,
+        { sensitivity: 'base', numeric: true }
+      );
+      if (nameDifference) return nameDifference;
+
+      return String(left.equipmentId || '').localeCompare(
+        String(right.equipmentId || ''),
+        undefined,
+        { sensitivity: 'base', numeric: true }
+      );
+    }
+
+    function setEquipmentView(view) {
+      state.equipmentView = view === 'all' ? 'all' : 'available';
+      const viewSelect = document.getElementById('equipmentViewSelect');
+      if (viewSelect && viewSelect.value !== state.equipmentView) viewSelect.value = state.equipmentView;
+      updateSelectedEquipmentInfo();
+    }
+
+    function syncBorrowSelectionSummary() {
+      const count = document.getElementById('selectedEquipmentCount');
+      const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
+      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
+      if (count) {
+        const availableCount = state.equipment.filter((item) => isEquipmentSelectable(item)).length;
+        count.textContent = `${availableCount} available · ${selectedItems.length} selected`;
+      }
+      if (submitButton) {
+        submitButton.disabled = selectedItems.length === 0;
+        submitButton.style.opacity = submitButton.disabled ? '0.5' : '1';
+        submitButton.style.cursor = submitButton.disabled ? 'not-allowed' : 'pointer';
+      }
+    }
+
     function updateSelectedEquipmentInfo() {
       const search = String(document.getElementById('equipmentSearch')?.value || '').trim().toLowerCase();
       const list = document.getElementById('equipmentSelectionList');
-      const count = document.getElementById('selectedEquipmentCount');
-      const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
-      if (!list || !count || !submitButton) return;
+      const results = document.getElementById('equipmentSelectionResults');
+      if (!list) return;
 
       const borrowRequests = state.borrowRequests || [];
-      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
-      const filtered = state.equipment.filter((item) => {
-        if (!isPortableBorrowOption(item)) return false;
+      const searchableEquipment = state.equipment.filter((item) => {
+        // For student borrowing, an active MR assignment is the source of
+        // truth. Do not hide assigned equipment merely because its category
+        // is a fixed/non-portable type; availability is checked below.
         const searchable = [item.name, item.equipmentId, item.category, item.laboratoryRoom].filter(Boolean).join(' ').toLowerCase();
         return !search || searchable.includes(search);
       });
+      const filtered = searchableEquipment
+        .filter((item) => state.equipmentView === 'all' || isEquipmentSelectable(item))
+        .sort(compareBorrowEquipment);
+      const assignedCount = searchableEquipment.filter((item) =>
+        Boolean(item.accountableFacultyUserId || item.accountableFacultyName)
+      ).length;
+
+      if (results) {
+        results.textContent = state.equipmentView === 'available'
+          ? `${filtered.length} available`
+          : `${filtered.length} items · ${assignedCount} MR-assigned`;
+      }
+
       if (!filtered.length) {
-        list.innerHTML = '<span class="text-sm text-emerald-100/60" role="status">No equipment matches your search.</span>';
+        const emptyMessage = state.equipmentView === 'available'
+          ? 'No borrowable equipment with an assigned MR Faculty matches your search.'
+          : 'No equipment matches your search.';
+        list.innerHTML = `<span class="text-sm text-emerald-100/60" role="status">${emptyMessage}</span>`;
       } else {
         list.innerHTML = filtered.map((item) => {
           const id = String(item.equipmentId || '');
           const location = item.laboratoryRoom || item.campus || 'Location not specified';
           const equipmentTooltip = `${id || '—'} · ${location}`;
+          const mrLabel = item.accountableFacultyName
+            ? `<span class="borrow-equipment-mr-faculty mt-0.5 block text-xs font-medium text-emerald-200/70">MR Faculty: ${escapeBorrowText(item.accountableFacultyName)}</span>`
+            : '';
           const selectable = Boolean(id) && isEquipmentSelectable(item);
           const selected = state.selectedEquipmentIds.has(id);
           const myPendingRequest = borrowRequests.some((record) =>
@@ -1723,17 +2256,13 @@
             <span class="borrow-equipment-option-details">
               <strong class="borrow-equipment-name text-base font-bold text-white" title="${escapeBorrowText(equipmentTooltip)}" tabindex="0">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
               <span class="mt-0.5 block text-xs font-medium text-emerald-200/80">${escapeBorrowText(id)} · ${escapeBorrowText(location)}</span>
+              ${mrLabel}
             </span>
-            <span class="borrow-equipment-option-status text-xs ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(label)}</span>
+            ${label ? `<span class="borrow-equipment-option-status text-xs ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(label)}</span>` : ''}
           </label>`;
         }).join('');
       }
-      count.textContent = selectedItems.length
-        ? `${selectedItems.length} equipment item${selectedItems.length === 1 ? '' : 's'} selected — one unit each`
-        : 'No equipment selected';
-      submitButton.disabled = selectedItems.length === 0;
-      submitButton.style.opacity = submitButton.disabled ? '0.5' : '1';
-      submitButton.style.cursor = submitButton.disabled ? 'not-allowed' : 'pointer';
+      syncBorrowSelectionSummary();
     }
 
     function showBorrowToast(message, isError = false) {
@@ -1852,8 +2381,11 @@
       document.getElementById('borrowRequestSearch')?.addEventListener('input', renderStudentBorrowRequests);
       document.getElementById('borrowRequestStatusFilter')?.addEventListener('change', renderStudentBorrowRequests);
       document.getElementById('borrowRequestSort')?.addEventListener('change', renderStudentBorrowRequests);
+      setupBorrowPullRefresh();
+      document.getElementById('equipmentViewSelect')?.addEventListener('change', (event) => {
+        setEquipmentView(event.target.value);
+      });
       const requestsLoad = loadStudentBorrowRequests();
-      document.getElementById('refreshStudentBorrowRequests')?.addEventListener('click', loadStudentBorrowRequests);
       document.getElementById('studentBorrowRequestsBody')?.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-mark-borrow-returned]');
         if (!button) return;
@@ -2086,7 +2618,10 @@
         if (!checkbox) return;
         if (checkbox.checked) state.selectedEquipmentIds.add(checkbox.value);
         else state.selectedEquipmentIds.delete(checkbox.value);
-        updateSelectedEquipmentInfo();
+        // Keep the live checkbox in the DOM while the user selects it. Rebuilding
+        // the whole list during its change event can cancel label activation on
+        // touch browsers and make otherwise available equipment feel unselectable.
+        syncBorrowSelectionSummary();
       });
       document.getElementById('cancelBorrowEquipmentRequest')?.addEventListener('click', () => {
         window.location.href = isFacultyBorrower ? '/faculty-dashboard' : '/student/dashboard';
@@ -2116,8 +2651,8 @@
   </script>
 
   <script src="/js/qr-equipment-report.js?v=1" defer></script>
-  <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=75" defer></script>
+  <script src="/js/student-sidebar-config.js?v=31" defer></script>
+    <script src="/js/sidebar-component.js?v=79" defer></script>
   <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
 </body>
 </html>

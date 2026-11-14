@@ -1778,7 +1778,14 @@
 
       const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
       const filtered = state.equipment.filter((item) => {
-        if (!isPortableBorrowOption(item)) return false;
+        // Faculty borrowing is limited to the items currently issued to that
+        // faculty member through MR. Do not apply the generic portable-item
+        // filter here: MR accountability is the source of truth for this page.
+        if (isFacultyBorrower) {
+          if (item.isAssignedToCurrentFaculty !== true) return false;
+        } else if (!isPortableBorrowOption(item)) {
+          return false;
+        }
         const searchable = [item.name, item.equipmentId, item.category, item.laboratoryRoom].filter(Boolean).join(' ').toLowerCase();
         return !search || searchable.includes(search);
       });

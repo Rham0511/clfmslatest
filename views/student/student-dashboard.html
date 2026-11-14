@@ -1158,9 +1158,48 @@
             padding: 0.25rem;
         }
     }
+
+    @media (max-width: 1023px) {
+        body.student-portal.system-layout-page .student-dashboard-profile-column .system-profile-badge {
+            box-sizing: border-box !important;
+            width: 2.35rem !important;
+            min-width: 2.35rem !important;
+            max-width: 2.35rem !important;
+            height: 2.35rem !important;
+            min-height: 2.35rem !important;
+            flex: 0 0 2.35rem !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            border: 0 !important;
+            border-radius: 50% !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            clip-path: circle(50%);
+            cursor: pointer !important;
+        }
+
+        body.student-portal.system-layout-page .student-dashboard-profile-column .system-profile-badge-avatar {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            height: 100% !important;
+            flex: 0 0 100% !important;
+            border: 0 !important;
+            border-radius: 50% !important;
+            clip-path: circle(50%);
+            background: #06402b !important;
+            font-size: 0.82rem !important;
+        }
+
+        body.student-portal.system-layout-page .student-dashboard-profile-column .system-profile-badge-copy {
+            display: none !important;
+        }
+    }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=11">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=35">
 </head>
 <body class="app-shell student-portal system-layout-page student-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -1182,20 +1221,20 @@
                 </div>
                 <div class="student-dashboard-profile-column">
                     <div class="student-dashboard-theme-anchor" data-theme-toggle-anchor></div>
-                    <div class="system-profile-badge profile-theme-static bg-[#04281b] text-white">
+                    <a class="system-profile-badge student-profile-avatar-link profile-theme-static bg-[#04281b] text-white" href="/student-profile" title="Open profile" aria-label="Open student profile">
                         <span class="system-profile-badge-avatar bg-[#06402b] text-emerald-300" data-user-initials>ST</span>
                         <span class="system-profile-badge-copy text-white">
                             <span class="system-profile-badge-name text-white" data-user-name>Student</span>
                             <span class="system-profile-badge-role text-emerald-400" data-user-role>Student</span>
                         </span>
-                    </div>
+                    </a>
                 </div>
             </header>
             <section class="summary-grid dashboard-kpi-grid" aria-label="Student facility overview">
                 <a class="summary-card dashboard-kpi-card pc-station" href="/my-pc-station" aria-label="View your PC station">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Station</p>
+                        <p class="card-label dashboard-kpi-label">PC Station</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-current-pc-value>Loading...</h4>
                         <p class="dashboard-kpi-description" data-current-pc-description>Checking your assignment</p>
                     </div>
@@ -1203,15 +1242,15 @@
                 <a class="summary-card dashboard-kpi-card borrowed" href="/student/borrow-equipment#borrow-requests" aria-label="View your borrowed items and borrow requests">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-box-open" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Borrowed Items</p>
+                        <p class="card-label dashboard-kpi-label">Borrowed</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-borrow-count>Loading...</h4>
-                        <p class="dashboard-kpi-description" data-borrow-description>Checking borrowed items</p>
+                        <p class="dashboard-kpi-description" data-borrow-description></p>
                     </div>
                 </a>
                 <a class="summary-card dashboard-kpi-card issues" href="/student-my-requests#issueReportsPanel" aria-label="View your reported issues">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">Reported Issues</p>
+                        <p class="card-label dashboard-kpi-label">Issues</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-issue-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-issue-description>Checking your requests</p>
                     </div>
@@ -1219,9 +1258,9 @@
                 <a class="summary-card dashboard-kpi-card sessions" href="/student-audit-history" aria-label="View your PC session history">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-computer" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label text-xs uppercase tracking-[0.2em] text-slate-400">PC Sessions</p>
+                        <p class="card-label dashboard-kpi-label">Sessions · 30d</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-session-count>Loading...</h4>
-                        <p class="dashboard-kpi-description" data-session-description>In the last 30 days</p>
+                        <p class="dashboard-kpi-description" data-session-description></p>
                     </div>
                 </a>
             </section>
@@ -1229,11 +1268,9 @@
             <section class="section-shell">
                 <div class="section-header">
                     <div>
-                        <h3>My PC Station Status &amp; Recent Activity</h3>
-                        <p>Latest sessions, station details, and time used.</p>
+                        <h3>Recent Activity</h3>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <a class="borrow-btn secondary" href="/my-pc-station"><i class="fas fa-desktop" aria-hidden="true"></i><span>My PC Station</span></a>
                         <a class="borrow-btn inline-flex" href="/student/borrow-equipment"><i class="fas fa-box-open" aria-hidden="true"></i><span>Borrow Equipment</span></a>
                     </div>
                 </div>
@@ -1255,7 +1292,19 @@
                         </tbody>
                     </table>
                 </div>
+                <a class="pc-activity-view-all" href="/student-audit-history">View all activity <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
             </section>
+
+            <div class="pc-activity-sheet-backdrop" id="pcActivityDetailBackdrop" hidden>
+                <section class="pc-activity-sheet" id="pcActivityDetailSheet" role="dialog" aria-modal="true" aria-labelledby="pcActivityDetailTitle" hidden>
+                    <div class="pc-activity-sheet-handle" aria-hidden="true"></div>
+                    <div class="pc-activity-sheet-header">
+                        <h3 id="pcActivityDetailTitle">PC session details</h3>
+                        <button type="button" class="pc-activity-sheet-close" id="closePcActivityDetail" aria-label="Close session details"><i class="fas fa-times" aria-hidden="true"></i></button>
+                    </div>
+                    <div id="pcActivityDetailBody" class="pc-activity-sheet-body"></div>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -1344,6 +1393,18 @@
             });
         }
 
+        function formatActivityMobileDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return String(value);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            }).replace(', ', ' · ');
+        }
+
         function formatDuration(minutes) {
             if (minutes == null) return '—';
             const rawMinutes = Number(minutes);
@@ -1355,32 +1416,76 @@
             return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
         }
 
+        let recentActivitySessions = [];
+
         function renderRecentActivity(sessions) {
             const tbody = document.getElementById('recentPcActivityBody');
             if (!tbody) return;
+            recentActivitySessions = sessions.slice(0, 6);
 
             if (!sessions.length) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No recent PC sessions found.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = sessions.slice(0, 6).map((session) => {
+            tbody.innerHTML = recentActivitySessions.map((session, index) => {
                 const isActive = !session.usageEndTime;
                 const stationName = session.stationName ||
                     (session.pcSetId ? `PC Station ${String(session.pcSetId).replace(/^PC-SET-/i, '')}` : 'PC Station');
+                const started = formatDateTime(session.usageStartTime);
+                const mobileStarted = formatActivityMobileDate(session.usageStartTime);
+                const ended = session.usageEndTime ? formatDateTime(session.usageEndTime) : 'In progress';
                 return `
-                <tr class="${isActive ? 'is-active-session' : 'is-completed-session'}">
+                <tr class="${isActive ? 'is-active-session' : 'is-completed-session'}" data-pc-activity-index="${index}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(stationName)}">
                     <td class="activity-station-cell" data-label="Station">
                         <span class="activity-station-name">${escapeHtml(stationName)}</span>
                         <span class="activity-session-status">${isActive ? 'Active' : 'Completed'}</span>
+                        <span class="activity-mobile-meta">${escapeHtml(mobileStarted)}</span>
+                        <i class="fas fa-chevron-right activity-mobile-chevron" aria-hidden="true"></i>
                     </td>
                     <td class="activity-type-cell" data-label="Activity">${escapeHtml(session.subject || session.activity || 'PC session')}</td>
-                    <td data-label="Started">${escapeHtml(formatDateTime(session.usageStartTime))}</td>
-                    <td data-label="Ended">${escapeHtml(session.usageEndTime ? formatDateTime(session.usageEndTime) : 'In progress')}</td>
+                    <td data-label="Started">${escapeHtml(started)}</td>
+                    <td data-label="Ended">${escapeHtml(ended)}</td>
                     <td class="activity-duration-cell" data-label="Duration">${escapeHtml(isActive ? 'In progress' : formatDuration(session.durationMinutes))}</td>
                 </tr>
             `;
             }).join('');
+        }
+
+        function openPcActivityDetail(index) {
+            const session = recentActivitySessions[index];
+            const backdrop = document.getElementById('pcActivityDetailBackdrop');
+            const sheet = document.getElementById('pcActivityDetailSheet');
+            const body = document.getElementById('pcActivityDetailBody');
+            if (!session || !backdrop || !sheet || !body) return;
+            const stationName = session.stationName || (session.pcSetId ? `PC Station ${String(session.pcSetId).replace(/^PC-SET-/i, '')}` : 'PC Station');
+            const isActive = !session.usageEndTime;
+            const rows = [
+                ['Duration', isActive ? 'In progress' : formatDuration(session.durationMinutes)],
+                ['Class', session.className || session.class || session.scheduleName || 'Unscheduled session'],
+                ['Instructor', session.instructorName || session.instructor || '—'],
+                ['Laboratory', session.laboratoryName || session.laboratory || session.campus || '—'],
+                ['Started', formatDateTime(session.usageStartTime)],
+                ['Ended', isActive ? 'In progress' : formatDateTime(session.usageEndTime)]
+            ].filter(([label, value]) => label !== 'Instructor' || value !== '—');
+            document.getElementById('pcActivityDetailTitle').textContent = stationName;
+            body.innerHTML = `<div class="pc-activity-detail-status">${escapeHtml(isActive ? 'Active' : 'Completed')}</div>${rows.map(([label, value]) => `<div class="pc-activity-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}`;
+            backdrop.hidden = false;
+            sheet.hidden = false;
+            requestAnimationFrame(() => backdrop.classList.add('is-open'));
+            document.body.classList.add('pc-activity-sheet-open');
+        }
+
+        function closePcActivityDetail() {
+            const backdrop = document.getElementById('pcActivityDetailBackdrop');
+            const sheet = document.getElementById('pcActivityDetailSheet');
+            if (!backdrop || !sheet) return;
+            backdrop.classList.remove('is-open');
+            document.body.classList.remove('pc-activity-sheet-open');
+            window.setTimeout(() => {
+                backdrop.hidden = true;
+                sheet.hidden = true;
+            }, 180);
         }
 
         function escapeHtml(value) {
@@ -1398,7 +1503,7 @@
             if (!userId) {
                 const error = new Error('Student account information is unavailable.');
                 console.error(error);
-                setMetric('[data-current-pc-value]', '[data-current-pc-description]', '—', error.message);
+                    setMetric('[data-current-pc-value]', '[data-current-pc-description]', '—', '');
                 setMetric('[data-borrow-count]', '[data-borrow-description]', '—', error.message);
                 setMetric('[data-issue-count]', '[data-issue-description]', '—', error.message);
                 setMetric('[data-session-count]', '[data-session-description]', '—', error.message);
@@ -1427,10 +1532,10 @@
                     '[data-current-pc-description]',
                     assignmentResult.value.hasAssignment
                         ? assignment?.pcSetId || assignment?.equipmentName || 'Assigned'
-                        : 'No station',
+                        : '—',
                     assignmentResult.value.hasAssignment
                         ? assignment?.laboratoryRoom || 'Currently assigned'
-                        : 'No active workstation assigned'
+                        : ''
                 );
             } else {
                 const error = assignmentResult.status === 'rejected'
@@ -1480,7 +1585,7 @@
                     '[data-session-count]',
                     '[data-session-description]',
                     String(recentSessions.length),
-                    'In the last 30 days'
+                    ''
                 );
                 renderRecentActivity(sessions);
             } else {
@@ -1514,17 +1619,31 @@
             }
 
             if (issuesResult.status === 'fulfilled' && Array.isArray(issuesResult.value)) {
-                const pendingCount = issuesResult.value.filter((issue) =>
-                    String(issue.status || '').toLowerCase() === 'pending'
-                ).length;
-                const inProgressCount = issuesResult.value.filter((issue) =>
-                    String(issue.status || '').toLowerCase() === 'in progress'
-                ).length;
+                const issueStatusLabels = {
+                    pending: 'pending',
+                    submitted: 'submitted',
+                    'in progress': 'in progress',
+                    resolved: 'resolved',
+                    completed: 'completed',
+                    closed: 'closed',
+                    rejected: 'rejected',
+                    cancelled: 'cancelled'
+                };
+                const issueStatusCounts = new Map();
+                issuesResult.value.forEach((issue) => {
+                    const rawStatus = String(issue.status || 'unknown').trim().toLowerCase().replace(/[_-]+/g, ' ');
+                    const label = issueStatusLabels[rawStatus] || rawStatus || 'unknown';
+                    issueStatusCounts.set(label, (issueStatusCounts.get(label) || 0) + 1);
+                });
+                const issueStatusSummary = [...issueStatusCounts.entries()]
+                    .filter(([, count]) => count > 0)
+                    .map(([status, count]) => `${count} ${status}`)
+                    .join(' · ');
                 setMetric(
                     '[data-issue-count]',
                     '[data-issue-description]',
                     String(issuesResult.value.length),
-                    `${pendingCount} pending · ${inProgressCount} in progress`
+                    issueStatusSummary || 'No status recorded'
                 );
             } else {
                 const error = issuesResult.status === 'rejected'
@@ -1840,9 +1959,39 @@
                     }
                 });
             }
+
+            const activityBody = document.getElementById('recentPcActivityBody');
+            const activityBackdrop = document.getElementById('pcActivityDetailBackdrop');
+            activityBody?.addEventListener('click', (event) => {
+                const row = event.target.closest('[data-pc-activity-index]');
+                if (row) openPcActivityDetail(Number(row.dataset.pcActivityIndex));
+            });
+            activityBody?.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                const row = event.target.closest('[data-pc-activity-index]');
+                if (!row) return;
+                event.preventDefault();
+                openPcActivityDetail(Number(row.dataset.pcActivityIndex));
+            });
+            document.getElementById('closePcActivityDetail')?.addEventListener('click', closePcActivityDetail);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closePcActivityDetail();
+            });
+            activityBackdrop?.addEventListener('click', (event) => {
+                if (event.target === activityBackdrop) closePcActivityDetail();
+            });
+
+            let activitySheetStartY = 0;
+            document.getElementById('pcActivityDetailSheet')?.addEventListener('touchstart', (event) => {
+                activitySheetStartY = event.touches[0]?.clientY || 0;
+            }, { passive: true });
+            document.getElementById('pcActivityDetailSheet')?.addEventListener('touchend', (event) => {
+                const endY = event.changedTouches[0]?.clientY || 0;
+                if (endY - activitySheetStartY > 70) closePcActivityDetail();
+            }, { passive: true });
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=75" defer></script>
+    <script src="/js/student-sidebar-config.js?v=31" defer></script>
+    <script src="/js/sidebar-component.js?v=78" defer></script>
 </body>
 </html>

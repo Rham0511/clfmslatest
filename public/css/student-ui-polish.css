@@ -304,25 +304,48 @@ html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .
   color: #173326 !important;
 }
 
-html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-switcher {
-  border: 1px solid #d5e5da !important;
-  border-radius: 1rem !important;
-  background: #eaf3ec !important;
-  box-shadow: 0 4px 12px rgba(31, 75, 48, .05);
+html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-switcher,
+html.theme-light body.app-shell.student-portal.student-report-equipment-page .main-container.theme-light .report-tabs {
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 3px solid #dce8df !important;
+  border-radius: 1.35rem !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
 }
 
-html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-button {
-  border: 1px solid transparent !important;
-  border-radius: .8rem !important;
-  background: transparent !important;
-  color: #365b46 !important;
+html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-button,
+html.theme-light body.app-shell.student-portal.student-report-equipment-page .main-container.theme-light .report-tab {
+  display: inline-flex !important;
+  min-height: 2.85rem !important;
+  flex: 1 1 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: .5rem !important;
+  border: 0 !important;
+  border-right: 2px solid #dce8df !important;
+  border-radius: 0 !important;
+  padding: .5rem .85rem !important;
+  background: #ffffff !important;
+  color: #17613b !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
 }
 
-html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-button[aria-selected="true"] {
-  border-color: #16834b !important;
-  background: linear-gradient(135deg, #1eaa61, #13824a) !important;
-  box-shadow: 0 5px 14px rgba(20, 131, 75, .16) !important;
-  color: #ffffff !important;
+html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-button:last-child,
+html.theme-light body.app-shell.student-portal.student-report-equipment-page .main-container.theme-light .report-tab:last-child {
+  border-right-color: transparent !important;
+}
+
+html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-tab-button[aria-selected="true"],
+html.theme-light body.app-shell.student-portal.student-report-equipment-page .main-container.theme-light .report-tab.is-active {
+  border: 3px solid #16834a !important;
+  border-right: 3px solid #16834a !important;
+  border-radius: 1.1rem !important;
+  background: #ffffff !important;
+  color: #17613b !important;
+  box-shadow: 0 1px 3px rgba(22, 131, 74, .08) !important;
 }
 
 html.theme-light body.app-shell.student-portal.student-borrow-equipment-page > .page-shell.theme-light .borrow-equipment-section-title {
@@ -1544,6 +1567,513 @@ html.theme-light body.app-shell.student-portal.student-pc-audit-page .main-conta
   color: #173326 !important;
 }
 
+/* Dashboard activity: compact mobile rows with a full-detail bottom sheet. */
+body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] {
+  cursor: pointer;
+}
+
+.activity-mobile-meta,
+.activity-mobile-chevron {
+  display: none;
+}
+
+.pc-activity-sheet-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  background: rgba(5, 18, 12, .48);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.pc-activity-sheet-backdrop.is-open {
+  opacity: 1;
+}
+
+.pc-activity-sheet {
+  width: min(100%, 34rem);
+  max-height: min(82vh, 38rem);
+  margin: 0 auto;
+  overflow: auto;
+  border: 1px solid rgba(110, 231, 183, .25);
+  border-bottom: 0;
+  border-radius: 1.35rem 1.35rem 0 0;
+  background: #f7fbf8;
+  color: #173326;
+  box-shadow: 0 -14px 35px rgba(5, 40, 23, .2);
+  transform: translateY(100%);
+  transition: transform 180ms ease;
+}
+
+.pc-activity-sheet-backdrop.is-open .pc-activity-sheet {
+  transform: translateY(0);
+}
+
+.pc-activity-sheet-handle {
+  width: 2.8rem;
+  height: .3rem;
+  margin: .65rem auto .2rem;
+  border-radius: 99px;
+  background: #b7cfc0;
+}
+
+.pc-activity-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .75rem 1.1rem .9rem;
+  border-bottom: 1px solid #dce8df;
+}
+
+.pc-activity-sheet-header h3 {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 800;
+}
+
+.pc-activity-sheet-close {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border: 1px solid #cbded1;
+  border-radius: 50%;
+  background: #fff;
+  color: #176c3f;
+  cursor: pointer;
+}
+
+.pc-activity-sheet-body {
+  padding: .65rem 1.1rem 1.35rem;
+}
+
+.pc-activity-detail-status {
+  display: inline-flex;
+  margin: .2rem 0 .55rem;
+  padding: .28rem .65rem;
+  border: 1px solid #b9dfc5;
+  border-radius: 99px;
+  background: #eaf7ee;
+  color: #176c3f;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.pc-activity-detail-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: .75rem;
+  padding: .62rem 0;
+  border-bottom: 1px solid #e1ece4;
+}
+
+.pc-activity-detail-row span {
+  color: #6b8172;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.pc-activity-detail-row strong {
+  color: #173326;
+  font-size: .92rem;
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody {
+    gap: .15rem !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center;
+    gap: .2rem .7rem !important;
+    min-height: 4.15rem;
+    padding: .7rem .15rem !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .18) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index]:active {
+    background: rgba(110, 231, 183, .08) !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] td {
+    display: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-station-cell,
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-duration-cell {
+    display: grid !important;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-station-cell {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .1rem .45rem;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-station-name {
+    grid-column: 1;
+    color: #173326;
+    font-size: .92rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-session-status {
+    display: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-mobile-meta {
+    display: block;
+    grid-column: 1;
+    color: #71877a;
+    font-size: .75rem;
+    line-height: 1.25;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-mobile-chevron {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: #16834a;
+    font-size: .78rem;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-duration-cell {
+    grid-column: 2;
+    grid-row: 1;
+    color: #173326 !important;
+    font-size: .8rem !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-duration-cell::before {
+    display: none !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-duration-cell {
+    transform: none;
+  }
+
+  .pc-activity-detail-row {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+  }
+}
+
+/* Final mobile row override: keep the station/date block and duration side by side. */
+@media (max-width: 767px) {
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .75rem !important;
+    min-height: 4.15rem !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-station-cell {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-station-name,
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-mobile-meta {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-mobile-meta {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-mobile-chevron {
+    grid-column: 2 !important;
+    grid-row: 1 / span 2 !important;
+    align-self: center !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] .activity-duration-cell {
+    display: block !important;
+    flex: 0 0 auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    transform: none !important;
+    white-space: nowrap !important;
+  }
+}
+
+html:not(.theme-light) .pc-activity-sheet {
+  border-color: rgba(110, 231, 183, .25);
+  background: #0c2118;
+  color: #e1f4e8;
+}
+
+html:not(.theme-light) .pc-activity-sheet-header {
+  border-color: rgba(110, 231, 183, .16);
+}
+
+html:not(.theme-light) .pc-activity-sheet-header h3,
+html:not(.theme-light) .pc-activity-detail-row strong {
+  color: #f0fdf4;
+}
+
+html:not(.theme-light) .pc-activity-sheet-close {
+  border-color: rgba(110, 231, 183, .25);
+  background: #173326;
+  color: #a7f3d0;
+}
+
+html:not(.theme-light) .pc-activity-detail-row {
+  border-color: rgba(110, 231, 183, .14);
+}
+
+html:not(.theme-light) .pc-activity-detail-row span {
+  color: #9ab4a4;
+}
+
+/* Final dashboard overrides: these intentionally outrank the shared mobile/theme rules. */
+body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+  min-height: 7rem !important;
+  padding: .85rem .9rem !important;
+}
+
+body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card .card-text {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card .dashboard-kpi-icon,
+html.theme-light body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card .dashboard-kpi-icon {
+  top: .65rem !important;
+  right: .7rem !important;
+  width: 1.45rem !important;
+  height: 1.45rem !important;
+  min-width: 1.45rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #16834a !important;
+  font-size: .95rem !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .section-shell,
+body.app-shell.student-dashboard-page .main-container .section-shell {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 767px) {
+  body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+    min-height: 6.6rem !important;
+    height: 6.6rem !important;
+    padding: .78rem .8rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .6rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header > div:last-child {
+    display: flex !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    grid-template-columns: none !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header > div:last-child .borrow-btn {
+    min-height: 2.1rem !important;
+    padding: .42rem .65rem !important;
+    white-space: nowrap !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .section-header h3 {
+    font-size: 1.2rem !important;
+  }
+}
+
+/* Student dashboard visual hierarchy cleanup. */
+body.app-shell.student-dashboard-page .dashboard-kpi-card {
+  min-height: 7rem !important;
+  padding: .9rem 1rem !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-label {
+  margin: 0 !important;
+  color: #52685a !important;
+  font-size: .82rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-value {
+  margin-top: .65rem !important;
+  color: #173326 !important;
+  font-size: 2rem !important;
+  line-height: 1 !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-card.pc-station .dashboard-kpi-value {
+  color: #71877a !important;
+  font-size: 1.55rem !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-card .dashboard-kpi-icon {
+  top: .7rem !important;
+  right: .8rem !important;
+  width: 1.55rem !important;
+  height: 1.55rem !important;
+  min-width: 1.55rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #16834a !important;
+  font-size: 1rem !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-description {
+  display: none !important;
+}
+
+body.app-shell.student-dashboard-page .dashboard-kpi-card.issues .dashboard-kpi-description {
+  display: block !important;
+  margin-top: .55rem !important;
+  color: #64796c !important;
+  font-size: .78rem !important;
+  line-height: 1.2 !important;
+}
+
+body.app-shell.student-dashboard-page .section-shell {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+body.app-shell.student-dashboard-page .section-header {
+  margin-bottom: .65rem !important;
+  padding: 0 !important;
+}
+
+body.app-shell.student-dashboard-page .section-header h3 {
+  color: #173326 !important;
+  font-size: 1.35rem !important;
+  line-height: 1.2 !important;
+}
+
+body.app-shell.student-dashboard-page .table-shell {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.pc-activity-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .6rem;
+  color: #16834a;
+  font-size: .82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pc-activity-view-all:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  body.app-shell.student-dashboard-page .main-container .dashboard-kpi-grid {
+    gap: .65rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .dashboard-kpi-card {
+    min-height: 6.55rem !important;
+    padding: .78rem .8rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .dashboard-kpi-card .card-text {
+    min-height: 0 !important;
+    padding-right: 1.4rem;
+  }
+
+  body.app-shell.student-dashboard-page .dashboard-kpi-label {
+    font-size: .78rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .dashboard-kpi-value {
+    margin-top: .8rem !important;
+    font-size: 1.85rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .dashboard-kpi-card.issues .dashboard-kpi-description {
+    margin-top: .45rem !important;
+    font-size: .72rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .section-header {
+    align-items: center !important;
+    margin-bottom: .35rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .section-header h3 {
+    font-size: 1.2rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .section-header > div:last-child .borrow-btn {
+    min-height: 2.15rem !important;
+    padding: .45rem .7rem !important;
+    font-size: .78rem !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable tbody tr[data-pc-activity-index] {
+    border-bottom: 0 !important;
+    padding: .65rem 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page #recentPcActivityTable .activity-station-name {
+    font-weight: 800 !important;
+  }
+}
+
 html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-page-heading.comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
   border-bottom-color: #d5e5da !important;
   background: #ffffff !important;
@@ -2269,6 +2799,84 @@ body.app-shell.student-portal.student-my-requests-page #requestsState .report-de
   white-space: normal;
 }
 
+/* Compact My Reports layout: the row carries the information; details live in a bottom sheet. */
+body.app-shell.student-portal.student-my-requests-page .report-status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin: -.25rem 0 .85rem;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-status-chip {
+  border: 1px solid #cfe2d5;
+  border-radius: 999px;
+  padding: .36rem .72rem;
+  background: #f8fbf9;
+  color: #456552;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-status-chip.is-active {
+  border-color: #16844b;
+  background: #e4f4e9;
+  color: #126e3e;
+}
+
+body.app-shell.student-portal.student-my-requests-page .report-summary-row { cursor: pointer; }
+body.app-shell.student-portal.student-my-requests-page .report-summary-row:focus-visible { outline: 2px solid #1b9a58; outline-offset: -2px; }
+body.app-shell.student-portal.student-my-requests-page .report-id-value { font-size: .8rem; color: #527161; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet[hidden] { display: none !important; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet { position: fixed; inset: 0; z-index: 20000; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-backdrop { position: absolute; inset: 0; background: rgba(4, 18, 10, .42); backdrop-filter: blur(3px); }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-panel {
+  position: absolute; right: 0; bottom: 0; left: 0; max-height: min(82vh, 40rem); overflow: auto;
+  padding: .7rem 1rem 1.2rem; border-radius: 1.25rem 1.25rem 0 0; border: 1px solid #cfe2d5;
+  background: #fff; color: #294839; box-shadow: 0 -16px 45px rgba(17, 68, 39, .22);
+}
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-handle { width: 2.8rem; height: .25rem; margin: 0 auto .75rem; border-radius: 99px; background: #b4cbbd; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-header h2 { margin: 0; color: #173b2a; font-size: 1.1rem; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-close { width: 2rem; height: 2rem; border: 0; border-radius: 50%; background: #edf6ef; color: #173b2a; cursor: pointer; }
+body.app-shell.student-portal.student-my-requests-page .report-details-sheet-content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+body.app-shell.student-portal.student-my-requests-page .report-sheet-detail { padding: .62rem .7rem; border-radius: .7rem; background: #f5faf6; }
+body.app-shell.student-portal.student-my-requests-page .report-sheet-detail dt { margin-bottom: .16rem; color: #23834d; font-size: .62rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+body.app-shell.student-portal.student-my-requests-page .report-sheet-detail dd { margin: 0; color: #294839; font-size: .82rem; line-height: 1.45; overflow-wrap: anywhere; }
+body.report-sheet-open { overflow: hidden !important; }
+
+@media (max-width: 767px) {
+  body.app-shell.student-portal.student-my-requests-page .requests-panel { padding: 1rem; border-radius: 1.25rem; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-panel-heading { margin-bottom: .75rem; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-panel-heading h2 { font-size: 1.35rem; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-controls { grid-template-columns: minmax(0, 1fr) auto; gap: .45rem; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-filter-control { min-height: 2.7rem; padding: 0 .7rem; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-filter-select-control { width: auto; min-width: 8.5rem; justify-content: flex-start; }
+  body.app-shell.student-portal.student-my-requests-page #issueReportsPanel .requests-filter-select-control select { position: static; width: 100%; opacity: 1; cursor: pointer; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr:not(.report-details-row) { grid-template-columns: minmax(0, 1fr) auto !important; grid-template-areas: "equipment status" "description description" "date action" !important; padding: .78rem .82rem !important; border: 0 !important; border-bottom: 1px solid #dce9df !important; border-radius: 0 !important; box-shadow: none !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-report-id { display: none !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-equipment::before,
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-description::before,
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-dates::before,
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-status::before,
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-action::before { display: none !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-equipment { grid-area: equipment !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-description { grid-area: description !important; padding-top: .25rem !important; border-top: 0 !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-dates { grid-area: date !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-status { grid-area: status !important; padding: 0 !important; align-self: start !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody td.col-action { grid-area: action !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge { min-width: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; color: #294839 !important; font-size: .78rem !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge::before { display: inline-block; width: .55rem; height: .55rem; margin: 0 .35rem 0 0; border-radius: 50%; background: #f5bd17; content: ''; vertical-align: middle; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge[class*="emerald"]::before { background: #1ca45a; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge[class*="blue"]::before { background: #3b82f6; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge[class*="red"]::before { background: #c6cbd0; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge.status-cancelled::before { background: #c6cbd0; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-description { margin-top: .08rem !important; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-row-actions { min-height: 2rem; }
+  body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle { width: 2rem; min-height: 2rem; border: 0; background: transparent; color: #294839; }
+}
+
 body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-heading {
   display: flex;
   align-items: center;
@@ -2358,5 +2966,801 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
 
   html body.app-shell.student-portal.student-my-requests-page #requestsState .report-details-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Keep the student portal's mobile header controls in the dashboard order:
+   menu on the left, then notifications, theme, and profile on the right. */
+@media (max-width: 1023px) {
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .5rem !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.student-page-heading, .system-dashboard-heading-main) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+      .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
+      .my-requests-header-actions, .student-profile-header-actions) {
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .45rem !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+      .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
+      .my-requests-header-actions, .student-profile-header-actions) > [data-comlab-notification-button] {
+    order: 1 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+      .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
+      .my-requests-header-actions, .student-profile-header-actions)
+    > :is(.student-dashboard-theme-anchor, .profile-theme-controls, [data-theme-toggle-anchor]) {
+    order: 2 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+      .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
+      .my-requests-header-actions, .student-profile-header-actions)
+    > :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link, .technician-profile-identity) {
+    order: 3 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(#mobileMenuToggle, .menu-toggle, .student-page-menu) {
+    order: 0 !important;
+  }
+}
+
+/* Keep the compact student header inside narrow phone viewports. */
+@media (max-width: 480px) {
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity) {
+    gap: .25rem !important;
+    padding-inline: max(.45rem, env(safe-area-inset-left, 0px)) max(.45rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+      .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
+      .my-requests-header-actions, .student-profile-header-actions) {
+    flex: 0 1 auto !important;
+    gap: .25rem !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    flex: 0 0 2rem !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+    max-width: 5.8rem !important;
+    flex: 0 1 auto !important;
+    gap: .25rem !important;
+    padding-inline: .2rem .35rem !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-copy, .student-page-user-copy, .user-info) {
+    min-width: 0 !important;
+    max-width: 3.3rem !important;
+    overflow: hidden !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-role, .student-page-user-role, .user-role) {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    font-size: .44rem !important;
+    letter-spacing: .04em !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 360px) {
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge-copy, .student-page-user-copy, .user-info) {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+    width: 2rem !important;
+    min-width: 2rem !important;
+    max-width: 2rem !important;
+    justify-content: center !important;
+    padding: .1rem !important;
+  }
+}
+
+/* Use a name-derived avatar as the student profile shortcut on mobile. */
+@media (max-width: 1023px) {
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    max-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    flex: 0 0 2.35rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    color: #a7f3d0 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user):focus-visible {
+    outline: 2px solid #34d399 !important;
+    outline-offset: 3px !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    flex: 0 0 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #06402b !important;
+    color: #a7f3d0 !important;
+    font-size: .82rem !important;
+    font-weight: 850 !important;
+    letter-spacing: .04em !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user)
+    :is(.system-profile-badge-copy, .student-page-user-copy, .student-page-user-role, .user-info, .user-role) {
+    display: none !important;
+  }
+
+}
+
+/* Override the legacy mobile rules that use two ID-based :not() selectors.
+   Only the initials circle should remain visible in a student header. */
+@media (max-width: 1023px) {
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 2.35rem !important;
+    min-width: 2.35rem !important;
+    max-width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    max-height: 2.35rem !important;
+    flex: 0 0 2.35rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-color: transparent !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    filter: none !important;
+    clip-path: circle(50%);
+    text-decoration: none !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user):focus-visible {
+    outline: 2px solid #34d399 !important;
+    outline-offset: 3px !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar) {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    flex: 0 0 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #06402b !important;
+    box-shadow: none !important;
+    color: #a7f3d0 !important;
+  }
+
+  html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.student-profile-avatar-link, .system-profile-badge, .student-page-user)
+    :is(.system-profile-badge-copy, .student-page-user-copy, .student-page-user-role, .user-info, .user-role) {
+    display: none !important;
+  }
+}
+
+/* Pure white, flat light theme for every student portal page. */
+html.theme-light {
+  color-scheme: light;
+  background: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal {
+  --student-surface: #fff;
+  --student-surface-soft: #fff;
+  --student-border: #dce5df;
+  --student-ink: #172b21;
+  --student-muted: #53665b;
+  background: #fff !important;
+  background-image: none !important;
+  color: var(--student-ink) !important;
+}
+
+html.theme-light body.app-shell.student-portal::before,
+html.theme-light body.app-shell.student-portal::after {
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) *,
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) *::before,
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(
+    .main-container,
+    .main-container > .page-shell,
+    main.page-shell,
+    .page-shell,
+    .system-dashboard-heading,
+    .comlab-slim-page-header,
+    .student-page-header,
+    .student-page-heading,
+    .section-shell,
+    .glass-card,
+    .panel-card,
+    .summary-card,
+    .summary-grid,
+    .dashboard-kpi-card,
+    .dashboard-card,
+    .activity-card,
+    .request-card,
+    .report-card,
+    .audit-card,
+    .pc-station-card,
+    .history-card,
+    .equipment-card,
+    .pc-session-empty,
+    .pc-session-feedback,
+    .borrow-request-filters,
+    .borrow-request-list,
+    .report-method-options,
+    .equipment-suggestions,
+    .equipment-suggestion-list,
+    .profile-details-panel,
+    .detail-list,
+    .profile-edit-form,
+    .card,
+    .profile-card,
+    .profile-shell,
+    .profile-photo-panel,
+    .profile-save-panel,
+    .form-section,
+    .detail-item,
+    .table-shell,
+    .table-container,
+    .table-responsive,
+    .usage-history-scroll,
+    .usage-history-table tbody tr,
+    .borrow-content-grid > .panel-card,
+    .borrow-tab-switcher,
+    .borrow-equipment-section-title,
+    .borrow-form-section,
+    .borrow-modal,
+    .borrow-modal-header,
+    .borrow-modal-body,
+    .borrow-modal-backdrop,
+    .borrow-inventory-card,
+    .borrow-equipment-option,
+    .borrow-qr-result,
+    .borrow-requests-table-wrap,
+    .borrow-request-empty,
+    .borrow-request-results,
+    .borrow-request-status-area,
+    .comlab-notice-panel,
+    .comlab-notice-row,
+    .comlab-notice-heading,
+    .comlab-notice-section,
+    .comlab-notice-empty,
+    .pc-session-card,
+    .session-card,
+    .radio-card,
+    .option-card,
+    .filter-control,
+    .modal,
+    .modal-dialog,
+    .modal-content,
+    .modal-header,
+    .modal-body,
+    .modal-footer,
+    .notification-panel,
+    .dropdown-menu,
+    [class*="-card"]:not(button):not(a):not([class*="icon"])
+  ) {
+  background-color: #fff !important;
+  background-image: none !important;
+  border-color: var(--student-border) !important;
+  color: var(--student-ink) !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.main-container, .page-shell) [class*="bg-"]:not(button):not(a):not([role="button"]):not(.btn-primary):not(.borrow-btn):not(.button-primary):not(.primary-button):not(.system-profile-badge-avatar):not(.student-page-user-initials):not(.user-avatar) {
+  background-color: #fff !important;
+  background-image: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.main-container, .page-shell) [style*="background"]:not(button):not(a):not([role="button"]):not(.btn-primary):not(.borrow-btn):not(.button-primary):not(.primary-button):not(.system-profile-badge-avatar):not(.student-page-user-initials):not(.user-avatar) {
+  background: #fff !important;
+  background-image: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(
+    .text-white,
+    .text-slate-50,
+    .text-slate-100,
+    .text-gray-50,
+    .text-gray-100,
+    .text-emerald-50,
+    .text-emerald-100,
+    .text-green-50,
+    .text-green-100,
+    .text-gray-400,
+    .text-gray-500,
+    .text-slate-400,
+    .text-slate-500,
+    [class*="text-emerald-100"],
+    [class*="text-green-100"]
+  ) {
+  color: #25372c !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.text-emerald-300, .text-emerald-400, .text-emerald-500, .text-green-300, .text-green-400, .text-green-500) {
+  color: #147a43 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.text-amber-100, [class*="text-amber-100"]) {
+  color: #805500 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.text-rose-100, [class*="text-rose-100"], .text-red-100, [class*="text-red-100"]) {
+  color: #9b2634 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(
+    #shared-sidebar,
+    #sidebar,
+    .sidebar,
+    .sidebar-container,
+    .sidebar-panel,
+    .sidebar-content,
+    .sidebar-header,
+    .sidebar-nav,
+    .sidebar-menu,
+    .mobile-sidebar,
+    .system-sidebar,
+    .side-nav
+  ) {
+  background-color: #071a12 !important;
+  background-image: none !important;
+  border-color: rgba(74, 222, 128, .2) !important;
+  box-shadow: none !important;
+  color: #e8f5ed !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .nav-item {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #a9c8b7 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .nav-item > i {
+  border-color: transparent !important;
+  background-color: rgba(34, 197, 94, .075) !important;
+  color: #4ade80 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .nav-item:hover {
+  border-color: rgba(74, 222, 128, .18) !important;
+  background: #0c3625 !important;
+  color: #e8f5ed !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .nav-item.active,
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .nav-item[aria-current="page"] {
+  border-color: rgba(74, 222, 128, .34) !important;
+  background: #10452e !important;
+  color: #effcf3 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .sidebar-logo-text {
+  color: #e8f5ed !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #sidebar .sidebar-tagline {
+  color: #95b5a4 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.sidebar-overlay, .modal-backdrop, .dialog-backdrop) {
+  background: rgba(255, 255, 255, .84) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(input, select, textarea, .form-control, .filter-control input, .filter-control select) {
+  background-color: #fff !important;
+  background-image: none !important;
+  border-color: var(--student-border) !important;
+  box-shadow: none !important;
+  color: var(--student-ink) !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(input, select, textarea)::placeholder {
+  color: #687a6f !important;
+  opacity: 1;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) option {
+  background: #fff !important;
+  color: #172b21 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.comlab-notification-button, [data-comlab-notification-button], .profile-theme-toggle, #mobileMenuToggle, .student-page-menu) {
+  background: #fff !important;
+  border-color: var(--student-border) !important;
+  box-shadow: none !important;
+  color: #17613b !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.system-profile-badge, .student-page-user, .user-profile) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #173b2a !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.system-profile-badge-copy, .student-page-user-copy, .system-profile-badge-name, .student-page-user-name, .user-name) {
+  background: transparent !important;
+  color: #173b2a !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.system-profile-badge-role, .student-page-user-role, .user-role) {
+  background: transparent !important;
+  color: #147a43 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar) {
+  background: #06402b !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #a7f3d0 !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.borrow-btn:not(.secondary), button[type="submit"], .btn-primary, .button-primary, .primary-button, .submit-btn) {
+  background-color: #16834a !important;
+  background-image: none !important;
+  border-color: #16834a !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.borrow-btn:not(.secondary), button[type="submit"], .btn-primary, .button-primary, .primary-button, .submit-btn) * {
+  color: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.borrow-btn.secondary, .btn-secondary, .button-secondary, .secondary-button) {
+  background: #fff !important;
+  border-color: #b9d4c2 !important;
+  box-shadow: none !important;
+  color: #17613b !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.borrow-tab-button, .tab-button, .tab-btn, .profile-nav-tab) {
+  background: #fff !important;
+  background-image: none !important;
+  border-color: var(--student-border) !important;
+  box-shadow: none !important;
+  color: #17613b !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.borrow-tab-button[aria-selected="true"], .tab-button.active, .tab-btn.active, .profile-nav-tab.active) {
+  background: #fff !important;
+  border-color: #16834a !important;
+  color: #12663a !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) :focus-visible {
+  outline: 2px solid #16834a !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(table, thead, tbody, tr, th, td, .modern-table tbody tr, .usage-history-table tbody tr) {
+  background-color: #fff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(table th, table td) {
+  border-color: #e2e9e4 !important;
+  color: var(--student-ink) !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.modern-table tbody tr:hover, .usage-history-table tbody tr:hover, .borrow-equipment-option:hover, .radio-card:hover) {
+  background-color: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  :is(.status-badge, .status-pill, .status-chip, .borrow-status, .borrow-request-status, .report-status, .request-status) {
+  background-color: #fff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Keep the floating scan and help actions visible in the flat light theme. */
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #qr-scan-float-btn {
+  border-color: #128348 !important;
+  background-color: #159653 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #qr-scan-float-btn i {
+  color: #fff !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #comlab-help-float-btn {
+  border-color: #b7d9c2 !important;
+  background-color: #e6f3e9 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #12663f !important;
+}
+
+html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+  #comlab-help-float-btn i {
+  color: #12663f !important;
+}
+
+/* My Requests: keep borrow and issue tables compact on touch/mobile screens. */
+@media (max-width: 1200px), (pointer: coarse) {
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table thead,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table thead {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody {
+    display: grid !important;
+    gap: 0 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] {
+    display: flex !important;
+    align-items: center !important;
+    gap: .65rem !important;
+    min-height: 4.2rem !important;
+    padding: .65rem 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dce8df !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td {
+    display: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:first-child,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(3),
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(5) {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:first-child {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(3) {
+    flex: 0 0 auto !important;
+    color: #71877a !important;
+    font-size: .75rem !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(5) {
+    flex: 0 0 auto !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table tbody tr[data-borrow-row] td::before,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td::before {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table .equipment-name,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-name {
+    overflow: hidden !important;
+    color: #173326 !important;
+    font-size: .92rem !important;
+    font-weight: 800 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table .equipment-id,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-id {
+    color: #71877a !important;
+    font-size: .72rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table .status-cell > div {
+    display: none !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .borrow-requests-table .status-cell .status-badge,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-cell .status-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: .25rem .45rem !important;
+    white-space: nowrap !important;
+    font-size: .72rem !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: .6rem !important;
+    min-height: 4.2rem !important;
+    padding: .65rem 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dce8df !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td {
+    display: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-equipment,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-dates,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-equipment {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-dates {
+    flex: 0 0 auto !important;
+    color: #71877a !important;
+    font-size: .72rem !important;
+    white-space: nowrap !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status,
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action {
+    flex: 0 0 auto !important;
+  }
+
+  html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-row-actions {
+    margin: 0 !important;
   }
 }

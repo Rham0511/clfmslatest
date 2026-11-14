@@ -613,7 +613,209 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=11">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=31">
+    <style>
+        /* Compact mobile history with full details in a bottom sheet. */
+        .usage-history-mobile-date,
+        .usage-history-mobile-chevron { display: none; }
+        .pc-history-detail-backdrop {
+            position: fixed; z-index: 1200; inset: 0; display: grid; align-items: end;
+            background: rgba(5, 18, 12, .48); opacity: 0; transition: opacity .18s ease;
+        }
+        .pc-history-detail-backdrop.is-open { opacity: 1; }
+        .pc-history-detail-sheet {
+            width: min(100%, 34rem); max-height: 82vh; margin: 0 auto; overflow: auto;
+            border: 1px solid #cbded1; border-bottom: 0; border-radius: 1.25rem 1.25rem 0 0;
+            background: #f7fbf8; color: #173326; transform: translateY(100%); transition: transform .18s ease;
+        }
+        .pc-history-detail-backdrop.is-open .pc-history-detail-sheet { transform: translateY(0); }
+        .pc-history-detail-handle { width: 2.8rem; height: .3rem; margin: .6rem auto .2rem; border-radius: 99px; background: #b7cfc0; }
+        .pc-history-detail-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem 1rem .8rem; border-bottom: 1px solid #dce8df; }
+        .pc-history-detail-header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+        .pc-history-detail-header button { width: 2.2rem; height: 2.2rem; border: 1px solid #cbded1; border-radius: 50%; background: #fff; color: #176c3f; }
+        .pc-history-detail-body { padding: .5rem 1rem 1.2rem; }
+        .pc-history-detail-row { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: .7rem; padding: .6rem 0; border-bottom: 1px solid #e1ece4; }
+        .pc-history-detail-row span { color: #6b8172; font-size: .76rem; font-weight: 700; }
+        .pc-history-detail-row strong { color: #173326; font-size: .9rem; }
+        @media (max-width: 640px) {
+            body.student-portal.pc-station-page .main-container > main { gap: .75rem; }
+            body.student-portal.pc-station-page #pcScanInfo,
+            body.student-portal.pc-station-page #pcScanInfo + section { padding: .85rem !important; border: 0; border-radius: 1rem; box-shadow: none; }
+            body.student-portal.pc-station-page #pcScanInfo + section h2 { margin-bottom: .35rem; font-size: 1.05rem; }
+            .pc-scan-icon { width: 2.15rem; height: 2.15rem; border: 0; background: transparent; font-size: 1.05rem; }
+            .pc-scan-copy p { display: none; }
+            .pc-logs-link { padding: .3rem; border: 0; background: transparent; font-size: 0; color: #16834a; }
+            .pc-logs-link i { font-size: 1rem; }
+            .usage-history-scroll { border: 0; border-radius: 0; }
+            .usage-history-table tbody { display: block; }
+            .usage-history-table tr[data-history-index] { display: flex; align-items: center; gap: .7rem; padding: .65rem 0; border: 0; border-bottom: 1px solid #e1ece4; background: transparent; cursor: pointer; }
+            .usage-history-table tr[data-history-index] td { display: none; }
+            .usage-history-table tr[data-history-index] td:first-child { display: block; flex: 1 1 auto; min-width: 0; padding: 0; border: 0; }
+            .usage-history-table tr[data-history-index] td:last-child { display: block; flex: 0 0 auto; padding: 0; border: 0; }
+            .usage-history-table tr[data-history-index] td:first-child .usage-history-cell-label { display: none; }
+            .usage-history-table tr[data-history-index] .usage-history-value { display: grid; gap: .12rem; }
+            .usage-history-table tr[data-history-index] .usage-history-primary { overflow: hidden; color: #173326; font-size: .92rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+            .usage-history-mobile-date { display: block; color: #71877a; font-size: .75rem; font-weight: 400; }
+            .usage-history-mobile-chevron { display: block; color: #16834a; font-size: .8rem; }
+            .usage-history-table tr[data-history-index] td:last-child .usage-history-cell-label { display: none; }
+            .usage-history-table tr[data-history-index] td:last-child .usage-history-primary { color: #173326; font-size: .82rem; font-weight: 800; white-space: nowrap; }
+            .usage-history-table tr[data-history-index] td:last-child .usage-history-value::before { display: none; }
+        }
+        html:not(.theme-light) .pc-history-detail-sheet { border-color: rgba(110,231,183,.25); background: #0c2118; color: #e1f4e8; }
+        html:not(.theme-light) .pc-history-detail-header { border-color: rgba(110,231,183,.16); }
+        html:not(.theme-light) .pc-history-detail-header h2,
+        html:not(.theme-light) .pc-history-detail-row strong { color: #f0fdf4; }
+        html:not(.theme-light) .pc-history-detail-header button { border-color: rgba(110,231,183,.25); background: #173326; color: #a7f3d0; }
+        html:not(.theme-light) .pc-history-detail-row { border-color: rgba(110,231,183,.14); }
+        html:not(.theme-light) .pc-history-detail-row span { color: #9ab4a4; }
+
+        /* Keep the history list compact on the rendered page; full details are in the sheet. */
+        body.student-portal.pc-station-page #historyContainer .usage-history-scroll,
+        body.student-portal.pc-station-page #historyContainer .usage-history-table,
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody { display: block !important; width: 100% !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table thead { display: none !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: .75rem !important; min-height: 4.2rem !important; padding: .7rem 0 !important; border: 0 !important; border-bottom: 1px solid #dce8df !important; border-radius: 0 !important; background: transparent !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td { display: none !important; grid-area: auto !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td:first-child,
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td:last-child { display: flex !important; align-items: center !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td:first-child { flex: 1 1 auto !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td:last-child { flex: 0 0 auto !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] .usage-history-cell-label { display: none !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] .usage-history-value { display: grid !important; gap: .1rem !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] .usage-history-primary { display: block !important; max-width: 100% !important; overflow: hidden !important; color: #173326 !important; font-size: .95rem !important; font-weight: 800 !important; line-height: 1.2 !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] .usage-history-mobile-date { display: block !important; color: #71877a !important; font-size: .76rem !important; font-weight: 400 !important; white-space: nowrap !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] .usage-history-mobile-chevron { display: block !important; margin-left: .55rem !important; color: #16834a !important; }
+        body.student-portal.pc-station-page #historyContainer .usage-history-table tbody tr[data-history-index] td:last-child .usage-history-primary { color: #173326 !important; font-size: .83rem !important; font-weight: 800 !important; white-space: nowrap !important; }
+    </style>
+    <style>
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo,
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection {
+            position: relative !important;
+            overflow: hidden !important;
+            border: 1px solid #cfe3d5 !important;
+            border-radius: 1.25rem !important;
+            background: linear-gradient(145deg, #ffffff 0%, #f6fbf7 100%) !important;
+            box-shadow: 0 10px 26px rgba(35, 91, 58, .07) !important;
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo::before,
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection::before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: .22rem;
+            background: linear-gradient(90deg, #159653, #6be2ac, transparent);
+            content: '';
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-session-heading {
+            position: relative;
+            z-index: 1;
+            padding-bottom: .85rem;
+            border-bottom: 1px solid #e1ece4;
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-scan-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            border: 1px solid #bfe4cc;
+            border-radius: .85rem;
+            background: #eaf7ee;
+            color: #176c3f;
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-scan-copy h2 {
+            color: #173326;
+            font-size: 1.35rem;
+            letter-spacing: -.02em;
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-logs-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.45rem;
+            height: 2.45rem;
+            border: 1px solid #c5dfcc;
+            border-radius: .75rem;
+            background: #f0f9f2;
+            color: #176c3f;
+            font-size: 0;
+        }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-logs-link i { font-size: 1rem; }
+        html.theme-light body.student-portal.pc-station-page #pcScanInfo .pc-session-empty {
+            margin-top: .9rem;
+            border: 1px solid #d5e8da;
+            border-radius: 1rem;
+            background: #f8fcf9;
+        }
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection > h2 {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            margin: 0 0 .8rem !important;
+            color: #173326 !important;
+            font-size: 1.2rem !important;
+            letter-spacing: -.02em;
+        }
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection > h2 i {
+            display: grid;
+            width: 2rem;
+            height: 2rem;
+            place-items: center;
+            margin: 0 !important;
+            border-radius: .65rem;
+            background: #eaf7ee;
+            color: #176c3f;
+            font-size: .95rem;
+        }
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection #historyContainer {
+            padding: .15rem .8rem;
+            border: 1px solid #d8e9dd !important;
+            border-radius: 1rem !important;
+            background: rgba(255,255,255,.72) !important;
+        }
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection #historyContainer .usage-history-table tbody tr[data-history-index]:hover {
+            background: #f0f9f2 !important;
+        }
+        html.theme-light body.student-portal.pc-station-page #usageHistorySection #historyContainer .usage-history-table tbody tr[data-history-index] td:first-child::before {
+            display: block;
+            width: .25rem;
+            height: 2rem;
+            margin-right: .6rem;
+            border-radius: 99px;
+            background: #65d8a2;
+            content: '';
+        }
+        @media (max-width: 640px) {
+            html.theme-light body.student-portal.pc-station-page #pcScanInfo,
+            html.theme-light body.student-portal.pc-station-page #usageHistorySection { border-radius: 1rem !important; }
+            html.theme-light body.student-portal.pc-station-page #usageHistorySection #historyContainer { padding: .1rem .65rem; }
+        }
+        .pc-session-scan-action { display: inline-flex; align-items: center; gap: .45rem; flex: 0 0 auto; min-height: 2.2rem; padding: .45rem .7rem; border: 1px solid #b9dfc5; border-radius: .7rem; background: #eaf7ee; color: #176c3f; font-size: .78rem; font-weight: 800; cursor: pointer; }
+        @media (max-width: 1200px), (pointer: coarse) {
+            body.student-portal.pc-station-page #pcScanInfo,
+            body.student-portal.pc-station-page #pcScanInfo + section { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+            body.student-portal.pc-station-page #pcScanInfo .pc-session-empty { display: grid !important; grid-template-columns: auto minmax(0, 1fr) !important; align-items: center !important; gap: .65rem !important; padding: .65rem 0 !important; border: 0 !important; background: transparent !important; }
+            body.student-portal.pc-station-page #pcScanInfo .pc-session-empty > span:last-child { color: #71877a !important; font-size: .78rem !important; line-height: 1.35 !important; }
+            body.student-portal.pc-station-page #historyContainer,
+            body.student-portal.pc-station-page .usage-history-scroll { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+            body.student-portal.pc-station-page .usage-history-table,
+            body.student-portal.pc-station-page .usage-history-table tbody { display: block !important; width: 100% !important; }
+            body.student-portal.pc-station-page .usage-history-table thead { display: none !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody { display: grid !important; gap: 0 !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] { display: flex !important; grid-template-columns: none !important; grid-template-areas: none !important; align-items: center !important; justify-content: space-between !important; gap: .7rem !important; min-height: 4.3rem !important; padding: .65rem 0 !important; border: 0 !important; border-bottom: 1px solid #e1ece4 !important; border-radius: 0 !important; background: transparent !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td { display: none !important; grid-area: auto !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:first-child,
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:last-child { display: block !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:first-child { flex: 1 1 auto !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:first-child { display: flex !important; align-items: center !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:last-child { flex: 0 0 auto !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:first-child .usage-history-cell-label,
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:last-child .usage-history-cell-label { display: none !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] .usage-history-value { display: grid !important; grid-template-columns: 1fr !important; gap: .1rem !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] .usage-history-primary { display: block !important; max-width: 100% !important; overflow: hidden !important; color: #173326 !important; font-size: .92rem !important; font-weight: 800 !important; line-height: 1.2 !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] .usage-history-mobile-date { display: block !important; color: #71877a !important; font-size: .75rem !important; font-weight: 400 !important; white-space: nowrap !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] td:last-child .usage-history-primary { color: #173326 !important; font-size: .82rem !important; font-weight: 800 !important; white-space: nowrap !important; }
+            body.student-portal.pc-station-page .usage-history-table tbody tr[data-history-index] .usage-history-mobile-chevron { display: block !important; position: static !important; margin-left: .5rem !important; flex: 0 0 auto !important; color: #16834a !important; font-size: .8rem !important; }
+        }
+    </style>
 </head>
 <body class="app-shell student-portal system-layout-page pc-station-page">
     <div id="shared-sidebar"></div>
@@ -657,7 +859,7 @@
             </section>
 
             <!-- Usage History Section -->
-            <section class="glass-card rounded-[1.5rem] p-4 md:p-5">
+            <section id="usageHistorySection" class="glass-card rounded-[1.5rem] p-4 md:p-5">
                 <h2 class="text-2xl font-semibold text-white mb-4">
                     <i class="fas fa-history mr-2"></i>Usage History
                 </h2>
@@ -668,7 +870,18 @@
                     </div>
                 </div>
             </section>
-        </main>
+    </main>
+    </div>
+
+    <div id="pcHistoryDetailBackdrop" class="pc-history-detail-backdrop" hidden>
+        <section id="pcHistoryDetailSheet" class="pc-history-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="pcHistoryDetailTitle" hidden>
+            <div class="pc-history-detail-handle" aria-hidden="true"></div>
+            <div class="pc-history-detail-header">
+                <h2 id="pcHistoryDetailTitle">Session details</h2>
+                <button type="button" id="closePcHistoryDetail" aria-label="Close session details"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
+            <div id="pcHistoryDetailBody" class="pc-history-detail-body"></div>
+        </section>
     </div>
 
     <script>
@@ -700,8 +913,8 @@
                 if (!sessions.length) {
                     container.innerHTML = `
                         <div class="pc-session-empty">
-                            <i class="fas fa-qrcode" aria-hidden="true"></i>
-                            <span>Scan a PC station QR code to log in. Scan it again or use the button here to end your session.</span>
+                            <button type="button" class="pc-session-scan-action" id="pcStationScanButton"><i class="fas fa-qrcode" aria-hidden="true"></i><span>Scan QR to log in</span></button>
+                            <span>Scan a station QR code to start a session. Scan the same code again to end it.</span>
                         </div>`;
                     return;
                 }
@@ -761,6 +974,8 @@
             }
         }
 
+        let usageHistoryRecords = [];
+
         // Usage History Functions
         function escapeHistoryText(value) {
             return String(value ?? '').replace(/[&<>"']/g, character => ({
@@ -809,6 +1024,15 @@
             return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
         }
 
+        function formatHistoryCompactDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '—';
+            return date.toLocaleString(undefined, {
+                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+            }).replace(', ', ' · ');
+        }
+
         function formatHistoryDuration(minutes) {
             if (minutes == null) return null;
             const totalMinutes = Number(minutes);
@@ -839,13 +1063,14 @@
                         </div>
                     `;
                 } else {
+                    usageHistoryRecords = history;
                     container.innerHTML = `
                         <div class="usage-history-scroll overflow-x-auto" tabindex="0" aria-label="Scrollable PC usage history">
                             <table class="usage-history-table">
                                 <thead><tr><th>Station</th><th>Class / Subject</th><th>Instructor</th><th>Laboratory</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead>
-                                <tbody>${history.map(item => `
-                                    <tr>
-                                        <td><span class="usage-history-cell-label">Station</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.stationName || (item.pcSetId ? `PC Station ${item.pcSetId.replace(/^PC-SET-/i, '')}` : 'PC Station'))}</span></span></td>
+                                <tbody>${history.map((item, index) => `
+                                    <tr data-history-index="${index}" tabindex="0" role="button" aria-label="View session details">
+                                        <td><span class="usage-history-cell-label">Station</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.stationName || (item.pcSetId ? `PC Station ${item.pcSetId.replace(/^PC-SET-/i, '')}` : 'PC Station'))}</span><small class="usage-history-mobile-date">${escapeHistoryText(formatHistoryCompactDate(item.usageStartTime))}</small></span><i class="fas fa-chevron-right usage-history-mobile-chevron" aria-hidden="true"></i></td>
                                         <td><span class="usage-history-cell-label">Class / Subject</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(formatHistoryCourseSection(item.courseSection) || (item.attendanceId ? 'Class session' : 'Unscheduled session'))}</span><small>${escapeHistoryText(item.subject || (item.attendanceId ? item.traceStatus || 'Class details unavailable' : 'No class schedule — session recorded'))}</small></span></td>
                                         <td><span class="usage-history-cell-label">Instructor</span><span class="usage-history-value"><span class="usage-history-primary">${escapeHistoryText(item.instructor || '—')}</span></span></td>
                                         <td><span class="usage-history-cell-label">Laboratory</span><button class="usage-history-value usage-history-expandable" type="button" aria-expanded="false" title="Tap to show full laboratory and room" onclick="toggleHistoryLab(this)"><span class="usage-history-primary">${escapeHistoryText(item.laboratoryRoom || '—')}</span></button></td>
@@ -867,6 +1092,36 @@
             }
         }
 
+        function openPcHistoryDetail(index) {
+            const item = usageHistoryRecords[index];
+            const backdrop = document.getElementById('pcHistoryDetailBackdrop');
+            const sheet = document.getElementById('pcHistoryDetailSheet');
+            const body = document.getElementById('pcHistoryDetailBody');
+            if (!item || !backdrop || !sheet || !body) return;
+            const station = item.stationName || (item.pcSetId ? `PC Station ${String(item.pcSetId).replace(/^PC-SET-/i, '')}` : 'PC Station');
+            const details = [
+                ['Duration', formatHistoryDuration(item.durationMinutes) || (item.usageEndTime ? 'Unavailable' : 'Active')],
+                ['Class / Subject', formatHistoryCourseSection(item.courseSection) || (item.attendanceId ? 'Class session' : 'Unscheduled session')],
+                ['Instructor', item.instructor || '—'],
+                ['Laboratory', item.laboratoryRoom || '—'],
+                ['Started', formatHistoryDateTime(item.usageStartTime)],
+                ['Ended', item.usageEndTime ? formatHistoryDateTime(item.usageEndTime) : 'Active']
+            ];
+            document.getElementById('pcHistoryDetailTitle').textContent = station;
+            body.innerHTML = details.map(([label, value]) => `<div class="pc-history-detail-row"><span>${escapeHistoryText(label)}</span><strong>${escapeHistoryText(value)}</strong></div>`).join('');
+            backdrop.hidden = false;
+            sheet.hidden = false;
+            requestAnimationFrame(() => backdrop.classList.add('is-open'));
+        }
+
+        function closePcHistoryDetail() {
+            const backdrop = document.getElementById('pcHistoryDetailBackdrop');
+            const sheet = document.getElementById('pcHistoryDetailSheet');
+            if (!backdrop || !sheet) return;
+            backdrop.classList.remove('is-open');
+            window.setTimeout(() => { backdrop.hidden = true; sheet.hidden = true; }, 180);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
             const loadingFallback = window.setTimeout(() => {
@@ -883,6 +1138,29 @@
             await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
             window.clearTimeout(loadingFallback);
 
+            const historyContainer = document.getElementById('historyContainer');
+            document.getElementById('pcStationScanButton')?.addEventListener('click', () => {
+                document.getElementById('qr-scan-float-btn')?.click();
+            });
+            historyContainer?.addEventListener('click', (event) => {
+                const row = event.target.closest('[data-history-index]');
+                if (row) openPcHistoryDetail(Number(row.dataset.historyIndex));
+            });
+            historyContainer?.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                const row = event.target.closest('[data-history-index]');
+                if (!row) return;
+                event.preventDefault();
+                openPcHistoryDetail(Number(row.dataset.historyIndex));
+            });
+            document.getElementById('closePcHistoryDetail')?.addEventListener('click', closePcHistoryDetail);
+            document.getElementById('pcHistoryDetailBackdrop')?.addEventListener('click', (event) => {
+                if (event.target.id === 'pcHistoryDetailBackdrop') closePcHistoryDetail();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closePcHistoryDetail();
+            });
+
             const refreshPCStationData = () => {
                 if (document.visibilityState === 'visible') {
                     Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
@@ -893,7 +1171,7 @@
             document.addEventListener('visibilitychange', refreshPCStationData);
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=75" defer></script>
+    <script src="/js/student-sidebar-config.js?v=31" defer></script>
+    <script src="/js/sidebar-component.js?v=79" defer></script>
 </body>
 </html>

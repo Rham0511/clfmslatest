@@ -103,9 +103,20 @@ function getSidebarItems() {
         items.splice(insertIndex, 0, accomplishmentsItem);
       }
     }
-    return role.includes('admin')
-      ? normalizeAdminFacilityItems(items).filter((item) => normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) !== '/page/laboratory-schedules')
-      : items;
+    if (!role.includes('admin')) {
+      const isStudent = role === 'student' || config.role === 'student' || document.body.classList.contains('student-portal');
+      return isStudent
+        ? items.filter((item) => {
+            const path = normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]);
+            const label = String(item.label || '').trim().toLowerCase();
+            return path !== '/student-profile' && label !== 'my profile' &&
+              path !== '/student/my-requests' && label !== 'my reports';
+          })
+        : items;
+    }
+
+    return normalizeAdminFacilityItems(items)
+      .filter((item) => normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) !== '/page/laboratory-schedules');
   }
 
   // Fallback: if page indicates student portal, show student-specific items
@@ -116,8 +127,6 @@ function getSidebarItems() {
       { label: 'My PC Station', href: '/my-pc-station', icon: 'fas fa-desktop' },
       { label: 'Borrow Equipment', href: '/student/borrow-equipment', icon: 'fas fa-people-carry' },
       { label: 'Report Issue', href: '/student/report-issue', icon: 'fas fa-exclamation-triangle' },
-      { label: 'My Reports', href: '/student/my-requests', icon: 'fas fa-list-check' },
-      { label: 'My Profile', href: '/student-profile', icon: 'fas fa-user' },
       { label: 'Audit History', href: '/student-audit-history', icon: 'fas fa-clock-rotate-left' },
       { label: 'Logout', href: '/logout', icon: 'fas fa-right-from-bracket' }
     ];
@@ -536,6 +545,29 @@ function closeSidebarOnMobile() {
   }
 }
 
+function setProfileAvatarContent(element, initials, photoUrl) {
+  if (!element) return;
+  const url = typeof photoUrl === 'string' ? photoUrl.trim() : '';
+  if (!url) {
+    element.textContent = initials;
+    element.classList.remove('has-profile-photo');
+    return;
+  }
+
+  const image = document.createElement('img');
+  image.className = 'profile-avatar-photo';
+  image.src = url;
+  image.alt = 'Profile photo';
+  image.draggable = false;
+  image.addEventListener('error', () => {
+    element.textContent = initials;
+    element.classList.remove('has-profile-photo');
+  }, { once: true });
+  element.replaceChildren(image);
+  element.classList.add('has-profile-photo');
+}
+window.setProfileAvatarContent = setProfileAvatarContent;
+
 function hydrateStudentPageHeader() {
   if (!document.body.classList.contains('student-portal')) return;
 
@@ -550,9 +582,10 @@ function hydrateStudentPageHeader() {
     .slice(0, 2)
     .map(part => part.charAt(0).toUpperCase())
     .join('') || 'ST';
+  const photoUrl = user.photo || user.photoUrl || user.avatarUrl || user.avatar || '';
 
   document.querySelectorAll('.student-page-user-initials').forEach(element => {
-    element.textContent = initials;
+    setProfileAvatarContent(element, initials, photoUrl);
   });
   document.querySelectorAll('[data-user-name]').forEach(element => {
     element.textContent = displayName || (['faculty', 'instructor'].includes(role) ? 'Faculty' : 'User');
@@ -682,9 +715,9 @@ function hydrateAuthenticatedProfileNames() {
       .forEach(element => {
         element.textContent = displayName;
       });
-    document.querySelectorAll('.system-profile-badge-avatar, .user-avatar, [data-user-initials], [data-tech-initials], [data-tech-header-initials], [data-tech-avatar], #adminAvatar, #adminBadgeAvatar')
+    document.querySelectorAll('.system-profile-badge-avatar, .user-avatar, [data-user-initials]:not(.student-page-user-initials), [data-tech-initials], [data-tech-header-initials], [data-tech-avatar], #adminAvatar, #adminBadgeAvatar')
       .forEach(element => {
-        element.textContent = initials;
+        setProfileAvatarContent(element, initials, user.photo || user.photoUrl || user.avatarUrl || user.avatar || '');
       });
     document.querySelectorAll('.system-profile-badge, .technician-profile-identity').forEach(element => {
       element.setAttribute('aria-label', `${displayName}, ${displayRole || 'Technician'}`);
@@ -696,6 +729,26 @@ function hydrateAuthenticatedProfileNames() {
       .forEach(element => {
         element.textContent = displayRole;
       });
+  }
+}
+
+async function hydrateAuthenticatedProfilePhoto() {
+  try {
+    const response = await fetch('/api/profile', { credentials: 'same-origin', cache: 'no-store' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    const profile = payload?.user || payload;
+    const photoUrl = profile?.photo || profile?.photoUrl || profile?.avatarUrl || profile?.avatar || '';
+    if (!photoUrl) return;
+    window.__CURRENT_USER__ = { ...(window.__CURRENT_USER__ || {}), photo: photoUrl };
+    const displayName = [window.__CURRENT_USER__?.name, profile?.name, profile?.fullName]
+      .find(value => typeof value === 'string' && value.trim()) || 'User';
+    const initials = displayName.trim().split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(part => part.charAt(0).toUpperCase()).join('') || 'U';
+    document.querySelectorAll('.system-profile-badge-avatar, .student-page-user-initials, .user-avatar, [data-user-initials]')
+      .forEach(element => setProfileAvatarContent(element, initials, photoUrl));
+  } catch (error) {
+    console.debug('Profile photo could not be loaded for the header.', error);
   }
 }
 
@@ -779,7 +832,7 @@ function ensureRoleNotificationButtons() {
       const avatar = document.createElement('span');
       avatar.className = 'system-profile-badge-avatar';
       avatar.dataset.userInitials = '';
-      avatar.textContent = initials;
+      setProfileAvatarContent(avatar, initials, user.photo || user.photoUrl || user.avatarUrl || user.avatar || '');
       const copy = document.createElement('span');
       copy.className = 'system-profile-badge-copy';
       const name = document.createElement('span');
@@ -792,6 +845,30 @@ function ensureRoleNotificationButtons() {
       copy.append(name, roleText);
       profile.append(avatar, copy);
       actions.append(profile);
+    }
+
+    if (role === 'student') {
+      let profile = header.querySelector('.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link');
+      if (profile) {
+        const isProfileLink = profile instanceof HTMLAnchorElement
+          && new URL(profile.href, window.location.origin).pathname === '/student-profile';
+        if (!isProfileLink) {
+          const profileLink = document.createElement('a');
+          Array.from(profile.attributes).forEach((attribute) => {
+            if (!attribute.name.toLowerCase().startsWith('on') && attribute.name !== 'href' && attribute.name !== 'role' && attribute.name !== 'tabindex') {
+              profileLink.setAttribute(attribute.name, attribute.value);
+            }
+          });
+          while (profile.firstChild) profileLink.append(profile.firstChild);
+          profile.replaceWith(profileLink);
+          profile = profileLink;
+        }
+
+        profile.classList.add('student-profile-avatar-link');
+        profile.href = '/student-profile';
+        profile.title = 'Open profile';
+        profile.setAttribute('aria-label', `Open profile for ${displayName}`);
+      }
     }
 
     if (!button) {
@@ -1187,7 +1264,8 @@ async function refreshRoleNotificationCount() {
 function initializeMainThemeToggle() {
   const savedTheme = localStorage.getItem(COMLAB_MAIN_THEME_KEY);
   const darkOnlyPage = isDarkOnlyPage();
-  const initialTheme = !darkOnlyPage && savedTheme === 'light' ? 'light' : 'dark';
+  const isStudentPortalPage = document.body.classList.contains('student-portal');
+  const initialTheme = !darkOnlyPage && (savedTheme === 'light' || (isStudentPortalPage && !savedTheme)) ? 'light' : 'dark';
   applyMainTheme(initialTheme);
 
   document.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
@@ -1331,6 +1409,7 @@ window.addEventListener('DOMContentLoaded', () => {
   ensureAdminProfileShortcut();
   ensureFloatingScanButton();
   refreshRoleNotificationCount();
+  hydrateAuthenticatedProfilePhoto();
   if (window.__COMLAB_HEADER_NOTIFICATION_TIMER__) {
     window.clearInterval(window.__COMLAB_HEADER_NOTIFICATION_TIMER__);
   }

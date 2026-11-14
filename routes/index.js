@@ -4647,10 +4647,20 @@ const serveHtmlPage = (req, res) => {
     }
 
     const html = await fs.promises.readFile(dashboardPath, "utf8");
-    const hydratedHtml = html.replaceAll(
+    let hydratedHtml = html.replaceAll(
       "__CURRENT_USER_JSON__",
       JSON.stringify(currentUser)
     );
+
+    // The student reports view is embedded as a tab inside Report Issue. Mark
+    // that server-side so its shell is hidden even when scripts are delayed or
+    // a browser has cached an older client bundle.
+    if (page === "student-my-requests" && req.query?.embedded === "report-issue") {
+      hydratedHtml = hydratedHtml.replace(
+        '<html lang="en">',
+        '<html lang="en" class="student-requests-embedded">'
+      );
+    }
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
@@ -5401,6 +5411,25 @@ router.get("/pc-station/:setId/status", redirectLegacyPCStationQr);
 router.get("/pc-station/:setId", redirectLegacyPCStationQr);
 router.get("/register", registerPage);
 router.post("/register", registerUser);
+router.get("/api/profile", async (req, res) => {
+  if (!req.session?.userId) return res.status(401).json({ error: "Please log in to view your profile." });
+  try {
+    const user = await User.findByPk(req.session.userId, {
+      attributes: ["id", "name", "email", "role", "photo"]
+    });
+    if (!user) return res.status(404).json({ error: "User not found." });
+    return res.json({
+      id: user.id,
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "",
+      photo: user.photo || null
+    });
+  } catch (error) {
+    console.error("Failed to load profile for header:", error);
+    return res.status(500).json({ error: "Unable to load profile." });
+  }
+});
 router.post("/api/profile", updateProfile);
 router.patch("/api/admin/profile", async (req, res) => {
   if (!req.session?.userId) return res.status(401).json({ success: false, error: "Please log in to update your profile." });
@@ -8353,6 +8382,7 @@ router.get('/api/equipment-sets', equipmentSetController.getAllPCSets);
 router.get('/api/pc-stations/:setId/qr', getPCStationQr);
 
 // Get single PC set with details
+router.get('/api/equipment-sets/stats/overview', equipmentSetController.getPCSetStatistics);
 router.get('/api/equipment-sets/:setId', equipmentSetController.getPCSetDetails);
 
 // Create new PC set
@@ -8372,9 +8402,6 @@ router.post('/api/equipment-sets/:setId/components', equipmentSetController.addC
 
 // Remove component from set
 router.delete('/api/equipment-sets/:setId/components/:equipmentId', equipmentSetController.removeComponentFromSet);
-
-// Get PC set statistics
-router.get('/api/equipment-sets/stats/overview', equipmentSetController.getPCSetStatistics);
 
 // PC Set Management Page
 router.get('/pc-set-management', (req, res) => {

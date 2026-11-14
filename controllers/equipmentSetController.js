@@ -1,6 +1,11 @@
 import mysql from 'mysql2/promise';
 import { sequelize } from '../models/db.js';
-import { getUserCampusFromSession } from './campusAuthController.js';
+import {
+  getUserAuthContext,
+  getUserCampusFromSession,
+  isAdminRole,
+  isTechnicianRole
+} from './campusAuthController.js';
 import { ensureArchiveRecordsTable, getArchivedEntityIds } from '../models/archiveRecords.js';
 
 // Get database config from environment
@@ -34,6 +39,25 @@ function getDisplaySetId(set) {
     : setId;
 }
 
+function getCampusVariants(campus) {
+  const normalized = String(campus || '').trim();
+  const name = normalized.replace(/\s*Campus\s*$/i, '').trim();
+  return [...new Set([normalized, name, `${name} Campus`].filter(Boolean))];
+}
+
+async function getEquipmentSetAccess(req, res) {
+  const auth = await getUserAuthContext(req);
+  if (!auth.userId) {
+    res.status(401).json({ success: false, message: 'Please log in to manage PC sets.' });
+    return null;
+  }
+  if (!isAdminRole(auth.role) && !isTechnicianRole(auth.role)) {
+    res.status(403).json({ success: false, message: 'Admin or technician access is required.' });
+    return null;
+  }
+  return { ...auth, campusVariants: getCampusVariants(auth.campus) };
+}
+
 /**
  * Recalculate and update PC Set status based on current component statuses.
  * Called whenever a component is added, removed, or changes status.
@@ -59,18 +83,16 @@ async function recalculateSetStatusInternal(setId) {
 
     const statuses = components.map(c => String(c.status || '').toLowerCase());
     const categories = components.map(c => String(c.category || '').toLowerCase());
+    const hasCpu = categories.some(c => c === 'cpu' || c === 'computer' || c === 'system unit');
+    const hasMonitor = categories.some(c => c === 'monitor');
 
     let newStatus = 'active';
-    if (statuses.some(s => s === 'missing')) {
+    if (statuses.some(s => ['missing', 'unserviceable', 'for disposal', 'lost'].includes(s)) || !hasCpu || !hasMonitor) {
       newStatus = 'incomplete';
     } else if (statuses.some(s => ['under maintenance', 'for repair'].includes(s))) {
       newStatus = 'maintenance';
-    } else if (statuses.some(s => ['unserviceable', 'for disposal', 'lost'].includes(s))) {
-      newStatus = 'incomplete';
-    } else {
-      const hasCpu = categories.some(c => c === 'cpu' || c === 'computer' || c === 'system unit');
-      const hasMonitor = categories.some(c => c === 'monitor');
-      if (!hasCpu || !hasMonitor) newStatus = 'incomplete';
+    } else if (statuses.some(s => s === 'in use')) {
+      newStatus = 'in_use';
     }
 
     await pool.query("UPDATE equipment_sets SET status = ?, updatedAt = NOW() WHERE setId = ?", [newStatus, setId]);
@@ -82,7 +104,16 @@ async function recalculateSetStatusInternal(setId) {
 // Get all PC sets with component counts
 export async function getAllPCSets(req, res) {
   try {
+    const access = await getEquipmentSetAccess(req, res);
+    if (!access) return;
     await ensureArchiveRecordsTable();
+    const campusScope = access.campusVariants.length
+      ? `AND (COALESCE(componentStats.campus, stationLab.campus) IN (${access.campusVariants.map(() => '?').join(',')})
+          OR (componentStats.campus IS NULL AND stationLab.campus IS NULL AND es.createdBy = ?))`
+      : '';
+    const campusParams = access.campusVariants.length
+      ? [...access.campusVariants, access.userId]
+      : [];
     const [sets] = await pool.query(`
       SELECT 
         es.*,
@@ -91,6 +122,10 @@ export async function getAllPCSets(req, res) {
         COALESCE(componentStats.missingCount, 0) as missingCount,
         COALESCE(componentStats.unserviceableCount, 0) as unserviceableCount,
         COALESCE(componentStats.underMaintenanceCount, 0) as underMaintenanceCount,
+        COALESCE(componentStats.lostCount, 0) as lostCount,
+        COALESCE(componentStats.forRepairCount, 0) as forRepairCount,
+        COALESCE(componentStats.forDisposalCount, 0) as forDisposalCount,
+        COALESCE(componentStats.inUseCount, 0) as inUseCount,
         COALESCE(componentStats.hasCpu, 0) as hasCpu,
         COALESCE(componentStats.hasMonitor, 0) as hasMonitor,
         componentStats.components,
@@ -106,9 +141,13 @@ export async function getAllPCSets(req, res) {
           WHEN COALESCE(componentStats.componentCount, 0) = 0 THEN 'incomplete'
           WHEN COALESCE(componentStats.missingCount, 0) > 0
             OR COALESCE(componentStats.unserviceableCount, 0) > 0
+            OR COALESCE(componentStats.lostCount, 0) > 0
+            OR COALESCE(componentStats.forDisposalCount, 0) > 0
             OR COALESCE(componentStats.hasCpu, 0) = 0
             OR COALESCE(componentStats.hasMonitor, 0) = 0 THEN 'incomplete'
-          WHEN COALESCE(componentStats.underMaintenanceCount, 0) > 0 THEN 'maintenance'
+          WHEN COALESCE(componentStats.underMaintenanceCount, 0) > 0
+            OR COALESCE(componentStats.forRepairCount, 0) > 0 THEN 'maintenance'
+          WHEN COALESCE(componentStats.inUseCount, 0) > 0 THEN 'in_use'
           ELSE 'active'
         END as computedStatus
       FROM equipment_sets es
@@ -120,11 +159,15 @@ export async function getAllPCSets(req, res) {
           SUM(CASE WHEN status = 'Missing' THEN 1 ELSE 0 END) as missingCount,
           SUM(CASE WHEN status = 'Unserviceable' THEN 1 ELSE 0 END) as unserviceableCount,
           SUM(CASE WHEN status = 'Under Maintenance' THEN 1 ELSE 0 END) as underMaintenanceCount,
+          SUM(CASE WHEN status = 'Lost' THEN 1 ELSE 0 END) as lostCount,
+          SUM(CASE WHEN status = 'For Repair' THEN 1 ELSE 0 END) as forRepairCount,
+          SUM(CASE WHEN status = 'For Disposal' THEN 1 ELSE 0 END) as forDisposalCount,
+          SUM(CASE WHEN status = 'In Use' THEN 1 ELSE 0 END) as inUseCount,
           MAX(CASE WHEN LOWER(category) IN ('cpu', 'computer', 'system unit') THEN 1 ELSE 0 END) as hasCpu,
           MAX(CASE WHEN LOWER(category) = 'monitor' THEN 1 ELSE 0 END) as hasMonitor,
           MAX(campus) as campus,
           MAX(laboratoryRoom) as laboratoryRoom,
-          COUNT(DISTINCT campus) as campusCount,
+          COUNT(DISTINCT LOWER(REPLACE(campus, ' Campus', ''))) as campusCount,
           GROUP_CONCAT(DISTINCT category SEPARATOR '|||') as componentCategories,
           GROUP_CONCAT(
             CONCAT(category, ' - ', name, ' [', status, ']')
@@ -141,8 +184,9 @@ export async function getAllPCSets(req, res) {
         FROM archived_records ar
         WHERE ar.entityType = 'pc-set' AND BINARY ar.entityId = BINARY es.setId
       )
+      ${campusScope}
       ORDER BY es.setId
-    `);
+    `, campusParams);
 
     const [unassigned] = await pool.query(`
       SELECT id, equipmentId, name, category, serialNumber, status, campus, laboratoryRoom
@@ -152,8 +196,9 @@ export async function getAllPCSets(req, res) {
           SELECT 1 FROM archived_records ar
           WHERE ar.entityType = 'equipment' AND BINARY ar.entityId = BINARY equipment.equipmentId
         )
+        ${access.campusVariants.length ? `AND equipment.campus IN (${access.campusVariants.map(() => '?').join(',')})` : ''}
       ORDER BY campus, category, name, equipmentId
-    `);
+    `, access.campusVariants.length ? access.campusVariants : []);
 
     const result = sets.map(s => ({
       ...s,
@@ -245,6 +290,8 @@ export async function getPCSetDetails(req, res) {
         computedStatus = 'incomplete';
       } else if (statuses.some(status => ['under maintenance', 'for repair'].includes(status))) {
         computedStatus = 'maintenance';
+      } else if (statuses.some(status => status === 'in use')) {
+        computedStatus = 'in_use';
       } else {
         computedStatus = 'active';
       }
@@ -400,6 +447,8 @@ export async function deletePCSet(req, res) {
 // Get available equipment (not in any set)
 export async function getAvailableEquipment(req, res) {
   try {
+    const access = await getEquipmentSetAccess(req, res);
+    if (!access) return;
     await ensureArchiveRecordsTable();
     const [equipment] = await pool.query(`
       SELECT 
@@ -420,8 +469,9 @@ export async function getAvailableEquipment(req, res) {
           SELECT 1 FROM archived_records ar
           WHERE ar.entityType = 'equipment' AND BINARY ar.entityId = BINARY equipment.equipmentId
         )
+        ${access.campusVariants.length ? `AND equipment.campus IN (${access.campusVariants.map(() => '?').join(',')})` : ''}
       ORDER BY category, name
-    `);
+    `, access.campusVariants.length ? access.campusVariants : []);
 
     res.json({
       success: true,
@@ -470,6 +520,9 @@ export async function addComponentToSet(req, res) {
       });
     }
 
+    const access = await getEquipmentSetAccess(req, res);
+    if (!access) return;
+
     connection = await pool.getConnection();
     await connection.beginTransaction();
     transactionStarted = true;
@@ -477,7 +530,7 @@ export async function addComponentToSet(req, res) {
     // Lock both the target set and equipment rows so simultaneous requests
     // cannot assign the same equipment to different sets.
     const [set] = await connection.query(
-      'SELECT id FROM equipment_sets WHERE setId = ? FOR UPDATE',
+      'SELECT id, createdBy FROM equipment_sets WHERE setId = ? FOR UPDATE',
       [setId]
     );
     if (set.length === 0) {
@@ -491,7 +544,7 @@ export async function addComponentToSet(req, res) {
 
     const placeholders = ids.map(() => '?').join(',');
     const [eqRows] = await connection.query(
-      `SELECT id, setId, status, equipmentId, serialNumber, category FROM equipment WHERE id IN (${placeholders}) FOR UPDATE`,
+      `SELECT id, setId, status, equipmentId, serialNumber, category, campus FROM equipment WHERE id IN (${placeholders}) FOR UPDATE`,
       ids
     );
     if (eqRows.length !== ids.length) {
@@ -518,20 +571,41 @@ export async function addComponentToSet(req, res) {
           message: `${reason} No components were added.`
         });
       }
-      if (String(eq.status || '').toLowerCase() === 'missing') {
+      if (String(eq.status || '').toLowerCase() !== 'serviceable') {
         await connection.rollback();
         transactionStarted = false;
         return res.status(409).json({
           success: false,
-          message: `Equipment ${eq.equipmentId} is marked Missing and cannot be added to a set. No components were added.`
+          message: `Equipment ${eq.equipmentId} is not Serviceable and cannot be added to a PC set. No components were added.`
         });
       }
     }
 
     const [assignedRows] = await connection.query(
-      'SELECT category FROM equipment WHERE setId = ? FOR UPDATE',
+      'SELECT category, campus FROM equipment WHERE setId = ? FOR UPDATE',
       [setId]
     );
+    const allowedCampuses = access.campusVariants.map((campus) => campus.toLowerCase());
+    const targetCampuses = [...assignedRows, ...eqRows]
+      .map((row) => String(row.campus || '').trim().toLowerCase())
+      .filter(Boolean);
+    if (allowedCampuses.length && targetCampuses.some((campus) => !allowedCampuses.includes(campus))) {
+      await connection.rollback();
+      transactionStarted = false;
+      return res.status(403).json({
+        success: false,
+        message: 'All PC set components must belong to your assigned campus. No components were added.'
+      });
+    }
+    const firstCampus = targetCampuses[0];
+    if (firstCampus && targetCampuses.some((campus) => campus !== firstCampus)) {
+      await connection.rollback();
+      transactionStarted = false;
+      return res.status(409).json({
+        success: false,
+        message: 'A PC set cannot contain equipment from different campuses. No components were added.'
+      });
+    }
     const categoriesInSet = new Set(
       assignedRows.map(row => String(row.category || '').trim().toLowerCase()).filter(Boolean)
     );
@@ -562,7 +636,7 @@ export async function addComponentToSet(req, res) {
       SET setId = ?
       WHERE id IN (${placeholders})
         AND (setId IS NULL OR TRIM(setId) = '')
-        AND status != 'Missing'
+        AND status = 'Serviceable'
     `, [setId, ...ids]);
     if (updateResult.affectedRows !== ids.length) {
       await connection.rollback();
@@ -690,25 +764,61 @@ export async function removeComponentFromSet(req, res) {
 // Get PC set statistics
 export async function getPCSetStatistics(req, res) {
   try {
+    const access = await getEquipmentSetAccess(req, res);
+    if (!access) return;
     await ensureArchiveRecordsTable();
-    const [stats] = await pool.query(`
-      SELECT 
-        COUNT(DISTINCT es.id) as totalSets,
-        SUM(CASE WHEN es.status = 'active' THEN 1 ELSE 0 END) as activeSets,
-        SUM(CASE WHEN es.status = 'incomplete' THEN 1 ELSE 0 END) as incompleteSets,
-        SUM(CASE WHEN es.status = 'maintenance' THEN 1 ELSE 0 END) as maintenanceSets,
-        COUNT(e.id) as totalComponents
+    const [rows] = await pool.query(`
+      SELECT es.id, es.setId, es.status as storedStatus, es.createdBy,
+        e.status as componentStatus, e.category as componentCategory,
+        e.campus as componentCampus
       FROM equipment_sets es
       LEFT JOIN equipment e ON e.setId = es.setId
       WHERE NOT EXISTS (
         SELECT 1 FROM archived_records ar
         WHERE ar.entityType = 'pc-set' AND BINARY ar.entityId = BINARY es.setId
       )
+      ORDER BY es.id
     `);
+    const groups = new Map();
+    rows.forEach((row) => {
+      if (!groups.has(row.id)) groups.set(row.id, { ...row, components: [] });
+      if (row.componentStatus !== null && row.componentStatus !== undefined) {
+        groups.get(row.id).components.push(row);
+      }
+    });
+    const allowedCampuses = access.campusVariants.map((campus) => campus.toLowerCase());
+    const scopedSets = [...groups.values()].filter((set) => {
+      if (!allowedCampuses.length) return true;
+      if (!set.components.length) return Number(set.createdBy) === Number(access.userId);
+      return set.components.every((component) => allowedCampuses.includes(String(component.componentCampus || '').trim().toLowerCase()));
+    });
+    const getStatus = (set) => {
+      const storedStatus = String(set.storedStatus || '').toLowerCase();
+      if (storedStatus === 'retired') return 'retired';
+      const statuses = set.components.map((component) => String(component.componentStatus || '').toLowerCase());
+      const categories = set.components.map((component) => String(component.componentCategory || '').toLowerCase());
+      if (!set.components.length ||
+        statuses.some((status) => ['missing', 'unserviceable', 'lost', 'for disposal'].includes(status)) ||
+        !categories.some((category) => ['cpu', 'computer', 'system unit'].includes(category)) ||
+        !categories.includes('monitor')) return 'incomplete';
+      if (statuses.some((status) => ['under maintenance', 'for repair'].includes(status))) return 'maintenance';
+      if (statuses.some((status) => status === 'in use')) return 'in_use';
+      return 'active';
+    };
+    const statistics = scopedSets.reduce((result, set) => {
+      const status = getStatus(set);
+      result.totalSets += 1;
+      result.totalComponents += set.components.length;
+      if (status === 'active') result.activeSets += 1;
+      else if (status === 'maintenance') result.maintenanceSets += 1;
+      else if (status === 'in_use') result.inUseSets += 1;
+      else if (status === 'incomplete') result.incompleteSets += 1;
+      return result;
+    }, { totalSets: 0, activeSets: 0, incompleteSets: 0, maintenanceSets: 0, inUseSets: 0, totalComponents: 0 });
 
     res.json({
       success: true,
-      statistics: stats[0]
+      statistics
     });
   } catch (error) {
     console.error('Error fetching PC set statistics:', error);

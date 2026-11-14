@@ -201,7 +201,7 @@ export const listEquipmentAssignments = async (req, res) => {
     const activeAssignments = equipmentIds.length
       ? await EquipmentAssignment.findAll({
           where: { equipmentRecordId: { [Op.in]: equipmentIds }, unassignedAt: null },
-          order: [["assignedAt", "DESC"]]
+          order: [["assignedAt", "DESC"], ["id", "DESC"]]
         })
       : [];
     const assignmentByEquipment = new Map();
@@ -293,7 +293,7 @@ export const updateEquipmentAssignment = async (req, res) => {
       });
       const currentAssignments = await EquipmentAssignment.findAll({
         where: { equipmentRecordId: equipment.id, unassignedAt: null },
-        order: [["assignedAt", "DESC"]],
+        order: [["assignedAt", "DESC"], ["id", "DESC"]],
         transaction,
         lock: transaction.LOCK.UPDATE
       });

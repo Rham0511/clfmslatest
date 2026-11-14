@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { Equipment } from "../models/equipmentModel.js";
+import { EquipmentAssignment } from "../models/equipmentAssignmentModel.js";
 import { BorrowRecord } from "../models/borrowRecordModel.js";
 import { getArchivedEntityIds } from "../models/archiveRecords.js";
 import { User } from "../models/userModel.js";
@@ -118,14 +119,38 @@ export const listEquipmentAvailability = async (req, res) => {
       getArchivedEntityIds("equipment")
     ]);
 
+    const activeAssignments = equipment.length
+      ? await EquipmentAssignment.findAll({
+          where: {
+            equipmentRecordId: { [Op.in]: equipment.map((item) => item.id) },
+            unassignedAt: null
+          },
+          order: [["assignedAt", "DESC"], ["id", "DESC"]]
+        })
+      : [];
+    const assignmentByEquipment = new Map();
+    activeAssignments.forEach((assignment) => {
+      const key = Number(assignment.equipmentRecordId);
+      if (!assignmentByEquipment.has(key)) assignmentByEquipment.set(key, assignment);
+    });
+
     const validRecords = borrowRecords.filter(isValidBorrowRecord);
     const archivedEquipment = new Set(archivedEquipmentIds);
     const now = new Date();
     const response = equipment.filter((item) => !archivedEquipment.has(String(item.equipmentId))).map((item) => {
       const itemRecords = validRecords.filter((record) => isMatchingEquipmentReference(record, item));
       const status = String(item.status || "Serviceable");
-      const unavailable = ["unserviceable", "lost", "missing", "under maintenance", "for repair", "for disposal"].includes(status.toLowerCase());
+      const unavailable = ["unserviceable", "lost", "missing", "under maintenance", "in use", "for repair", "for disposal"].includes(status.toLowerCase());
       const currentlyBorrowed = !unavailable && itemRecords.some((record) => isCurrentlyBorrowed(record, now));
+      const assignment = assignmentByEquipment.get(Number(item.id));
+      const hasCurrentAccountability = Boolean(assignment);
+      const availability = unavailable
+        ? "UNAVAILABLE"
+        : currentlyBorrowed
+          ? "BORROWED"
+          : hasCurrentAccountability
+            ? "AVAILABLE"
+            : "UNAVAILABLE";
       return {
         databaseId: item.id,
         equipmentId: item.equipmentId,
@@ -135,7 +160,15 @@ export const listEquipmentAvailability = async (req, res) => {
         laboratoryRoom: item.laboratoryRoom || null,
         campus: item.campus,
         status,
-        availability: unavailable ? "UNAVAILABLE" : currentlyBorrowed ? "BORROWED" : "AVAILABLE",
+        availability,
+        availabilityReason: unavailable
+          ? "Equipment condition/status does not allow borrowing"
+          : currentlyBorrowed
+            ? "Currently borrowed"
+            : hasCurrentAccountability
+              ? "Ready to borrow"
+              : "No current MR Faculty assignment",
+        hasCurrentAccountability,
         timesBorrowed: itemRecords.length
       };
     });

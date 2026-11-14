@@ -9,7 +9,7 @@ const roleHelp = {
       "Report Issue (/student/report-issue): report equipment problems.",
       "My PC Station (/my-pc-station): scan a station QR code to start a session, scan again or use the page button to end it, and view usage history.",
       "Student attendance: use the shared Scan QR button or Scan Attendance page to check in with an instructor's active attendance QR code.",
-      "Audit History (/student-audit-history) and My Profile (/student-profile)."
+      "Audit History (/student-audit-history). Open My Profile (/student-profile) from the profile icon in the header."
     ]
   },
   faculty: {

@@ -1459,6 +1459,7 @@
                 'active':      'background:rgb(20, 83, 45);color:#86efac;border-color:rgba(34,197,94,.3);',
                 'incomplete':  'background:rgb(133, 77, 14);color:#fcd34d;border-color:rgba(251,191,36,.3);',
                 'maintenance': 'background:rgb(88, 28, 135);color:#c4b5fd;border-color:rgba(139,92,246,.3);',
+                'in_use':     'background:rgb(30, 64, 175);color:#bfdbfe;border-color:rgba(96,165,250,.3);',
                 'retired':     'background:rgba(107,114,128,.15);color:#d1d5db;border-color:rgba(107,114,128,.3);',
             };
             const sc = statusColors[set.status] || statusColors['incomplete'];

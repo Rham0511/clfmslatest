@@ -2141,7 +2141,7 @@
             <td>${escapeHtml(record.borrowerName || '—')}</td>
             <td>${equipmentDisplay.name}<div class="text-xs text-slate-400">${record.equipmentReferenceStatus === 'unresolved' ? `Original Equipment ID: ${equipmentDisplay.id}` : equipmentDisplay.id}</div></td>
             <td>${formatDate(record.borrowDate)}</td>
-            <td>${escapeHtml(record.takenOverFrom || '—')}</td>
+            <td>${escapeHtml(record.takenOverFrom || (isPending && record.isStudentQrHandoff ? record.currentBorrowerName : '') || '—')}</td>
             <td><span class="status-badge ${statusClass}">${statusLabel}</span>${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeHtml(record.returnRequestedBy)}` : ''}</div>` : ''}</td>
             <td>${isBorrowed ? `<div>${escapeHtml(record.borrowerName || '—')}</div>${record.currentAccountableFacultyName ? `<div class="mt-1 text-xs text-emerald-200">Accountable: ${escapeHtml(record.currentAccountableFacultyName)}</div>` : ''}` : '—'}</td>
             <td>
@@ -2498,8 +2498,10 @@
       document.getElementById('detailInstructorName').textContent = record.instructorName || record.instructor_name || '—';
       const takenOverFrom = document.getElementById('detailTakenOverFrom');
       const takenOverFromCard = document.getElementById('detailTakenOverFromCard');
-      if (takenOverFrom) takenOverFrom.textContent = record.takenOverFrom || '—';
-      if (takenOverFromCard) takenOverFromCard.hidden = !record.takenOverFrom;
+      const takeoverSource = record.takenOverFrom ||
+        (record.isStudentQrHandoff && String(record.status || '').toLowerCase() === 'pending' ? record.currentBorrowerName : null);
+      if (takenOverFrom) takenOverFrom.textContent = takeoverSource || '—';
+      if (takenOverFromCard) takenOverFromCard.hidden = !takeoverSource;
       document.getElementById('detailEquipmentLabel').textContent = getEquipmentDisplay(record).text;
       const qty = Number(record.quantity || 1);
       document.getElementById('detailQuantity').textContent = `${qty} Unit${qty === 1 ? '' : 's'}`;

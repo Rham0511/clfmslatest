@@ -166,6 +166,7 @@
       .labs-page-tabs { max-width: min(100%, 15rem); }
     }
     @media (max-width: 1023px) {
+      html body.app-shell.computer-labs-admin-page .page-heading #mobileMenuToggle,
       html body.app-shell.computer-labs-admin-page .comlab-slim-page-header #mobileMenuToggle {
         position: static !important;
         top: auto !important;
@@ -183,6 +184,7 @@
         vertical-align: middle;
       }
 
+      html body.app-shell.computer-labs-admin-page .page-heading .header-actions,
       html body.app-shell.computer-labs-admin-page .comlab-slim-page-header .header-actions {
         margin-left: auto !important;
       }
@@ -551,6 +553,9 @@
   <main class="main-container computer-labs-page">
     <div class="labs-wrap">
       <header class="page-heading" data-comlab-no-header-spacer="true">
+        <button id="mobileMenuToggle" class="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Open navigation" aria-expanded="false">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
         <div class="heading-copy">
           <p class="eyebrow">Facilities management</p>
           <p>Add and manage the computer laboratories registered at your campus.</p>
@@ -571,7 +576,7 @@
       </section>
       <div class="labs-grid">
         <section class="panel add-panel" aria-labelledby="add-lab-title">
-          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span><div class="panel-heading-copy"><p class="panel-kicker">Campus setup</p><h2 id="add-lab-title">Add a Computer Lab</h2><p class="panel-description">Register a lab and its room location.</p></div></div>
+          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span><div class="panel-heading-copy"><h2 id="add-lab-title">Add a Computer Lab</h2><p class="panel-description">Register a lab and its room location.</p></div></div>
           <form id="labForm">
             <div class="form-fields">
               <label for="labName">Laboratory name</label>
@@ -583,10 +588,9 @@
             <button class="submit" id="submitLab" type="submit"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Computer Lab</button>
             <p id="formNotice" class="notice" role="status" aria-live="polite"></p>
           </form>
-          <p class="form-footnote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Equipment and schedules can be linked to a registered lab.</span></p>
         </section>
         <section class="panel labs-panel" aria-labelledby="lab-list-title">
-          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i></span><div class="panel-heading-copy"><p class="panel-kicker">Location directory</p><h2 id="lab-list-title">Labs at Your Campus</h2><p class="panel-description">List updates automatically after changes and checks for updates every 10 seconds.</p></div><span id="labCount" class="list-count">Loading…</span></div>
+          <div class="panel-heading"><span class="panel-heading-icon"><i class="fa-solid fa-building-circle-check" aria-hidden="true"></i></span><div class="panel-heading-copy"><p class="panel-kicker">Location directory</p><h2 id="lab-list-title">Labs at Your Campus</h2></div><span id="labCount" class="list-count">Loading…</span></div>
           <div class="lab-toolbar">
             <label class="lab-search-wrap" for="labSearch"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="labSearch" type="search" placeholder="Search by lab name or room" autocomplete="off"></label>
             <button class="secondary-button" id="refreshLabs" type="button" aria-label="Refresh computer lab list" title="Refresh list"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span class="button-label">Refresh</span></button>

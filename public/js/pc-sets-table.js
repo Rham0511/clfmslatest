@@ -300,6 +300,7 @@ function renderPCSetsTable(sets, unassigned = {}) {
             'active':      { label: '✔ Ready to Use', style: 'background:rgba(34,197,94,.2);color:#bbf7d0;border:1px solid rgba(74,222,128,.5);' },
             'incomplete':  { label: '⚠ Needs Review', style: 'background:rgba(245,158,11,.16);color:#fde68a;border:1px solid rgba(245,158,11,.38);' },
             'maintenance': { label: '🔧 Under Maintenance', style: 'background:rgba(139,92,246,.18);color:#ddd6fe;border:1px solid rgba(167,139,250,.4);' },
+            'in_use':      { label: '● In Use', style: 'background:rgba(59,130,246,.18);color:#bfdbfe;border:1px solid rgba(96,165,250,.4);' },
             'retired':     { label: '✕ Retired', style: 'background:rgba(107,114,128,.16);color:#d1d5db;border:1px solid rgba(156,163,175,.3);' },
         };
         const missing = Number(set.missingCount || 0);
@@ -625,6 +626,7 @@ async function editPCSetInline(setId) {
                                     <option value="incomplete" ${set.status === 'incomplete' ? 'selected' : ''}>Incomplete</option>
                                     <option value="active" ${set.status === 'active' ? 'selected' : ''}>Active</option>
                                     <option value="maintenance" ${set.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                                    <option value="in_use" ${set.status === 'in_use' ? 'selected' : ''}>In Use</option>
                                     <option value="retired" ${set.status === 'retired' ? 'selected' : ''}>Retired</option>
                                 </select>
                             </div>

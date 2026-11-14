@@ -26,14 +26,16 @@
       font-family: Inter, "Segoe UI", sans-serif;
     }
     html.theme-light body.app-shell.admin-facilities-page {
-      --page-bg: #eef4f0;
-      --surface: #f6faf7;
-      --text: #16271d;
-      --muted: #5c7566;
-      --line: rgba(22, 101, 52, .17);
-      --accent: #168044;
-      --accent-strong: #15803d;
-      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page-bg);
+      --page-bg: #f1f5f9;
+      --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, .98), rgba(241, 245, 249, .98));
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #526174;
+      --line: rgba(71, 85, 105, .2);
+      --accent: #2563eb;
+      --accent-strong: #1d4ed8;
+      --soft: rgba(59, 130, 246, .1);
+      background: radial-gradient(ellipse at 82% 0%, rgba(59, 130, 246, .1), transparent 38%), var(--page-bg);
     }
     .facilities-main {
       box-sizing: border-box;
@@ -392,11 +394,40 @@
         html body.app-shell.facilities-embedded.system-layout-page #mainContainer:has(#equipment-availability-view.active) .equipment-availability-page { margin-top: 0 !important; }
         html body.app-shell.facilities-embedded.admin-borrow-equipment-page .main-container { margin: 0 !important; padding: .35rem !important; }
         html body.app-shell.facilities-embedded.admin-borrow-equipment-page .page-card { margin-top: 0 !important; }
+        html.theme-light body.app-shell.facilities-embedded {
+          color-scheme: light !important;
+          background: #f8fafc !important;
+          color: #172033 !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded .main-container,
+        html.theme-light body.app-shell.facilities-embedded .page-content,
+        html.theme-light body.app-shell.facilities-embedded .assignment-content {
+          background: #f8fafc !important;
+          color: #172033 !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-assignment-page .assignment-table thead th {
+          background: #e2e8f0 !important;
+          color: #172033 !important;
+          box-shadow: 0 1px 0 rgba(71, 85, 105, .2) !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-assignment-page .assignment-table-scroll {
+          scrollbar-color: #94a3b8 #e2e8f0 !important;
+        }
       `;
       const applyEmbeddedLayout = () => {
         try {
           const doc = frame.contentDocument;
           if (!doc?.head || !doc.body) return;
+          const isLight = document.documentElement.classList.contains('theme-light');
+          doc.documentElement.classList.toggle('theme-light', isLight);
+          doc.documentElement.classList.toggle('theme-dark', !isLight);
+          doc.documentElement.classList.toggle('dark', !isLight);
+          doc.body.classList.toggle('theme-light', isLight);
+          doc.body.classList.toggle('theme-dark', !isLight);
+          doc.querySelectorAll('.main-container, .page-shell, .audit-page-content').forEach((container) => {
+            container.classList.toggle('theme-light', isLight);
+            container.classList.toggle('theme-dark', !isLight);
+          });
           doc.body.classList.add('facilities-embedded');
           doc.defaultView.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__ = true;
           doc.querySelectorAll('#shared-sidebar, #sidebar, #sidebarOverlay, #qr-scan-float-btn, #comlab-help-float-btn, #comlab-help-panel').forEach((element) => element.remove());
@@ -432,6 +463,7 @@
           window.history.replaceState(null, '', nextUrl);
         }
       };
+      new MutationObserver(() => applyEmbeddedLayout()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
       frame.addEventListener('load', applyEmbeddedLayout);
       tabs.forEach((tab) => tab.addEventListener('click', () => setActiveTab(tab.dataset.facilitiesTab)));
       document.querySelector('.facilities-header-tabs').addEventListener('keydown', (event) => {

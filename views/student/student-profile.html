@@ -649,7 +649,7 @@
     </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=10">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=31">
 </head>
 <body class="app-shell student-portal system-layout-page student-profile-page">
     <div id="shared-sidebar"></div>
@@ -813,6 +813,28 @@
             return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
         }
 
+        function applyProfilePhotoToHeader(initials, photoUrl) {
+            document.querySelectorAll('.student-page-user-initials').forEach((element) => {
+                element.replaceChildren();
+                if (photoUrl) {
+                    const image = document.createElement('img');
+                    image.className = 'profile-avatar-photo';
+                    image.src = photoUrl;
+                    image.alt = 'Profile photo';
+                    image.draggable = false;
+                    image.addEventListener('error', () => {
+                        element.textContent = initials;
+                        element.classList.remove('has-profile-photo');
+                    }, { once: true });
+                    element.append(image);
+                    element.classList.add('has-profile-photo');
+                } else {
+                    element.textContent = initials;
+                    element.classList.remove('has-profile-photo');
+                }
+            });
+        }
+
         function hydrateProfilePage() {
             const user = window.__CURRENT_USER__ || {};
             const displayName = user.name || user.fullName || 'Student Name';
@@ -824,7 +846,9 @@
             const initials = user.initials || getInitials(displayName, email);
             const roleLabel = formatRole(user.role || 'student');
 
-            document.querySelectorAll('[data-user-initials]').forEach((element) => { element.textContent = initials; });
+            const photoUrl = user.photo || user.photoUrl || user.avatarUrl || user.avatar || '';
+            applyProfilePhotoToHeader(initials, photoUrl);
+            document.querySelectorAll('[data-user-initials]:not(.student-page-user-initials)').forEach((element) => { element.textContent = initials; });
             document.querySelectorAll('[data-user-role]').forEach((element) => { element.textContent = roleLabel; });
             document.querySelectorAll('[data-profile-full-name]').forEach((element) => { element.textContent = displayName; });
             document.querySelectorAll('[data-profile-course-inline]').forEach((element) => {
@@ -849,7 +873,6 @@
             const preview = document.querySelector('[data-student-photo-preview]');
             const fallback = document.querySelector('[data-student-photo-fallback]');
             if (preview && fallback) {
-                const photoUrl = user.photo || user.photoUrl || user.avatarUrl;
                 if (photoUrl) {
                     preview.src = photoUrl;
                     preview.style.display = 'block';
@@ -959,6 +982,9 @@
                     }
 
                     preview.src = result.photo;
+                    window.__CURRENT_USER__ = { ...(window.__CURRENT_USER__ || {}), photo: result.photo };
+                    const headerInitials = getInitials(window.__CURRENT_USER__?.name || 'Student', window.__CURRENT_USER__?.email || '');
+                    applyProfilePhotoToHeader(headerInitials, result.photo);
                 } catch (error) {
                     console.error(error);
                     alert(error.message || 'Unable to upload profile photo.');
@@ -990,8 +1016,8 @@
             }
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=75" defer></script>
+    <script src="/js/student-sidebar-config.js?v=31" defer></script>
+    <script src="/js/sidebar-component.js?v=78" defer></script>
     <script src="/js/qr-scanner-button.js?v=9" defer></script>
 </body>
 </html>

@@ -4,9 +4,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ComLab Student Portal</title>
+    <script>
+        if (new URLSearchParams(window.location.search).get('embedded') === 'report-issue') {
+            document.documentElement.classList.add('student-requests-embedded');
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <style>
+        html.student-requests-embedded,
+        html.student-requests-embedded body {
+            min-height: 100%;
+            overflow-x: hidden;
+        }
+
+        html.student-requests-embedded body {
+            min-height: 0;
+        }
+
+        html.student-requests-embedded #shared-sidebar,
+        html.student-requests-embedded .main-container > header,
+        html.student-requests-embedded #qr-scan-float-btn,
+        html.student-requests-embedded #comlab-help-float-btn,
+        html.student-requests-embedded #comlab-help-panel {
+            display: none !important;
+        }
+
+        html.student-requests-embedded .main-container {
+            min-height: 0 !important;
+            margin-left: 0 !important;
+            background: transparent !important;
+        }
+
+        html.student-requests-embedded .requests-page {
+            max-width: none;
+            padding: .2rem !important;
+        }
+
+        @media (max-width: 1200px), (pointer: coarse) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .status-badge {
+                display: inline-flex !important;
+                width: max-content !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                outline: 0 !important;
+                color: #536c5c !important;
+                font-size: .68rem !important;
+                line-height: 1.2 !important;
+                white-space: nowrap !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status::before,
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action::before {
+                display: none !important;
+                content: none !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status {
+                width: max-content !important;
+                max-width: none !important;
+                overflow: visible !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-summary {
+                min-width: 0 !important;
+                overflow: hidden !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-summary strong {
+                min-width: 0 !important;
+                font-size: .86rem !important;
+                white-space: nowrap !important;
+            }
+        }
+    </style>
+    <style>
+        @media (max-width: 1200px), (pointer: coarse) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table,
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: fixed !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody {
+                display: grid !important;
+                gap: 0 !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row {
+                display: grid !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+                grid-template-areas: "summary status" "summary action" !important;
+                align-items: center !important;
+                gap: .1rem .7rem !important;
+                padding: .72rem .8rem !important;
+                box-sizing: border-box !important;
+                border: 0 !important;
+                border-bottom: 1px solid #dce8df !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row > td {
+                min-width: 0 !important;
+                width: auto !important;
+                max-width: none !important;
+                padding: 0 !important;
+                border: 0 !important;
+                overflow: hidden !important;
+                background: transparent !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row > td:not(.report-mobile-summary):not(.col-status):not(.col-action) {
+                display: none !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row > td.report-mobile-summary {
+                display: grid !important;
+                grid-area: summary !important;
+                gap: .12rem !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-mobile-summary strong {
+                display: block !important;
+                overflow: hidden !important;
+                color: #173326 !important;
+                font-size: .94rem !important;
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-mobile-summary span {
+                display: block !important;
+                overflow: hidden !important;
+                color: #71877a !important;
+                font-size: .76rem !important;
+                line-height: 1.25 !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row > td.col-status {
+                display: flex !important;
+                grid-area: status !important;
+                justify-content: flex-end !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge {
+                display: inline-flex !important;
+                width: auto !important;
+                min-width: max-content !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row > td.col-action {
+                display: flex !important;
+                grid-area: action !important;
+                justify-content: flex-end !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle {
+                display: inline-grid !important;
+                width: 1.6rem !important;
+                min-width: 1.6rem !important;
+                height: 1.6rem !important;
+                place-items: center !important;
+                padding: 0 !important;
+                font-size: 0 !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle i { display: none !important; }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle::after { content: '›' !important; font-size: 1.5rem !important; color: #16834a !important; }
+        }
+    </style>
     <style>
         body {
             background: #020617;
@@ -1023,7 +1194,328 @@
     </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=18">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=32">
+    <style>
+        @media (max-width: 1200px), (pointer: coarse) {
+            body.student-my-requests-page .borrow-requests-table { min-width: 0 !important; width: 100% !important; }
+            body.student-my-requests-page .borrow-requests-table thead { display: none !important; }
+            body.student-my-requests-page .borrow-requests-table tbody { display: grid !important; gap: 0 !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] { display: flex !important; align-items: center !important; gap: .65rem !important; min-height: 4.2rem !important; padding: .65rem 0 !important; border: 0 !important; border-bottom: 1px solid #dce8df !important; border-radius: 0 !important; background: transparent !important; cursor: pointer; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td { display: none !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:first-child,
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(3),
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(5) { display: flex !important; align-items: center !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:first-child { flex: 1 1 auto !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(3) { flex: 0 0 auto !important; color: #71877a !important; font-size: .75rem !important; white-space: nowrap !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td:nth-child(5) { flex: 0 0 auto !important; }
+            body.student-my-requests-page .borrow-requests-table tbody tr[data-borrow-row] td::before { display: none !important; }
+            body.student-my-requests-page .borrow-requests-table .equipment-name { overflow: hidden !important; color: #173326 !important; font-size: .92rem !important; font-weight: 800 !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+            body.student-my-requests-page .borrow-requests-table .equipment-id { color: #71877a !important; font-size: .72rem !important; }
+            body.student-my-requests-page .borrow-requests-table .status-cell > div { display: none !important; }
+            body.student-my-requests-page .borrow-requests-table .status-cell .status-badge { white-space: nowrap !important; font-size: .72rem !important; }
+            body.student-my-requests-page .borrow-requests-table .status-cell button { display: inline-flex !important; margin: 0 !important; padding: .3rem .45rem !important; font-size: .68rem !important; }
+            body.student-my-requests-page .maintenance-reports-table { min-width: 0 !important; width: 100% !important; }
+            body.student-my-requests-page .maintenance-reports-table thead { display: none !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody { display: grid !important; gap: 0 !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row { display: flex !important; align-items: center !important; gap: .6rem !important; min-height: 4.2rem !important; padding: .65rem 0 !important; border: 0 !important; border-bottom: 1px solid #dce8df !important; border-radius: 0 !important; background: transparent !important; cursor: pointer; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td { display: none !important; padding: 0 !important; border: 0 !important; min-width: 0 !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-equipment,
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-dates,
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-status,
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-action { display: flex !important; align-items: center !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-equipment { flex: 1 1 auto !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-dates { flex: 0 0 auto !important; color: #71877a !important; font-size: .72rem !important; white-space: nowrap !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-status,
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td.col-action { flex: 0 0 auto !important; }
+            body.student-my-requests-page .maintenance-reports-table tbody tr.report-summary-row td::before { display: none !important; }
+            body.student-my-requests-page .maintenance-reports-table .equipment-name { overflow: hidden !important; color: #173326 !important; font-size: .9rem !important; font-weight: 800 !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+            body.student-my-requests-page .maintenance-reports-table .equipment-id { color: #71877a !important; font-size: .7rem !important; }
+            body.student-my-requests-page .maintenance-reports-table .report-row-actions { margin: 0 !important; }
+        }
+    </style>
+    <style>
+        /* Reports: compact two-line mobile rows with details opened on tap. */
+        @media (max-width: 1200px), (pointer: coarse) {
+            html body.student-my-requests-page #requestsState .maintenance-reports-table-scroll,
+            html body.student-my-requests-page #requestsState .maintenance-reports-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                border: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table thead { display: none !important; }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody { display: grid !important; gap: 0 !important; }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+                grid-template-areas: "summary status" "summary action" !important;
+                align-items: center !important;
+                gap: .1rem .7rem !important;
+                min-height: 4.35rem !important;
+                padding: .72rem .55rem !important;
+                border: 0 !important;
+                border-bottom: 1px solid #dce8df !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                cursor: pointer !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td {
+                display: none !important;
+                min-width: 0 !important;
+                padding: 0 !important;
+                border: 0 !important;
+                background: transparent !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.report-mobile-summary {
+                display: grid !important;
+                grid-area: summary !important;
+                gap: .12rem !important;
+                overflow: hidden !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .report-mobile-summary strong {
+                overflow: hidden !important;
+                color: #173326 !important;
+                font-size: .94rem !important;
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .report-mobile-summary span {
+                overflow: hidden !important;
+                color: #71877a !important;
+                font-size: .76rem !important;
+                line-height: 1.25 !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status {
+                display: flex !important;
+                grid-area: status !important;
+                justify-content: flex-end !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .status-badge {
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: .32rem !important;
+                padding: 0 !important;
+                border: 0 !important;
+                background: transparent !important;
+                color: #536c5c !important;
+                font-size: .72rem !important;
+                font-weight: 700 !important;
+                white-space: nowrap !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .status-badge::before {
+                width: .55rem !important;
+                height: .55rem !important;
+                margin: 0 !important;
+                border-radius: 50% !important;
+                background: #c5cbd0 !important;
+                content: '' !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .status-badge.status-pending::before { background: #f5bd17 !important; }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .status-badge.status-resolved::before { background: #1ca45a !important; }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action {
+                display: flex !important;
+                grid-area: action !important;
+                justify-content: flex-end !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle {
+                width: 1.6rem !important;
+                height: 1.6rem !important;
+                border: 0 !important;
+                background: transparent !important;
+                color: #16834a !important;
+                font-size: 0 !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle i { display: none !important; }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table .report-menu-toggle::after {
+                font-size: 1.5rem !important;
+                line-height: 1 !important;
+                content: '›' !important;
+            }
+            html body.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-details-row { display: none !important; }
+        }
+    </style>
+    <style>
+        @media (max-width: 1200px), (pointer: coarse) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row {
+                grid-template-columns: minmax(0, 1fr) max-content !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status::before,
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action::before {
+                display: none !important;
+                width: 0 !important;
+                content: none !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status {
+                width: max-content !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                overflow: visible !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge {
+                width: max-content !important;
+                min-width: 0 !important;
+                max-width: 6.5rem !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                outline: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+                white-space: nowrap !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+                writing-mode: horizontal-tb !important;
+                font-size: .68rem !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-mobile-summary strong {
+                font-size: .86rem !important;
+                letter-spacing: -.01em !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action {
+                width: max-content !important;
+                min-width: 2rem !important;
+                max-width: none !important;
+                overflow: visible !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-row-actions {
+                width: max-content !important;
+                min-width: 2rem !important;
+                overflow: visible !important;
+            }
+        }
+    </style>
+    <style>
+        @media (max-width: 1200px), (pointer: coarse) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .status-badge {
+                display: inline-flex !important; width: max-content !important; min-width: 0 !important; max-width: none !important;
+                margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+                background: transparent !important; box-shadow: none !important; outline: 0 !important;
+                color: #536c5c !important; font-size: .68rem !important; line-height: 1.2 !important;
+                white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row {
+                grid-template-columns: minmax(0, 1fr) 7rem !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status::before,
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-action::before { display: none !important; content: none !important; }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table tbody tr.report-summary-row td.col-status { width: max-content !important; max-width: none !important; overflow: visible !important; white-space: nowrap !important; }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-summary { min-width: 0 !important; overflow: hidden !important; }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-summary strong { min-width: 0 !important; font-size: .86rem !important; white-space: nowrap !important; }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-summary strong {
+                display: block !important;
+                width: auto !important;
+                max-width: none !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                font-size: .78rem !important;
+                letter-spacing: -.015em !important;
+                white-space: nowrap !important;
+            }
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #requestsState .maintenance-reports-table .report-mobile-id {
+                display: inline !important;
+                color: #71877a !important;
+                font-weight: 500 !important;
+                white-space: nowrap !important;
+            }
+        }
+</style>
+    <style>
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .report-details-sheet .report-sheet-detail dt {
+            letter-spacing: .02em !important;
+            text-transform: none !important;
+            color: #6b8172 !important;
+            font-size: .72rem !important;
+            font-weight: 700 !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .report-details-sheet .report-sheet-detail dd {
+            color: #294839 !important;
+            font-size: .9rem !important;
+        }
+</style>
+    <style>
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-controls {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 8.5rem !important;
+            gap: .55rem !important;
+            margin: .85rem 0 1rem !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control {
+            display: flex !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            min-height: 2.9rem !important;
+            gap: .55rem !important;
+            padding: 0 .75rem !important;
+            border: 1px solid #cfe3d5 !important;
+            border-radius: .8rem !important;
+            background: #f8fcf9 !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control:focus-within {
+            border-color: #75c99a !important;
+            background: #fff !important;
+            box-shadow: 0 0 0 3px rgba(21,150,83,.1) !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control > i {
+            flex: 0 0 auto !important;
+            color: #16834a !important;
+            font-size: .95rem !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control :is(input, select) {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            min-height: 2.75rem !important;
+            padding: 0 !important;
+            border: 0 !important;
+            outline: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #294839 !important;
+            font-size: .86rem !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control :is(input, select):focus,
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control :is(input, select):focus-visible {
+            outline: none !important;
+            outline-offset: 0 !important;
+            box-shadow: none !important;
+            border: 0 !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel #maintenanceSearch:focus,
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel #maintenanceSearch:focus-visible,
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel #maintenanceStatusFilter:focus,
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel #maintenanceStatusFilter:focus-visible {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            outline: 0 !important;
+            outline-width: 0 !important;
+            outline-offset: 0 !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control input::placeholder { color: #71877a !important; }
+        html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-select-control { gap: .45rem !important; }
+        @media (max-width: 600px) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-filter-control :is(input, select) {
+                font-size: 16px !important;
+            }
+        }
+        @media (max-width: 480px) {
+            html.theme-light body.app-shell.student-portal.student-my-requests-page .main-container.theme-light #issueReportsPanel .requests-controls { grid-template-columns: minmax(0, 1fr) 7.2rem !important; }
+        }
+    </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-my-requests-page">
     <div id="shared-sidebar"></div>
@@ -1065,7 +1557,7 @@
                         <i class="fas fa-search text-emerald-300"></i>
                         <input id="maintenanceSearch" type="search" aria-label="Search equipment or issue" placeholder="Search equipment or issue" />
                     </label>
-                    <label class="requests-filter-control">
+                    <label class="requests-filter-control requests-filter-select-control">
                         <i class="fas fa-filter text-emerald-300"></i>
                         <select id="maintenanceStatusFilter" aria-label="Filter maintenance requests">
                             <option value="all">All</option>
@@ -1077,7 +1569,6 @@
                         </select>
                     </label>
                 </div>
-
                 <div id="requestsState" class="requests-table-shell text-sm text-emerald-100/70" aria-live="polite">
                     <div class="requests-empty-state">
                         <span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-spinner fa-spin"></i></span>
@@ -1104,6 +1595,18 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <div id="reportDetailsSheet" class="report-details-sheet" hidden aria-hidden="true">
+        <div class="report-details-sheet-backdrop" data-close-report-sheet></div>
+        <section class="report-details-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="reportSheetTitle">
+            <div class="report-details-sheet-handle" aria-hidden="true"></div>
+            <div class="report-details-sheet-header">
+                <h2 id="reportSheetTitle">Report details</h2>
+                <button type="button" class="report-details-sheet-close" data-close-report-sheet aria-label="Close report details"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div id="reportDetailsSheetContent" class="report-details-sheet-content"></div>
+        </section>
     </div>
 
     <script>
@@ -1150,12 +1653,14 @@
             element.textContent = roleLabel;
         });
     </script>
-    <script src="/js/student-sidebar-config.js?v=30" defer></script>
-    <script src="/js/sidebar-component.js?v=75" defer></script>
+    <script src="/js/student-sidebar-config.js?v=32" defer></script>
+    <script src="/js/sidebar-component.js?v=79" defer></script>
     <script>
         const requestsState = document.getElementById('requestsState');
         const maintenanceSearch = document.getElementById('maintenanceSearch');
         const maintenanceStatusFilter = document.getElementById('maintenanceStatusFilter');
+        const reportDetailsSheet = document.getElementById('reportDetailsSheet');
+        const reportDetailsSheetContent = document.getElementById('reportDetailsSheetContent');
         const reportActionMenus = new WeakMap();
         const reportActionMenuPlaceholders = new WeakMap();
         const requestsStateData = {
@@ -1277,6 +1782,8 @@
                                 const equipmentId = item.equipmentId || item.equipment_id || '';
                                 const category = item.category || String(item.issueTitle || 'Equipment issue').split(':')[0].trim();
                                 const description = item.description || '—';
+                                const submittedDate = formatDate(item.dateReported || item.date || item.created_at || item.createdAt)
+                                    .replace(new RegExp(`,\\s*${new Date().getFullYear()}$`), '');
                                 const normalizedStatus = status.toLowerCase();
                                 const isStudentOwnerPage = currentPageRole === 'student';
                                 const canChangePendingReport = isStudentOwnerPage && normalizedStatus === 'pending' && !item.assignedTo;
@@ -1328,8 +1835,8 @@
                                         </div>
                                     </div>` : '';
                                 return `
-                                    <tr>
-                                        <td class="col-report-id" data-label="Report ID">${reportId}</td>
+                                    <tr class="report-summary-row" data-report-row="${reportId}" tabindex="0" aria-label="Open details for report ${reportId}">
+                                        <td class="col-report-id" data-label="Report ID"><span class="report-id-value">#${reportId}</span></td>
                                         <td class="col-equipment equipment-cell" data-label="PC Station / Equipment">
                                             <div class="equipment-name">${escapeBorrowRequestText(equipmentName)}</div>
                                             ${equipmentId && equipmentId !== equipmentName ? `<div class="equipment-id">${escapeBorrowRequestText(equipmentId)}</div>` : ''}
@@ -1339,12 +1846,15 @@
                                             <span class="report-description">${escapeBorrowRequestText(description)}</span>
                                         </td>
                                         <td class="col-dates date-cell" data-label="Date Submitted">${escapeBorrowRequestText(formatDate(item.dateReported || item.date || item.created_at || item.createdAt))}</td>
-                                        <td class="col-status status-cell" data-label="Status"><span class="status-badge ${statusClass}">${escapeBorrowRequestText(status)}</span></td>
+                                        <td class="col-status status-cell" data-label="Status"><span class="status-badge status-${escapeBorrowRequestText(normalizedStatus.replace(/\s+/g, '-'))} ${statusClass}">${escapeBorrowRequestText(status)}</span></td>
                                         <td class="col-action" data-label="Action">
                                             <div class="report-row-actions">
-                                                <button type="button" class="report-details-button" data-report-details="${reportId}" aria-expanded="false"><i class="fas fa-eye" aria-hidden="true"></i>View Details</button>
                                                 ${actionMenu}
                                             </div>
+                                        </td>
+                                        <td class="report-mobile-summary">
+                                            <strong>${escapeBorrowRequestText(equipmentName)}${equipmentId && equipmentId !== equipmentName ? `<span class="report-mobile-id"> · ${escapeBorrowRequestText(equipmentId)}</span>` : ''}</strong>
+                                            <span>${escapeBorrowRequestText(description)} · ${escapeBorrowRequestText(submittedDate)}</span>
                                         </td>
                                     </tr>
                                     <tr class="report-details-row" data-report-details-row="${reportId}" hidden style="display: none !important;">
@@ -1364,6 +1874,19 @@
                 </div>
                 ${renderRequestsPagination(filteredRecords.length)}
             `;
+
+            requestsState.querySelectorAll('[data-report-row]').forEach((row) => {
+                row.addEventListener('click', (event) => {
+                    if (event.target.closest('.report-row-actions, button, a')) return;
+                    openReportDetailsSheet(row.dataset.reportRow);
+                });
+                row.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openReportDetailsSheet(row.dataset.reportRow);
+                    }
+                });
+            });
 
             requestsState.querySelectorAll('[data-request-page]').forEach((button) => {
                 button.addEventListener('click', () => {
@@ -1422,6 +1945,81 @@
             });
         };
 
+        const openReportDetailsSheet = (reportId) => {
+            const item = requestsStateData.records.find((record) => String(record.id) === String(reportId));
+            if (!item) return;
+            const status = String(item.status || 'Pending').trim();
+            reportDetailsSheet.querySelector('#reportSheetTitle').textContent = `Report #${item.id || '—'}`;
+            const equipmentName = item.equipmentName || item.equipment_id || item.equipmentId || '—';
+            const equipmentId = item.equipmentId || item.equipment_id || '';
+            const category = item.category || String(item.issueTitle || 'Equipment issue').split(':')[0].trim();
+            const laboratoryName = String(item.laboratoryName || '').trim();
+            let laboratoryRoom = String(item.laboratoryRoom || '').trim();
+            const roomLabPrefix = laboratoryRoom.slice(0, laboratoryName.length);
+            if (laboratoryName && roomLabPrefix.toLowerCase() === laboratoryName.toLowerCase() &&
+                (!laboratoryRoom[laboratoryName.length] || /[\s—–-]/.test(laboratoryRoom[laboratoryName.length]))) {
+                laboratoryRoom = laboratoryRoom.slice(laboratoryName.length).replace(/^[\s—–-]+/, '').trim();
+            }
+            const locationParts = [laboratoryName, laboratoryRoom, item.campus].map(value => String(value || '').trim()).filter(Boolean);
+            const seenLocationParts = new Set();
+            const location = locationParts.filter((value) => {
+                const key = value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                if (seenLocationParts.has(key)) return false;
+                seenLocationParts.add(key);
+                return true;
+            }).join(' · ') || 'Location not recorded';
+            const submitted = formatDate(item.dateReported || item.date || item.created_at || item.createdAt)
+                .replace(new RegExp(`,\\s*${new Date().getFullYear()}$`), '');
+            const details = [
+                ['Status', status],
+                ['Equipment', `${equipmentName}${equipmentId && equipmentId !== equipmentName ? ` (${equipmentId})` : ''}`],
+                ['Category', category],
+                ['Description', item.description || '—'],
+                ['Submitted', submitted],
+                ['Location', location],
+                ['Assigned technician', item.technicianName || 'Not assigned'],
+                ['Technician update', item.technicianNotes || 'No technician update yet.']
+            ];
+            reportDetailsSheetContent.innerHTML = details.map(([label, value]) => `<div class="report-sheet-detail"><dt>${escapeBorrowRequestText(label)}</dt><dd>${escapeBorrowRequestText(value)}</dd></div>`).join('');
+            reportDetailsSheet.hidden = false;
+            reportDetailsSheet.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('report-sheet-open');
+            reportDetailsSheet.querySelector('.report-details-sheet-close')?.focus();
+        };
+
+        const closeReportDetailsSheet = () => {
+            reportDetailsSheet.hidden = true;
+            reportDetailsSheet.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('report-sheet-open');
+        };
+
+        const openBorrowDetailsSheet = (recordId) => {
+            const item = borrowRequestsStateData.records.find((record) => String(record.id) === String(recordId));
+            if (!item) return;
+            const status = String(item.status || 'Pending').trim();
+            const details = [
+                ['Status', status],
+                ['Equipment', `${item.equipmentName || '—'}${item.equipmentId ? ` (${item.equipmentId})` : ''}`],
+                ['Laboratory', item.laboratoryRoom || item.campus || '—'],
+                ['Borrow date', `${item.borrowDate || '—'} ${item.borrowStartTime || ''}`.trim()],
+                ['Return date', `${item.returnDate || item.expectedReturnDate || 'When returned'} ${item.returnTime || item.expectedReturnTime || ''}`.trim()],
+                ['Reason', status.toLowerCase() === 'rejected' ? (item.remarks || 'No reason provided') : '—']
+            ];
+            reportDetailsSheet.querySelector('#reportSheetTitle').textContent = 'Borrow request details';
+            reportDetailsSheetContent.innerHTML = details.map(([label, value]) => `<div class="report-sheet-detail"><dt>${escapeBorrowRequestText(label)}</dt><dd>${escapeBorrowRequestText(value)}</dd></div>`).join('');
+            reportDetailsSheet.hidden = false;
+            reportDetailsSheet.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('report-sheet-open');
+            reportDetailsSheet.querySelector('.report-details-sheet-close')?.focus();
+        };
+
+        reportDetailsSheet?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-close-report-sheet]')) closeReportDetailsSheet();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !reportDetailsSheet?.hidden) closeReportDetailsSheet();
+        });
+
         const toggleReportDetails = (detailsButton) => {
             const detailsRow = detailsButton.closest('tr')?.nextElementSibling;
             if (!detailsRow || !detailsRow.classList.contains('report-details-row')) return;
@@ -1442,12 +2040,6 @@
         };
 
         requestsState.addEventListener('click', async (event) => {
-            const detailsButton = event.target.closest('[data-report-details]');
-            if (detailsButton) {
-                toggleReportDetails(detailsButton);
-                return;
-            }
-
             const menuToggle = event.target.closest('[data-report-menu-toggle]');
             if (menuToggle) {
                 const menu = reportActionMenus.get(menuToggle) || menuToggle.parentElement?.querySelector('[data-report-actions-menu]');
@@ -1662,8 +2254,11 @@
                             ${pageRecords.map((record) => {
                                 const statusText = record.status || 'Pending';
                                 const statusClass = getStatusClass(statusText);
+                                const isPending = String(statusText).toLowerCase() === 'pending';
+                                const takeoverSource = record.takenOverFrom ||
+                                    (record.isStudentQrHandoff && isPending ? record.currentBorrowerName : null);
                                 const reasonText = String(statusText).toLowerCase() === 'rejected' ? (record.remarks || 'No reason provided') : '—';
-                                return `<tr>
+                                return `<tr data-borrow-row="${escapeBorrowRequestText(record.id)}" tabindex="0" role="button" aria-label="Open details for ${escapeBorrowRequestText(record.equipmentName || 'borrow request')}">
                                                     <td class="equipment-cell" data-label="Equipment"><div class="equipment-name">${escapeBorrowRequestText(record.equipmentName || '—')}</div><div class="equipment-id">${escapeBorrowRequestText(record.equipmentId || '—')}</div></td>
                                                     <td data-label="Laboratory">${escapeBorrowRequestText(record.laboratoryRoom || record.campus || '—')}</td>
                                                     <td data-label="Borrow date">${escapeBorrowRequestText(record.borrowDate || '—')} ${escapeBorrowRequestText(record.borrowStartTime || '')}</td>
@@ -1672,7 +2267,7 @@
                                                         <span class="status-badge ${statusClass}">${escapeBorrowRequestText(statusText)}</span>
                                                         ${record.accountableFacultyName ? `<div class="mt-1 text-xs text-slate-400">Accountable Faculty: ${escapeBorrowRequestText(record.accountableFacultyName)}</div>` : ''}
                                                         ${String(statusText).toLowerCase() === 'pending' && record.requiresFacultyApproval ? '<div class="mt-1 text-xs font-semibold text-amber-300">Waiting for the accountable MR Faculty member to approve.</div>' : ''}
-                                                        ${record.takenOverFrom ? `<div class="mt-1 text-xs font-semibold text-sky-300">You took over this item from ${escapeBorrowRequestText(record.takenOverFrom)}.</div>` : ''}
+                                                        ${takeoverSource ? `<div class="mt-1 text-xs font-semibold text-sky-300">${isPending ? 'Takeover requested from' : 'You took over this item from'} ${escapeBorrowRequestText(takeoverSource)}.</div>` : ''}
                                                         ${record.takenOverBy ? `<div class="mt-1 text-xs text-slate-400">This item was transferred to ${escapeBorrowRequestText(record.takenOverBy)}.</div>` : ''}
                                                         ${record.approvedByName ? `<div class="mt-1 text-xs text-slate-400">${String(statusText).toLowerCase() === 'rejected' ? 'Rejected' : 'Approved'} by ${escapeBorrowRequestText(record.approvedByName)}</div>` : ''}
                                                         ${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeBorrowRequestText(record.returnRequestedBy)}` : ''}</div>` : ''}
@@ -1686,6 +2281,18 @@
                 </div>
                 ${renderBorrowRequestsPagination(rows.length)}
             `;
+
+            target.querySelectorAll('[data-borrow-row]').forEach((row) => {
+                row.addEventListener('click', (event) => {
+                    if (event.target.closest('button, a')) return;
+                    openBorrowDetailsSheet(row.dataset.borrowRow);
+                });
+                row.addEventListener('keydown', (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    openBorrowDetailsSheet(row.dataset.borrowRow);
+                });
+            });
 
             target.querySelectorAll('[data-borrow-page]').forEach((button) => {
                 button.addEventListener('click', () => {
