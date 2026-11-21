@@ -144,6 +144,71 @@ body.student-portal.sidebar-open {
     overflow: hidden;
 }
 
+/* Pages loaded inside the persistent admin shell keep only their content. */
+body.app-content-embedded #shared-sidebar,
+body.app-content-embedded .sidebar-overlay {
+    display: none !important;
+}
+
+body.app-content-embedded .main-container {
+    width: 100% !important;
+    min-height: 100vh;
+    margin-left: 0 !important;
+}
+
+html body.app-shell.facilities-embedded .main-container,
+html body.app-shell.facilities-embedded .main-container.computer-labs-page,
+html body.app-shell.facilities-embedded .facilities-main {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+}
+
+.app-content-frame {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    height: 100vh;
+    border: 0;
+    background: transparent;
+    animation: none !important;
+    will-change: auto;
+}
+
+.app-content-frame.app-content-frame-back {
+    animation: none !important;
+}
+
+@keyframes app-content-frame-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(1.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes app-content-frame-slide-in-back {
+    from {
+        opacity: 0;
+        transform: translateX(-1.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-content-frame,
+    .app-content-frame.app-content-frame-back {
+        animation: none;
+    }
+}
+
 .sidebar-header {
     position: relative;
     padding: 1.2rem 1rem 1rem;
@@ -371,10 +436,15 @@ body.student-portal.sidebar-open {
 #sidebar {
     position: fixed !important;
     left: 0 !important;
-    top: 0 !important;
-    height: 100vh !important;
+    top: var(--comlab-mobile-sidebar-top, 0px) !important;
+    height: calc(100vh - var(--comlab-mobile-sidebar-top, 0px)) !important;
+    height: calc(100dvh - var(--comlab-mobile-sidebar-top, 0px)) !important;
     z-index: 1200 !important;
     display: block !important;
+}
+
+#sidebarOverlay {
+    inset: var(--comlab-mobile-sidebar-top, 0px) 0 0 !important;
 }
 
 .sidebar .nav-item {
@@ -487,6 +557,11 @@ body.app-shell .page-content {
     padding: 1.5rem !important;
     color: #d9f5e0;
     min-height: 100vh;
+}
+
+/* Keep standalone feature-page content below the page shell instead of crowding the top edge. */
+html body.app-shell:not(.app-content-embedded):not(.audit-logs-page):not(.reports-page):not(.laboratory-schedules-page) .page-content {
+    padding-top: 2rem !important;
 }
 
 /* Glassmorphism cards: replace white cards with dark translucent panels */
@@ -1529,11 +1604,41 @@ body, .main-container, .page-content {
     --sidebar-active-bg: linear-gradient(135deg, #0f3726, #0a281c) !important;
 }
 
-html,
-body,
-body.app-shell {
+html.theme-light,
+html[data-theme="light"],
+body.theme-light {
+    --primary: #16a34a !important;
+    --accent: #16a34a !important;
+    --hover: #15803d !important;
+    --success: #16a34a !important;
+    --bg: #f4f7f5 !important;
+    --bg-secondary: #ffffff !important;
+    --card-bg: #ffffff !important;
+    --card-bg-solid: #ffffff !important;
+    --card-hover: #f0fdf4 !important;
+    --borders: #dce5df !important;
+    --text: #1f2937 !important;
+    --text-secondary: #64748b !important;
+    --text-muted: #64748b !important;
+    --sidebar-bg: #ffffff !important;
+    --sidebar-border: #dce5df !important;
+    --sidebar-hover-bg: #f0fdf4 !important;
+    --sidebar-active-bg: #e8f5ed !important;
+    color-scheme: light !important;
+}
+
+html:not(.theme-light),
+body:not(.theme-light),
+body.app-shell:not(.theme-light) {
     background: #07150f !important;
     color: #f8fafc !important;
+}
+
+html.theme-light,
+html.theme-light body,
+html.theme-light body.app-shell {
+    background: #f4f7f5 !important;
+    color: #1f2937 !important;
 }
 
 body.app-shell .main-container,
@@ -1561,7 +1666,7 @@ body.app-shell .maintenance-header-card,
 body.app-shell .student-page-header,
 body.app-shell .system-dashboard-heading,
 body.app-shell .page-header-card {
-    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    background: var(--app-header-bg) !important;
     border-color: rgba(74, 222, 128, 0.18) !important;
     box-shadow: 0 12px 35px rgba(6, 64, 43, 0.18) !important;
 }
@@ -2652,23 +2757,27 @@ html body:is(.faculty-page, .faculty-portal) :is(
     font-size: 0.9375rem !important;
 }
 
-html.theme-light body.app-shell {
+html.theme-light body.app-shell,
+html.theme-light body {
     color-scheme: light;
-    color: #26352b !important;
-    background: #ffffff !important;
+    color: #1f2937 !important;
+    background: #f4f7f5 !important;
 }
 
 html.theme-light body.app-shell .main-container,
 html.theme-light body.app-shell .main-content,
-html.theme-light body.app-shell .page-content {
-    color: #26352b !important;
-    background: #ffffff !important;
+html.theme-light body.app-shell .page-content,
+html.theme-light .facilities-main,
+html.theme-light .page-shell,
+html.theme-light .audit-page-content {
+    color: #1f2937 !important;
+    background: #f4f7f5 !important;
 }
 
 html.theme-light body.app-shell :is(.system-profile-badge, .student-page-user, .user-profile, .profile-theme-static) {
-    border-color: rgba(74, 222, 128, 0.24) !important;
-    background: #04281b !important;
-    color: #ffffff !important;
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
     box-shadow: none !important;
 }
 
@@ -2677,8 +2786,9 @@ html.theme-light body.app-shell :is(
     .student-page-user-initials,
     .user-avatar
 ) {
-    background: #06402b !important;
-    color: #a7f3d0 !important;
+    border: 1px solid #dce5df !important;
+    background: #e8f5ed !important;
+    color: #16a34a !important;
 }
 
 html.theme-light body.app-shell :is(
@@ -2688,7 +2798,7 @@ html.theme-light body.app-shell :is(
     .system-profile-badge-copy,
     .student-page-user-copy
 ) {
-    color: #ffffff !important;
+    color: #1f2937 !important;
 }
 
 html.theme-light body.app-shell :is(
@@ -2696,7 +2806,7 @@ html.theme-light body.app-shell :is(
     .student-page-user-role,
     .user-role
 ) {
-    color: #34d399 !important;
+    color: #16a34a !important;
 }
 
 html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
@@ -3325,12 +3435,29 @@ body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendan
     gap: .55rem !important;
     margin: 0 0 .65rem !important;
     padding: .15rem .8rem !important;
-    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border: 1px solid var(--app-border) !important;
     border-radius: 0 !important;
-    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    background: var(--app-header-bg) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     transform: none !important;
+}
+
+html.theme-light body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero):has(h1, .page-title, .header-title, .student-page-title, .page-header-title) {
+    border: 1px solid var(--app-border) !important;
+    background: var(--app-header-bg) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.theme-light body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(h1, .page-title, .header-title, .student-page-title, .page-header-title) {
+    color: #1f2937 !important;
+}
+
+html.theme-light body :is(.system-dashboard-heading, .top-header, .student-page-header, .attendance-page-header, .page-header-card, .technician-profile-header, .page-heading, .hero)
+    :is(p, .eyebrow, .header-eyebrow, .header-subtitle, .student-page-subtitle, .page-header-subtitle, .dashboard-header-details) {
+    color: #64748b !important;
 }
 
 body .top-header > .top-header-card {
@@ -3444,9 +3571,9 @@ body .audit-page-heading {
     min-height: 2.45rem !important;
     margin: 0 0 .65rem !important;
     padding: .4rem .8rem !important;
-    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border: 1px solid var(--app-border) !important;
     border-radius: 0 !important;
-    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    background: var(--app-header-bg) !important;
     box-shadow: none !important;
 }
 
@@ -3618,7 +3745,7 @@ body.student-portal .student-page-header {
 }
 
 /* High-specificity layer keeps older page-level styles from restoring thick cards. */
-html body .comlab-slim-page-header:not(#comlab-header-specificity) {
+html body:not(.app-content-embedded):not(.facilities-embedded) .comlab-slim-page-header:not(#comlab-header-specificity) {
     box-sizing: border-box !important;
     display: flex !important;
     position: fixed !important;
@@ -3633,14 +3760,22 @@ html body .comlab-slim-page-header:not(#comlab-header-specificity) {
     gap: .55rem !important;
     margin: 0 !important;
     padding: .15rem .8rem !important;
-    border: 1px solid rgba(74, 222, 128, .2) !important;
+    border: 1px solid var(--app-border) !important;
     border-radius: 0 !important;
-    background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
+    background: var(--app-header-bg) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     transform: none !important;
     z-index: 1050 !important;
     transition: none !important;
+}
+
+html.theme-light body .comlab-slim-page-header:not(#comlab-header-specificity) {
+    border: 0 !important;
+    border-bottom: 1px solid var(--app-border) !important;
+    background: var(--app-header-bg) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+    color: #1f2937 !important;
 }
 
 html body .comlab-page-header-spacer {
@@ -3811,9 +3946,12 @@ html body .comlab-static-header-wrap:not(#comlab-header-wrap-specificity) {
 }
 
 @media (max-width: 1023px) {
-    html body.student-portal .comlab-slim-page-header:not(#comlab-header-specificity) {
+    html body.app-shell.student-portal:not(.app-content-embedded):not(.facilities-embedded)
+        .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
         inset: 0 0 auto 0 !important;
+        width: 100% !important;
     }
+
 }
 
 @media (max-width: 768px) {
@@ -4179,6 +4317,153 @@ html body #sidebar .sidebar-footer {
     }
 }
 
+/* Light mode shared navigation */
+html.theme-light body #sidebar,
+html.theme-light #sidebar,
+html.theme-light .sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    background: #ffffff !important;
+    border-right: 1px solid #dce5df !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.04), inset -1px 0 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+html.theme-light body #sidebar .sidebar-header,
+html.theme-light .sidebar .sidebar-header {
+    background: #ffffff !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dce5df !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body #sidebar .sidebar-logo > i,
+html.theme-light .sidebar .sidebar-logo > i {
+    border: 1px solid #dce5df !important;
+    border-radius: .78rem !important;
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body #sidebar .sidebar-logo-text,
+html.theme-light .sidebar .sidebar-logo-text {
+    color: #1f2937 !important;
+    text-shadow: none !important;
+}
+
+html.theme-light body #sidebar .sidebar-tagline,
+html.theme-light .sidebar .sidebar-tagline {
+    color: #64748b !important;
+}
+
+html.theme-light body #sidebar .sidebar-nav,
+html.theme-light .sidebar .sidebar-nav {
+    scrollbar-color: #dce5df transparent !important;
+}
+
+html.theme-light body #sidebar .sidebar-nav::-webkit-scrollbar-thumb,
+html.theme-light .sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+    background: #dce5df !important;
+}
+
+html.theme-light body #sidebar .nav-item,
+html.theme-light .sidebar .nav-item {
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body #sidebar .nav-item > i,
+html.theme-light .sidebar .nav-item > i {
+    border: 1px solid transparent !important;
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+}
+
+html.theme-light body #sidebar .sidebar-nav-label,
+html.theme-light .sidebar .sidebar-nav-label {
+    color: inherit !important;
+}
+
+html.theme-light body #sidebar .nav-item:hover,
+html.theme-light .sidebar .nav-item:hover {
+    border-color: #dce5df !important;
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+    box-shadow: none !important;
+    transform: translateX(2px) !important;
+}
+
+html.theme-light body #sidebar .nav-item:hover > i,
+html.theme-light .sidebar .nav-item:hover > i {
+    border-color: #dce5df !important;
+    background: #dcfce7 !important;
+    color: #15803d !important;
+}
+
+html.theme-light body #sidebar .nav-item.active,
+html.theme-light body #sidebar .nav-item[aria-current="page"],
+html.theme-light .sidebar .nav-item.active,
+html.theme-light .sidebar .nav-item[aria-current="page"] {
+    border-color: rgba(22, 163, 74, 0.25) !important;
+    background: #e8f5ed !important;
+    color: #16a34a !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+html.theme-light body #sidebar .nav-item.active::before,
+html.theme-light body #sidebar .nav-item[aria-current="page"]::before,
+html.theme-light .sidebar .nav-item.active::before,
+html.theme-light .sidebar .nav-item[aria-current="page"]::before {
+    background: #16a34a !important;
+    box-shadow: 0 0 8px rgba(22, 163, 74, 0.35) !important;
+}
+
+html.theme-light body #sidebar .nav-item.active > i,
+html.theme-light body #sidebar .nav-item[aria-current="page"] > i,
+html.theme-light .sidebar .nav-item.active > i,
+html.theme-light .sidebar .nav-item[aria-current="page"] > i {
+    border-color: transparent !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+    filter: none !important;
+}
+
+html.theme-light body #sidebar .nav-item:focus-visible,
+html.theme-light .sidebar .nav-item:focus-visible {
+    outline: 2px solid #16a34a !important;
+    outline-offset: 2px !important;
+    color: #16a34a !important;
+}
+
+html.theme-light body #sidebar .sidebar-footer,
+html.theme-light .sidebar .sidebar-footer {
+    border-top: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+}
+
+@media (max-width: 1023px) {
+    html.theme-light body #sidebar .sidebar-close-btn,
+    html.theme-light .sidebar .sidebar-close-btn {
+        border-color: #dce5df !important;
+        background: #f4f7f5 !important;
+        color: #1f2937 !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body #sidebar .sidebar-close-btn:hover,
+    html.theme-light body #sidebar .sidebar-close-btn:focus-visible,
+    html.theme-light .sidebar .sidebar-close-btn:hover,
+    html.theme-light .sidebar .sidebar-close-btn:focus-visible {
+        border-color: #16a34a !important;
+        background: #e8f5ed !important;
+        color: #16a34a !important;
+    }
+}
+
 body.app-shell :is(
     .system-dashboard-heading,
     .top-header,
@@ -4214,7 +4499,7 @@ body.app-shell :is(.system-dashboard-heading, .top-header, .student-page-header,
 }
 
 /* One shared toolbar for every authenticated content area. */
-html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+html body.app-shell:not(.app-content-embedded):not(.facilities-embedded) .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
     box-sizing: border-box !important;
     position: fixed !important;
     inset: 0 0 auto var(--sidebar-width, 280px) !important;
@@ -4234,7 +4519,7 @@ html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not
     border: 0 !important;
     border-bottom: 1px solid rgba(110, 231, 183, .2) !important;
     border-radius: 0 !important;
-    background: linear-gradient(135deg, rgba(7, 35, 23, .98), rgba(4, 22, 15, .98)) !important;
+    background: var(--app-header-bg) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
     backdrop-filter: blur(16px) saturate(1.12) !important;
     transform: none !important;
@@ -4390,7 +4675,8 @@ html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not
 }
 
 @media (max-width: 768px) {
-    html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+    html body.app-shell.student-portal:not(.app-content-embedded):not(.facilities-embedded)
+        .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
         inset: env(safe-area-inset-top, 0px) 0 auto 0 !important;
         width: 100% !important;
         height: 2.8rem !important;
@@ -4432,33 +4718,72 @@ html body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not
 }
 
 html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
-    border-bottom-color: #d4e4d9 !important;
-    background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(242, 249, 244, .98)) !important;
-    box-shadow: 0 8px 22px rgba(27, 74, 48, .1) !important;
+    border-bottom: 1px solid var(--app-border) !important;
+    background: var(--app-header-bg) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .04) !important;
 }
 
 html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
     :is(#mobileMenuToggle, .menu-toggle, .student-page-menu, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]) {
-    border-color: #c9dfd0 !important;
-    background: #edf7f0 !important;
-    color: #17623a !important;
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    color: #16a34a !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(#mobileMenuToggle, .menu-toggle, .student-page-menu, .profile-theme-toggle, .comlab-notification-button, [data-comlab-notification-button]):hover {
+    border-color: #16a34a !important;
+    background: #f0fdf4 !important;
+    color: #15803d !important;
 }
 
 html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
     :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
-    border-color: #c9dfd0 !important;
-    background: #f0f8f2 !important;
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
     color: #1f2937 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(.system-profile-badge-avatar, .student-page-user-initials, .user-avatar, .faculty-profile-avatar) {
+    border: 1px solid #dce5df !important;
+    background: #e8f5ed !important;
+    color: #16a34a !important;
 }
 
 html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
     :is(.system-profile-badge-name, .student-page-user-name, .user-name) {
-    color: #173b2a !important;
+    color: #1f2937 !important;
 }
 
 html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
     :is(.system-profile-badge-role, .student-page-user-role, .user-role) {
-    color: #08774f !important;
+    color: #16a34a !important;
+}
+
+html.theme-light body.app-shell .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2)
+    :is(h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title) {
+    color: #1f2937 !important;
+}
+
+html body.app-shell.student-portal .comlab-slim-page-header
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons)
+    > :is(.comlab-notification-button, [data-comlab-notification-button]) {
+    order: 1 !important;
+}
+
+html body.app-shell.student-portal .comlab-slim-page-header
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons)
+    > :is([data-theme-toggle-anchor], .profile-theme-controls, .profile-theme-toggle) {
+    order: 2 !important;
+}
+
+html body.app-shell.student-portal .comlab-slim-page-header
+    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons)
+    > :is(.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link) {
+    order: 3 !important;
 }
 
 html body.app-shell #qr-scan-float-btn {
@@ -4494,6 +4819,23 @@ html body.app-shell #qr-scan-float-btn:hover {
 
 html body.app-shell #qr-scan-float-btn:focus-visible {
     outline: 3px solid #a7f3d0 !important;
+    outline-offset: 3px !important;
+}
+
+html.theme-light body.app-shell #qr-scan-float-btn {
+    border: 1px solid #15803d !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(22, 163, 74, .35), 0 0 0 4px rgba(22, 163, 74, .1) !important;
+}
+
+html.theme-light body.app-shell #qr-scan-float-btn:hover {
+    background: #15803d !important;
+    filter: brightness(1.05) !important;
+}
+
+html.theme-light body.app-shell #qr-scan-float-btn:focus-visible {
+    outline: 3px solid #16a34a !important;
     outline-offset: 3px !important;
 }
 
@@ -4829,10 +5171,16 @@ html body.app-shell #comlab-help-panel .comlab-help-form button:disabled {
 }
 
 html.theme-light body.app-shell #comlab-help-float-btn {
-    border-color: #b7d9c2 !important;
-    background: linear-gradient(135deg, #eaf5ed, #d9ecdf) !important;
-    color: #12663f !important;
-    box-shadow: 0 10px 24px rgba(31, 75, 48, .2), 0 0 0 4px rgba(34, 197, 94, .08) !important;
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    color: #16a34a !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08) !important;
+}
+
+html.theme-light body.app-shell #comlab-help-float-btn:hover {
+    background: #f0fdf4 !important;
+    border-color: #16a34a !important;
+    color: #15803d !important;
 }
 
 html.theme-light body.app-shell #comlab-help-panel {
@@ -5255,6 +5603,588 @@ html body.app-shell #qr-pc-station-scan-again {
 
 @media (prefers-reduced-motion: reduce) {
     html body.app-shell #qr-scan-float-btn {
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   GLOBAL LIGHT MODE UNIFIED STYLING
+   ========================================================================== */
+
+html.theme-light,
+html[data-theme="light"],
+body.theme-light {
+    --bg-page: #f4f7f5;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --bg-header: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #64748b;
+    --border-color: #dce5df;
+    --primary-green: #16a34a;
+    --hover-bg: #f0fdf4;
+    --active-bg: #e8f5ed;
+}
+
+/* 1. Global Backgrounds and Page Containers */
+html.theme-light,
+html.theme-light body,
+html.theme-light body.app-shell,
+html.theme-light .main-container,
+html.theme-light .main-content,
+html.theme-light .page-content,
+html.theme-light .facilities-main,
+html.theme-light .page-shell,
+html.theme-light .audit-page-content,
+html.theme-light .assignment-content {
+    background-color: #f4f7f5 !important;
+    color: #1f2937 !important;
+}
+
+/* 2. Global Cards, Panels, Surfaces */
+html.theme-light :is(
+    .panel,
+    .panel-card,
+    .card,
+    .dashboard-card,
+    .stat-card,
+    .quick-card,
+    .report-card,
+    .profile-card,
+    .content-card,
+    .overview-card,
+    .inventory-card,
+    .hero-card,
+    .filter-card,
+    .settings-card,
+    .table-card,
+    section.panel,
+    .action-card,
+    .status-card,
+    .page-card,
+    .summary-card,
+    .glass-card,
+    #reportPreviewCard,
+    #systemAuditPanel,
+    .chart-card,
+    .chart-container,
+    .lab-card,
+    .report,
+    .inventory-summary-card
+) {
+    background: #ffffff !important;
+    border: 1px solid #dce5df !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.theme-light :is(.panel, .card, .dashboard-card, .table-card, .report-card) :is(h1, h2, h3, h4, h5, h6, strong, .card-title, .panel-title) {
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.panel, .card, .dashboard-card, .table-card, .report-card) :is(p:not(.btn), span:not(.badge):not([class*="badge-"]):not(.status-badge), small, .text-muted, .sub, .card-subtitle, .panel-subtitle) {
+    color: #64748b !important;
+}
+
+/* 3. Global Tables */
+html.theme-light table,
+html.theme-light .table,
+html.theme-light .custom-table,
+html.theme-light .report-table-shell table,
+html.theme-light .inventory-table,
+html.theme-light .audit-logs-table,
+html.theme-light .borrow-requests-table,
+html.theme-light .maintenance-table,
+html.theme-light .assignment-table {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border-collapse: collapse !important;
+}
+
+html.theme-light :is(.table-wrap, .table-container, .table-responsive, .report-table-shell, .overflow-x-auto) {
+    background: #ffffff !important;
+    border: 1px solid #dce5df !important;
+}
+
+html.theme-light table thead,
+html.theme-light table thead tr,
+html.theme-light table thead th,
+html.theme-light th,
+html.theme-light .theme-locked-table-header {
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #dce5df !important;
+    font-weight: 700 !important;
+}
+
+html.theme-light table tbody,
+html.theme-light table tbody tr {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #dce5df !important;
+}
+
+html.theme-light table tbody tr:nth-child(even) {
+    background: #fafbf9 !important;
+}
+
+html.theme-light table tbody tr:hover {
+    background: #f0fdf4 !important;
+}
+
+html.theme-light table td {
+    color: #1f2937 !important;
+    border-bottom: 1px solid #dce5df !important;
+}
+
+html.theme-light table td :is(.text-xs, .text-slate-400, .text-slate-500, .text-gray-400, .text-gray-500, .sub) {
+    color: #64748b !important;
+}
+
+/* 4. Global Inputs, Selects, and Textareas */
+html.theme-light :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+    select,
+    textarea,
+    .form-control,
+    .search-box input,
+    .filter-select,
+    .modal-form-input,
+    .modal-form-select,
+    .modal-form-textarea,
+    .search-field input,
+    .filter-field select,
+    .field input,
+    .field select
+) {
+    background: #ffffff !important;
+    border: 1px solid #dce5df !important;
+    border-radius: .55rem !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+    select,
+    textarea,
+    .form-control
+):focus {
+    border-color: #16a34a !important;
+    outline: 2px solid rgba(22, 163, 74, 0.2) !important;
+    outline-offset: 1px !important;
+}
+
+html.theme-light :is(input, textarea)::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+html.theme-light :is(select option, select optgroup) {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.search-field, .search-box) > i {
+    color: #16a34a !important;
+}
+
+/* 5. Buttons & Controls */
+html.theme-light :is(.btn-primary, .primary-btn, .btn.approve, .save-btn) {
+    border: 1px solid #15803d !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+}
+
+html.theme-light :is(.btn-primary, .primary-btn, .btn.approve, .save-btn):hover:not(:disabled) {
+    background: #15803d !important;
+    border-color: #15803d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light :is(.btn-secondary, .btn.feedback, .refresh-button, .cancel-btn, .action-btn:not(.primary), .page-controls .btn) {
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.btn-secondary, .btn.feedback, .refresh-button, .cancel-btn, .action-btn:not(.primary), .page-controls .btn):hover:not(:disabled) {
+    border-color: #16a34a !important;
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+}
+
+/* 6. Pagination */
+html.theme-light :is(.pagination, #reportPagination, #pagination) {
+    color: #64748b !important;
+}
+
+html.theme-light :is(.pagination-btn, .report-page-button, .page-button) {
+    border: 1px solid #dce5df !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.pagination-btn, .report-page-button, .page-button):hover:not(:disabled) {
+    border-color: #16a34a !important;
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+}
+
+html.theme-light :is(.pagination-btn.active, .report-page-button[aria-current="page"], .page-button.active) {
+    border-color: #16a34a !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+}
+
+/* 7. Modals, Popovers, Dialogs */
+html.theme-light :is(
+    .modal-content,
+    .modal-dialog,
+    .modal-card,
+    .swal2-popup,
+    .dialog,
+    .audit-details-popover,
+    .dropdown-menu,
+    .pc-set-actions-menu,
+    .menu-dropdown
+) {
+    background: #ffffff !important;
+    border: 1px solid #dce5df !important;
+    color: #1f2937 !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12) !important;
+}
+
+html.theme-light :is(.modal-content, .modal-card, .swal2-popup) :is(h1, h2, h3, h4, h5, h6, strong, .modal-title) {
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.modal-content, .modal-card, .swal2-popup) :is(p, label, span:not(.badge):not([class*="badge-"])) {
+    color: #1f2937 !important;
+}
+
+html.theme-light :is(.dropdown-item, .pc-set-actions-menu button, .menu-item) {
+    color: #1f2937 !important;
+    background: transparent !important;
+}
+
+html.theme-light :is(.dropdown-item, .pc-set-actions-menu button, .menu-item):hover {
+    background: #f0fdf4 !important;
+    color: #16a34a !important;
+}
+
+/* 8. Global Scrollbars */
+html.theme-light,
+html.theme-light body,
+html.theme-light * {
+    scrollbar-color: #dce5df #f4f7f5 !important;
+}
+
+html.theme-light ::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+html.theme-light ::-webkit-scrollbar-track {
+    background: #f4f7f5 !important;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: #dce5df !important;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb:hover {
+    background: #b6d7c8 !important;
+}
+
+/* Maintenance Monitoring: the page has its own dark visual layer, so keep its
+   light theme explicit and opaque. This also disables the shared decorative
+   pseudo-layers that otherwise tint the table through the content stack. */
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer:has(#maintenance-view.active)::before,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer:has(#maintenance-view.active)::after,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer:has(#maintenance-view.active) .main-content::before,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer:has(#maintenance-view.active) .page-content::before {
+    display: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring {
+    --maintenance-ink: #1f2937;
+    --maintenance-muted: #64748b;
+    --maintenance-border: #dce5df;
+    background: transparent !important;
+    background-image: none !important;
+    color: #1f2937 !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-list-heading,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-table-footer {
+    border-color: #dce5df !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-report-tab,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-date-filter,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-search-box,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-search-box input,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-refresh-button {
+    border-color: #cbd5e1 !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-report-tab.active,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter.active,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"] {
+    border-color: #08643d !important;
+    background: #08643d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-report-tab:hover {
+    border-color: #15803d !important;
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter.active:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"]:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-report-tab.active:hover {
+    background: #08643d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .overflow-x-auto {
+    border-color: #dce5df !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    scrollbar-color: #b6d7c8 #f8fafc !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1f2937 !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table thead,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table thead tr,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table thead th {
+    background: #08643d !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: #075c35 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr:nth-child(odd),
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr:nth-child(even) {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr:nth-child(even) {
+    background: #f8fafc !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody tr:hover td {
+    background: #f0fdf4 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody td,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody td:last-child {
+    background: inherit !important;
+    background-image: none !important;
+    border-color: #dce5df !important;
+    color: #1f2937 !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring :is(.maintenance-equipment-name, .maintenance-reporter-name, .maintenance-issue-title, .maintenance-reported-date time) {
+    color: #1f2937 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-equipment-name {
+    color: #15803d !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring :is(.maintenance-equipment-location, .maintenance-reporter-email, .maintenance-issue-description, .maintenance-reported-date, #maintenancePaginationInfo) {
+    color: #64748b !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-equipment-id {
+    border-color: #b7d8c1 !important;
+    background: #f0fdf4 !important;
+    color: #166534 !important;
+}
+
+#maintenance-monitoring .maintenance-reporter-avatar {
+    display: inline-flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 2.25rem;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(74, 222, 128, .28);
+    border-radius: 999px;
+    background: rgba(16, 185, 129, .12);
+    color: #bbf7d0;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+#maintenance-monitoring .maintenance-reporter-avatar.has-profile-photo {
+    background: #0f1f18;
+}
+
+#maintenance-monitoring .maintenance-reporter-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body.app-shell .system-dashboard-heading .system-profile-badge-avatar.has-profile-photo,
+body.app-shell.admin-profile-page [data-admin-profile-initials].has-profile-photo {
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0;
+    border: 0 !important;
+}
+
+body.app-shell .system-dashboard-heading .system-profile-badge-avatar.has-profile-photo > .profile-avatar-photo {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    flex: 0 0 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring :is(.status-badge.status-pending, .status-badge.status-in-progress, .status-badge.status-resolved, .status-badge.status-rejected, .status-badge.status-cancelled, .status-badge.status-secondary) {
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-badge.status-pending {
+    border-color: #eab308 !important; background: #fef3c7 !important; color: #854d0e !important;
+}
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-badge.status-in-progress {
+    border-color: #38bdf8 !important; background: #e0f2fe !important; color: #075985 !important;
+}
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-badge.status-resolved {
+    border-color: #34d399 !important; background: #d1fae5 !important; color: #065f46 !important;
+}
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring :is(.status-badge.status-rejected, .status-badge.status-cancelled) {
+    border-color: #f87171 !important; background: #fee2e2 !important; color: #991b1b !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-details-button,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-search-clear,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring #maintenancePagination button {
+    border-color: #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring :is(.maintenance-details-button:hover, .maintenance-search-clear:hover, #maintenancePagination button:hover:not(:disabled)) {
+    border-color: #15803d !important;
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring #maintenancePagination button[aria-current="page"] {
+    border-color: #15803d !important;
+    background: #15803d !important;
+    color: #ffffff !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal {
+    background: rgba(15, 23, 42, .32) !important;
+    backdrop-filter: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal .maintenance-details-card {
+    border-color: #dce5df !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1f2937 !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, .18) !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal :is(.maintenance-details-header, .maintenance-details-footer) {
+    background: #ffffff !important;
+    border-color: #dce5df !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal .details-modal-close {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+}
+
+/* Shared application chrome polish: consistent focus, surfaces, and motion. */
+html body.app-shell {
+    --shell-emerald: #34d399;
+    --shell-focus-ring: rgba(52, 211, 153, .38);
+}
+
+html body.app-shell .comlab-slim-page-header {
+    border-bottom-color: rgba(110, 231, 183, .2) !important;
+    backdrop-filter: blur(14px) saturate(1.08) !important;
+}
+
+html body.app-shell #sidebar .nav-item:focus-visible,
+html body.app-shell :is(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--shell-emerald) !important;
+    outline-offset: 2px !important;
+}
+
+html body.app-shell :is(input, select, textarea) {
+    transition: border-color .16s ease, box-shadow .16s ease !important;
+}
+
+html body.app-shell :is(input, select, textarea):focus {
+    border-color: var(--shell-emerald) !important;
+    box-shadow: 0 0 0 3px var(--shell-focus-ring) !important;
+}
+
+html.theme-light body.app-shell {
+    --shell-emerald: #15803d;
+    --shell-focus-ring: rgba(21, 128, 61, .18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.app-shell :is(input, select, textarea) {
         transition: none !important;
     }
 }

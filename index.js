@@ -87,18 +87,34 @@ app.get('/service-worker.js', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.type('application/javascript').sendFile(path.join(__dirname, 'public', 'service-worker.js'));
 });
+app.get('/favicon.ico', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.type('image/svg+xml').sendFile(path.join(__dirname, 'public', 'images', 'msu-logo.svg'));
+});
 app.get('/manifest.webmanifest', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.type('application/manifest+json').sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
 });
-app.use(express.static(path.join(process.cwd(), "public")));
+app.use(express.static(path.join(process.cwd(), "public"), {
+  setHeaders: (res, filePath) => {
+    if (/\.(?:css|js)$/i.test(filePath)) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+  }
+}));
 app.use((req, res, next) => {
   const send = res.send;
   res.send = function (body) {
     if (typeof body === "string" && /<(?:!doctype html|html)\b/i.test(body)) {
       const dialogScript = '<script src="/js/custom-dialogs.js"></script>';
-      const pwaHead = '<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#062719"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ComLab"><link rel="apple-touch-icon" href="/images/comlab-app-192.png"><link rel="stylesheet" href="/css/pwa-install.css">';
+      const pwaHead = '<link rel="icon" type="image/svg+xml" href="/images/msu-logo.svg"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#062719"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ComLab"><link rel="apple-touch-icon" href="/images/comlab-app-192.png"><link rel="stylesheet" href="/css/pwa-install.css">';
+      const appThemeHead = `<script>(function(){var root=document.documentElement;try{var theme=localStorage.getItem('comlab-main-theme')==='light'?'light':'dark';root.classList.toggle('theme-light',theme==='light');root.classList.toggle('theme-dark',theme==='dark');root.classList.toggle('dark',theme==='dark');root.setAttribute('data-theme',theme);}catch(error){root.classList.remove('theme-light');root.classList.add('theme-dark','dark');root.setAttribute('data-theme','dark');}})();</script><link rel="stylesheet" href="/css/app-theme.css?v=11">`;
       const pwaScript = '<script src="/js/pwa-install.js" defer></script>';
+      if (/\bapp-shell\b/.test(body) && /<\/head>/i.test(body) && !/href=["']\/css\/app-theme\.css(?:\?[^"']*)?["']/i.test(body)) {
+        body = body.replace(/<\/head>/i, `${appThemeHead}</head>`);
+      }
       if (!/href=["']\/manifest\.webmanifest["']/i.test(body) && /<\/head>/i.test(body)) {
         body = body.replace(/<\/head>/i, `${pwaHead}</head>`);
       }

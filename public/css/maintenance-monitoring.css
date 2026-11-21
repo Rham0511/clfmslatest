@@ -1,0 +1,487 @@
+/* Maintenance Monitoring - Service Desk button system */
+#mainContainer #maintenance-monitoring {
+  --maintenance-button-height: 2.5rem;
+}
+
+#mainContainer #maintenance-monitoring button,
+#mainContainer #maintenance-monitoring input,
+#mainContainer #maintenance-monitoring select {
+  font-family: inherit;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-report-tabs {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-report-tab {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .55rem .8rem;
+  border: 1px solid #B8C9BF;
+  border-radius: .65rem;
+  background: #FFFFFF;
+  color: #475569;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  text-shadow: none;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-report-tab:hover {
+  border-color: #16A34A;
+  background: #DCFCE7;
+  color: #166534;
+  transform: translateY(-1px);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-report-tab.active,
+#mainContainer #maintenance-monitoring .maintenance-report-tab[aria-selected="true"] {
+  border-color: #16A34A;
+  background: #16A34A;
+  color: #FFFFFF;
+  transform: none;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-tab-count {
+  display: inline-flex;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 .32rem;
+  border: 0;
+  border-radius: 999px;
+  background: #DCFCE7;
+  color: #166534;
+  font-size: .68rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-report-tab.active .maintenance-tab-count,
+#mainContainer #maintenance-monitoring .maintenance-report-tab[aria-selected="true"] .maintenance-tab-count {
+  background: rgba(255, 255, 255, .22);
+  color: #FFFFFF;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-refresh-button {
+  display: inline-flex;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #B8C9BF;
+  border-radius: .65rem;
+  background: #FFFFFF;
+  color: #166534;
+  box-shadow: none;
+  text-shadow: none;
+  cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-refresh-button:hover:not(:disabled) {
+  border-color: #16A34A;
+  background: #DCFCE7;
+  color: #166534;
+  transform: translateY(-1px);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-refresh-button:disabled,
+#mainContainer #maintenance-monitoring .maintenance-refresh-button.is-refreshing {
+  cursor: wait;
+  opacity: .72;
+  transform: none;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-refresh-button.is-refreshing i,
+#mainContainer #maintenance-monitoring .maintenance-refresh-button[aria-busy="true"] i {
+  animation: maintenance-refresh-spin .8s linear infinite;
+}
+
+@keyframes maintenance-refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-trigger,
+#mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select {
+  min-height: 2.5rem;
+  border: 1px solid #B8C9BF;
+  border-radius: .65rem;
+  background: #FFFFFF;
+  color: #475569;
+  box-shadow: none;
+  text-shadow: none;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-trigger:hover,
+#mainContainer #maintenance-monitoring .maintenance-status-trigger:focus-visible,
+#mainContainer #maintenance-monitoring .maintenance-status-trigger.has-active-filter,
+#mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select:hover,
+#mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select:focus-visible {
+  border-color: #16A34A;
+  background: #F7FEF9;
+  color: #166534;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, .12);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-menu {
+  border: 1px solid #D9E6DE;
+  border-radius: .65rem;
+  background: #FFFFFF;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-option {
+  min-height: 2.35rem;
+  border: 0;
+  border-radius: .45rem;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: background-color .16s ease, color .16s ease;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-option:hover,
+#mainContainer #maintenance-monitoring .maintenance-status-option:focus-visible {
+  background: #DCFCE7;
+  color: #166534;
+  outline: none;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] {
+  background: #16A34A;
+  color: #FFFFFF;
+  font-weight: 800;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] .maintenance-status-option-count {
+  background: rgba(255, 255, 255, .22);
+  color: #FFFFFF;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-trigger-count,
+#mainContainer #maintenance-monitoring .maintenance-status-option-count,
+#mainContainer #maintenance-monitoring .maintenance-filter-count {
+  border: 0;
+  background: #DCFCE7;
+  color: #166534;
+  box-shadow: none;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-details-button,
+#mainContainer #maintenance-monitoring #maintenancePagination button {
+  min-height: 2.25rem;
+  border: 1px solid #B8C9BF;
+  border-radius: .55rem;
+  background: #FFFFFF;
+  color: #166534;
+  box-shadow: none;
+  text-shadow: none;
+  cursor: pointer;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-details-button {
+  display: inline-flex;
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0 auto;
+  font-size: .88rem;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-details-button:hover,
+#mainContainer #maintenance-monitoring #maintenancePagination button:hover:not(:disabled) {
+  border-color: #16A34A;
+  background: #DCFCE7;
+  color: #166534;
+  transform: translateY(-1px);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-details-button:active,
+#mainContainer #maintenance-monitoring #maintenancePagination button:active:not(:disabled) {
+  transform: translateY(0);
+  background: #BBF7D0;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-details-button:focus-visible,
+#mainContainer #maintenance-monitoring #maintenancePagination button:focus-visible {
+  outline: 3px solid rgba(22, 163, 74, .24);
+  outline-offset: 2px;
+}
+
+#mainContainer #maintenance-monitoring #maintenancePagination button[aria-current="page"] {
+  border-color: #16A34A;
+  background: #16A34A;
+  color: #FFFFFF;
+}
+
+#mainContainer #maintenance-monitoring #maintenancePagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  transform: none;
+}
+
+/* Dark theme */
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-report-tab,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-refresh-button,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-trigger,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-details-button,
+html.theme-dark #mainContainer #maintenance-monitoring #maintenancePagination button {
+  border-color: #174B35;
+  background: #0A2119;
+  color: #E6F5EC;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-report-tab:hover,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-refresh-button:hover:not(:disabled),
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-trigger:hover,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-trigger:focus-visible,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-trigger.has-active-filter,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select:hover,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select:focus-visible,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-details-button:hover,
+html.theme-dark #mainContainer #maintenance-monitoring #maintenancePagination button:hover:not(:disabled) {
+  border-color: #16A36A;
+  background: #103B2B;
+  color: #E6F5EC;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-report-tab.active,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-report-tab[aria-selected="true"],
+html.theme-dark #mainContainer #maintenance-monitoring #maintenancePagination button[aria-current="page"] {
+  border-color: #16A36A;
+  background: #16A36A;
+  color: #FFFFFF;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-menu {
+  border-color: #174B35;
+  background: #0A2119;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-option {
+  color: #E6F5EC;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-option:hover,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-option:focus-visible {
+  background: #103B2B;
+  color: #E6F5EC;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] {
+  background: #16A36A;
+  color: #FFFFFF;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-tab-count,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-filter-count,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-trigger-count,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-status-option-count {
+  background: #103B2B;
+  color: #A7C5B4;
+}
+
+/* Last-layer theme lock for Maintenance Monitoring only. */
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab, .maintenance-refresh-button, .maintenance-status-trigger, .maintenance-date-filter .filter-select, .maintenance-details-button, #maintenancePagination button) {
+  border: 1px solid #DCE5DF !important;
+  border-radius: .65rem !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab:hover, .maintenance-refresh-button:hover:not(:disabled), .maintenance-status-trigger:hover, .maintenance-status-trigger:focus-visible, .maintenance-status-trigger.has-active-filter, .maintenance-date-filter .filter-select:hover, .maintenance-date-filter .filter-select:focus-visible, .maintenance-details-button:hover, #maintenancePagination button:hover:not(:disabled)) {
+  border-color: #16A34A !important;
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"], #maintenancePagination button[aria-current="page"]) {
+  border-color: #16A34A !important;
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-tab-count, .maintenance-filter-count, .maintenance-status-trigger-count, .maintenance-status-option-count) {
+  border: 0 !important;
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"]) .maintenance-tab-count {
+  background: rgba(255, 255, 255, .22) !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  :is(.maintenance-report-tab, .maintenance-refresh-button, .maintenance-status-trigger, .maintenance-date-filter .filter-select, .maintenance-details-button, #maintenancePagination button) {
+  border: 1px solid #174B35 !important;
+  border-radius: .65rem !important;
+  background: #0A2119 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  :is(.maintenance-report-tab:hover, .maintenance-refresh-button:hover:not(:disabled), .maintenance-status-trigger:hover, .maintenance-status-trigger:focus-visible, .maintenance-status-trigger.has-active-filter, .maintenance-date-filter .filter-select:hover, .maintenance-date-filter .filter-select:focus-visible, .maintenance-details-button:hover, #maintenancePagination button:hover:not(:disabled)) {
+  border-color: #16A36A !important;
+  background: #103B2B !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"], #maintenancePagination button[aria-current="page"]) {
+  border-color: #16A36A !important;
+  background: #16A36A !important;
+  color: #FFFFFF !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mainContainer #maintenance-monitoring .maintenance-refresh-button i {
+    animation-duration: 1.8s;
+  }
+  #mainContainer #maintenance-monitoring button,
+  #mainContainer #maintenance-monitoring .filter-select {
+    transition: none;
+  }
+}
+
+/* Final Maintenance-only cascade fix: this page loads after all inline styles. */
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab, .maintenance-refresh-button, .maintenance-status-trigger, .maintenance-date-filter .filter-select, .maintenance-search-clear, .maintenance-details-button, #maintenancePagination button) {
+  height: var(--maintenance-button-height) !important;
+  min-height: var(--maintenance-button-height) !important;
+  border: 1px solid #DCE5DF !important;
+  border-radius: .65rem !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab:hover, .maintenance-refresh-button:hover:not(:disabled), .maintenance-status-trigger:hover, .maintenance-status-trigger:focus-visible, .maintenance-status-trigger.has-active-filter, .maintenance-date-filter .filter-select:hover, .maintenance-date-filter .filter-select:focus-visible, .maintenance-search-clear:hover, .maintenance-details-button:hover, #maintenancePagination button:hover:not(:disabled)) {
+  border-color: #16A34A !important;
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"], #maintenancePagination button[aria-current="page"]) {
+  border-color: #16A34A !important;
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"]) {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"]) > span,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"]) .maintenance-tab-count {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-details-button i,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-details-button svg {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+  opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-refresh-button i,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-trigger i,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-chevron {
+  color: #166534 !important;
+  opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-menu {
+  border-color: #DCE5DF !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .10) !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option {
+  background: #FFFFFF !important;
+  color: #475569 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option:focus-visible {
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option[aria-selected="true"] {
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  :is(.maintenance-report-tab, .maintenance-refresh-button, .maintenance-status-trigger, .maintenance-date-filter .filter-select, .maintenance-search-clear, .maintenance-details-button, #maintenancePagination button) {
+  height: var(--maintenance-button-height) !important;
+  min-height: var(--maintenance-button-height) !important;
+  border: 1px solid #174B35 !important;
+  border-radius: .65rem !important;
+  background: #0A2119 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  :is(.maintenance-report-tab.active, .maintenance-report-tab[aria-selected="true"], #maintenancePagination button[aria-current="page"]) {
+  border-color: #16A36A !important;
+  background: #16A36A !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}

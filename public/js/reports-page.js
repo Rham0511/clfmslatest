@@ -489,6 +489,13 @@
           definition.columns.forEach((column) => {
             const th = document.createElement('th');
             th.className = 'px-4 py-4 text-left text-sm font-semibold uppercase tracking-[0.18em] text-emerald-100/90';
+            th.style.border = '0';
+            th.style.borderTop = '0';
+            th.style.borderRight = '0';
+            th.style.borderBottom = '0';
+            th.style.borderLeft = '0';
+            th.style.outline = '0';
+            th.style.boxShadow = 'none';
             th.textContent = column;
             headerRow.appendChild(th);
           });
@@ -512,6 +519,10 @@
             const message = document.createElement('p');
             cell.colSpan = definition.columns.length;
             cell.className = 'px-5 py-6 text-center';
+            cell.style.border = '0';
+            cell.style.borderBottom = '0';
+            cell.style.outline = '0';
+            cell.style.boxShadow = 'none';
             notice.className = 'report-access-notice';
             title.className = 'report-access-notice-title';
             title.textContent = campusLabel;
@@ -544,9 +555,20 @@
           pageRows.forEach((record) => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-emerald-500/10';
+            row.style.border = '0';
+            row.style.borderBottom = '0';
+            row.style.outline = '0';
+            row.style.boxShadow = 'none';
             definition.columns.forEach((column) => {
               const td = document.createElement('td');
               td.className = 'px-4 py-4 align-top text-base text-emerald-50/90';
+              td.style.border = '0';
+              td.style.borderTop = '0';
+              td.style.borderRight = '0';
+              td.style.borderBottom = '0';
+              td.style.borderLeft = '0';
+              td.style.outline = '0';
+              td.style.boxShadow = 'none';
               td.textContent = formatCell(getCellValue(record, column));
               row.appendChild(td);
             });
@@ -570,12 +592,16 @@
             const button = document.createElement('button');
             button.type = 'button';
             button.textContent = label;
-            button.className = isActive
-              ? 'flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500 bg-emerald-600 font-bold text-white shadow-sm transition'
-              : 'rounded-lg border border-emerald-800/40 bg-emerald-950/40 px-3 py-1.5 text-sm text-emerald-300 transition hover:bg-emerald-900/60';
+            button.className = 'report-page-button';
+            button.setAttribute('aria-label', label === 'Previous'
+              ? 'Previous page'
+              : label === 'Next' ? 'Next page' : `Page ${label}`);
+            if (isActive) {
+              button.classList.add('is-active');
+              button.setAttribute('aria-current', 'page');
+            }
             if (isDisabled) {
               button.disabled = true;
-              button.classList.add('cursor-not-allowed', 'opacity-40');
             } else {
               button.addEventListener('click', () => {
                 reportState.page = page;

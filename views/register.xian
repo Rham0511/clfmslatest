@@ -23,14 +23,11 @@
       inset: 0;
       z-index: -1;
       content: '';
-      background:
-        radial-gradient(circle at 10% 10%, rgba(34, 197, 94, .18), transparent 26%),
-        linear-gradient(135deg, rgba(7, 17, 31, .78), rgba(2, 6, 23, .72));
+      background: linear-gradient(135deg, rgba(3, 16, 12, 0.58) 0%, rgba(2, 10, 22, 0.66) 100%);
     }
 
     .register-card {
-      max-height: calc(100vh - 160px);
-      background-color: #033D2B;
+      max-height: calc(100vh - 100px);
     }
 
     .register-card-content {
@@ -262,29 +259,35 @@
     }
 
     .register-intro-eyebrow {
-      margin: 0;
-      color: #6ee7b7;
-      font-size: 1.05rem;
-      font-weight: 900;
-      letter-spacing: .22em;
-      text-transform: uppercase;
+      display: none;
     }
 
-    .register-intro h1 {
+    .register-headline {
       margin: 0;
-      color: #f8fafc;
-      font-size: clamp(2.4rem, 4.5vw, 4rem);
-      font-weight: 800;
-      letter-spacing: -.06em;
-      line-height: 1.05;
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+      color: #ffffff;
+      font-size: clamp(2.4rem, 4.2vw, 3.8rem);
+      font-weight: 850;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .register-headline-highlight {
+      display: block;
+      background: linear-gradient(135deg, #4ade80 0%, #10b981 55%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 18px rgba(16, 185, 129, 0.35));
     }
 
     .register-intro p:last-child {
       max-width: 36rem;
       margin: 0;
-      color: rgba(226, 232, 240, .9);
-      font-size: 1.08rem;
-      line-height: 1.7;
+      color: rgba(226, 232, 240, .92);
+      font-size: 1.12rem;
+      line-height: 1.65;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
     }
 
     .register-nav {
@@ -353,25 +356,58 @@
 
     .register-card {
       width: 100%;
-      max-height: calc(100vh - 150px);
-      border-color: rgba(96, 165, 250, .28);
-      background: linear-gradient(145deg, rgba(7, 17, 31, .92), rgba(2, 6, 23, .9));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 24px 70px rgba(2, 8, 23, .45);
-      backdrop-filter: blur(18px);
+      max-height: calc(100vh - 100px);
+      border: 1px solid rgba(52, 211, 153, 0.35) !important;
+      border-radius: 1.5rem !important;
+      background: linear-gradient(165deg,
+        rgba(5, 32, 22, 0.85) 0%,
+        rgba(3, 20, 15, 0.9) 50%,
+        rgba(2, 11, 8, 0.95) 100%
+      ) !important;
+      box-shadow:
+        0 0 35px rgba(16, 185, 129, 0.18),
+        0 25px 60px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 0 20px rgba(16, 185, 129, 0.06) !important;
+      backdrop-filter: blur(28px) saturate(1.35) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(1.35) !important;
     }
 
     .register-card .register-form-grid input,
     .register-card .register-form-grid select {
-      border-color: rgba(74, 222, 128, .3);
-      background-color: rgba(2, 20, 35, .72);
+      border: 1px solid rgba(52, 211, 153, 0.3) !important;
+      background-color: rgba(2, 22, 15, 0.72) !important;
+      border-radius: 0.75rem !important;
+      color: #ffffff !important;
     }
 
     .register-card .register-form-grid input:focus,
     .register-card .register-form-grid select:focus {
-      border-color: #6ee7b7;
-      background-color: rgba(2, 30, 55, .86);
-      box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
-      outline: none;
+      border-color: #34d399 !important;
+      background-color: rgba(2, 30, 20, 0.9) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22) !important;
+      outline: none !important;
+    }
+
+    .register-card .register-form-grid input::placeholder {
+      color: rgba(110, 231, 183, .72);
+      letter-spacing: .01em;
+    }
+
+    .register-card .register-form-grid label {
+      color: #d1fae5;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+
+    .register-card .register-form-grid select {
+      color: #f0fdf4 !important;
+      font-weight: 600 !important;
+      letter-spacing: .005em;
+    }
+
+    .register-card .register-form-grid select:invalid {
+      color: rgba(167, 243, 208, .78) !important;
     }
 
     .register-form-grid {
@@ -494,6 +530,7 @@
 
     @media (max-width: 1023px) {
       .register-header {
+        position: relative;
         padding: .8rem 1.25rem;
       }
 
@@ -506,37 +543,39 @@
       }
 
       .register-bg {
+        align-items: flex-start;
         height: auto;
-        padding: 6.5rem 1.5rem 2rem;
+        padding: 3.5rem 1.5rem 2rem;
       }
 
       .register-layout {
-        width: min(680px, 100%);
+        width: 100%;
         grid-template-columns: 1fr;
         gap: 1.5rem;
       }
 
-      .register-step[data-register-step="2"] {
+      .register-step[data-register-step="3"] {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .register-step[data-register-step="2"] > .register-step-indicator,
-      .register-step[data-register-step="2"] > .register-step-controls,
-      .register-step[data-register-step="2"] > .register-student-fields {
+      .register-step[data-register-step="3"] > .register-step-indicator,
+      .register-step[data-register-step="3"] > .register-step-controls,
+      .register-step[data-register-step="3"] > .register-student-fields {
         grid-column: 1 / -1;
       }
 
-      .register-step[data-register-step="2"] > .register-student-fields {
+      .register-step[data-register-step="3"] > .register-student-fields {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .register-step[data-register-step="2"] > .register-student-fields > .register-form-row {
+      .register-step[data-register-step="3"] > .register-student-fields > .register-form-row {
         display: grid;
         grid-column: 1 / -1;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .register-intro {
+        display: none;
         align-items: center;
         gap: .75rem;
         text-align: center;
@@ -603,7 +642,11 @@
       }
 
       .register-bg {
-        padding: 6rem .85rem .75rem;
+        padding: 1rem .85rem 1.5rem;
+      }
+
+      .register-intro {
+        display: none;
       }
 
       .register-layout {
@@ -705,6 +748,10 @@
         padding-bottom: .25rem;
         font-size: .8rem;
       }
+
+      .register-card-content .register-footer {
+        display: none;
+      }
     }
 
     @media (max-width: 380px) {
@@ -723,6 +770,22 @@
 
       .register-step-controls button {
         font-size: .9rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .register-card-content .register-footer.register-footer {
+        display: flex;
+        gap: .3rem;
+        margin-top: .4rem;
+        padding: .45rem .1rem 0;
+        font-size: .65rem;
+      }
+
+      .register-card-content .register-footer-home a {
+        min-height: 0;
+        padding: 0;
+        font-size: .65rem;
       }
     }
 
@@ -760,25 +823,27 @@
 
     .register-footer-home a {
       display: inline-flex;
-      min-height: 2.25rem;
       align-items: center;
       justify-content: center;
-      padding: .4rem .85rem;
-      border: 1px solid rgba(167, 243, 208, .2);
-      border-radius: 999px;
-      color: #d1fae5;
+      padding: 0;
+      border: 0;
+      color: #6ee7b7;
       font-size: .78rem;
       font-weight: 700;
       text-decoration: none;
-      transition: border-color .2s ease, background .2s ease, color .2s ease;
+      transition: color .2s ease;
+    }
+
+    .register-footer-home {
+      align-self: flex-start;
     }
 
     .register-footer-home a:hover,
     .register-footer-home a:focus-visible {
-      border-color: rgba(110, 231, 183, .5);
-      outline: none;
-      background: rgba(16, 185, 129, .12);
       color: #a7f3d0;
+      outline: none;
+      text-decoration: underline;
+      text-underline-offset: .2em;
     }
 
     @media (min-width: 1024px) {
@@ -911,28 +976,262 @@
     }
 
     @media (min-width: 1024px) {
-      html,
-      body.register-page {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-
       .register-bg {
-        height: 100dvh;
-        min-height: 0;
-        overflow: hidden;
-        padding: 5rem 2rem .75rem;
-      }
-
-      .register-layout {
-        max-height: calc(100dvh - 5.75rem);
+        min-height: 100vh;
+        min-height: 100dvh;
+        height: 100vh;
+        padding: 6rem 2rem 2rem;
       }
 
       .register-card.custom-scrollbar {
-        max-height: 100%;
-        overflow-y: auto !important;
-        overscroll-behavior: contain;
+        max-height: none;
+        overflow: visible !important;
+      }
+
+      .register-layout {
+        align-items: center;
+      }
+
+      .register-card {
+        padding: 1rem 1.5rem;
+        transform: scale(.92);
+        transform-origin: center;
+      }
+
+      .register-card-content > .register-logo {
+        margin-bottom: .35rem;
+      }
+
+      .register-card-content > .register-logo img {
+        width: 2.75rem;
+        height: 2.75rem;
+      }
+
+      .register-card-content > .register-heading {
+        margin-bottom: .75rem;
+      }
+
+      .register-card-content > .register-heading h1 {
+        font-size: 1.25rem;
+        line-height: 1.4;
+      }
+
+      .register-card-content > .register-heading p {
+        margin-top: .2rem;
+        font-size: .72rem;
+      }
+
+      .register-stepper {
+        margin-bottom: .8rem;
+      }
+
+      .register-step {
+        gap: .55rem 1rem;
+      }
+
+      .register-step-indicator {
+        margin-bottom: 0;
+        font-size: .72rem;
+      }
+
+      .register-step label {
+        font-size: .76rem;
+      }
+
+      .register-step label input,
+      .register-step label select {
+        min-height: 2.15rem;
+        margin-top: .15rem;
+        padding: .35rem .7rem;
+        font-size: .78rem;
+      }
+
+      .register-password-control {
+        margin-top: .15rem;
+      }
+
+      .register-password-control input {
+        min-height: 2.15rem;
+      }
+
+      .register-step-hint {
+        margin-top: .25rem;
+        font-size: .68rem;
+        line-height: 1.35;
+      }
+
+      .register-step-controls {
+        margin-top: .15rem;
+      }
+
+      .register-card-content .register-footer.register-footer {
+        margin-top: .6rem;
+        padding-top: .55rem;
+        font-size: .7rem;
+      }
+    }
+
+    .register-stepper {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .5rem;
+      margin: 0 0 1.4rem;
+      padding: 0;
+    }
+
+    .register-stepper-item {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      flex: 1 1 0;
+      flex-direction: column;
+      align-items: center;
+      gap: .45rem;
+      color: rgba(167, 243, 208, .5);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .register-stepper-item::before {
+      position: absolute;
+      top: 1.05rem;
+      right: calc(50% + 1.15rem);
+      left: calc(-50% + 1.15rem);
+      height: 2px;
+      content: '';
+      background: rgba(52, 211, 153, .2);
+      transition: background .25s ease;
+    }
+
+    .register-stepper-item:first-child::before {
+      display: none;
+    }
+
+    .register-stepper-dot {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: 2.1rem;
+      height: 2.1rem;
+      place-items: center;
+      border: 2px solid rgba(52, 211, 153, .28);
+      border-radius: 999px;
+      background: rgba(2, 22, 15, .9);
+      color: rgba(167, 243, 208, .7);
+      font-size: .85rem;
+      font-weight: 800;
+      transition: border-color .25s ease, background .25s ease, color .25s ease, box-shadow .25s ease;
+    }
+
+    .register-stepper-label {
+      overflow: hidden;
+      max-width: 100%;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .register-stepper-item.is-active {
+      color: #d1fae5;
+    }
+
+    .register-stepper-item.is-active .register-stepper-dot {
+      border-color: #34d399;
+      background: #10b981;
+      color: #022c1a;
+      box-shadow: 0 0 0 5px rgba(16, 185, 129, .14), 0 0 18px rgba(16, 185, 129, .4);
+    }
+
+    .register-stepper-item.is-complete {
+      color: #6ee7b7;
+    }
+
+    .register-stepper-item.is-complete .register-stepper-dot {
+      border-color: #34d399;
+      background: rgba(16, 185, 129, .16);
+      color: #6ee7b7;
+      font-size: 0;
+    }
+
+    .register-stepper-item.is-complete .register-stepper-dot::after {
+      content: '✓';
+      font-size: .85rem;
+    }
+
+    .register-stepper-item.is-complete::before {
+      background: #10b981;
+    }
+
+    .register-step:not([hidden]) {
+      animation: register-step-in .28s ease both;
+    }
+
+    @keyframes register-step-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .register-step:not([hidden]) {
+        animation: none;
+      }
+    }
+
+    .register-step-hint {
+      margin: .65rem 0 0;
+      color: rgba(167, 243, 208, .68);
+      font-size: .8rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 640px) {
+      .register-stepper {
+        gap: .25rem;
+        margin-bottom: 1.1rem;
+      }
+
+      .register-stepper-item {
+        gap: .35rem;
+        font-size: .58rem;
+        letter-spacing: .06em;
+      }
+
+      .register-stepper-dot {
+        width: 1.9rem;
+        height: 1.9rem;
+        font-size: .78rem;
+      }
+
+      .register-stepper-item::before {
+        top: .95rem;
+        right: calc(50% + 1.05rem);
+        left: calc(-50% + 1.05rem);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .register-card-content .register-footer.register-footer {
+        display: flex;
+        gap: .3rem;
+        margin-top: .4rem;
+        padding: .45rem .1rem 0;
+        font-size: .65rem;
+      }
+
+      .register-card-content .register-footer-home a {
+        min-height: 1.8rem;
+        padding: .25rem .65rem;
+        font-size: .65rem;
       }
     }
   </style>
@@ -959,21 +1258,23 @@
   <div class="register-bg relative flex min-h-screen items-center">
     <main class="register-layout relative z-10">
       <section class="register-intro" aria-label="ComLab registration">
-        <p class="register-intro-eyebrow">Welcome to ComLab</p>
-        <h1>Computer Laboratory Facilities Management System</h1>
+        <h1 class="register-headline">
+          Computer Laboratory
+          <span class="register-headline-highlight">Facilities Management System</span>
+        </h1>
         <p>Access laboratory schedules, equipment services, and your personalized ComLab dashboard with one account.</p>
       </section>
 
       <div class="register-card-wrap">
-      <div class="register-card custom-scrollbar overflow-y-auto rounded-2xl border-2 border-emerald-400 p-6 shadow-[0_0_25px_rgba(52,211,153,0.35)] backdrop-blur-xl">
+      <div class="register-card custom-scrollbar overflow-y-auto rounded-2xl p-6">
         <div class="register-card-content h-full pr-2">
-          <div class="register-logo mb-6 flex justify-center">
-            <img src="/images/ccs-logo.png" alt="CCS Logo" class="h-16 w-16 object-contain drop-shadow-[0_0_18px_rgba(34,197,94,0.35)]" />
+          <div class="register-logo mb-4 flex justify-center">
+            <img src="/images/ccs-logo.png" alt="CCS Logo" class="h-14 w-14 object-contain drop-shadow-[0_0_20px_rgba(16,185,129,0.45)]" />
           </div>
 
-          <div class="register-heading mb-8 text-center">
-            <h1 class="text-2xl font-extrabold text-white">Welcome to ComLab</h1>
-            <p class="mt-3 text-sm text-slate-200">Create your account to continue to ComLab and access your dashboard.</p>
+          <div class="register-heading mb-4 text-center">
+            <h1 class="text-xl font-extrabold text-white">Create Your Account</h1>
+            <p class="mt-1.5 text-xs text-slate-300">Create your account to continue to ComLab and access your dashboard.</p>
             {{#if isEquipmentRegistration}}
               <p class="register-qr-notice mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">You scanned an equipment QR code. Register as a Student, verify your email, and continue to the scanned item's borrow request.</p>
             {{/if}}
@@ -986,118 +1287,141 @@
             <div class="mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-sm">{{success_msg}}</div>
           {{/if}}
 
-          <form class="register-form-grid space-y-4 pb-6" autocomplete="off" method="POST" action="/register">
+          <form class="register-form-grid space-y-4 pb-6" autocomplete="off" method="POST" action="/register" novalidate>
+            <div class="register-stepper" aria-label="Registration progress">
+              <div class="register-stepper-item is-active" data-register-marker="1">
+                <span class="register-stepper-dot">1</span>
+                <span class="register-stepper-label">Account</span>
+              </div>
+              <div class="register-stepper-item" data-register-marker="2">
+                <span class="register-stepper-dot">2</span>
+                <span class="register-stepper-label">Campus</span>
+              </div>
+              <div class="register-stepper-item" data-register-marker="3">
+                <span class="register-stepper-dot">3</span>
+                <span class="register-stepper-label">Student</span>
+              </div>
+            </div>
+
             <div class="register-step" data-register-step="1">
-              <p class="register-step-indicator">Step 1 of 2 · Account details</p>
-            <div class="register-form-row grid gap-4 sm:grid-cols-2">
-              <label class="block text-sm font-semibold text-slate-200">
-                Full Name
-                <input autocomplete="off" type="text" name="name" placeholder="Full Name" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-              </label>
-              <input type="hidden" name="role" value="student">
-            </div>
-
-            <label class="register-full-field block text-sm font-semibold text-slate-200">
-              Email address
-              <input autocomplete="off" type="email" name="email" placeholder="Enter your email" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-            </label>
-
-            <div class="register-form-row grid gap-4 sm:grid-cols-2">
-              <label class="register-half-field block text-sm font-semibold text-slate-200">
-                Password
-                <div class="register-password-control">
-                  <input id="registerPassword" autocomplete="new-password" type="password" name="password" placeholder="Create a password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-                  <button class="register-password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                      <path class="register-password-eye-slash" d="m4 4 16 16" hidden></path>
-                    </svg>
-                  </button>
-                </div>
-              </label>
-              <label class="register-half-field block text-sm font-semibold text-slate-200">
-                Confirm Password
-                <div class="register-password-control">
-                  <input id="registerConfirmPassword" autocomplete="new-password" type="password" name="confirmPassword" placeholder="Repeat password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
-                  <button class="register-password-toggle" type="button" data-password-toggle="registerConfirmPassword" aria-label="Show password" aria-pressed="false">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                      <path class="register-password-eye-slash" d="m4 4 16 16" hidden></path>
-                    </svg>
-                  </button>
-                </div>
-              </label>
-            </div>
-
-              <div class="register-step-controls">
-                <button class="register-next" id="registerNext" type="button">Next</button>
-              </div>
-            </div>
-
-            <div class="register-step" data-register-step="2">
-              <p class="register-step-indicator">Step 2 of 2 · Campus information</p>
-            <label class="register-half-field block text-sm font-semibold text-slate-200">
-              Campus
-              <select name="campus" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                <option value="" selected disabled>Select Campus</option>
-                <option value="Bongabong">Bongabong</option>
-                <option value="Victoria">Victoria</option>
-                <option value="Calapan">Calapan</option>
-              </select>
-            </label>
-
-            <div id="studentRegistrationFields" class="register-student-fields space-y-4">
-              <h2 class="text-sm font-bold uppercase tracking-wide text-emerald-200">Student information</h2>
               <div class="register-form-row grid gap-4 sm:grid-cols-2">
                 <label class="block text-sm font-semibold text-slate-200">
-                  Student ID
-                  <input id="studentIdInput" autocomplete="off" type="text" name="student_number" placeholder="e.g. 2023-0001" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" />
+                  Full Name
+                  <input autocomplete="off" type="text" name="name" placeholder="Full Name" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
                 </label>
-                <label class="block text-sm font-semibold text-slate-200">
-                  Program / Course
-                  <select name="program" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                    <option value="" selected disabled>Select Program / Course</option>
-                    <option value="BSIT">BSIT — Bachelor of Science in Information Technology</option>
-                    <option value="BSCPE">BSCPE — Bachelor of Science in Computer Engineering</option>
-                  </select>
+                <input type="hidden" name="role" value="student">
+              </div>
+
+              <label class="register-full-field block text-sm font-semibold text-slate-200">
+                Email address
+                <input autocomplete="off" type="email" name="email" placeholder="Enter your email" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+              </label>
+
+              <div class="register-form-row grid gap-4 sm:grid-cols-2">
+                <label class="register-half-field block text-sm font-semibold text-slate-200">
+                  Password
+                  <div class="register-password-control">
+                    <input id="registerPassword" autocomplete="new-password" type="password" name="password" placeholder="Create a password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                    <button class="register-password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path class="register-password-eye-slash" d="m4 4 16 16" hidden></path>
+                      </svg>
+                    </button>
+                  </div>
+                </label>
+                <label class="register-half-field block text-sm font-semibold text-slate-200">
+                  Confirm Password
+                  <div class="register-password-control">
+                    <input id="registerConfirmPassword" autocomplete="new-password" type="password" name="confirmPassword" placeholder="Repeat password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                    <button class="register-password-toggle" type="button" data-password-toggle="registerConfirmPassword" aria-label="Show password" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path class="register-password-eye-slash" d="m4 4 16 16" hidden></path>
+                      </svg>
+                    </button>
+                  </div>
                 </label>
               </div>
 
-              <div class="register-form-row grid gap-4 sm:grid-cols-2">
-                <label class="block text-sm font-semibold text-slate-200">
-                  Year
-                  <select name="year" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                    <option value="" selected disabled>Select Year Level</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                  </select>
-                </label>
-                <label class="block text-sm font-semibold text-slate-200">
-                  Section
-                  <select name="section" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                    <option value="" selected disabled>Select Section</option>
-                    <option value="F1">F1</option>
-                    <option value="F2">F2</option>
-                    <option value="F3">F3</option>
-                  </select>
-                </label>
+              <div class="register-step-controls">
+                <button class="register-next" type="button" data-register-next>Continue</button>
               </div>
             </div>
 
-            {{#if isEquipmentRegistration}}
-              <label class="register-full-field flex items-center gap-2 text-sm font-medium text-emerald-100/80">
-                <input type="checkbox" name="rememberMe" value="on" class="h-4 w-4 accent-emerald-400" />
-                <span>Remember me on this device for 30 days</span>
-              </label>
-            {{/if}}
+            <div class="register-step" data-register-step="2" hidden>
+              <div class="register-full-field">
+                <label class="block text-sm font-semibold text-slate-200">
+                  Campus
+                  <select name="campus" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
+                    <option value="" selected disabled>Select Campus</option>
+                    <option value="Bongabong">Bongabong</option>
+                    <option value="Victoria">Victoria</option>
+                    <option value="Calapan">Calapan</option>
+                  </select>
+                </label>
+                <p class="register-step-hint">Choose the Mindoro State University campus where you are enrolled. This determines the laboratories, equipment, and schedules available to your account.</p>
+              </div>
 
               <div class="register-step-controls">
-                <button id="registerBack" type="button">Back</button>
-                <button id="registerButton" class="register-create" type="submit" aria-label="Create account and send verification code">Create account &amp; send code</button>
+                <button class="register-prev" type="button" data-register-prev>Back</button>
+                <button class="register-next" type="button" data-register-next>Continue</button>
+              </div>
+            </div>
+
+            <div class="register-step" data-register-step="3" hidden>
+              <div id="studentRegistrationFields" class="register-student-fields space-y-4">
+                <h2 class="text-sm font-bold uppercase tracking-wide text-emerald-200">Student information</h2>
+                <div class="register-form-row grid gap-4 sm:grid-cols-2">
+                  <label class="block text-sm font-semibold text-slate-200">
+                    Student ID
+                    <input id="studentIdInput" autocomplete="off" type="text" name="student_number" placeholder="e.g. 2023-0001" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" />
+                  </label>
+                  <label class="block text-sm font-semibold text-slate-200">
+                    Program
+                    <select name="program" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
+                      <option value="" selected disabled>Select Program</option>
+                      <option value="BSIT">BSIT — Bachelor of Science in Information Technology</option>
+                      <option value="BSCPE">BSCPE — Bachelor of Science in Computer Engineering</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="register-form-row grid gap-4 sm:grid-cols-2">
+                  <label class="block text-sm font-semibold text-slate-200">
+                    Year
+                    <select name="year" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
+                      <option value="" selected disabled>Select Year</option>
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                    </select>
+                  </label>
+                  <label class="block text-sm font-semibold text-slate-200">
+                    Section
+                    <select name="section" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
+                      <option value="" selected disabled>Select Section</option>
+                      <option value="F1">F1</option>
+                      <option value="F2">F2</option>
+                      <option value="F3">F3</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {{#if isEquipmentRegistration}}
+                <label class="register-full-field flex items-center gap-2 text-sm font-medium text-emerald-100/80">
+                  <input type="checkbox" name="rememberMe" value="on" class="h-4 w-4 accent-emerald-400" />
+                  <span>Remember me on this device for 30 days</span>
+                </label>
+              {{/if}}
+
+              <div class="register-step-controls">
+                <button class="register-prev" type="button" data-register-prev>Back</button>
+                <button id="registerButton" class="register-create" type="submit" aria-label="Create account">Create Account</button>
               </div>
             </div>
           </form>
@@ -1115,7 +1439,7 @@
             {{else}}
               <p class="register-footer-account">Already have an account? <a href="/login">Log in</a></p>
             {{/if}}
-            <p class="register-footer-home"><a href="/">Back to landing</a></p>
+            <p class="register-footer-home"><a href="/">&larr; Back to landing</a></p>
           </div>
         </div>
       </div>
@@ -1125,11 +1449,10 @@
   <script>
     const form = document.querySelector('form[action="/register"]');
     const button = document.getElementById('registerButton');
-    const nextButton = document.getElementById('registerNext');
-    const backButton = document.getElementById('registerBack');
     const loading = document.getElementById('registerLoading');
     const steps = Array.from(document.querySelectorAll('[data-register-step]'));
-
+    const markers = Array.from(document.querySelectorAll('[data-register-marker]'));
+    let currentStep = 1;
     document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
       toggle.addEventListener('click', () => {
         const input = document.getElementById(toggle.dataset.passwordToggle);
@@ -1143,46 +1466,72 @@
       });
     });
 
-    function showStep(stepNumber) {
+    function findStep(stepNumber) {
+      return steps.find((step) => Number(step.dataset.registerStep) === stepNumber);
+    }
+
+    function setStep(stepNumber) {
+      currentStep = stepNumber;
       steps.forEach((step) => {
-        const isActive = step.dataset.registerStep === String(stepNumber);
+        const isActive = Number(step.dataset.registerStep) === stepNumber;
         step.hidden = !isActive;
         step.querySelectorAll('input, select, textarea').forEach((field) => {
           field.disabled = !isActive;
         });
       });
-      if (stepNumber === 1) {
-        steps[0]?.querySelector('input, select')?.focus();
-      } else {
-        steps[1]?.querySelector('input:not([type="checkbox"]), select')?.focus();
-      }
+
+      markers.forEach((marker) => {
+        const markerStep = Number(marker.dataset.registerMarker);
+        marker.classList.toggle('is-active', markerStep === stepNumber);
+        marker.classList.toggle('is-complete', markerStep < stepNumber);
+        if (markerStep === stepNumber) {
+          marker.setAttribute('aria-current', 'step');
+        } else {
+          marker.removeAttribute('aria-current');
+        }
+      });
+
+      findStep(stepNumber)
+        ?.querySelector('input:not([type="hidden"]):not([type="checkbox"]), select')
+        ?.focus({ preventScroll: true });
     }
 
-    nextButton?.addEventListener('click', () => {
-      const accountStep = steps[0];
-      const passwordInput = accountStep?.querySelector('input[name="password"]');
-      const confirmPasswordInput = accountStep?.querySelector('input[name="confirmPassword"]');
+    function validateStep(stepNumber, shouldReport = true) {
+      const step = findStep(stepNumber);
+      if (!step) return true;
+
+      const passwordInput = step.querySelector('input[name="password"]');
+      const confirmPasswordInput = step.querySelector('input[name="confirmPassword"]');
       if (passwordInput && confirmPasswordInput) {
         confirmPasswordInput.setCustomValidity(
           passwordInput.value === confirmPasswordInput.value ? '' : 'Passwords do not match.'
         );
       }
-      if (accountStep && !accountStep.querySelector('input:invalid, select:invalid, textarea:invalid')) {
-        showStep(2);
-      } else {
-        accountStep?.querySelector(':invalid')?.reportValidity();
-      }
+
+      const invalid = step.querySelector('input:invalid, select:invalid, textarea:invalid');
+      if (!invalid) return true;
+      if (shouldReport) invalid.reportValidity();
+      return false;
+    }
+
+    document.querySelectorAll('[data-register-next]').forEach((next) => {
+      next.addEventListener('click', () => {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < steps.length) setStep(currentStep + 1);
+      });
     });
 
-    backButton?.addEventListener('click', () => showStep(1));
-
-    showStep(1);
+    document.querySelectorAll('[data-register-prev]').forEach((prev) => {
+      prev.addEventListener('click', () => {
+        if (currentStep > 1) setStep(currentStep - 1);
+      });
+    });
 
     if (form) {
       form.addEventListener('submit', (event) => {
-        if (steps[1]?.hidden) {
+        if (currentStep < steps.length) {
           event.preventDefault();
-          nextButton?.click();
+          if (validateStep(currentStep)) setStep(currentStep + 1);
           return;
         }
 
@@ -1191,6 +1540,16 @@
             field.disabled = false;
           });
         });
+
+        const invalidStep = steps.find((step) => !validateStep(Number(step.dataset.registerStep), false));
+        if (invalidStep) {
+          event.preventDefault();
+          const stepNumber = Number(invalidStep.dataset.registerStep);
+          setStep(stepNumber);
+          findStep(stepNumber)?.querySelector(':invalid')?.reportValidity();
+          return;
+        }
+
         if (button) {
           button.disabled = true;
           button.setAttribute('aria-busy', 'true');
@@ -1202,5 +1561,17 @@
         }
       });
     }
+
+    setStep(1);
+
+    {{#if error_msg}}
+      if (loading) loading.classList.add('hidden');
+      if (button) {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.textContent = 'Create Account';
+        button.classList.remove('opacity-70', 'cursor-not-allowed');
+      }
+    {{/if}}
   </script>
 {{> footer }}

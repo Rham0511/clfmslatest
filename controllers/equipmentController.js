@@ -347,7 +347,35 @@ export const inventoryPage = async (req, res) => {
     const filePath = path.join(process.cwd(), "views", "admin", "equipment-inventory.html");
     const html = await fs.promises.readFile(filePath, "utf8");
     const currentUserJson = JSON.stringify(currentUser).replaceAll("<", "\\u003c");
-    const hydratedHtml = html.replaceAll("__CURRENT_USER_JSON__", currentUserJson);
+    let hydratedHtml = html.replaceAll("__CURRENT_USER_JSON__", currentUserJson);
+    if (req.query?.embedded === "facilities") {
+      hydratedHtml = hydratedHtml.replace(
+        '<body class="app-shell system-layout-page equipment-inventory-page">',
+        '<body class="app-shell system-layout-page equipment-inventory-page facilities-embedded">'
+      );
+      hydratedHtml = hydratedHtml.replace(
+        "</head>",
+        `<style id="facilities-embed-layout-server">
+          html body.facilities-embedded #shared-sidebar,
+          html body.facilities-embedded .sidebar,
+          html body.facilities-embedded .sidebar-overlay,
+          html body.facilities-embedded .top-header,
+          html body.facilities-embedded .comlab-slim-page-header,
+          html body.facilities-embedded .comlab-page-header-spacer,
+          html body.facilities-embedded #mobileMenuToggle,
+          html body.facilities-embedded #qr-scan-float-btn,
+          html body.facilities-embedded #comlab-help-float-btn,
+          html body.facilities-embedded #comlab-help-panel { display: none !important; }
+          html body.facilities-embedded .main-container {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 100vh !important;
+            margin: 0 !important;
+          }
+        </style></head>`
+      );
+    }
 
     res.set({
       "Cache-Control": "no-store, no-cache, must-revalidate, private",

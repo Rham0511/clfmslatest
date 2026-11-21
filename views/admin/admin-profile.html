@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Profile | ComLab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <style>
     body.admin-profile-page { min-height: 100vh; }
@@ -17,6 +17,50 @@
     .admin-profile-summary, .admin-profile-panels { min-width: 0; border: 1px solid #cfe0d4; border-radius: 1rem; background: #f7faf8; box-shadow: 0 14px 32px rgba(16,42,28,.08); }
     .admin-profile-summary { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 25rem; padding: 1.5rem; text-align: center; background: radial-gradient(circle at 50% 28%, #e4f5e9, #f7faf8 68%); }
     .admin-profile-avatar { display: grid; width: 6rem; height: 6rem; place-items: center; margin: .5rem 0 1rem; border: 1px solid #a8d9b9; border-radius: 50%; background: linear-gradient(145deg, #31b878, #07583d); color: #f0fdf4; font-size: 1.7rem; font-weight: 800; box-shadow: 0 12px 28px rgba(5,96,63,.18); }
+    .admin-profile-avatar { overflow: hidden; }
+    html body.app-shell.admin-profile-page .admin-profile-avatar.has-profile-photo,
+    html body.app-shell.admin-profile-page .admin-profile-heading .system-profile-badge-avatar.has-profile-photo {
+      overflow: hidden;
+      border: 0 !important;
+      border-radius: 50% !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    html body.app-shell.admin-profile-page .admin-profile-avatar.has-profile-photo > img,
+    html body.app-shell.admin-profile-page .admin-profile-heading .system-profile-badge-avatar.has-profile-photo > .profile-avatar-photo {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0 !important;
+      border-radius: 50% !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      object-fit: contain;
+      transform: none;
+    }
+    html body.app-shell.admin-profile-page .admin-profile-heading [data-admin-profile-initials],
+    html body.app-shell.admin-profile-page .admin-profile-avatar[data-admin-profile-initials] {
+      border: 0 !important;
+      border-radius: 50% !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    html body.app-shell.admin-profile-page .admin-profile-heading [data-admin-profile-initials] > img,
+    html body.app-shell.admin-profile-page .admin-profile-avatar[data-admin-profile-initials] > img {
+      border: 0 !important;
+      border-radius: 50% !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      clip-path: circle(50% at 50% 50%) !important;
+      -webkit-clip-path: circle(50% at 50% 50%) !important;
+    }
+    .admin-profile-photo-actions { display: grid; justify-items: center; gap: .45rem; margin: -.35rem 0 .75rem; }
+    .admin-profile-photo-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.35rem; padding: .55rem .8rem; border: 1px solid #08774f; border-radius: .65rem; background: #07844f; color: #fff; font-size: .78rem; font-weight: 750; cursor: pointer; }
+    .admin-profile-photo-button:hover { background: #066a41; }
+    .admin-profile-photo-button:disabled { opacity: .65; cursor: wait; }
+    .admin-profile-photo-input { display: none; }
     .admin-profile-kicker { margin: 0; color: #08774f; font-size: .7rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
     .admin-profile-name { margin: .1rem 0 .35rem; overflow-wrap: anywhere; color: #17281d; font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 800; }
     .admin-profile-role { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .7rem; border: 1px solid #b8e4c7; border-radius: 999px; background: #e7f7ec; color: #08774f; font-size: .75rem; font-weight: 750; }
@@ -73,7 +117,7 @@
     html.dark body.admin-profile-page .admin-profile-message { color: #a7f3d0; }
     html.dark body.admin-profile-page .admin-profile-message[data-state="error"] { color: #fda4af; }
   </style>
-  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=4">
 </head>
 <body class="app-shell admin-shell system-layout-page admin-profile-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -103,6 +147,11 @@
         <aside class="admin-profile-summary">
           <p class="admin-profile-kicker">Administrator account</p>
           <div class="admin-profile-avatar" data-admin-profile-initials>AD</div>
+          <div class="admin-profile-photo-actions">
+            <input id="adminProfilePhotoInput" class="admin-profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <button id="adminProfilePhotoButton" class="admin-profile-photo-button" type="button"><i class="fas fa-camera" aria-hidden="true"></i><span>Upload profile photo</span></button>
+            <p id="adminProfilePhotoMessage" class="admin-profile-message" role="status" aria-live="polite"></p>
+          </div>
           <h2 class="admin-profile-name" data-admin-profile-name>Administrator</h2>
           <span class="admin-profile-role"><i class="fas fa-shield-halved" aria-hidden="true"></i><span data-admin-profile-role>Admin</span></span>
           <p class="admin-profile-summary-note">Your account identity is used throughout ComLab records and administrative activity logs.</p>
@@ -180,16 +229,110 @@
       document.getElementById('adminProfileCampus').value = user.campus || '—';
       document.querySelectorAll('[data-admin-profile-role]').forEach(element => { element.textContent = role; });
 
+      const setAdminAvatar = (initials, photoUrl) => {
+        document.querySelectorAll('[data-admin-profile-initials], .system-profile-badge-avatar, .user-avatar, [data-user-initials], #adminAvatar, #adminBadgeAvatar').forEach(element => {
+          const url = typeof photoUrl === 'string' ? photoUrl.trim() : '';
+          if (!url) {
+            element.textContent = initials;
+            element.classList.remove('has-profile-photo');
+            return;
+          }
+          const image = document.createElement('img');
+          image.className = 'profile-avatar-photo';
+          image.src = url;
+          image.alt = 'Profile photo';
+          image.draggable = false;
+          image.style.setProperty('display', 'block', 'important');
+          image.style.setProperty('width', '100%', 'important');
+          image.style.setProperty('height', '100%', 'important');
+          image.style.setProperty('border', '0', 'important');
+          image.style.setProperty('border-radius', '50%', 'important');
+          image.style.setProperty('outline', '0', 'important');
+          image.style.setProperty('box-shadow', 'none', 'important');
+          image.style.setProperty('clip-path', 'circle(50% at 50% 50%)', 'important');
+          image.style.setProperty('-webkit-clip-path', 'circle(50% at 50% 50%)', 'important');
+          element.style.setProperty('overflow', 'hidden', 'important');
+          element.style.setProperty('border', '0', 'important');
+          element.style.setProperty('border-radius', '50%', 'important');
+          element.style.setProperty('outline', '0', 'important');
+          element.style.setProperty('box-shadow', 'none', 'important');
+          element.style.setProperty('background', 'transparent', 'important');
+          image.addEventListener('error', () => {
+            element.textContent = initials;
+            element.classList.remove('has-profile-photo');
+          }, { once: true });
+          element.replaceChildren(image);
+          element.classList.add('has-profile-photo');
+        });
+      };
+
       const syncName = (updatedName) => {
         const updatedInitials = updatedName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'AD';
         document.querySelectorAll('[data-admin-profile-name]').forEach(element => { element.textContent = updatedName; });
-        document.querySelectorAll('[data-admin-profile-initials]').forEach(element => { element.textContent = updatedInitials; });
         document.querySelectorAll('.system-profile-badge-name, .user-name, [data-user-name], #adminUserName, #adminBadgeName').forEach(element => { element.textContent = updatedName; });
-        document.querySelectorAll('.system-profile-badge-avatar, .user-avatar, [data-user-initials], #adminAvatar, #adminBadgeAvatar').forEach(element => { element.textContent = updatedInitials; });
+        setAdminAvatar(updatedInitials, user.photo || '');
         document.querySelectorAll('.system-profile-badge').forEach(element => { element.setAttribute('aria-label', `${updatedName}, ${role}. Open profile management.`); });
         user.name = updatedName;
       };
       syncName(name);
+
+      setAdminAvatar(initials, user.photo || '');
+
+      const photoInput = document.getElementById('adminProfilePhotoInput');
+      const photoButton = document.getElementById('adminProfilePhotoButton');
+      const photoMessage = document.getElementById('adminProfilePhotoMessage');
+
+      photoButton?.addEventListener('click', () => photoInput?.click());
+      photoInput?.addEventListener('change', async () => {
+        const file = photoInput.files?.[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          photoMessage.dataset.state = 'error';
+          photoMessage.textContent = 'Only JPG, PNG, and WEBP images are allowed.';
+          photoInput.value = '';
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          photoMessage.dataset.state = 'error';
+          photoMessage.textContent = 'Image must be 5MB or smaller.';
+          photoInput.value = '';
+          return;
+        }
+
+        photoButton.disabled = true;
+        photoMessage.removeAttribute('data-state');
+        photoMessage.textContent = 'Uploading…';
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const response = await fetch('/api/student/photo', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: reader.result, fileName: file.name })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.success) throw new Error(result.error || 'Unable to upload profile photo.');
+            const photoUrl = `${result.photo}?v=${Date.now()}`;
+            user.photo = result.photo;
+            setAdminAvatar(initials, photoUrl);
+            window.__CURRENT_USER__ = { ...user, photo: result.photo };
+            photoMessage.textContent = 'Profile photo updated.';
+          } catch (error) {
+            photoMessage.dataset.state = 'error';
+            photoMessage.textContent = error.message || 'Unable to upload profile photo.';
+          } finally {
+            photoButton.disabled = false;
+            photoInput.value = '';
+          }
+        };
+        reader.onerror = () => {
+          photoButton.disabled = false;
+          photoMessage.dataset.state = 'error';
+          photoMessage.textContent = 'Unable to read the selected image.';
+        };
+        reader.readAsDataURL(file);
+      });
 
       const bindForm = (formId, messageId, endpoint, successText, getPayload, afterSuccess) => {
         const form = document.getElementById(formId);
@@ -235,6 +378,6 @@
       });
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

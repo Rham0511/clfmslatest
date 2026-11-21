@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#12372a}
+      .subtitle{font:400 18px Arial,sans-serif;fill:#5b6b64}
+      .label{font:700 21px Arial,sans-serif;fill:#17352b}
+      .small{font:400 16px Arial,sans-serif;fill:#53655d}
+      .process{fill:#e8f4ef;stroke:#2f7d62;stroke-width:4}
+      .entity{fill:#fff;stroke:#315a49;stroke-width:3}
+      .datastore{fill:#fff7df;stroke:#c58d2b;stroke-width:3}
+      .arrow{stroke:#3f5d51;stroke-width:3;fill:none;marker-end:url(#m)}
+    </style>
+    <marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#3f5d51"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7faf8"/>
+  <text x="80" y="70" class="title">ComLab - Data Flow Diagram (Level 0)</text>
+  <text x="80" y="103" class="subtitle">Context diagram showing the system boundary and external users</text>
+
+  <!-- External entities -->
+  <rect x="70" y="230" width="260" height="112" rx="18" class="entity"/>
+  <circle cx="128" cy="286" r="28" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M128 258 v56 M100 286 h56" stroke="#315a49" stroke-width="4"/>
+  <text x="175" y="279" class="label">Administrator</text>
+  <text x="175" y="309" class="small">Manage the system</text>
+
+  <rect x="70" y="390" width="260" height="112" rx="18" class="entity"/>
+  <circle cx="128" cy="446" r="28" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M128 418 v56 M100 446 h56" stroke="#315a49" stroke-width="4"/>
+  <text x="175" y="439" class="label">Faculty</text>
+  <text x="175" y="469" class="small">Schedule and monitor</text>
+
+  <rect x="70" y="550" width="260" height="112" rx="18" class="entity"/>
+  <circle cx="128" cy="606" r="28" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M128 578 v56 M100 606 h56" stroke="#315a49" stroke-width="4"/>
+  <text x="175" y="599" class="label">Student</text>
+  <text x="175" y="629" class="small">Attend and borrow</text>
+
+  <rect x="1270" y="390" width="260" height="112" rx="18" class="entity"/>
+  <circle cx="1328" cy="446" r="28" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M1300 446 h56 M1328 418 v56" stroke="#315a49" stroke-width="4"/>
+  <text x="1375" y="439" class="label">Technician</text>
+  <text x="1375" y="469" class="small">Repair and maintenance</text>
+
+  <!-- Central process -->
+  <ellipse cx="800" cy="450" rx="330" ry="170" class="process"/>
+  <circle cx="800" cy="450" r="118" fill="#fff" stroke="#2f7d62" stroke-width="3"/>
+  <rect x="760" y="400" width="80" height="50" rx="8" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <rect x="772" y="412" width="56" height="38" rx="3" fill="#fff" stroke="#315a49" stroke-width="2"/>
+  <path d="M785 432 h30 M785 440 h22" stroke="#315a49" stroke-width="3"/>
+  <text x="800" y="482" text-anchor="middle" class="label">ComLab System</text>
+  <text x="800" y="510" text-anchor="middle" class="small">Facilities Management</text>
+
+  <!-- Data store -->
+  <rect x="665" y="720" width="270" height="90" rx="12" class="datastore"/>
+  <path d="M665 744 h270 M665 764 h270 M665 784 h270" stroke="#dcc78a" stroke-width="2"/>
+  <text x="800" y="757" text-anchor="middle" class="label">MySQL Database</text>
+  <text x="800" y="792" text-anchor="middle" class="small">D1 - ComLab Records</text>
+
+  <!-- Flows -->
+  <path d="M330 286 C430 286 470 330 520 375" class="arrow"/>
+  <text x="355" y="270" class="small">User and account data</text>
+  <path d="M520 420 C450 420 390 435 330 446" class="arrow"/>
+  <text x="375" y="425" class="small">Reports and schedules</text>
+  <path d="M330 446 C430 446 470 446 470 446" class="arrow"/>
+  <text x="350" y="503" class="small">Lab and roster records</text>
+  <path d="M330 606 C430 606 470 530 520 505" class="arrow"/>
+  <text x="350" y="580" class="small">Attendance and requests</text>
+  <path d="M1270 446 C1170 446 1130 446 1130 446" class="arrow"/>
+  <text x="1160" y="425" class="small">Maintenance tasks</text>
+  <path d="M800 620 C800 650 800 680 800 720" class="arrow"/>
+  <text x="820" y="680" class="small">Read / write records</text>
+
+  <text x="80" y="850" class="small">Legend:  External Entity       Process       Data Store</text>
+</svg>

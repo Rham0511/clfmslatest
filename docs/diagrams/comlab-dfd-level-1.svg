@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#12372a}
+      .subtitle{font:400 18px Arial,sans-serif;fill:#5b6b64}
+      .label{font:700 18px Arial,sans-serif;fill:#17352b}
+      .small{font:400 15px Arial,sans-serif;fill:#53655d}
+      .process{fill:#edf6f2;stroke:#2f7d62;stroke-width:3}
+      .entity{fill:#fff;stroke:#315a49;stroke-width:3}
+      .store{fill:#fff7df;stroke:#c58d2b;stroke-width:3}
+      .arrow{stroke:#4a685b;stroke-width:2.5;fill:none;marker-end:url(#m)}
+    </style>
+    <marker id="m" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a685b"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7faf8"/>
+  <text x="70" y="65" class="title">ComLab - Data Flow Diagram (Level 1)</text>
+  <text x="70" y="98" class="subtitle">Major processes, external entities, and shared data stores</text>
+
+  <!-- External entities -->
+  <rect x="35" y="170" width="230" height="85" rx="14" class="entity"/>
+  <text x="150" y="205" text-anchor="middle" class="label">Administrator</text>
+  <text x="150" y="233" text-anchor="middle" class="small">Manages and reviews</text>
+  <rect x="35" y="405" width="230" height="85" rx="14" class="entity"/>
+  <text x="150" y="440" text-anchor="middle" class="label">Faculty</text>
+  <text x="150" y="468" text-anchor="middle" class="small">Schedules and attendance</text>
+  <rect x="35" y="640" width="230" height="85" rx="14" class="entity"/>
+  <text x="150" y="675" text-anchor="middle" class="label">Student</text>
+  <text x="150" y="703" text-anchor="middle" class="small">Borrow and report</text>
+  <rect x="1335" y="405" width="230" height="85" rx="14" class="entity"/>
+  <text x="1450" y="440" text-anchor="middle" class="label">Technician</text>
+  <text x="1450" y="468" text-anchor="middle" class="small">Maintenance and reports</text>
+
+  <!-- Processes -->
+  <ellipse cx="480" cy="230" rx="145" ry="78" class="process"/>
+  <text x="480" y="218" text-anchor="middle" class="label">1.0 Authentication</text>
+  <text x="480" y="247" text-anchor="middle" class="small">Login / Register / Profile</text>
+
+  <ellipse cx="820" cy="230" rx="145" ry="78" class="process"/>
+  <text x="820" y="218" text-anchor="middle" class="label">2.0 Attendance</text>
+  <text x="820" y="247" text-anchor="middle" class="small">QR / PC / Schedule</text>
+
+  <ellipse cx="1160" cy="230" rx="145" ry="78" class="process"/>
+  <text x="1160" y="218" text-anchor="middle" class="label">3.0 Equipment</text>
+  <text x="1160" y="247" text-anchor="middle" class="small">Inventory / Assignment</text>
+
+  <ellipse cx="480" cy="520" rx="145" ry="78" class="process"/>
+  <text x="480" y="508" text-anchor="middle" class="label">4.0 Borrowing</text>
+  <text x="480" y="537" text-anchor="middle" class="small">Request / Release / Return</text>
+
+  <ellipse cx="820" cy="520" rx="145" ry="78" class="process"/>
+  <text x="820" y="508" text-anchor="middle" class="label">5.0 Maintenance</text>
+  <text x="820" y="537" text-anchor="middle" class="small">Issue / Assign / Repair</text>
+
+  <ellipse cx="1160" cy="520" rx="145" ry="78" class="process"/>
+  <text x="1160" y="508" text-anchor="middle" class="label">6.0 Scheduling &amp; Reports</text>
+  <text x="1160" y="537" text-anchor="middle" class="small">Labs / Roster / Analytics</text>
+
+  <!-- Stores -->
+  <rect x="625" y="710" width="350" height="90" rx="12" class="store"/>
+  <text x="800" y="744" text-anchor="middle" class="label">D1 - MySQL Database</text>
+  <text x="800" y="772" text-anchor="middle" class="small">Users • Attendance • Equipment • Borrowing • Maintenance • Schedules</text>
+
+  <!-- Flows -->
+  <path d="M265 212 C315 212 350 212 335 212" class="arrow"/>
+  <text x="270" y="195" class="small">Credentials / profile</text>
+  <path d="M265 447 C340 447 390 370 440 300" class="arrow"/>
+  <text x="270" y="390" class="small">Schedule / attendance data</text>
+  <path d="M265 682 C330 682 365 610 335 585" class="arrow"/>
+  <text x="270" y="632" class="small">Requests / attendance</text>
+  <path d="M1335 447 C1280 447 1250 360 1210 300" class="arrow"/>
+  <text x="1250" y="385" class="small">Maintenance records</text>
+
+  <path d="M625 230 h50" class="arrow"/><text x="646" y="210" class="small">Identity</text>
+  <path d="M965 230 h50" class="arrow"/><text x="990" y="210" class="small">Status</text>
+  <path d="M625 520 h50" class="arrow"/><text x="646" y="500" class="small">Request</text>
+  <path d="M965 520 h50" class="arrow"/><text x="985" y="500" class="small">Work data</text>
+  <path d="M625 520 C680 600 700 650 710 710" class="arrow"/>
+  <path d="M820 598 C820 650 820 675 820 710" class="arrow"/>
+  <path d="M1015 520 C960 600 930 650 925 710" class="arrow"/>
+  <path d="M480 598 C480 650 600 680 625 716" class="arrow"/>
+  <path d="M1160 598 C1160 650 1040 680 975 716" class="arrow"/>
+</svg>

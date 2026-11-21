@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <defs>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#12372a}
+      .subtitle{font:400 18px Arial,sans-serif;fill:#5b6b64}
+      .lane{font:700 21px Arial,sans-serif;fill:#17352b}
+      .activity{font:700 17px Arial,sans-serif;fill:#17352b}
+      .small{font:400 15px Arial,sans-serif;fill:#53655d}
+      .box{fill:#edf6f2;stroke:#2f7d62;stroke-width:3}
+      .decision{fill:#fff7df;stroke:#c58d2b;stroke-width:3}
+      .arrow{stroke:#4a685b;stroke-width:3;fill:none;marker-end:url(#m)}
+    </style>
+    <marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a685b"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="980" fill="#f7faf8"/>
+  <text x="70" y="60" class="title">ComLab - Equipment Borrowing Activity Diagram</text>
+  <text x="70" y="93" class="subtitle">Borrow request, approval, release, return, and audit recording</text>
+
+  <!-- Swimlane separators -->
+  <rect x="70" y="125" width="1460" height="790" rx="12" fill="#fff" stroke="#b9c9c2" stroke-width="2"/>
+  <rect x="70" y="125" width="220" height="790" rx="12" fill="#eef5f1"/>
+  <rect x="290" y="125" width="123" height="790" fill="#f7faf8"/>
+  <line x1="413" y1="125" x2="413" y2="915" stroke="#cbd8d2" stroke-width="2"/>
+  <line x1="850" y1="125" x2="850" y2="915" stroke="#cbd8d2" stroke-width="2"/>
+  <text x="180" y="165" text-anchor="middle" class="lane">Borrower</text>
+  <text x="631" y="165" text-anchor="middle" class="lane">ComLab System</text>
+  <text x="1125" y="165" text-anchor="middle" class="lane">Administrator</text>
+  <text x="1340" y="165" text-anchor="middle" class="lane">Database / Audit</text>
+
+  <!-- Start -->
+  <circle cx="180" cy="220" r="24" fill="#263f35"/>
+  <path d="M180 244 C180 270 180 275 180 275" class="arrow"/>
+
+  <!-- Borrower -->
+  <rect x="90" y="275" width="180" height="70" rx="12" class="box"/>
+  <text x="180" y="305" text-anchor="middle" class="activity">Select equipment</text>
+  <text x="180" y="332" text-anchor="middle" class="small">Browse / scan QR</text>
+  <path d="M180 345 C180 370 180 380 180 380" class="arrow"/>
+  <rect x="90" y="380" width="180" height="70" rx="12" class="box"/>
+  <text x="180" y="410" text-anchor="middle" class="activity">Submit request</text>
+  <text x="180" y="437" text-anchor="middle" class="small">Purpose and schedule</text>
+  <path d="M270 415 C380 415 430 415 500 415" class="arrow"/>
+
+  <!-- System -->
+  <rect x="500" y="380" width="220" height="70" rx="12" class="box"/>
+  <text x="610" y="410" text-anchor="middle" class="activity">Validate request</text>
+  <text x="610" y="437" text-anchor="middle" class="small">Availability and account</text>
+  <path d="M610 450 C610 475 610 490 610 490" class="arrow"/>
+  <polygon points="610,490 690,540 610,590 530,540" class="decision"/>
+  <text x="610" y="535" text-anchor="middle" class="activity">Valid?</text>
+  <text x="610" y="560" text-anchor="middle" class="small">Yes / No</text>
+  <path d="M530 540 C430 540 350 540 270 540" class="arrow"/>
+  <text x="420" y="530" class="small">No: notify borrower</text>
+  <rect x="90" y="505" width="180" height="70" rx="12" class="box"/>
+  <text x="180" y="535" text-anchor="middle" class="activity">Receive notice</text>
+  <text x="180" y="562" text-anchor="middle" class="small">Correct / cancel</text>
+
+  <path d="M690 540 C790 540 830 540 900 540" class="arrow"/>
+  <text x="780" y="530" class="small">Yes: pending approval</text>
+
+  <!-- Admin -->
+  <rect x="900" y="505" width="220" height="70" rx="12" class="box"/>
+  <text x="1010" y="535" text-anchor="middle" class="activity">Review request</text>
+  <text x="1010" y="562" text-anchor="middle" class="small">Approve or reject</text>
+  <path d="M1010 575 C1010 620 1010 630 1010 630" class="arrow"/>
+  <polygon points="1010,630 1090,680 1010,730 930,680" class="decision"/>
+  <text x="1010" y="675" text-anchor="middle" class="activity">Approved?</text>
+  <text x="1010" y="700" text-anchor="middle" class="small">Yes / No</text>
+
+  <path d="M930 680 C850 680 760 680 720 680" class="arrow"/>
+  <text x="820" y="670" class="small">No: reject</text>
+  <rect x="500" y="645" width="220" height="70" rx="12" class="box"/>
+  <text x="610" y="675" text-anchor="middle" class="activity">Update status</text>
+  <text x="610" y="702" text-anchor="middle" class="small">Rejected</text>
+
+  <path d="M1090 680 C1180 680 1220 680 1220 680" class="arrow"/>
+  <text x="1140" y="670" class="small">Yes: release</text>
+  <rect x="1220" y="645" width="180" height="70" rx="12" class="box"/>
+  <text x="1310" y="675" text-anchor="middle" class="activity">Record release</text>
+  <text x="1310" y="702" text-anchor="middle" class="small">Create audit trail</text>
+  <path d="M1310 715 C1310 760 1310 770 1310 770" class="arrow"/>
+
+  <!-- Return and close -->
+  <rect x="1220" y="770" width="180" height="70" rx="12" class="box"/>
+  <text x="1310" y="800" text-anchor="middle" class="activity">Store transaction</text>
+  <text x="1310" y="827" text-anchor="middle" class="small">Borrow / return / lost</text>
+  <path d="M1220 805 C1100 805 1050 805 930 805" class="arrow"/>
+  <rect x="710" y="770" width="220" height="70" rx="12" class="box"/>
+  <text x="820" y="800" text-anchor="middle" class="activity">Borrower returns item</text>
+  <text x="820" y="827" text-anchor="middle" class="small">Inspection and completion</text>
+  <path d="M710 805 C600 805 520 805 520 805" class="arrow"/>
+  <rect x="300" y="770" width="220" height="70" rx="12" class="box"/>
+  <text x="410" y="800" text-anchor="middle" class="activity">Return confirmed</text>
+  <text x="410" y="827" text-anchor="middle" class="small">Equipment available</text>
+  <circle cx="410" cy="890" r="25" fill="#fff" stroke="#263f35" stroke-width="4"/>
+  <circle cx="410" cy="890" r="13" fill="#263f35"/>
+  <path d="M410 840 C410 860 410 865 410 865" class="arrow"/>
+</svg>

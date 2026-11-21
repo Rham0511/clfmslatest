@@ -6,7 +6,7 @@
   <title>Equipment Assignment | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <style>
     html,
     body {
@@ -242,13 +242,13 @@
     }
 
     html.theme-light body.admin-shell .assignment-content {
-      --assignment-ink: #183b2b;
-      --assignment-muted: #617668;
-      --assignment-border: #c8ddd0;
-      --assignment-panel: linear-gradient(145deg, #ffffff, #f5faf6);
+      --assignment-ink: #1f2937;
+      --assignment-muted: #64748b;
+      --assignment-border: #dce5df;
+      --assignment-panel: #ffffff;
       --assignment-field: #ffffff;
-      --assignment-row: #fbfdfb;
-      --assignment-row-alt: #f2f7f3;
+      --assignment-row: #ffffff;
+      --assignment-row-alt: #fafbf9;
     }
 
     body.admin-shell .assignment-controls {
@@ -1339,7 +1339,7 @@
   </div>
 
   <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
   <script>
     const state = { equipment: [], faculty: [], histories: new Set(), selectedEquipmentIds: new Set(), loading: false, bulkAssigning: false, currentPage: 1 };
     const rowsPerPage = 12;

@@ -6,7 +6,7 @@
   <title>Faculty Laboratory Schedules | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <style>
     body {
       min-height: 100vh;
@@ -1980,6 +1980,174 @@
         max-height: 100%;
       }
     }
+
+    body.schedule-page.faculty-page-heading-page.system-layout-page .main-container > main.faculty-content {
+      box-sizing: border-box;
+      gap: 1.1rem !important;
+      padding: 0 clamp(1rem, 2vw, 1.75rem) 1.5rem !important;
+    }
+
+    body.schedule-page.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
+      margin-bottom: 0 !important;
+    }
+
+    body.schedule-page .schedule-page-heading-copy {
+      min-width: 0;
+    }
+
+    body.schedule-page .system-dashboard-heading .schedule-page-heading-copy h1 {
+      margin: 0;
+      color: #f0fdf4;
+      font-size: clamp(1.15rem, 2vw, 1.55rem);
+      font-weight: 850;
+      letter-spacing: -.025em;
+      line-height: 1.2;
+    }
+
+    body.schedule-page .schedule-page-heading-copy p {
+      margin: .25rem 0 0;
+      color: #91c6a4;
+      font-size: .8rem;
+      font-weight: 550;
+      line-height: 1.4;
+    }
+
+    body.schedule-page #scheduleCalendarModal {
+      padding: 1.1rem !important;
+      border-radius: 1.25rem;
+      background:
+        radial-gradient(600px 200px at 0% 0%, rgba(16, 185, 129, .08), transparent 78%),
+        linear-gradient(145deg, #072a1b, #041d13) !important;
+      box-shadow: 0 20px 52px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-panel {
+      gap: 1rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-heading {
+      gap: .85rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-heading-icon {
+      width: 2.65rem;
+      height: 2.65rem;
+      flex-basis: 2.65rem;
+      border-radius: .85rem;
+      box-shadow: 0 0 22px rgba(16, 185, 129, .12);
+      font-size: 1rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-heading h2 {
+      font-size: 1.15rem;
+      letter-spacing: -.015em;
+    }
+
+    #scheduleCalendarModal .schedule-map-heading p {
+      margin-top: .25rem;
+      font-size: .82rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar {
+      gap: 1rem;
+      padding: .9rem;
+      border-radius: 1rem;
+      background: rgba(2, 24, 15, .55);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .02);
+    }
+
+    #scheduleCalendarModal .schedule-map-controls {
+      gap: .85rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar label {
+      gap: .45rem;
+      font-size: .76rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar .schedule-search {
+      min-height: 2.8rem;
+      border-radius: .8rem;
+      padding: .6rem .85rem;
+      font-size: .9rem;
+    }
+
+    #scheduleCalendarModal .schedule-map-count {
+      width: max-content;
+      max-width: 100%;
+      min-height: 2.5rem;
+      box-sizing: border-box;
+      margin: 0;
+      padding: .5rem .8rem;
+      border: 1px solid rgba(74, 222, 128, .18);
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .09);
+      color: #a7f3d0;
+      font-size: .78rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-scroll {
+      height: min(68vh, 45rem);
+      min-height: 25rem;
+      border-radius: 1rem;
+      background: rgba(2, 20, 13, .38);
+      box-shadow: inset 0 1px 5px rgba(0, 0, 0, .18);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-day-heading {
+      padding: .75rem .4rem;
+      font-size: .76rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-time {
+      padding-right: .65rem;
+      font-size: .72rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry:not(.is-compact) {
+      gap: .2rem;
+      border-radius: .65rem;
+      padding: .25rem .35rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry:not(.is-compact) > span {
+      font-size: .68rem;
+      line-height: 1.15;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry:not(.is-compact) > strong {
+      font-size: .84rem;
+      line-height: 1.15;
+    }
+
+    @media (max-width: 760px) {
+      body.schedule-page.faculty-page-heading-page.system-layout-page .main-container > main.faculty-content {
+        padding: 0 .85rem 1.25rem !important;
+      }
+
+      body.schedule-page #scheduleCalendarModal {
+        padding: .85rem !important;
+      }
+
+      #scheduleCalendarModal .schedule-calendar-scroll {
+        height: min(62vh, 40rem);
+        min-height: 20rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body.schedule-page .schedule-page-heading-copy p {
+        display: none;
+      }
+
+      body.schedule-page .system-dashboard-heading .schedule-page-heading-copy h1 {
+        font-size: 1.05rem;
+      }
+
+      #scheduleCalendarModal .schedule-map-toolbar {
+        padding: .7rem;
+      }
+    }
   </style>
 </head>
 <body class="app-shell student-portal faculty-page faculty-page-heading-page system-layout-page schedule-page">
@@ -1993,6 +2161,10 @@
           <button id="mobileMenuToggle" class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="toggleSidebar()">
             <i class="fas fa-bars" aria-hidden="true"></i>
           </button>
+          <div class="schedule-page-heading-copy">
+            <h1>Laboratory Schedules</h1>
+            <p>Browse weekly lab availability by day, time, and room.</p>
+          </div>
         </div>
         <div class="system-dashboard-heading-actions">
           <a class="faculty-profile-link" href="/faculty-profile" aria-label="Open my profile">
@@ -3918,6 +4090,6 @@
     })();
   </script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=75" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

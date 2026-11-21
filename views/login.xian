@@ -2,9 +2,9 @@
 <style>
   :root {
     color-scheme: dark;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #f8fafc;
-    background: #020617;
+    background: #020806;
   }
 
   *,
@@ -17,8 +17,9 @@
     min-height: 100vh;
     min-height: 100dvh;
     margin: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #f8fafc;
-    background: #020617;
+    background: #020806;
   }
 
   a {
@@ -30,7 +31,7 @@
     min-height: 100vh;
     min-height: 100dvh;
     background: url('/images/MinSU_Bongabong_enhanced.jpg') center / cover no-repeat;
-    filter: saturate(1.45) contrast(1.12) brightness(0.96);
+    filter: saturate(1.35) contrast(1.1) brightness(0.96);
     isolation: isolate;
   }
 
@@ -39,7 +40,7 @@
     inset: 0;
     z-index: -1;
     content: '';
-    background: linear-gradient(135deg, rgba(5, 15, 25, .72), rgba(2, 6, 23, .8));
+    background: linear-gradient(135deg, rgba(3, 16, 12, 0.58) 0%, rgba(2, 10, 22, 0.66) 100%);
   }
 
   .login-shell {
@@ -57,27 +58,28 @@
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 1rem;
-    padding: .7rem 1.75rem;
-    border-bottom: 1px solid rgba(148, 163, 184, .14);
-    background: rgba(7, 17, 31, .72);
-    box-shadow: 0 12px 32px rgba(2, 6, 23, .16);
-    backdrop-filter: blur(18px) saturate(1.2);
+    padding: .75rem 2rem;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.18);
+    background: rgba(3, 12, 9, 0.8);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(20px) saturate(1.3);
   }
 
   .login-brand {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: .7rem;
+    gap: .75rem;
   }
 
   .login-brand img {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    clip-path: circle(49% at 50% 50%);
-    object-fit: contain;
-    filter: drop-shadow(0 0 12px rgba(16, 185, 129, .24));
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(52, 211, 153, 0.35);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.28);
   }
 
   .login-brand-copy {
@@ -89,15 +91,22 @@
 
   .login-brand-name {
     color: #f8fafc;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     font-size: 1.05rem;
     font-weight: 800;
+    letter-spacing: -0.01em;
     line-height: 1.2;
     white-space: nowrap;
   }
 
   .login-brand-subtitle {
-    color: #a7f3d0;
-    font-size: .72rem;
+    color: #34d399;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
     font-weight: 700;
     letter-spacing: .2em;
     text-transform: uppercase;
@@ -187,77 +196,94 @@
   }
 
   .login-eyebrow {
-    margin: 0;
-    color: #a7f3d0;
-    font-size: 1.5rem;
-    font-weight: 900;
-    letter-spacing: .16em;
-    line-height: 1.2;
-    text-transform: uppercase;
+    display: none;
   }
 
-  .login-intro h1 {
+  .login-headline {
     margin: 0;
-    color: #f8fafc;
-    font-size: clamp(3rem, 5vw, 5rem);
-    font-weight: 800;
-    letter-spacing: -.06em;
-    line-height: 1.02;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    color: #ffffff;
+    font-size: clamp(2.6rem, 4.6vw, 4.2rem);
+    font-weight: 850;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .login-headline-highlight {
+    display: block;
+    background: linear-gradient(135deg, #4ade80 0%, #10b981 55%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 18px rgba(16, 185, 129, 0.35));
   }
 
   .login-intro p:last-child {
-    max-width: 40rem;
+    max-width: 38rem;
     margin: 0;
-    color: rgba(248, 250, 252, .98);
-    font-size: 1.35rem;
+    color: rgba(226, 232, 240, 0.92);
+    font-size: 1.15rem;
+    font-weight: 450;
     line-height: 1.65;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
   }
 
   .login-card {
     width: 100%;
-    max-width: 410px;
+    max-width: 440px;
     justify-self: end;
-    padding: 1.6rem;
-    border: 1px solid rgba(96, 165, 250, .28);
+    padding: clamp(1.1rem, 2vh, 1.5rem) clamp(1.2rem, 2vw, 1.75rem);
+    border: 1px solid rgba(52, 211, 153, 0.35);
     border-radius: 1.5rem;
-    background: linear-gradient(145deg, rgba(7, 17, 31, .92), rgba(2, 6, 23, .9));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 24px 70px rgba(2, 8, 23, .45);
-    backdrop-filter: blur(18px);
+    background: linear-gradient(165deg,
+      rgba(5, 32, 22, 0.85) 0%,
+      rgba(3, 20, 15, 0.9) 50%,
+      rgba(2, 11, 8, 0.95) 100%
+    );
+    box-shadow:
+      0 0 35px rgba(16, 185, 129, 0.18),
+      0 25px 60px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      inset 0 0 20px rgba(16, 185, 129, 0.05);
+    backdrop-filter: blur(28px) saturate(1.35);
+    -webkit-backdrop-filter: blur(28px) saturate(1.35);
   }
 
   .login-logo {
     display: block;
-    width: 3.5rem;
-    height: 3.5rem;
-    margin: 0 auto 1rem;
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.5rem;
     object-fit: contain;
-    filter: drop-shadow(0 0 18px rgba(34, 197, 94, .35));
+    filter: drop-shadow(0 0 18px rgba(16, 185, 129, 0.5));
   }
 
   .login-card-heading {
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.85rem;
     text-align: center;
   }
 
   .login-card-heading h2 {
     margin: 0;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     color: #fff;
-    font-size: 1.45rem;
+    font-size: 1.35rem;
     font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
   .login-card-heading p {
-    margin: .55rem 0 0;
+    margin: .25rem 0 0;
     color: #cbd5e1;
-    font-size: .84rem;
-    line-height: 1.5;
+    font-size: .8rem;
+    line-height: 1.4;
   }
 
   .login-message {
-    margin-bottom: 1rem;
-    padding: .75rem 1rem;
-    border-radius: .8rem;
-    font-size: .875rem;
+    margin-bottom: .75rem;
+    padding: .65rem .85rem;
+    border-radius: .75rem;
+    font-size: .82rem;
   }
 
   .login-message.error {
@@ -274,39 +300,49 @@
 
   .login-form {
     display: grid;
-    gap: .85rem;
+    gap: .65rem;
   }
 
   .login-field label {
     display: block;
-    margin-bottom: .35rem;
-    color: #d1d5db;
-    font-size: .84rem;
+    margin-bottom: .25rem;
+    color: #e2e8f0;
+    font-size: .82rem;
     font-weight: 600;
     text-align: left;
   }
 
   .login-field input {
     width: 100%;
-    min-height: 2.7rem;
-    padding: .6rem .85rem;
-    border: 1px solid rgba(74, 222, 128, .3);
-    border-radius: .8rem;
+    min-height: 2.5rem;
+    padding: .45rem .85rem;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    border-radius: .75rem;
     outline: none;
-    background: rgba(2, 20, 35, .72);
+    background: rgba(2, 40, 20, 0.6);
     color: #fff;
     font: inherit;
-    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    font-size: .88rem;
+    transition: all .2s ease;
   }
 
   .login-field input::placeholder {
-    color: rgba(167, 243, 208, .5);
+    color: rgba(167, 243, 208, .45);
   }
 
   .login-field input:focus {
-    border-color: #6ee7b7;
-    background: rgba(2, 30, 55, .86);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, .14);
+    border-color: #34d399;
+    background: rgba(2, 40, 20, 0.8);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+  }
+
+  .login-field input:-webkit-autofill,
+  .login-field input:-webkit-autofill:hover,
+  .login-field input:-webkit-autofill:focus {
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    -webkit-text-fill-color: #ffffff;
+    box-shadow: 0 0 0 1000px rgba(2, 40, 20, 0.6) inset;
+    transition: background-color 9999s ease-out 0s;
   }
 
   .login-password-control {
@@ -353,59 +389,97 @@
   .login-remember {
     display: flex;
     align-items: center;
-    gap: .65rem;
+    gap: .55rem;
     color: #d1fae5;
-    font-size: .82rem;
+    font-size: .8rem;
+    margin-top: .1rem;
   }
 
   .login-remember input {
-    width: 1rem;
-    min-height: 1rem;
+    width: .95rem;
+    min-height: .95rem;
     margin: 0;
     accent-color: #22c55e;
   }
 
   .login-submit {
-    min-height: 2.8rem;
+    min-height: 2.75rem;
     margin-top: .2rem;
-    border: 0;
-    border-radius: .85rem;
+    border: 1px solid transparent;
+    border-radius: .8rem;
     background: #10b981;
-    box-shadow: 0 10px 24px rgba(16, 185, 129, .2);
     color: #020617;
-    font-size: .94rem;
-    font-weight: 800;
+    font-size: .92rem;
+    font-weight: 750;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     cursor: pointer;
-    transition: transform .2s ease, box-shadow .2s ease;
+    transition: all .2s ease;
   }
 
   .login-submit:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     background: #34d399;
-    box-shadow: 0 14px 30px rgba(16, 185, 129, .28);
   }
 
   .login-links {
     display: grid;
     gap: .65rem;
-    margin-top: 1.15rem;
+    margin-top: 1rem;
+    padding-top: .85rem;
+    border-top: 1px solid rgba(167, 243, 208, .12);
     color: #cbd5e1;
-    font-size: .82rem;
+    font-size: .78rem;
     text-align: center;
   }
 
   .login-links p {
     margin: 0;
+    line-height: 1.5;
+  }
+
+  .login-links .login-link-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .login-links .login-forgot-link {
+    text-align: right;
   }
 
   .login-links a {
     color: #6ee7b7;
-    font-weight: 600;
+    font-weight: 700;
     transition: color .2s ease;
   }
 
   .login-links a:hover {
     color: #a7f3d0;
+  }
+
+  .login-links .login-home-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    color: #6ee7b7;
+    font-size: .78rem;
+    font-weight: 700;
+    transition: color .2s ease;
+  }
+
+  .login-links > p:last-child {
+    text-align: left;
+  }
+
+  .login-links .login-home-link:hover,
+  .login-links .login-home-link:focus-visible {
+    color: #a7f3d0;
+    outline: none;
+    text-decoration: underline;
+    text-underline-offset: .2em;
   }
 
   @media (max-width: 900px) {
@@ -554,6 +628,16 @@
       gap: .45rem;
     }
 
+    .login-links .login-link-row {
+      align-items: stretch;
+      flex-direction: column;
+      gap: .25rem;
+    }
+
+    .login-links .login-forgot-link {
+      text-align: left;
+    }
+
     .login-eyebrow {
       font-size: .8rem;
       letter-spacing: .18em;
@@ -624,23 +708,17 @@
   }
 
   @media (min-width: 901px) {
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .login-hero,
-    .login-shell {
-      height: 100dvh;
-      min-height: 0;
-      overflow: hidden;
-    }
-
     .login-main {
       min-height: 0;
-      padding: clamp(.5rem, 2vh, 1.25rem) 1.5rem;
+      padding: clamp(0.5rem, 1.8vh, 1.5rem) 2rem;
+    }
+
+    .login-grid {
+      display: grid;
+      width: min(1200px, 100%);
+      grid-template-columns: minmax(0, 1.15fr) minmax(390px, 450px);
+      align-items: center;
+      gap: clamp(2rem, 5vw, 5rem);
     }
   }
 </style>
@@ -674,15 +752,17 @@
       <main class="login-main">
         <div class="login-grid">
           <section class="login-intro">
-            <p class="login-eyebrow">Welcome to</p>
-            <h1>Computer Laboratory Facilities Management System</h1>
+            <h1 class="login-headline">
+              Computer Laboratory
+              <span class="login-headline-highlight">Facilities Management System</span>
+            </h1>
             <p>Manage laboratory logs, equipment reports, inventory, and borrow requests in one centralized platform.</p>
           </section>
 
           <section class="login-card" aria-labelledby="loginTitle">
             <img src="/images/ccs-logo.png" alt="CCS Logo" class="login-logo" />
             <div class="login-card-heading">
-              <h2 id="loginTitle">Welcome to ComLab</h2>
+              <h2 id="loginTitle">Sign In to ComLab</h2>
               <p>Login to continue to ComLab and access your dashboard.</p>
               {{#if isEquipmentLogin}}
                 <p class="login-message success" role="status">You scanned an equipment QR. Sign in to continue directly to that item’s borrow request.</p>
@@ -725,13 +805,15 @@
             </form>
 
             <div class="login-links">
-              <p><a href="/forgot-password">Forgot your password?</a></p>
-              {{#if isEquipmentLogin}}
-                <p>Don't have an account? <a href="/register?role=faculty">Register</a></p>
-              {{else}}
-                <p>Don't have an account? <a href="/register">Register now</a></p>
-              {{/if}}
-              <p><a href="/">Back to landing</a></p>
+              <div class="login-link-row">
+                {{#if isEquipmentLogin}}
+                  <p>Don't have an account? <a href="/register?role=faculty">Register</a></p>
+                {{else}}
+                  <p>Don't have an account? <a href="/register">Sign up</a></p>
+                {{/if}}
+                <p class="login-forgot-link"><a href="/forgot-password">Forgot password</a></p>
+              </div>
+              <p><a class="login-home-link" href="/">&larr; Back to landing</a></p>
             </div>
           </section>
         </div>

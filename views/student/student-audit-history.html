@@ -6,8 +6,8 @@
   <title>Audit History | ComLab</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
-  <script src="/js/sidebar-component.js?v=79" defer></script>
+  <link rel="stylesheet" href="/css/sidebar.css?v=94">
+  <script src="/js/sidebar-component.js?v=108" defer></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -129,45 +129,68 @@
     }
     .audit-overview-note i { color: #6ee7b7; }
     .audit-tabs {
-      display: flex;
-      gap: .45rem;
+      display: block;
       margin-top: 1rem;
-      overflow-x: auto;
-      border: 1px solid rgba(74, 222, 128, .12);
-      border-radius: 1rem;
-      padding: .5rem;
-      background: rgba(5, 22, 15, .82);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(74, 222, 128, .35) transparent;
     }
-    .audit-tab {
-      display: inline-flex;
-      min-height: 2.75rem;
-      flex: 0 0 auto;
+    .audit-category-control {
+      position: relative;
+      display: flex;
+      width: min(100%, 24rem);
+      min-height: 3.35rem;
       align-items: center;
-      gap: .55rem;
-      border: 1px solid transparent;
-      border-radius: .72rem;
-      padding: .55rem .85rem;
+      gap: .8rem;
+      border: 1px solid rgba(110, 231, 183, .28);
+      border-radius: .95rem;
+      padding: .3rem .9rem;
+      background: linear-gradient(110deg, rgba(12, 58, 38, .92), rgba(7, 31, 21, .94));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 8px 20px rgba(0, 0, 0, .12);
+      color: #6ee7b7;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+    }
+    .audit-category-control:hover {
+      border-color: rgba(110, 231, 183, .48);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 10px 24px rgba(0, 0, 0, .16);
+    }
+    .audit-category-control > i:first-child {
+      display: grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      flex: 0 0 2.25rem;
+      place-items: center;
+      border: 1px solid rgba(110, 231, 183, .22);
+      border-radius: .7rem;
+      background: rgba(16, 185, 129, .13);
+      color: #6ee7b7;
+    }
+    .audit-category-control select {
+      width: 100%;
+      min-width: 0;
+      min-height: 2.75rem;
+      appearance: none;
+      border: 0;
+      outline: 0;
+      padding: .5rem 2rem .5rem 0;
       background: transparent;
-      color: #a8c3b2;
-      font-size: .88rem;
-      font-weight: 700;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
-    }
-    .audit-tab i { color: #6ee7b7; }
-    .audit-tab:hover { background: rgba(16, 91, 58, .3); color: #e7fff1; }
-    .audit-tab:active { transform: translateY(1px); }
-    .audit-tab[aria-selected="true"] {
-      border-color: rgba(52, 211, 153, .28);
-      background: linear-gradient(135deg, rgba(16, 115, 70, .84), rgba(8, 74, 47, .86));
       color: #e7fff1;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 16px rgba(0, 0, 0, .14);
+      font: inherit;
+      font-size: .95rem;
+      font-weight: 750;
+      cursor: pointer;
     }
-    .audit-tab:focus-visible { outline: 2px solid #6ee7b7; outline-offset: 2px; }
+    .audit-category-control select option { background: #0a1d15; color: #e7fff1; }
+    .audit-category-control:focus-within {
+      border-color: #6ee7b7;
+      outline: 2px solid rgba(110, 231, 183, .62);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, .12), 0 10px 24px rgba(0, 0, 0, .16);
+    }
+    .audit-category-chevron {
+      position: absolute;
+      right: .95rem;
+      color: #6ee7b7;
+      font-size: .85rem;
+      pointer-events: none;
+    }
     .audit-card {
       margin-top: .8rem;
       overflow: hidden;
@@ -178,7 +201,7 @@
     }
     .audit-card-header {
       display: flex;
-      min-height: 5.1rem;
+      min-height: 0;
       align-items: stretch;
       flex-direction: column;
       gap: .9rem;
@@ -186,7 +209,7 @@
       border-bottom: 1px solid rgba(52, 211, 153, .13);
     }
     .audit-title-wrap {
-      display: flex;
+      display: none;
       min-width: 0;
       align-items: center;
       gap: .85rem;
@@ -518,8 +541,11 @@
       .audit-overview-icon { width: 2.8rem; height: 2.8rem; border-radius: .8rem; font-size: 1rem; }
       .audit-overview-description { max-width: 30rem; font-size: .76rem; line-height: 1.45; }
       .audit-overview-note { display: none; }
-      .audit-tabs { margin-top: .75rem; border-radius: .85rem; padding: .4rem; }
-      .audit-tab { min-height: 2.45rem; padding: .45rem .7rem; font-size: .79rem; }
+      .audit-tabs { margin-top: .75rem; }
+      .audit-category-control { min-height: 3rem; gap: .65rem; padding: .25rem .7rem; }
+      .audit-category-control > i:first-child { width: 2rem; height: 2rem; flex-basis: 2rem; }
+      .audit-category-control select { min-height: 2.5rem; font-size: .88rem; }
+      .audit-category-chevron { right: .75rem; }
       .audit-card-header {
         align-items: stretch;
         flex-direction: column;
@@ -605,7 +631,42 @@
     }
   </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=31">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
+  <style>
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-tabs {
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-control {
+      border-color: #c9dfd0;
+      background: linear-gradient(110deg, #ffffff, #f3f9f4);
+      box-shadow: 0 5px 16px rgba(31, 75, 48, .07);
+      color: #247044;
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-control:hover {
+      border-color: #83b995;
+      box-shadow: 0 8px 20px rgba(31, 75, 48, .11);
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-control > i:first-child {
+      border-color: #cde2d4;
+      background: #eaf6ed;
+      color: #247044;
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-control select {
+      border: 0 !important;
+      background: transparent !important;
+      color: #173b2a !important;
+      color-scheme: light;
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-chevron {
+      color: #247044;
+    }
+    html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-category-control select option {
+      background: #ffffff !important;
+      color: #294839 !important;
+    }
+  </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-pc-audit-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -628,15 +689,21 @@
       </div>
       <span class="audit-overview-note"><i class="fas fa-lock" aria-hidden="true"></i>Private to your account</span>
     </section>
-    <div class="audit-tabs" role="tablist" aria-label="Student audit history">
-      <button class="audit-tab" type="button" role="tab" aria-selected="true" data-category="pc-station"><i class="fas fa-desktop" aria-hidden="true"></i>PC Logs</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="all"><i class="fas fa-list-check" aria-hidden="true"></i>All Activity</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="access"><i class="fas fa-right-to-bracket" aria-hidden="true"></i>System Access</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="profile"><i class="fas fa-user-pen" aria-hidden="true"></i>Profile Updates</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="scans"><i class="fas fa-qrcode" aria-hidden="true"></i>Item QR Scans</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="borrow"><i class="fas fa-box-open" aria-hidden="true"></i>Borrowing</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="reports"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i>Issue Reports</button>
-      <button class="audit-tab" type="button" role="tab" aria-selected="false" data-category="security"><i class="fas fa-shield-halved" aria-hidden="true"></i>Account Security</button>
+    <div class="audit-tabs" role="group" aria-label="Student audit history category">
+      <label class="audit-category-control">
+        <i id="auditCategoryIcon" class="fas fa-desktop" aria-hidden="true"></i>
+        <select id="studentAuditCategory" aria-label="Activity category">
+          <option value="pc-station" selected>PC Logs</option>
+          <option value="all">All Activity</option>
+          <option value="access">System Access</option>
+          <option value="profile">Profile Updates</option>
+          <option value="scans">Item QR Scans</option>
+          <option value="borrow">Borrowing</option>
+          <option value="reports">Issue Reports</option>
+          <option value="security">Account Security</option>
+        </select>
+        <i class="fas fa-chevron-down audit-category-chevron" aria-hidden="true"></i>
+      </label>
     </div>
     <section class="audit-card" aria-live="polite">
       <header class="audit-card-header">
@@ -686,7 +753,8 @@
     const title = document.getElementById('auditTitle');
     const subtitle = document.getElementById('auditSubtitle');
     const titleIcon = document.getElementById('auditTitleIcon');
-    const tabs = [...document.querySelectorAll('.audit-tab[data-category]')];
+    const categorySelect = document.getElementById('studentAuditCategory');
+    const categoryIcon = document.getElementById('auditCategoryIcon');
     const pageSize = 25;
     const dataCache = new Map();
     const tabCopy = {
@@ -901,6 +969,7 @@
       title.textContent = heading;
       subtitle.textContent = description;
       titleIcon.className = `fas ${icon}`;
+      categoryIcon.className = `fas ${icon}`;
       showTableMessage('Loading activity…', 'fa-spinner fa-spin');
       resultsSummary.textContent = 'Loading activity…';
 
@@ -935,12 +1004,11 @@
       dateFromFilter.max = dateToFilter.value;
     }
 
-    tabs.forEach((tab) => tab.addEventListener('click', () => {
-      activeCategory = tab.dataset.category;
-      tabs.forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
+    categorySelect.addEventListener('change', () => {
+      activeCategory = categorySelect.value;
       currentPage = 1;
       loadActiveCategory();
-    }));
+    });
     dateFromFilter.addEventListener('change', () => {
       syncDateFilterLimits();
       resetAndRender();

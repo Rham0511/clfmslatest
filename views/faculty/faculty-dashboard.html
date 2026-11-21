@@ -6,7 +6,7 @@
   <title>Faculty Dashboard | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <style>
     :root {
       color-scheme: dark;
@@ -424,6 +424,313 @@
   </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
+<style>
+  html body.app-shell.student-portal.faculty-page.faculty-dashboard-page.system-layout-page .main-container > main.faculty-content {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto !important;
+    padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem !important;
+    gap: 1.35rem !important;
+  }
+
+  body.faculty-dashboard-page .faculty-metric-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  body.faculty-dashboard-page .faculty-stat {
+    --faculty-metric-accent: #34d399;
+    --faculty-metric-tint: rgba(52, 211, 153, .12);
+    --faculty-metric-glow: rgba(52, 211, 153, .13);
+    --faculty-metric-border: rgba(52, 211, 153, .24);
+    position: relative;
+    min-width: 0;
+    border-color: var(--faculty-metric-border);
+    border-radius: 1.1rem;
+    background:
+      radial-gradient(190px 130px at 100% 0%, var(--faculty-metric-glow), transparent 76%),
+      linear-gradient(150deg, rgba(12, 36, 25, .98), rgba(4, 17, 12, .98));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 12px 28px rgba(0, 0, 0, .2);
+  }
+
+  body.faculty-dashboard-page .faculty-metric-grid > .faculty-stat {
+    min-height: 9.25rem !important;
+    padding: 1rem 1.05rem !important;
+  }
+
+  body.faculty-dashboard-page .faculty-stat::before {
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    left: 1rem;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--faculty-metric-accent), transparent);
+    content: "";
+    opacity: .8;
+  }
+
+  body.faculty-dashboard-page .faculty-stat > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  body.faculty-dashboard-page .faculty-stat--borrowings {
+    --faculty-metric-accent: #34d399;
+    --faculty-metric-tint: rgba(52, 211, 153, .12);
+    --faculty-metric-glow: rgba(52, 211, 153, .13);
+    --faculty-metric-border: rgba(52, 211, 153, .24);
+  }
+
+  body.faculty-dashboard-page .faculty-stat--assigned {
+    --faculty-metric-accent: #38bdf8;
+    --faculty-metric-tint: rgba(56, 189, 248, .12);
+    --faculty-metric-glow: rgba(56, 189, 248, .13);
+    --faculty-metric-border: rgba(56, 189, 248, .24);
+  }
+
+  body.faculty-dashboard-page .faculty-stat--requests {
+    --faculty-metric-accent: #a78bfa;
+    --faculty-metric-tint: rgba(167, 139, 250, .12);
+    --faculty-metric-glow: rgba(167, 139, 250, .13);
+    --faculty-metric-border: rgba(167, 139, 250, .24);
+  }
+
+  body.faculty-dashboard-page .faculty-stat--pending {
+    --faculty-metric-accent: #fbbf24;
+    --faculty-metric-tint: rgba(251, 191, 36, .12);
+    --faculty-metric-glow: rgba(251, 191, 36, .13);
+    --faculty-metric-border: rgba(251, 191, 36, .24);
+  }
+
+  body.faculty-dashboard-page .faculty-stat--student-requests {
+    --faculty-metric-accent: #60a5fa;
+    --faculty-metric-tint: rgba(96, 165, 250, .12);
+    --faculty-metric-glow: rgba(96, 165, 250, .13);
+    --faculty-metric-border: rgba(96, 165, 250, .24);
+  }
+
+  body.faculty-dashboard-page .faculty-stat .dashboard-kpi-icon {
+    flex: 0 0 2.65rem;
+    width: 2.65rem;
+    height: 2.65rem;
+    border: 1px solid var(--faculty-metric-border);
+    background: var(--faculty-metric-tint);
+    color: var(--faculty-metric-accent);
+    box-shadow: 0 0 22px var(--faculty-metric-glow);
+  }
+
+  body.faculty-dashboard-page .faculty-stat h3 {
+    color: #dceee4 !important;
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  body.faculty-dashboard-page .faculty-stat .dashboard-kpi-value {
+    margin-top: auto;
+    padding-top: .8rem;
+    color: #f0fdf4 !important;
+    font-size: clamp(1.9rem, 2.2vw, 2.35rem) !important;
+    letter-spacing: -.045em;
+    text-shadow: 0 0 24px var(--faculty-metric-glow);
+  }
+
+  body.faculty-dashboard-page .faculty-surface:not(.faculty-stat) {
+    border-color: rgba(74, 222, 128, .2);
+    border-radius: 1.15rem;
+    background: linear-gradient(145deg, rgba(10, 31, 22, .97), rgba(4, 18, 12, .98));
+    box-shadow: 0 16px 38px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .035);
+  }
+
+  body.faculty-dashboard-page .faculty-content > section.grid {
+    gap: 1.25rem !important;
+  }
+
+  body.faculty-dashboard-page .faculty-content .faculty-surface:not(.faculty-stat) > div:first-child {
+    min-height: 4.25rem;
+    padding: 1rem 1.35rem !important;
+    border-bottom-color: rgba(74, 222, 128, .13);
+    background: linear-gradient(90deg, rgba(16, 54, 35, .55), rgba(7, 28, 19, .18));
+  }
+
+  body.faculty-dashboard-page .faculty-content .section-heading {
+    color: #f0fdf4;
+    font-size: 1.05rem;
+    font-weight: 750;
+    letter-spacing: -.015em;
+  }
+
+  body.faculty-dashboard-page .faculty-content .section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border: 1px solid rgba(52, 211, 153, .2);
+    border-radius: .7rem;
+    padding: .48rem .7rem;
+    background: rgba(16, 185, 129, .08);
+    color: #6ee7b7;
+    font-size: .82rem;
+    transition: background .16s ease, border-color .16s ease, color .16s ease;
+  }
+
+  body.faculty-dashboard-page .faculty-content .section-link:hover {
+    border-color: rgba(52, 211, 153, .4);
+    background: rgba(16, 185, 129, .15);
+    color: #a7f3d0;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table {
+    min-width: 36rem;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table th {
+    padding: .78rem 1.15rem;
+    border-bottom-color: rgba(74, 222, 128, .15);
+    background: rgba(10, 43, 28, .72);
+    color: #9dcbb0;
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .09em;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table td {
+    padding: .9rem 1.15rem;
+    border-bottom-color: rgba(74, 222, 128, .09);
+    color: #cfe5d6;
+    font-size: .88rem;
+    line-height: 1.45;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table tbody tr {
+    transition: background .16s ease;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table tbody tr:hover {
+    background: rgba(34, 197, 94, .055);
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table .table-item-name {
+    color: #f0fdf4;
+    font-size: .9rem;
+    font-weight: 700;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status {
+    padding: .3rem .7rem;
+    border: 1px solid rgba(251, 191, 36, .24);
+    border-radius: 999px;
+    background: rgba(120, 53, 15, .2);
+    color: #fcd34d;
+    font-size: .74rem;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="returned"],
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="resolved"] {
+    border-color: rgba(52, 211, 153, .25);
+    background: rgba(16, 185, 129, .1);
+    color: #6ee7b7;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="approved"],
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="borrowed"] {
+    border-color: rgba(56, 189, 248, .25);
+    background: rgba(14, 165, 233, .1);
+    color: #7dd3fc;
+  }
+
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="rejected"],
+  body.faculty-dashboard-page .faculty-dashboard-table .faculty-status[data-status="cancelled"] {
+    border-color: rgba(251, 113, 133, .25);
+    background: rgba(244, 63, 94, .1);
+    color: #fda4af;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-metric-grid > .faculty-stat {
+    background:
+      radial-gradient(190px 130px at 100% 0%, var(--faculty-metric-glow), transparent 76%),
+      linear-gradient(150deg, #fff, #f3f8f5) !important;
+    border-color: var(--faculty-metric-border) !important;
+    box-shadow: 0 12px 28px rgba(27, 74, 48, .08), inset 0 1px 0 #fff !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-metric-grid > .faculty-stat .dashboard-kpi-icon {
+    border-color: var(--faculty-metric-border) !important;
+    background: var(--faculty-metric-tint) !important;
+    color: var(--faculty-metric-accent) !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-stat h3 {
+    color: #355642 !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-stat .dashboard-kpi-value {
+    color: #14251b !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-surface:not(.faculty-stat) {
+    border-color: #c9ddd0 !important;
+    background: linear-gradient(145deg, #fff, #f3f8f5) !important;
+    box-shadow: 0 14px 34px rgba(27, 74, 48, .08) !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-content .faculty-surface:not(.faculty-stat) > div:first-child {
+    background: linear-gradient(90deg, #edf8f0, #f8fbf9) !important;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .section-heading,
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-dashboard-table .table-item-name {
+    color: #173b2b;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-dashboard-table th {
+    background: #eaf5ed;
+    color: #42634d;
+  }
+
+  html.theme-light body.faculty-dashboard-page .main-container.theme-light .faculty-dashboard-table td {
+    color: #355642;
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    body.faculty-dashboard-page .faculty-metric-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 767px) {
+    body.faculty-dashboard-page .faculty-metric-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: .75rem !important;
+    }
+
+    body.faculty-dashboard-page .faculty-metric-grid > .faculty-stat {
+      min-height: 8.5rem !important;
+      padding: .9rem !important;
+    }
+
+    body.faculty-dashboard-page .faculty-content > section.grid {
+      gap: 1rem !important;
+    }
+
+    body.faculty-dashboard-page .faculty-content .faculty-surface > div:first-child {
+      padding: .9rem 1rem !important;
+    }
+
+    body.faculty-dashboard-page .faculty-dashboard-table th,
+    body.faculty-dashboard-page .faculty-dashboard-table td {
+      padding: .75rem .85rem;
+    }
+  }
+
+  @media (max-width: 359px) {
+    body.faculty-dashboard-page .faculty-metric-grid {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+  }
+</style>
 </head>
 <body class="app-shell student-portal faculty-page faculty-dashboard-page faculty-page-heading-page system-layout-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -450,7 +757,7 @@
         </div>
       </div>
       <section aria-label="My Faculty metrics" class="faculty-metric-grid dashboard-kpi-grid grid grid-cols-5 gap-3">
-        <a href="/faculty-my-requests" aria-label="View my active borrowings" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+        <a href="/faculty-my-requests" aria-label="View my active borrowings" class="faculty-surface faculty-stat faculty-stat--borrowings dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">My active borrowings</h3>
             <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-box-open" aria-hidden="true"></i></span>
@@ -458,28 +765,28 @@
           <p id="activeBorrowCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
         </a>
 
-        <a href="/faculty-mir-items" aria-label="View items assigned to me" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+        <a href="/faculty-mir-items" aria-label="View items assigned to me" class="faculty-surface faculty-stat faculty-stat--assigned dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Items assigned to me</h3>
             <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-laptop" aria-hidden="true"></i></span>
           </div>
           <p id="assignedEquipmentCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
         </a>
-        <a href="/faculty-my-requests" aria-label="View my total requests" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+        <a href="/faculty-my-requests" aria-label="View my total requests" class="faculty-surface faculty-stat faculty-stat--requests dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">My total requests</h3>
             <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
           </div>
           <p id="facultyRequestCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
         </a>
-        <a href="/faculty-my-requests" aria-label="View my pending requests" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+        <a href="/faculty-my-requests" aria-label="View my pending requests" class="faculty-surface faculty-stat faculty-stat--pending dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Pending requests</h3>
             <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-400/10 text-emerald-300"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
           </div>
           <p id="facultyPendingCount" class="dashboard-kpi-value mt-4 text-4xl font-extrabold leading-none text-white sm:text-5xl" aria-live="polite">—</p>
         </a>
-        <a href="/faculty-my-requests?tab=student-requests" aria-label="View Student requests for equipment assigned to me" class="faculty-surface faculty-stat dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
+        <a href="/faculty-my-requests?tab=student-requests" aria-label="View Student requests for equipment assigned to me" class="faculty-surface faculty-stat faculty-stat--student-requests dashboard-kpi-card group cursor-pointer p-5 transition duration-200 hover:-translate-y-1 hover:border-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="dashboard-kpi-label text-base font-bold leading-snug text-emerald-100">Student requests</h3>
             <span class="dashboard-kpi-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-400/10 text-amber-300"><i class="fas fa-user-clock" aria-hidden="true"></i></span>
@@ -586,6 +893,7 @@
         const badge = document.createElement('span');
         badge.className = 'faculty-status';
         badge.textContent = type === 'approval' ? 'Review' : (record.effectiveStatus || record.status || 'Pending');
+        badge.dataset.status = badge.textContent.trim().toLowerCase().replace(/[\s_]+/g, '-');
         statusCell.append(badge);
 
         const dateCell = document.createElement('td');
@@ -766,6 +1074,6 @@
     loadAssignedEquipment();
   </script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=75" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

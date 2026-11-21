@@ -6,7 +6,7 @@
     <title>ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <link rel="stylesheet" href="/css/sidebar.css?v=94">
     <style>
         :root {
             --primary: #052e1d;
@@ -1199,7 +1199,7 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=35">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
 </head>
 <body class="app-shell student-portal system-layout-page student-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -1250,7 +1250,7 @@
                 <a class="summary-card dashboard-kpi-card issues" href="/student-my-requests#issueReportsPanel" aria-label="View your reported issues">
                     <div class="card-icon dashboard-kpi-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></div>
                     <div class="card-text">
-                        <p class="card-label dashboard-kpi-label">Issues</p>
+                        <p class="card-label dashboard-kpi-label">Reported Issues</p>
                         <h4 class="card-value dashboard-kpi-value mt-2 text-2xl font-semibold text-white" data-issue-count>Loading...</h4>
                         <p class="dashboard-kpi-description" data-issue-description>Checking your requests</p>
                     </div>
@@ -1265,14 +1265,9 @@
                 </a>
             </section>
 
-            <section class="section-shell">
+            <section class="section-shell recent-activity-section">
                 <div class="section-header">
-                    <div>
-                        <h3>Recent Activity</h3>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <a class="borrow-btn inline-flex" href="/student/borrow-equipment"><i class="fas fa-box-open" aria-hidden="true"></i><span>Borrow Equipment</span></a>
-                    </div>
+                    <h3>Recent Activity</h3>
                 </div>
 
                 <div class="table-shell" role="region" aria-label="Recent PC activity" tabindex="0">
@@ -1992,6 +1987,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=31" defer></script>
-    <script src="/js/sidebar-component.js?v=78" defer></script>
+    <script src="/js/sidebar-component.js?v=108" defer></script>
 </body>
 </html>

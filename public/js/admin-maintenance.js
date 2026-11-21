@@ -14,14 +14,21 @@
   const adminAvatar = document.getElementById('adminAvatar');
   const adminUserName = document.getElementById('adminUserName');
   const adminUserRole = document.getElementById('adminUserRole');
+  const statusDropdown = document.getElementById('maintenanceStatusDropdown');
+  const statusTrigger = document.getElementById('maintenanceStatusTrigger');
+  const statusMenu = document.getElementById('maintenanceStatusMenu');
+  const statusSelection = document.getElementById('maintenanceStatusSelection');
+  const statusTriggerCount = document.getElementById('maintenanceStatusTriggerCount');
+  const statusOptionSelector = '[data-maintenance-section] .maintenance-status-option';
   let currentRequests = [];
   let activeStatusFilter = 'All';
   let activeDateFilter = 'All';
   let activeSearchText = '';
   let activeReporterRole = 'student';
+  let isMaintenanceRefreshing = false;
   const paginationState = {
     currentPage: 1,
-    rowsPerPage: 10
+    rowsPerPage: 5
   };
 
   if (!tableBody) return; // not on this page
@@ -67,6 +74,16 @@
     return rawTitle.slice(0, titleEnd).replace(/[\s:–—-]+$/, '').trim() || 'Equipment issue';
   };
 
+  // Status dropdown presentation stays connected to the existing filter state.
+  const syncStatusDropdown = () => {
+    const activeOption = Array.from(document.querySelectorAll(statusOptionSelector))
+      .find((option) => option.dataset.filter === activeStatusFilter);
+    const activeCount = activeOption?.querySelector('.maintenance-status-option-count')?.textContent || '0';
+    if (statusSelection) statusSelection.textContent = activeStatusFilter;
+    if (statusTriggerCount) statusTriggerCount.textContent = activeCount;
+    if (statusTrigger) statusTrigger.classList.toggle('has-active-filter', activeStatusFilter !== 'All');
+  };
+
   const updateMaintenanceCounts = () => {
     const studentCount = currentRequests.filter((request) => getReporterRole(request) === 'student').length;
     const facultyCount = currentRequests.filter((request) => getReporterRole(request) === 'faculty').length;
@@ -85,6 +102,7 @@
     document.querySelectorAll('[data-maintenance-count]').forEach((counter) => {
       counter.textContent = String(counts[counter.dataset.maintenanceCount] ?? 0);
     });
+    syncStatusDropdown();
   };
 
   const fetchRequests = async () => {
@@ -169,10 +187,11 @@
   const setReporterRole = (role) => {
     activeReporterRole = role;
     paginationState.currentPage = 1;
-    document.querySelectorAll('[data-maintenance-section] [data-reporter-role]').forEach((tab) => {
+    document.querySelectorAll('[data-reporter-role]').forEach((tab) => {
       const isActive = tab.dataset.reporterRole === role;
       tab.classList.toggle('active', isActive);
       tab.setAttribute('aria-selected', String(isActive));
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
     });
     updateMaintenanceCounts();
     renderTable(filterRequests(currentRequests));
@@ -181,11 +200,13 @@
   const setStatusFilter = (status) => {
     activeStatusFilter = status;
     paginationState.currentPage = 1;
-    document.querySelectorAll('[data-maintenance-section] .status-filter').forEach(btn => {
-      const isActive = btn.dataset.filter === status;
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', String(isActive));
+    document.querySelectorAll(statusOptionSelector).forEach((option) => {
+      const isActive = option.dataset.filter === status;
+      option.classList.toggle('active', isActive);
+      option.setAttribute('aria-selected', String(isActive));
+      option.tabIndex = isActive ? 0 : -1;
     });
+    syncStatusDropdown();
     renderTable(filterRequests(currentRequests));
   };
 
@@ -242,13 +263,15 @@
     }
 
     paginationContainer.innerHTML = '';
-    if (totalPages <= 1) return;
 
     const createButton = (label, page, isActive, isDisabled, isPageNumber = false) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = label;
       button.disabled = isDisabled;
+      if (isPageNumber && isActive) button.setAttribute('aria-current', 'page');
+      if (isPageNumber) button.setAttribute('aria-label', `Page ${label}`);
+      else button.setAttribute('aria-label', `${label} page`);
 
       if (isPageNumber) {
         button.className = isActive
@@ -266,6 +289,7 @@
         button.addEventListener('click', () => {
           paginationState.currentPage = page;
           renderTable(rows);
+          document.querySelector('#maintenance-monitoring .overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
         });
       }
       return button;
@@ -321,18 +345,37 @@
       const issueTitle = getIssueTitle(r);
       const issueDescription = String(r.description || '').trim();
       const reporterName = String(r.reporterName || 'Unknown Reporter');
+      const reporterInitials = reporterName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part.charAt(0).toUpperCase())
+        .join('') || 'U';
+      const reporterPhoto = String(r.reporterPhoto || r.reporter?.photo || r.reporterPhotoUrl || '').trim();
+      const reporterAvatar = reporterPhoto
+        ? `<span class="maintenance-reporter-avatar has-profile-photo" aria-hidden="true" data-reporter-initials="${escapeHtml(reporterInitials)}"><img class="maintenance-reporter-photo" src="${escapeHtml(reporterPhoto)}" alt=""></span>`
+        : `<span class="maintenance-reporter-avatar" aria-hidden="true">${escapeHtml(reporterInitials)}</span>`;
       const reportedDateTime = hasValidDate ? reportedDate.toISOString() : '';
       return `
         <tr class="maintenance-report-row" data-maintenance-details="${escapeHtml(String(r.id ?? ''))}" title="Open report details">
-          <td class="px-4 py-3"><div class="maintenance-equipment-cell" title="${escapeHtml(equipmentTooltip)}"><span class="maintenance-equipment-name">${escapeHtml(equipmentName)}</span>${equipmentId ? `<span class="maintenance-equipment-id">${escapeHtml(equipmentId)}</span>` : ''}</div>${equipmentLocation ? `<span class="maintenance-equipment-location">${escapeHtml(equipmentLocation)}</span>` : ''}</td>
-          <td class="px-4 py-3"><span class="maintenance-issue-title" title="${escapeHtml(issueTitle)}">${escapeHtml(issueTitle)}</span>${issueDescription ? `<span class="maintenance-issue-description" title="${escapeHtml(issueDescription)}">${escapeHtml(issueDescription)}</span>` : '<span class="maintenance-issue-description">No additional details provided.</span>'}</td>
-          <td class="px-4 py-3"><span class="maintenance-reporter-name">${escapeHtml(reporterName)}</span>${r.reporterEmail ? `<span class="maintenance-reporter-email">${escapeHtml(String(r.reporterEmail))}</span>` : ''}</td>
-          <td class="px-4 py-3"><span class="status-badge ${statusClass}">${escapeHtml(currentStatus)}</span></td>
-          <td class="px-4 py-3"><span class="maintenance-reported-date">${reportedDateTime ? `<time datetime="${escapeHtml(reportedDateTime)}">${escapeHtml(dateTimeLabel)}</time>` : `<time>${escapeHtml(dateTimeLabel)}</time>`}</span></td>
-          <td class="px-4 py-3"><button type="button" class="maintenance-details-button" aria-label="View details for ${escapeHtml(equipmentName)} report"><i class="fas fa-eye" aria-hidden="true"></i><span>View details</span></button></td>
+          <td class="px-4 py-3" data-label="Equipment"><div class="maintenance-equipment-cell" title="${escapeHtml(equipmentTooltip)}"><span class="maintenance-equipment-name">${escapeHtml(equipmentName)}</span>${equipmentId ? `<span class="maintenance-equipment-id">${escapeHtml(equipmentId)}</span>` : ''}</div>${equipmentLocation ? `<span class="maintenance-equipment-location">${escapeHtml(equipmentLocation)}</span>` : ''}</td>
+          <td class="px-4 py-3" data-label="Issue"><span class="maintenance-issue-title" title="${escapeHtml(issueTitle)}">${escapeHtml(issueTitle)}</span>${issueDescription ? `<span class="maintenance-issue-description" title="${escapeHtml(issueDescription)}">${escapeHtml(issueDescription)}</span>` : '<span class="maintenance-issue-description">No additional details provided.</span>'}</td>
+          <td class="px-4 py-3" data-label="Reported by"><div class="maintenance-reporter">${reporterAvatar}<span class="maintenance-reporter-copy"><span class="maintenance-reporter-name">${escapeHtml(reporterName)}</span>${r.reporterEmail ? `<span class="maintenance-reporter-email" title="${escapeHtml(String(r.reporterEmail))}">${escapeHtml(String(r.reporterEmail))}</span>` : ''}</span></div></td>
+          <td class="px-4 py-3" data-label="Status"><span class="status-badge ${statusClass}">${escapeHtml(currentStatus)}</span></td>
+          <td class="px-4 py-3" data-label="Date reported"><span class="maintenance-reported-date">${reportedDateTime ? `<time datetime="${escapeHtml(reportedDateTime)}"><span class="maintenance-date-label">${escapeHtml(dateLabel)}</span><span class="maintenance-time-label">${escapeHtml(timeLabel)}</span></time>` : `<time><span class="maintenance-date-label">${escapeHtml(dateTimeLabel)}</span></time>`}</span></td>
+          <td class="px-4 py-3" data-label="Action"><button type="button" class="maintenance-details-button" aria-label="View details for ${escapeHtml(equipmentName)} report" title="View details"><i class="fas fa-eye" aria-hidden="true"></i></button></td>
         </tr>
       `;
     }).join('\n');
+
+    tableBody.querySelectorAll('.maintenance-reporter-avatar.has-profile-photo').forEach((avatar) => {
+      const image = avatar.querySelector('img');
+      if (!image) return;
+      image.addEventListener('error', () => {
+        avatar.classList.remove('has-profile-photo');
+        avatar.textContent = avatar.dataset.reporterInitials || 'U';
+      }, { once: true });
+    });
 
     renderPaginationControls(rows);
   };
@@ -343,6 +386,7 @@
       case 'In Progress': return 'status-in-progress';
       case 'Resolved': return 'status-resolved';
       case 'Rejected': return 'status-rejected';
+      case 'Cancelled': return 'status-cancelled';
       default: return 'status-secondary';
     }
   };
@@ -399,27 +443,132 @@
   }
 
   const refreshMaintenanceData = async () => {
-    const [, requestsLoaded] = await Promise.all([
-      fetchSummary(),
-      fetchRequests()
-    ]);
-    const updatedLabel = document.getElementById('maintenanceLastUpdated');
-    if (updatedLabel) {
-      updatedLabel.textContent = requestsLoaded
-        ? `Last updated: ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date())}`
-        : 'Unable to refresh reports';
+    if (isMaintenanceRefreshing) return false;
+    isMaintenanceRefreshing = true;
+    const refreshButton = document.getElementById('refreshMaintenanceData');
+    const refreshIcon = refreshButton?.querySelector('i');
+    refreshButton?.setAttribute('aria-busy', 'true');
+    refreshButton?.classList.add('is-refreshing');
+    refreshButton && (refreshButton.disabled = true);
+    refreshIcon?.classList.add('fa-spin');
+
+    try {
+      const [, requestsLoaded] = await Promise.all([
+        fetchSummary(),
+        fetchRequests()
+      ]);
+      const updatedLabel = document.getElementById('maintenanceLastUpdated');
+      if (updatedLabel) {
+        updatedLabel.textContent = requestsLoaded
+          ? `Last updated: ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date())}`
+          : 'Unable to refresh reports';
+      }
+      return requestsLoaded;
+    } finally {
+      isMaintenanceRefreshing = false;
+      refreshButton?.removeAttribute('aria-busy');
+      refreshButton?.classList.remove('is-refreshing');
+      refreshButton && (refreshButton.disabled = false);
+      refreshIcon?.classList.remove('fa-spin');
     }
-    return requestsLoaded;
   };
 
-  document.querySelectorAll('[data-maintenance-section] .status-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      setStatusFilter(btn.dataset.filter);
-    });
+  // Accessible custom status dropdown behavior; selection still calls setStatusFilter().
+  const getStatusOptions = () => Array.from(document.querySelectorAll(statusOptionSelector));
+  const closeStatusDropdown = (restoreFocus = false) => {
+    if (!statusDropdown || !statusTrigger) return;
+    statusDropdown.classList.remove('is-open');
+    statusTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) statusTrigger.focus();
+  };
+
+  const openStatusDropdown = (focusActive = true) => {
+    if (!statusDropdown || !statusTrigger) return;
+    statusDropdown.classList.add('is-open');
+    statusTrigger.setAttribute('aria-expanded', 'true');
+    if (focusActive) {
+      getStatusOptions().find((option) => option.getAttribute('aria-selected') === 'true')?.focus();
+    }
+  };
+
+  const moveStatusOptionFocus = (direction) => {
+    const options = getStatusOptions();
+    if (!options.length) return;
+    const currentIndex = options.indexOf(document.activeElement);
+    const nextIndex = currentIndex < 0
+      ? 0
+      : (currentIndex + direction + options.length) % options.length;
+    options[nextIndex].focus();
+  };
+
+  statusTrigger?.addEventListener('click', () => {
+    if (statusDropdown?.classList.contains('is-open')) closeStatusDropdown();
+    else openStatusDropdown();
   });
 
-  document.querySelectorAll('[data-maintenance-section] [data-reporter-role]').forEach((tab) => {
+  statusTrigger?.addEventListener('keydown', (event) => {
+    if (['Enter', ' ', 'ArrowDown'].includes(event.key)) {
+      event.preventDefault();
+      openStatusDropdown();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      openStatusDropdown();
+      moveStatusOptionFocus(-1);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeStatusDropdown();
+    }
+  });
+
+  statusMenu?.addEventListener('click', (event) => {
+    const option = event.target.closest('.maintenance-status-option');
+    if (!option) return;
+    setStatusFilter(option.dataset.filter);
+    closeStatusDropdown(true);
+  });
+
+  statusMenu?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveStatusOptionFocus(1);
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      moveStatusOptionFocus(-1);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const option = event.target.closest('.maintenance-status-option');
+      if (option) {
+        setStatusFilter(option.dataset.filter);
+        closeStatusDropdown(true);
+      }
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeStatusDropdown(true);
+    } else if (event.key === 'Tab') {
+      closeStatusDropdown();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (statusDropdown?.classList.contains('is-open') && !statusDropdown.contains(event.target)) {
+      closeStatusDropdown();
+    }
+  });
+
+  document.querySelectorAll('[data-reporter-role]').forEach((tab) => {
     tab.addEventListener('click', () => setReporterRole(tab.dataset.reporterRole));
+    tab.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const tabs = Array.from(document.querySelectorAll('[data-reporter-role]'));
+      if (!tabs.length) return;
+      let nextIndex = tabs.indexOf(tab);
+      if (event.key === 'Home') nextIndex = 0;
+      else if (event.key === 'End') nextIndex = tabs.length - 1;
+      else nextIndex = (nextIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[nextIndex].focus();
+      setReporterRole(tabs[nextIndex].dataset.reporterRole);
+    });
   });
 
   maintenanceSearchInput?.addEventListener('input', (e) => {
@@ -438,18 +587,7 @@
 
   document.getElementById('refreshMaintenanceData')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    const button = e.currentTarget;
-    const icon = button.querySelector('i');
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    icon?.classList.add('fa-spin');
-    try {
-      await refreshMaintenanceData();
-    } finally {
-      button.disabled = false;
-      button.removeAttribute('aria-busy');
-      icon?.classList.remove('fa-spin');
-    }
+    await refreshMaintenanceData();
   });
 
   const detailsModal = document.getElementById('maintenanceDetailsModal');
@@ -472,6 +610,14 @@
     const dateLabel = date && !Number.isNaN(date.getTime())
       ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
       : 'Date unavailable';
+    const reporterName = request.reporterName || 'Unknown Reporter';
+    const reporterInitials = reporterName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part.charAt(0).toUpperCase())
+      .join('') || 'U';
+    const reporterPhoto = String(request.reporterPhoto || request.reporter?.photo || request.reporterPhotoUrl || '').trim();
     const fields = [
       ['Report ID', request.id ? `#${request.id}` : 'Not available'],
       ['Equipment', request.equipmentName || 'Unknown Equipment'],
@@ -479,7 +625,7 @@
       ['Location', request.laboratoryRoom || request.equipmentLocation || request.campus || 'Not specified'],
       ['Reported issue', getIssueTitle(request)],
       ['Additional details', request.description || 'No additional details provided.'],
-      ['Reported by', request.reporterName || 'Unknown Reporter'],
+      ['Reported by', reporterName],
       ['Reporter email', request.reporterEmail || 'Not available'],
       ['Reporter type', getReporterRole(request) === 'faculty' ? 'Faculty' : 'Student'],
       ['Current status', request.status || 'Pending'],
@@ -488,12 +634,33 @@
       ['Assigned technician', request.technicianName || 'Unassigned'],
       ['Equipment condition', request.equipmentStatus || 'Not available']
     ];
-    detailsModalBody.innerHTML = fields.map(([label, value]) => `
-      <div class="maintenance-detail-item${label === 'Additional details' ? ' maintenance-detail-item-wide' : ''}">
-        <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(String(value))}</strong>
-      </div>
-    `).join('');
+    detailsModalBody.innerHTML = fields.map(([label, value]) => {
+      if (label === 'Reported by') {
+        const photoMarkup = reporterPhoto
+          ? `<span class="maintenance-detail-reporter-avatar has-profile-photo" data-reporter-initials="${escapeHtml(reporterInitials)}"><img src="${escapeHtml(reporterPhoto)}" alt="${escapeHtml(reporterName)}"></span>`
+          : `<span class="maintenance-detail-reporter-avatar">${escapeHtml(reporterInitials)}</span>`;
+        return `
+          <div class="maintenance-detail-item maintenance-detail-reporter">
+            <span>${escapeHtml(label)}</span>
+            <strong>${photoMarkup}<span class="maintenance-detail-reporter-name">${escapeHtml(String(value))}</span></strong>
+          </div>
+        `;
+      }
+      return `
+        <div class="maintenance-detail-item${label === 'Additional details' ? ' maintenance-detail-item-wide' : ''}">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(String(value))}</strong>
+        </div>
+      `;
+    }).join('');
+    detailsModalBody.querySelectorAll('.maintenance-detail-reporter-avatar.has-profile-photo').forEach((avatar) => {
+      const image = avatar.querySelector('img');
+      if (!image) return;
+      image.addEventListener('error', () => {
+        avatar.classList.remove('has-profile-photo');
+        avatar.textContent = avatar.dataset.reporterInitials || 'U';
+      }, { once: true });
+    });
     const status = detailsModal.querySelector('[data-maintenance-modal-status]');
     if (status) {
       status.textContent = request.status || 'Pending';

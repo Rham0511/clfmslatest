@@ -729,7 +729,13 @@
           
           auditLogsTableBody.innerHTML = rows;
           
-          const summary = 'Showing ' + auditState.entries.length + ' entries on page ' + auditState.page + ' of ' + auditState.totalPages + '.';
+          const total = Math.max(0, Number(auditState.total) || 0);
+          const pageSize = Math.max(1, Number(auditState.pageSize) || 7);
+          const firstEntry = total ? ((auditState.page - 1) * pageSize) + 1 : 0;
+          const lastEntry = total ? Math.min(firstEntry + auditState.entries.length - 1, total) : 0;
+          const summary = total
+            ? 'Showing ' + firstEntry + '-' + lastEntry + ' of ' + total + ' entries.'
+            : 'No audit entries found.';
           if (auditLogsSummary) auditLogsSummary.textContent = summary;
           console.log('[Audit Logs]', summary);
           
@@ -1009,6 +1015,7 @@
 
         // Define event handlers outside so they can be removed/re-attached
         const auditEventHandlers = {};
+        let auditSearchDebounce = null;
 
         const createAuditEventHandlers = () => {
           auditEventHandlers.updateFilters = () => updateAuditFilters();
@@ -1030,7 +1037,10 @@
           
           // Search input - live search
           if (auditSearchInput) {
-            auditSearchInput.addEventListener('input', auditEventHandlers.updateFilters);
+            auditSearchInput.addEventListener('input', () => {
+              if (auditSearchDebounce) window.clearTimeout(auditSearchDebounce);
+              auditSearchDebounce = window.setTimeout(auditEventHandlers.updateFilters, 250);
+            });
             console.log('[Audit Logs] Search input listener attached');
           } else {
             console.warn('[Audit Logs] auditSearchInput not found');

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Facilities | ComLab Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <style>
     :root { color-scheme: light dark; }
     body.app-shell.admin-facilities-page {
-      --page-bg: #07130d;
+      --page-bg: #061A13;
       --panel-bg: linear-gradient(145deg, rgba(17, 43, 29, .98), rgba(9, 27, 18, .98));
       --surface: #0b1e14;
       --text: #edf8f1;
@@ -26,16 +26,17 @@
       font-family: Inter, "Segoe UI", sans-serif;
     }
     html.theme-light body.app-shell.admin-facilities-page {
-      --page-bg: #f1f5f9;
-      --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, .98), rgba(241, 245, 249, .98));
+      --page-bg: #FFFFFF;
+      --panel-bg: #ffffff;
       --surface: #ffffff;
-      --text: #172033;
-      --muted: #526174;
-      --line: rgba(71, 85, 105, .2);
-      --accent: #2563eb;
-      --accent-strong: #1d4ed8;
-      --soft: rgba(59, 130, 246, .1);
-      background: radial-gradient(ellipse at 82% 0%, rgba(59, 130, 246, .1), transparent 38%), var(--page-bg);
+      --text: #1E293B;
+      --muted: #64748b;
+      --line: #E5E7EB;
+      --header-divider: #E5E7EB;
+      --accent: #16a34a;
+      --accent-strong: #15803d;
+      --soft: #DCFCE7;
+      background: var(--page-bg);
     }
     .facilities-main {
       box-sizing: border-box;
@@ -43,18 +44,20 @@
       margin-left: var(--sidebar-width, 250px);
       padding: 0 .55rem .35rem;
     }
-    .facilities-heading {
-      margin: 0 !important;
-      padding: 0 .5rem !important;
-    }
-    html body.app-shell.admin-facilities-page .facilities-main > .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
-      margin-bottom: .25rem !important;
-    }
     .facilities-heading-main {
       display: flex;
       min-width: 0;
       flex: 1 1 auto;
       align-items: center;
+    }
+    .facilities-context-bar {
+      display: flex;
+      min-height: 2.2rem;
+      align-items: center;
+      justify-content: flex-start;
+      gap: .55rem;
+      margin: 0 0 .45rem;
+      padding: 0 .25rem;
     }
     .facilities-workspace {
       width: 100%;
@@ -104,11 +107,105 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
     }
     .facilities-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    /* The legacy tab strip is scrollable because it hosts the embedded table
+       tabs. The replacement header menu must remain an intrinsic, non-scrolling
+       flex item so its flyout can escape the header normally. */
+    .facilities-management-menu {
+      position: relative;
+      z-index: 20;
+      display: block;
+      width: max-content;
+      max-width: 100%;
+      min-width: 0;
+      height: auto;
+      max-height: none;
+      overflow: visible !important;
+      padding: 0;
+      scrollbar-width: none;
+    }
+    .facilities-management-menu::-webkit-scrollbar { display: none; }
+    .facilities-heading-main,
+    .facilities-heading {
+      box-sizing: border-box;
+      overflow: visible;
+    }
+    .facilities-management-trigger {
+      display: inline-flex;
+      width: auto;
+      max-width: 100%;
+      box-sizing: border-box;
+      min-height: 2.2rem;
+      align-items: center;
+      gap: .45rem;
+      padding: .38rem .7rem;
+      border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+      border-radius: .68rem;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .facilities-management-trigger > i:first-child { color: var(--accent); }
+    .facilities-management-trigger .facilities-menu-chevron { color: var(--muted); font-size: .65rem; transition: transform .16s ease; }
+    .facilities-management-trigger[aria-expanded="true"] .facilities-menu-chevron { transform: rotate(180deg); }
+    .facilities-management-trigger:hover,
+    .facilities-management-trigger:focus-visible { border-color: var(--accent); background: var(--soft); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+    .facilities-management-dropdown {
+      position: absolute;
+      top: calc(100% + .38rem);
+      left: 0;
+      display: grid;
+      width: min(16rem, calc(100vw - 2rem));
+      gap: .18rem;
+      padding: .4rem;
+      border: 1px solid var(--line);
+      border-radius: .8rem;
+      background: var(--surface);
+      box-shadow: 0 14px 32px rgba(2, 18, 11, .22);
+      opacity: 0;
+      transform: translateY(-.3rem) scale(.98);
+      transform-origin: top left;
+      pointer-events: none;
+      transition: opacity .14s ease, transform .14s ease;
+    }
+    .facilities-management-dropdown:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .facilities-management-item {
+      display: grid;
+      grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: .55rem;
+      width: 100%;
+      min-height: 2.2rem;
+      padding: .45rem .55rem;
+      border: 0;
+      border-radius: .55rem;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+    .facilities-management-item > i:first-child { color: var(--accent); text-align: center; }
+    .facilities-management-item .facilities-menu-check { visibility: hidden; color: var(--accent); font-size: .65rem; }
+    .facilities-management-item:hover,
+    .facilities-management-item:focus-visible { background: var(--soft); outline: none; }
+    .facilities-management-item[aria-checked="true"] { background: color-mix(in srgb, var(--soft) 82%, var(--surface)); color: var(--accent-strong); }
+    .facilities-management-item[aria-checked="true"] .facilities-menu-check { visibility: visible; }
+    @media (max-width: 540px) {
+      .facilities-management-trigger { min-height: 1.95rem; padding: .3rem .52rem; font-size: .65rem; }
+      .facilities-management-dropdown { width: min(15rem, calc(100vw - 1.5rem)); }
+    }
     .facilities-content { padding: 0; }
     .facilities-frame {
       display: block;
       width: 100%;
-      height: calc(100dvh - 3.4rem);
+      height: calc(100dvh - 6.45rem);
       min-height: 0;
       border: 0;
       border-radius: 0;
@@ -116,14 +213,14 @@
     }
     @media (max-width: 1023px) {
       .facilities-main { margin-left: 0; padding: 0 .5rem .35rem; }
-      .facilities-frame { height: calc(100dvh - 3.4rem - env(safe-area-inset-top, 0px)); }
+      .facilities-frame { height: calc(100dvh - 6.45rem - env(safe-area-inset-top, 0px)); }
     }
     @media (max-width: 540px) {
       .facilities-main { padding-right: .35rem; padding-left: .35rem; }
       .facilities-heading { padding-right: .25rem !important; padding-left: .25rem !important; }
       .facilities-tabs { gap: .1rem; }
       .facilities-tab { min-height: 1.9rem; padding: .3rem .43rem; font-size: .64rem; }
-      .facilities-frame { height: calc(100dvh - 3.4rem - env(safe-area-inset-top, 0px)); }
+      .facilities-frame { height: calc(100dvh - 6.45rem - env(safe-area-inset-top, 0px)); }
     }
     @media (prefers-reduced-motion: reduce) {
       .facilities-tab { transition-duration: .01ms; }
@@ -136,12 +233,9 @@
   <main class="facilities-main">
     <header id="facilitiesPageHeader" class="system-dashboard-heading facilities-heading" data-comlab-hide-auto-title="true">
       <div class="system-dashboard-heading-main facilities-heading-main">
-        <nav class="facilities-tabs facilities-header-tabs" role="tablist" aria-label="Facility sections">
-          <button class="facilities-tab" type="button" role="tab" id="inventoryTab" aria-selected="true" aria-controls="facilityFrame" data-facilities-tab="inventory"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>Equipment Inventory</button>
-          <button class="facilities-tab" type="button" role="tab" id="assignmentTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="assignment"><i class="fa-solid fa-user-check" aria-hidden="true"></i>Equipment Assignment</button>
-          <button class="facilities-tab" type="button" role="tab" id="availabilityTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="availability"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>Availability</button>
-          <button class="facilities-tab" type="button" role="tab" id="borrowedTab" aria-selected="false" aria-controls="facilityFrame" tabindex="-1" data-facilities-tab="borrowed"><i class="fa-solid fa-box-open" aria-hidden="true"></i>Borrowed Equipment</button>
-        </nav>
+        <button id="mobileMenuToggle" class="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Open navigation" aria-expanded="false">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
       </div>
       <div class="system-dashboard-heading-actions">
         <div class="inline-flex shrink-0 items-center" data-theme-toggle-anchor></div>
@@ -154,8 +248,21 @@
         </div>
       </div>
     </header>
+    <div class="facilities-context-bar">
+      <div class="facilities-tabs facilities-header-tabs facilities-management-menu">
+        <button id="equipmentManagementToggle" class="facilities-management-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="equipmentManagementMenu">
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i><span id="facilitiesManagementLabel">Borrowed</span><i class="fa-solid fa-chevron-down facilities-menu-chevron" aria-hidden="true"></i>
+        </button>
+        <div id="equipmentManagementMenu" class="facilities-management-dropdown" role="menu" aria-label="Equipment management sections" hidden>
+          <button class="facilities-management-item" type="button" role="menuitemradio" aria-checked="false" data-facilities-tab="inventory" id="inventoryTab"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Inventory</span><i class="fa-solid fa-check facilities-menu-check" aria-hidden="true"></i></button>
+          <button class="facilities-management-item" type="button" role="menuitemradio" aria-checked="false" data-facilities-tab="assignment" id="assignmentTab"><i class="fa-solid fa-user-check" aria-hidden="true"></i><span>Assignment</span><i class="fa-solid fa-check facilities-menu-check" aria-hidden="true"></i></button>
+          <button class="facilities-management-item" type="button" role="menuitemradio" aria-checked="false" data-facilities-tab="availability" id="availabilityTab"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Availability</span><i class="fa-solid fa-check facilities-menu-check" aria-hidden="true"></i></button>
+          <button class="facilities-management-item" type="button" role="menuitemradio" aria-checked="true" data-facilities-tab="borrowed" id="borrowedTab"><i class="fa-solid fa-box-open" aria-hidden="true"></i><span>Borrowed</span><i class="fa-solid fa-check facilities-menu-check" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </div>
     <section class="facilities-workspace" aria-label="Facility management sections">
-      <div class="facilities-content" role="tabpanel" aria-labelledby="inventoryTab">
+      <div class="facilities-content" role="tabpanel" aria-labelledby="borrowedTab">
         <iframe id="facilityFrame" class="facilities-frame" title="Equipment Inventory" loading="eager"></iframe>
       </div>
     </section>
@@ -164,11 +271,14 @@
     (() => {
       const frame = document.getElementById('facilityFrame');
       const tabs = Array.from(document.querySelectorAll('[data-facilities-tab]'));
+      const menu = document.getElementById('equipmentManagementMenu');
+      const menuToggle = document.getElementById('equipmentManagementToggle');
+      const menuItems = tabs;
       const routes = {
-        inventory: { href: '/equipment-inventory?embedded=facilities', title: 'Equipment Inventory' },
-        assignment: { href: '/equipment-assignment?embedded=facilities', title: 'Equipment Assignment' },
-        availability: { href: '/admin-dashboard?embedded=facilities#equipment-availability', title: 'Equipment Availability' },
-        borrowed: { href: '/borrow-equipment?embedded=facilities', title: 'Borrowed Equipment' }
+        inventory: { href: '/equipment-inventory?embedded=facilities', title: 'Inventory', label: 'Inventory' },
+        assignment: { href: '/equipment-assignment?embedded=facilities', title: 'Assignment', label: 'Assignment' },
+        availability: { href: '/admin-dashboard?embedded=facilities#equipment-availability', title: 'Availability', label: 'Availability' },
+        borrowed: { href: '/borrow-equipment?embedded=facilities', title: 'Borrowed', label: 'Borrowed' }
       };
       const embedStyle = `
         html, body { width: 100% !important; height: 100% !important; min-height: 0 !important; margin: 0 !important; }
@@ -187,6 +297,15 @@
         html body.app-shell.facilities-embedded #comlab-help-panel { display: none !important; }
         html body.app-shell.facilities-embedded .comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) { display: none !important; }
         body { overflow: auto !important; }
+        html body.app-shell.facilities-embedded,
+        html body.app-shell.facilities-embedded .main-container,
+        html body.app-shell.facilities-embedded .page-content,
+        html body.app-shell.facilities-embedded button,
+        html body.app-shell.facilities-embedded a,
+        html body.app-shell.facilities-embedded input,
+        html body.app-shell.facilities-embedded select {
+          pointer-events: auto !important;
+        }
         html body.app-shell.facilities-embedded > .main-container,
         html body.app-shell.facilities-embedded > #mainContainer,
         html body.app-shell.facilities-embedded > .assignment-container {
@@ -396,22 +515,128 @@
         html body.app-shell.facilities-embedded.admin-borrow-equipment-page .page-card { margin-top: 0 !important; }
         html.theme-light body.app-shell.facilities-embedded {
           color-scheme: light !important;
-          background: #f8fafc !important;
-          color: #172033 !important;
+          background: #FFFFFF !important;
+          color: #1E293B !important;
         }
         html.theme-light body.app-shell.facilities-embedded .main-container,
         html.theme-light body.app-shell.facilities-embedded .page-content,
         html.theme-light body.app-shell.facilities-embedded .assignment-content {
-          background: #f8fafc !important;
-          color: #172033 !important;
+          background: #FFFFFF !important;
+          background-image: none !important;
+          color: #1E293B !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-inventory-page .page-content::before {
+          display: none !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-inventory-page > .main-container {
+          padding: 0 !important;
+          background: #ffffff !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-inventory-page > .main-container > .page-content {
+          padding: .2rem 0 .3rem !important;
+          background: #ffffff !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-inventory-page #equipmentTableSection {
+          border: 1px solid #dce7e0 !important;
+          background: #ffffff !important;
+          box-shadow: none !important;
+          outline: none !important;
+          filter: none !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded.equipment-inventory-page .table-scroll-wrapper {
+          border: 0 !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
         html.theme-light body.app-shell.facilities-embedded.equipment-assignment-page .assignment-table thead th {
-          background: #e2e8f0 !important;
-          color: #172033 !important;
-          box-shadow: 0 1px 0 rgba(71, 85, 105, .2) !important;
+          background: #FFFFFF !important;
+          color: #1E293B !important;
+          box-shadow: none !important;
         }
         html.theme-light body.app-shell.facilities-embedded.equipment-assignment-page .assignment-table-scroll {
           scrollbar-color: #94a3b8 #e2e8f0 !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page :is(.table-wrap, .table-wrap table, .table-wrap thead, .table-wrap tbody, .table-wrap tfoot, .table-wrap tr, .table-wrap th, .table-wrap td) {
+          border-color: #E2E8F0 !important;
+          background: #FFFFFF !important;
+          background-color: #FFFFFF !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          filter: none !important;
+          backdrop-filter: none !important;
+          color: #1E293B !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap :is(thead, thead tr, thead th) {
+          background: #F8FAFC !important;
+          background-color: #F8FAFC !important;
+          color: #334155 !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap :is(tbody tr, tbody td, tfoot, tfoot tr, tfoot td) {
+          background: #FFFFFF !important;
+          background-color: #FFFFFF !important;
+          color: #1E293B !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even),
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even) td {
+          background: #F8FAFC !important;
+          background-color: #F8FAFC !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap :is(tbody tr:hover, tbody tr:hover td) {
+          background: #E8F5ED !important;
+          background-color: #E8F5ED !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap :is(thead, tbody, tfoot, tr, th, td)::before,
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap :is(thead, tbody, tfoot, tr, th, td)::after {
+          background: transparent !important;
+          background-image: none !important;
+          box-shadow: none !important;
+          filter: none !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap {
+          scrollbar-color: #CBD5E1 #FFFFFF !important;
+          scrollbar-width: thin !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar,
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
+          background: #FFFFFF !important;
+        }
+        html body.app-shell.facilities-embedded.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
+          border: 2px solid #FFFFFF !important;
+          border-radius: 999px !important;
+          background: #CBD5E1 !important;
+        }
+        html body.app-shell.facilities-embedded *,
+        html body.app-shell.facilities-embedded *::before,
+        html body.app-shell.facilities-embedded *::after {
+          box-shadow: none !important;
+          text-shadow: none !important;
+          background-image: none !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded :is(
+          .card, .chart-card, .table-card, .summary-card, .stat-card, .metric-card,
+          .section-shell, .glass-card, .table-shell, .table-wrap, .table-scroll-wrapper,
+          .assignment-table-scroll, .assignment-table-card, .equipment-availability-page
+        ),
+        html.theme-light body.app-shell.facilities-embedded :is(
+          table, table thead, table tbody, table tfoot, table tr, table th, table td
+        ) {
+          border-color: #E5E7EB !important;
+          background: #FFFFFF !important;
+          background-color: #FFFFFF !important;
+          color: #1E293B !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded table tbody tr:hover,
+        html.theme-light body.app-shell.facilities-embedded table tbody tr:hover td {
+          background: #DCFCE7 !important;
+          background-color: #DCFCE7 !important;
+        }
+        html.theme-light body.app-shell.facilities-embedded :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+          border-color: #E5E7EB !important;
+          background: #FFFFFF !important;
+          background-color: #FFFFFF !important;
+          color: #1E293B !important;
         }
       `;
       const applyEmbeddedLayout = () => {
@@ -422,8 +647,10 @@
           doc.documentElement.classList.toggle('theme-light', isLight);
           doc.documentElement.classList.toggle('theme-dark', !isLight);
           doc.documentElement.classList.toggle('dark', !isLight);
+          doc.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
           doc.body.classList.toggle('theme-light', isLight);
           doc.body.classList.toggle('theme-dark', !isLight);
+          doc.body.setAttribute('data-theme', isLight ? 'light' : 'dark');
           doc.querySelectorAll('.main-container, .page-shell, .audit-page-content').forEach((container) => {
             container.classList.toggle('theme-light', isLight);
             container.classList.toggle('theme-dark', !isLight);
@@ -447,37 +674,79 @@
         }
       };
       const setActiveTab = (key, updateAddress = true) => {
-        const route = routes[key] || routes.inventory;
-        tabs.forEach((tab) => {
+        const route = routes[key] || routes.borrowed;
+        document.getElementById('facilitiesManagementLabel').textContent = route.label;
+        menuToggle.setAttribute('aria-label', `Current section: ${route.label}. Open equipment management menu`);
+        menuItems.forEach((tab) => {
           const active = tab.dataset.facilitiesTab === key;
-          tab.setAttribute('aria-selected', String(active));
+          tab.setAttribute('aria-checked', String(active));
           tab.tabIndex = active ? 0 : -1;
         });
-        document.querySelector('.facilities-content').setAttribute('aria-labelledby', tabs.find((tab) => tab.dataset.facilitiesTab === key)?.id || 'inventoryTab');
+        document.querySelector('.facilities-content').setAttribute('aria-labelledby', menuItems.find((tab) => tab.dataset.facilitiesTab === key)?.id || 'borrowedTab');
         frame.title = route.title;
         frame.src = route.href;
+        menu.hidden = true;
+        menuToggle.setAttribute('aria-expanded', 'false');
         if (updateAddress) {
           const nextUrl = new URL(window.location.href);
-          if (key === 'inventory') nextUrl.hash = '';
-          else nextUrl.hash = key;
+          nextUrl.hash = key === 'borrowed' ? 'borrowed' : '';
           window.history.replaceState(null, '', nextUrl);
         }
       };
       new MutationObserver(() => applyEmbeddedLayout()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-      frame.addEventListener('load', applyEmbeddedLayout);
-      tabs.forEach((tab) => tab.addEventListener('click', () => setActiveTab(tab.dataset.facilitiesTab)));
-      document.querySelector('.facilities-header-tabs').addEventListener('keydown', (event) => {
-        if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+      frame.style.visibility = 'hidden';
+      frame.addEventListener('load', () => {
+        applyEmbeddedLayout();
+        frame.style.visibility = 'visible';
+      });
+      const closeMenu = () => {
+        menu.hidden = true;
+        menuToggle.setAttribute('aria-expanded', 'false');
+      };
+      menuToggle.addEventListener('click', (event) => {
         event.preventDefault();
+        event.stopPropagation();
+        const isOpen = !menu.hidden;
+        menu.hidden = isOpen;
+        menuToggle.setAttribute('aria-expanded', String(!isOpen));
+        if (isOpen) menuToggle.focus();
+        else menuItems.find((item) => item.getAttribute('aria-checked') === 'true')?.focus();
+      });
+      document.querySelector('.facilities-header-tabs').addEventListener('click', (event) => {
+        const tab = event.target.closest('[data-facilities-tab]');
+        if (!tab || !tabs.includes(tab)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setActiveTab(tab.dataset.facilitiesTab);
+      }, true);
+      document.querySelector('.facilities-header-tabs').addEventListener('keydown', (event) => {
+        if (event.target === menuToggle && ['ArrowDown', 'Enter', ' '].includes(event.key)) {
+          event.preventDefault();
+          menu.hidden = false;
+          menuToggle.setAttribute('aria-expanded', 'true');
+          menuItems.find((item) => item.getAttribute('aria-checked') === 'true')?.focus();
+          return;
+        }
+        if (event.target === menuToggle || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        event.stopPropagation();
         const currentIndex = tabs.indexOf(document.activeElement);
-        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (currentIndex + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (currentIndex + (event.key === 'ArrowDown' ? 1 : tabs.length - 1)) % tabs.length;
         tabs[nextIndex].focus();
-        setActiveTab(tabs[nextIndex].dataset.facilitiesTab);
+      });
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('.facilities-management-menu')) closeMenu();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !menu.hidden) {
+          closeMenu();
+          menuToggle.focus();
+        }
       });
       const requestedTab = window.location.hash.slice(1);
-      setActiveTab(routes[requestedTab] ? requestedTab : 'inventory', false);
+      setActiveTab(routes[requestedTab] ? requestedTab : 'borrowed', false);
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

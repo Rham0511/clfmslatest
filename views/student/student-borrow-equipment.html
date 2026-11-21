@@ -6,7 +6,7 @@
   <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css?v=75" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=94" />
   <style>
     :root {
       color-scheme: dark;
@@ -1372,7 +1372,7 @@
   </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=39">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
     <style>
       /* Borrow equipment: compact mobile-first selection flow. */
       html body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-section-title {
@@ -1586,6 +1586,60 @@
         html body.app-shell.student-portal.student-borrow-equipment-page .equipment-search-controls select {
           width: 7.25rem !important;
         }
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page #selectedEquipmentCount {
+        color: #a7f3d0 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option {
+        border-bottom-color: rgba(110, 231, 183, .2) !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option:hover {
+        background: rgba(74, 222, 128, .08) !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details .borrow-equipment-name {
+        color: #e8f4ed !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option-details > span:not(.borrow-equipment-name) {
+        color: #d1fae5 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-equipment-option:has(input:checked) {
+        background: rgba(34, 197, 94, .14) !important;
+        box-shadow: inset 3px 0 0 #4ade80 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-switcher {
+        border-color: rgba(110, 231, 183, .24) !important;
+        background: #0b2017 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button {
+        border-right-color: rgba(110, 231, 183, .2) !important;
+        background: #0b2017 !important;
+        color: #b6d7c8 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button:hover:not([aria-selected="true"]) {
+        background: #10291d !important;
+        color: #e8f4ed !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-tab-button[aria-selected="true"] {
+        border-color: #4ade80 !important;
+        background: #123c27 !important;
+        color: #f0fdf4 !important;
+        box-shadow: inset 0 -3px 0 #4ade80 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-action-row {
+        border-color: rgba(110, 231, 183, .2) !important;
+        background: rgba(7, 21, 15, .96) !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page .borrow-action-row .secondary {
+        border: 1px solid rgba(110, 231, 183, .24) !important;
+        background: #0b2017 !important;
+        color: #d1fae5 !important;
+      }
+      html:not(.theme-light) body.app-shell.student-portal.student-borrow-equipment-page #studentBorrowForm .borrow-action-row button[type="submit"]:disabled {
+        border-color: rgba(110, 231, 183, .2) !important;
+        background: #16432d !important;
+        color: #b6d7c8 !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
       }
     </style>
 </head>
@@ -2652,7 +2706,7 @@
 
   <script src="/js/qr-equipment-report.js?v=1" defer></script>
   <script src="/js/student-sidebar-config.js?v=31" defer></script>
-    <script src="/js/sidebar-component.js?v=79" defer></script>
+    <script src="/js/sidebar-component.js?v=108" defer></script>
   <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
 </body>
 </html>

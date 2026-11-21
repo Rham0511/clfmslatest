@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'comlab-static-';
-const CACHE_NAME = 'comlab-static-v1';
+const CACHE_NAME = 'comlab-static-v3';
 const OFFLINE_PAGE = '/offline.html';
 const STATIC_PATH = /^\/(?:css|js|images)\//;
 

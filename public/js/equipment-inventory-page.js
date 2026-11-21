@@ -838,26 +838,16 @@
             });
 
             const campusKey = normalizeCampusKey(selectedCampus);
-            const pcSetLabKey = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
-            const hasEquipmentFilters = Boolean(
-                document.getElementById('searchInput')?.value?.trim() ||
-                document.getElementById('statusFilter')?.value ||
-                inventoryAssignmentFilter
-            );
-            const matchingSetIds = new Set((equipmentFilterSummary || [])
-                .map((item) => String(item.setId || '').trim())
-                .filter(Boolean));
-            const visibleSets = equipmentPCSets.filter((set) =>
-                (!campusKey || normalizeCampusKey(set.campus) === campusKey) &&
-                (!pcSetLabKey || normalizeComLabKey(set.location || set.laboratoryRoom) === pcSetLabKey) &&
-                (!hasEquipmentFilters || matchingSetIds.has(String(set.setId || '').trim()))
-            );
+            const campusSetCount = equipmentPCSets.filter((set) =>
+                !campusKey || normalizeCampusKey(set.campus) === campusKey
+            ).length;
+            // Summary cards show campus totals; table filters only affect the rows below.
             const inventoryCards = {
-                inventoryCountEquipment: summaryTarget.total || 0,
-                inventoryCountPCSets: visibleSets.length,
-                inventoryCountAssigned: summaryTarget.assigned || 0,
-                inventoryCountUnassigned: summaryTarget.unassigned || 0,
-                inventoryCountMissing: summaryTarget.Missing || 0
+                inventoryCountEquipment: fallbackSummary.total || 0,
+                inventoryCountPCSets: campusSetCount,
+                inventoryCountAssigned: fallbackSummary.assigned || 0,
+                inventoryCountUnassigned: fallbackSummary.unassigned || 0,
+                inventoryCountMissing: fallbackSummary.Missing || 0
             };
             Object.entries(inventoryCards).forEach(([id, value]) => {
                 const element = document.getElementById(id);

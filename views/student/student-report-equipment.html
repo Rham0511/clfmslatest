@@ -6,7 +6,7 @@
     <title>Report Equipment Issue | ComLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <link rel="stylesheet" href="/css/sidebar.css?v=94">
     <style>
         :root { --bg: #020617; --bg-secondary: #07111f; }
         body {
@@ -386,7 +386,7 @@
     </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=39">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
     <style>
         .report-tabs {
             display: flex !important;
@@ -470,7 +470,154 @@
         .report-method-options .radio-card p:last-child { color: rgba(23, 51, 38, 0.7) !important; }
         @media (max-width: 640px) {
             .report-method-options { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-        }    </style>
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-tabs {
+            border-color: rgba(110, 231, 183, .24) !important;
+            background: #0b2017 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-tabs .report-tab {
+            border-right-color: rgba(110, 231, 183, .2) !important;
+            background: #0b2017 !important;
+            color: #b6d7c8 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-tabs .report-tab:hover:not(.is-active) {
+            background: #10291d !important;
+            color: #e8f4ed !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-tabs .report-tab.is-active {
+            border-color: #4ade80 !important;
+            background: #123c27 !important;
+            color: #f0fdf4 !important;
+            box-shadow: inset 0 -3px 0 #4ade80 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page :is(.report-method-options, .report-scope-options) .radio-card {
+            border-color: rgba(110, 231, 183, .24) !important;
+            background: #0b2017 !important;
+            color: #b6d7c8 !important;
+            box-shadow: none !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page :is(.report-method-options, .report-scope-options) .radio-card:hover:not(.selected) {
+            border-color: rgba(110, 231, 183, .45) !important;
+            background: #10291d !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page :is(.report-method-options, .report-scope-options) .radio-card.selected {
+            border-color: #4ade80 !important;
+            background: #123c27 !important;
+            color: #f0fdf4 !important;
+            box-shadow: inset 0 -3px 0 #4ade80 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-method-options .radio-card.selected::after {
+            color: #6ee7b7 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .report-method-options .radio-card p:last-child {
+            color: #a7c2b2 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-panel {
+            border-color: rgba(110, 231, 183, .2) !important;
+            background: linear-gradient(145deg, #0c2118, #071a12) !important;
+            color: #e7fff1 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-heading-icon {
+            border-color: rgba(110, 231, 183, .25) !important;
+            background: rgba(16, 185, 129, .16) !important;
+            color: #6ee7b7 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-heading h2 {
+            color: #f0fdf4 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-control {
+            border-color: rgba(110, 231, 183, .24) !important;
+            background: #0a2117 !important;
+            color: #6ee7b7 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-control :is(input, select) {
+            color: #e7fff1 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-control input::placeholder {
+            color: #91ad9c !important;
+            opacity: 1;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-control select option {
+            background: #0a2117;
+            color: #e7fff1;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-row {
+            border-color: rgba(110, 231, 183, .22) !important;
+            background: #0b2017 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-row strong {
+            color: #f0fdf4 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-row small {
+            color: #b6d7c8 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-equipment-id {
+            color: #a7f3d0 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-status {
+            color: #fcd34d !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-status.cancelled {
+            color: #cbd5e1 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-status.resolved {
+            color: #6ee7b7 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-status.rejected {
+            color: #fca5a5 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-arrow {
+            color: #6ee7b7 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-row:is(:hover, :focus-visible, .is-expanded) {
+            border-color: rgba(74, 222, 128, .55) !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .2), 0 0 0 1px rgba(74, 222, 128, .12) !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-details {
+            border-top-color: rgba(110, 231, 183, .18) !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-detail {
+            background: #10291d !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-detail-label {
+            color: #a7c2b2 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-report-detail-value {
+            color: #e7fff1 !important;
+        }
+        html:not(.theme-light) body.app-shell.student-portal.student-report-equipment-page .my-reports-empty {
+            color: #a7c2b2 !important;
+        }
+        html body.app-shell.student-portal.student-report-equipment-page .main-container > header {
+            padding-top: 0 !important;
+        }
+        html body.app-shell.student-portal.student-report-equipment-page .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+            display: block !important;
+            height: 1.5rem !important;
+            min-height: 1.5rem !important;
+            margin: 0 !important;
+        }
+        html body.app-shell.student-portal.student-report-equipment-page .main-container > main {
+            padding-top: .5rem !important;
+        }
+        @media (min-width: 1024px) {
+            html body.app-shell.student-portal.student-report-equipment-page .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
+                height: 2.25rem !important;
+                min-height: 2.25rem !important;
+                margin-bottom: .25rem !important;
+            }
+        }
+        html.theme-light body.app-shell.student-portal.student-report-equipment-page:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) #submitBtn:disabled {
+            border-color: #14834b !important;
+            background: linear-gradient(135deg, #1eaa61, #13824a) !important;
+            box-shadow: 0 6px 15px rgba(20, 131, 75, .16) !important;
+            color: #ffffff !important;
+            opacity: 1 !important;
+        }
+        html.theme-light body.app-shell.student-portal.student-report-equipment-page:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3) #submitBtn:disabled > * {
+            color: inherit !important;
+        }
+    </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-report-equipment-page">
     <div id="shared-sidebar"></div>
@@ -736,11 +883,11 @@
         const user = window.__CURRENT_USER__ || {};
         const name = user.name || '';
         const userRole = String(user.role || 'student').trim().toLowerCase();
-        const isFaculty = userRole === 'faculty' || userRole === 'instructor';
+        const isFacultyReportUser = userRole === 'faculty' || userRole === 'instructor';
         const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join('') || 'ST';
         document.querySelectorAll('[data-user-initials]').forEach(el => el.textContent = user.initials || initials);
-        document.querySelectorAll('[data-user-role]').forEach(el => el.textContent = isFaculty ? 'Faculty' : (user.role||'student').charAt(0).toUpperCase() + (user.role||'student').slice(1));
-        if (isFaculty) {
+        document.querySelectorAll('[data-user-role]').forEach(el => el.textContent = isFacultyReportUser ? 'Faculty' : (user.role||'student').charAt(0).toUpperCase() + (user.role||'student').slice(1));
+        if (isFacultyReportUser) {
             document.getElementById('reportHeading').textContent = 'Report a Lab Equipment Issue';
             document.getElementById('reportIntro').textContent = 'Select the affected equipment and share clear details so your campus technician can follow up.';
             document.querySelector('#methodCard1 p:last-child').textContent = 'Search equipment assigned to your campus';
@@ -1140,6 +1287,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=32" defer></script>
-    <script src="/js/sidebar-component.js?v=79" defer></script>
+    <script src="/js/sidebar-component.js?v=108" defer></script>
 </body>
 </html>

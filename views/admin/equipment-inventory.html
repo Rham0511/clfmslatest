@@ -8,14 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <link rel="stylesheet" href="/css/sidebar.css?v=91">
     <style>
         :root {
             color-scheme: dark;
-            --bg: #020617;
-            --bg-secondary: #07111f;
-            --panel: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(2, 6, 23, 0.96));
-            --panel-strong: linear-gradient(180deg, rgba(7, 17, 31, 0.99), rgba(2, 6, 23, 0.99));
+            --bg: #07150f;
+            --bg-secondary: #0b1d14;
+            --panel: linear-gradient(180deg, rgba(13, 37, 25, 0.98), rgba(8, 27, 18, 0.98));
+            --panel-strong: linear-gradient(180deg, rgba(16, 43, 29, 0.99), rgba(9, 29, 19, 0.99));
             --panel-soft: rgba(74,222,128,.08);
             --surface: rgba(10, 24, 18, 0.92);
             --surface-muted: rgba(12, 30, 22, 0.88);
@@ -41,7 +41,7 @@
             background:
                 radial-gradient(circle at top left, rgba(34,197,94,.16), transparent 24%),
                 radial-gradient(circle at bottom right, rgba(74,222,128,.10), transparent 26%),
-                linear-gradient(180deg, #020617 0%, #07111f 100%);
+                linear-gradient(180deg, #07150f 0%, #0b1d14 100%);
             color: var(--text);
             font-family: Inter, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.55;
@@ -50,7 +50,7 @@
         .main-container {
             height: 100vh;
             min-height: 100vh;
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.95), rgba(2, 6, 23, 0.95));
+            background: linear-gradient(180deg, rgba(11, 33, 22, 0.97), rgba(7, 24, 16, 0.97));
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -347,7 +347,7 @@
         .card {
             position: relative;
             overflow: hidden;
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(2, 6, 23, 0.96));
+            background: linear-gradient(180deg, rgba(13, 37, 25, 0.98), rgba(8, 27, 18, 0.98));
             border: 1px solid rgba(74,222,128,.16);
             border-radius: 20px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 12px 35px rgba(6,64,43,.18);
@@ -355,7 +355,7 @@
         }
 
         .card.sm {
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(2, 6, 23, 0.96));
+            background: linear-gradient(180deg, rgba(13, 37, 25, 0.98), rgba(8, 27, 18, 0.98));
             border: 1px solid rgba(74,222,128,.16);
             box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 12px 35px rgba(6,64,43,.18);
             padding: 0.9rem;
@@ -875,7 +875,7 @@
             padding: 0.95rem 1rem;
             border-radius: 999px;
             border: 1px solid rgba(74,222,128,.16);
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(2, 6, 23, 0.98));
+            background: linear-gradient(180deg, #123a27, #0b2b1d);
             color: #F8FAFC;
             font-size: 0.95rem;
             outline: none;
@@ -968,15 +968,15 @@
         }
 
         .page-content thead {
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(2, 6, 23, 0.98));
+            background: linear-gradient(180deg, #123a27, #0b2b1d);
         }
 
         .page-content tbody {
-            background: rgba(8, 21, 16, 0.84);
+            background: #0a1d15;
         }
 
         .page-content tbody tr:nth-child(even) {
-            background: rgba(7, 17, 31, 0.3);
+            background: #102b1e;
         }
 
         .table-row-hover:hover {
@@ -1288,7 +1288,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: var(--bg);
+            background: #0a1d15;
         }
 
         /* Scrollable table container */
@@ -1317,7 +1317,7 @@
         }
 
         .page-content thead {
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(2, 6, 23, 0.98));
+            background: linear-gradient(180deg, #123a27, #0b2b1d);
         }
 
         .page-content thead th {
@@ -1453,7 +1453,7 @@
         .main-container {
             height: 100vh;
             min-height: 0;
-            background: linear-gradient(180deg, rgba(7, 17, 31, 0.95), rgba(2, 6, 23, 0.95));
+            background: linear-gradient(180deg, rgba(13, 37, 25, 0.98), rgba(8, 27, 18, 0.98));
             overflow: hidden;
         }
 
@@ -1534,7 +1534,7 @@
         #equipmentPaginationFooter {
             flex: 0 0 auto;
             min-height: 3.75rem;
-            background: rgba(4, 18, 12, .96);
+            background: #0a1d15;
         }
 
         #equipmentPagination {
@@ -1799,6 +1799,68 @@
         body.app-shell.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) > .overflow-x-auto > table:not(.pc-components-table) > tbody#equipmentTable > tr:hover {
             background-color: rgba(16, 185, 129, .08);
         }
+
+        /* Keep the table surface emerald even when global table styles are loaded. */
+        body.app-shell.equipment-inventory-page #equipmentTableSection {
+            border-color: rgba(74, 222, 128, .2) !important;
+            background: linear-gradient(180deg, #0d2519, #091b12) !important;
+            box-shadow: inset 0 1px 0 rgba(167, 243, 208, .035), 0 12px 30px rgba(0, 0, 0, .16) !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection > .overflow-x-auto,
+        body.app-shell.equipment-inventory-page #equipmentTableSection table,
+        body.app-shell.equipment-inventory-page #equipmentTableSection table tbody {
+            background: #0a1d15 !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection table thead > tr > th {
+            border-color: rgba(110, 231, 183, .2) !important;
+            background: linear-gradient(180deg, #16442d, #103522) !important;
+            color: #d1fae5 !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection table tbody > tr {
+            border-color: rgba(110, 231, 183, .12) !important;
+            background: #0d2419 !important;
+            box-shadow: none !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection table tbody > tr:nth-child(even) {
+            background: #102b1e !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection table tbody > tr:hover {
+            background: #16402a !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection table tbody > tr > td {
+            border-color: rgba(110, 231, 183, .12) !important;
+            background: transparent !important;
+            color: #d1fae5 !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection #equipmentPaginationFooter {
+            border-color: rgba(110, 231, 183, .14) !important;
+            background: #0b2017 !important;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection .equipment-pagination-button {
+            border-color: rgba(110, 231, 183, .24);
+            background: #103522;
+            color: #a7f3d0;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection .equipment-pagination-button:hover:not(:disabled) {
+            border-color: rgba(110, 231, 183, .55);
+            background: #185334;
+            color: #ecfdf5;
+        }
+
+        body.app-shell.equipment-inventory-page #equipmentTableSection .equipment-pagination-button[aria-current="page"] {
+            border-color: #34d399;
+            background: #059669;
+            color: #ffffff;
+        }
         body.app-shell.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) .equipment-row-actions .action-btn-qr,
         body.app-shell.equipment-inventory-page #equipmentTableSection:not(.pc-sets-view) .equipment-row-actions .dropdown-toggle {
             width: 1.8rem;
@@ -1990,7 +2052,7 @@
   <link rel="stylesheet" href="/css/table-readability.css?v=7">
   <style>
     html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light {
-      background: #edf4ef !important;
+      background: #f4f7f5 !important;
     }
 
     html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .page-content {
@@ -2568,6 +2630,345 @@
         height: 1.7rem;
       }
     }
+
+    /* Light mode tokens for the Facilities inventory workspace. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light {
+      --surface: #ffffff;
+      --surface-muted: #f8faf9;
+      --border: #d8e2dc;
+      --border-soft: #eef2f0;
+      --text: #1f2937;
+      --text-muted: #6b7a72;
+      --primary: #15803d;
+      --primary-hover: #166534;
+    }
+
+    /* Toolbar card and two-row control layout. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .top-controls-section {
+      box-sizing: border-box;
+      margin-bottom: 12px !important;
+      padding: 16px !important;
+      border: 1px solid var(--border-soft) !important;
+      border-radius: 12px !important;
+      background: var(--surface) !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-row.system-filter-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 12px !important;
+      align-items: stretch !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-controls {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+      min-width: 0;
+    }
+
+    /* One border belongs to the wrapper; inner controls are borderless. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field {
+      box-sizing: border-box;
+      display: flex;
+      width: 100%;
+      height: 42px;
+      min-height: 42px !important;
+      min-width: 0;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+      background: var(--surface) !important;
+      color: var(--text) !important;
+      box-shadow: none !important;
+      transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field:hover,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field:hover {
+      border-color: #b7c9bf !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field:focus-within,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field:focus-within {
+      border-color: #16a34a !important;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .15) !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field > i,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field > i {
+      position: static !important;
+      flex: 0 0 auto;
+      color: #6b7a72 !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field select,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field input {
+      box-sizing: border-box;
+      width: auto !important;
+      min-width: 0;
+      height: 100%;
+      flex: 1 1 auto;
+      padding: 0 2rem 0 0 !important;
+      border: 0 !important;
+      border-color: transparent !important;
+      border-radius: 0 !important;
+      outline: 0 !important;
+      background-color: transparent !important;
+      background-image: none;
+      box-shadow: none !important;
+      color: var(--text) !important;
+      appearance: none !important;
+      -webkit-appearance: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m2.25 4.5 3.75 3.75L9.75 4.5' fill='none' stroke='%236B7A72' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-position: right .1rem center;
+      background-repeat: no-repeat;
+      background-size: 12px 12px;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field input {
+      padding-right: 0 !important;
+      background-image: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-search-field input::placeholder {
+      color: #6b7a72 !important;
+      opacity: 1;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-toolbar-main {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 12px;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-toolbar-main .inventory-search-field {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    /* Light secondary and primary toolbar button treatments. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button {
+      display: inline-flex;
+      height: 42px;
+      min-height: 42px !important;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px !important;
+      border-radius: 12px !important;
+      box-shadow: none !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button:not(.btn-primary) {
+      border: 1px solid #d8e2dc !important;
+      background: #ffffff !important;
+      color: #3f4f46 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button:not(.btn-primary) i {
+      color: #15803d !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button:not(.btn-primary):hover {
+      border-color: #b7c9bf !important;
+      background: #f6fbf8 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button.btn-primary {
+      border: 1px solid #15803d !important;
+      background: #15803d !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button.btn-primary i {
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group button.btn-primary:hover {
+      border-color: #166534 !important;
+      background: #166534 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group #openQrExportModal {
+      width: 42px;
+      min-width: 42px;
+      padding: 0 !important;
+    }
+
+    /* Stat cards: one border, with a 2px active state and no glow ring. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-summary-card {
+      border: 1px solid #e3eae6 !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-summary-card.is-active {
+      border: 2px solid #16a34a !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-summary-card:focus-visible {
+      outline: 2px solid #16a34a !important;
+      outline-offset: 1px;
+    }
+
+    /* Light inventory table and action controls. */
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection {
+      border: 1px solid #eef2f0 !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+      padding-bottom: 0 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto {
+      border: 0 !important;
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > thead > tr > th {
+      border-bottom: 1px solid #eef2f0 !important;
+      background: #f4f8f5 !important;
+      color: #5b6b62 !important;
+      font-size: 12px !important;
+      letter-spacing: .08em !important;
+      text-transform: uppercase;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr:nth-child(even) {
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr:hover {
+      background: #f6fbf8 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr > td {
+      border-bottom: 1px solid #eef2f0 !important;
+      color: #1f2937 !important;
+      vertical-align: middle;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-id-tooltip-trigger {
+      border-bottom: 0 !important;
+      color: #15803d !important;
+      font-weight: 700 !important;
+      text-decoration: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-id-tooltip-trigger:hover,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-id-tooltip-trigger:focus-visible {
+      text-decoration: underline !important;
+      text-underline-offset: 3px;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr > td:nth-child(2) {
+      color: #6b7a72 !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      font-size: 12px !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection > .overflow-x-auto > table > tbody#equipmentTable > tr > td:nth-child(5) > span {
+      border: 1px solid #bbf7d0 !important;
+      border-radius: 999px !important;
+      background: #ecfdf3 !important;
+      color: #166534 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-row-actions .action-btn-qr,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-row-actions .dropdown-toggle {
+      width: 32px !important;
+      min-width: 32px !important;
+      height: 32px !important;
+      min-height: 32px !important;
+      padding: 0 !important;
+      border: 1px solid #d8e2dc !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      color: #3f4f46 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-row-actions .action-btn-qr:hover,
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection .equipment-row-actions .dropdown-toggle:hover {
+      border-color: #b7c9bf !important;
+      background: #ecfdf3 !important;
+      color: #16a34a !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentTableSection #equipmentPaginationFooter {
+      min-height: 3.75rem;
+      padding-right: 5rem !important;
+      border-top: 1px solid #eef2f0 !important;
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentPagination .equipment-pagination-button {
+      min-width: 36px;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid #d8e2dc !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      color: #3f4f46 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentPagination .equipment-pagination-button:hover:not(:disabled) {
+      border-color: #b7c9bf !important;
+      background: #f6fbf8 !important;
+    }
+
+    html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light #equipmentPagination .equipment-pagination-button[aria-current="page"] {
+      border-color: #15803d !important;
+      background: #15803d !important;
+      color: #ffffff !important;
+    }
+
+    /* At tablet widths the filter row stacks and the action row wraps cleanly. */
+    @media (max-width: 899px) {
+      html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-filter-controls {
+        grid-template-columns: 1fr !important;
+      }
+
+      html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-toolbar-main {
+        flex-wrap: wrap;
+      }
+
+      html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-toolbar-main .inventory-search-field {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      html.theme-light body.app-shell.equipment-inventory-page .main-container.theme-light .inventory-actions-group {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
   </style>
 </head>
 <body class="app-shell system-layout-page equipment-inventory-page">
@@ -3112,7 +3513,7 @@
     </div>
 
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
-    <script src="/js/equipment-inventory-page.js?v=20261107-facilities-embed"></script>
+    <script src="/js/equipment-inventory-page.js?v=20261118-stable-summary"></script>
     <!-- ===== REPORT MISSING MODAL ===== -->
     <div id="reportMissingModal" class="modal">
         <div class="modal-content mx-auto w-full max-w-xl rounded-2xl p-6">
@@ -3396,6 +3797,6 @@
 
     <script src="/js/pc-sets-table.js?v=43"></script>
     <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-    <script src="/js/sidebar-component.js?v=77" defer></script>
+    <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

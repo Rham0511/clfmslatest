@@ -2074,6 +2074,36 @@ body.app-shell.student-dashboard-page .table-shell {
   }
 }
 
+html:not(.theme-light) body.app-shell.student-dashboard-page :is(.dashboard-kpi-label, .section-header h3) {
+  color: #e8f4ed !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page .dashboard-kpi-value {
+  color: #f0fdf4 !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page .dashboard-kpi-card.pc-station .dashboard-kpi-value,
+html:not(.theme-light) body.app-shell.student-dashboard-page .dashboard-kpi-card.issues .dashboard-kpi-description {
+  color: #b6d7c8 !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page #recentPcActivityTable .activity-station-name {
+  color: #e8f4ed !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page #recentPcActivityTable .activity-mobile-meta {
+  color: #a7c2b2 !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page #recentPcActivityTable .activity-duration-cell {
+  color: #d1fae5 !important;
+}
+
+html:not(.theme-light) body.app-shell.student-dashboard-page #recentPcActivityTable .activity-mobile-chevron,
+html:not(.theme-light) body.app-shell.student-dashboard-page .pc-activity-view-all {
+  color: #6ee7b7 !important;
+}
+
 html.theme-light body.app-shell.student-portal.student-pc-audit-page .audit-page-heading.comlab-slim-page-header:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
   border-bottom-color: #d5e5da !important;
   background: #ffffff !important;
@@ -2981,17 +3011,18 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
   }
 
   html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
-    :is(.student-page-heading, .system-dashboard-heading-main) {
+    > :is(.student-page-heading, .system-dashboard-heading-main) {
     display: flex !important;
     width: auto !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
     align-items: center !important;
+    order: 1 !important;
     margin: 0 !important;
   }
 
   html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
-    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+    > :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
       .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
       .my-requests-header-actions, .student-profile-header-actions) {
     display: flex !important;
@@ -3001,13 +3032,14 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
+    order: 2 !important;
     gap: .45rem !important;
     margin: 0 0 0 auto !important;
     padding: 0 !important;
   }
 
   html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
-    :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
+    > :is(.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons,
       .pc-station-header-actions, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions,
       .my-requests-header-actions, .student-profile-header-actions) > [data-comlab-notification-button] {
     order: 1 !important;
@@ -3030,8 +3062,9 @@ html.theme-light body.app-shell.student-portal.student-my-requests-page .main-co
   }
 
   html body.app-shell.student-portal .comlab-slim-page-header:not(#comlab-header-specificity)
-    :is(#mobileMenuToggle, .menu-toggle, .student-page-menu) {
+    > :is(#mobileMenuToggle, .menu-toggle, .student-page-menu) {
     order: 0 !important;
+    flex: 0 0 2.25rem !important;
   }
 }
 
@@ -3762,5 +3795,173 @@ html.theme-light body.app-shell.student-portal:not(#student-light-theme-override
 
   html body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .report-row-actions {
     margin: 0 !important;
+  }
+}
+
+body.app-shell.student-dashboard-page .main-container .recent-activity-section {
+  padding: 1.1rem !important;
+  border: 1px solid rgba(110, 231, 183, .2) !important;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(145deg, #0d2419, #091b13) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .16) !important;
+}
+
+body.app-shell.student-dashboard-page .main-container .recent-activity-section .section-header {
+  align-items: center !important;
+  margin: 0 0 .8rem !important;
+}
+
+body.app-shell.student-dashboard-page .main-container .recent-activity-section .section-header h3 {
+  margin: 0 !important;
+  color: #e8f7ed !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.015em;
+}
+
+body.app-shell.student-dashboard-page .main-container .recent-activity-section .table-shell {
+  overflow: hidden !important;
+  border: 1px solid rgba(110, 231, 183, .16) !important;
+  border-radius: .9rem !important;
+  background: rgba(5, 18, 12, .28) !important;
+}
+
+@media (min-width: 768px) {
+  body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable thead th {
+    padding: .8rem 1rem !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .18) !important;
+    background: rgba(110, 231, 183, .06) !important;
+    color: #91b9a2 !important;
+    font-size: .67rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .075em !important;
+    text-transform: uppercase;
+  }
+
+  body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable tbody td {
+    padding: .85rem 1rem !important;
+    border-bottom: 1px solid rgba(110, 231, 183, .1) !important;
+    background: transparent !important;
+    color: #d7e9dd !important;
+  }
+
+  body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable tbody tr:last-child td {
+    border-bottom: 0 !important;
+  }
+
+  body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable tbody tr:hover {
+    background: rgba(110, 231, 183, .045) !important;
+  }
+}
+
+body.app-shell.student-dashboard-page .recent-activity-section .pc-activity-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  margin-top: .8rem;
+  color: #80dba8 !important;
+  font-size: .82rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition: color .18s ease, gap .18s ease;
+}
+
+body.app-shell.student-dashboard-page .recent-activity-section .pc-activity-view-all:hover {
+  gap: .6rem;
+  color: #a7f3c4 !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section {
+  border-color: #d5e5da !important;
+  background: linear-gradient(145deg, #ffffff, #f8fbf9) !important;
+  box-shadow: 0 8px 24px rgba(31, 75, 48, .06) !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section .section-header h3 {
+  color: #173b2a !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section .table-shell {
+  border-color: #e1ebe4 !important;
+  background: #fff !important;
+}
+
+@media (min-width: 768px) {
+  html.theme-light body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable thead th {
+    border-bottom-color: #e1ebe4 !important;
+    background: #f3f8f4 !important;
+    color: #60786a !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable tbody td {
+    border-bottom-color: #e8f0ea !important;
+    color: #294839 !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page .recent-activity-section #recentPcActivityTable tbody tr:hover {
+    background: #f7fbf8 !important;
+  }
+}
+
+html.theme-light body.app-shell.student-dashboard-page .recent-activity-section .pc-activity-view-all {
+  color: #167846 !important;
+}
+
+html.theme-light body.app-shell.student-dashboard-page .recent-activity-section .pc-activity-view-all:hover {
+  color: #0d5f36 !important;
+}
+
+@media (max-width: 767px) {
+  body.app-shell.student-dashboard-page .main-container .recent-activity-section {
+    padding: .85rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable tbody tr[data-pc-activity-index] {
+    padding-right: .75rem !important;
+    padding-left: .75rem !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-station-name {
+    color: #f0fdf4 !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-mobile-meta {
+    color: #b6d7c8 !important;
+  }
+
+  body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-duration-cell {
+    color: #dcfce7 !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-station-name {
+    color: #173326 !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-mobile-meta {
+    color: #60786a !important;
+  }
+
+  html.theme-light body.app-shell.student-dashboard-page .main-container .recent-activity-section #recentPcActivityTable .activity-duration-cell {
+    color: #176c3f !important;
+  }
+}
+
+@media (max-width: 1200px), (pointer: coarse) {
+  html:not(.theme-light) body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-name {
+    color: #f0f7f2 !important;
+  }
+
+  html:not(.theme-light) body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .equipment-id,
+  html:not(.theme-light) body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table td.col-dates {
+    color: #b9d0c2 !important;
+  }
+
+  html:not(.theme-light) body.app-shell.student-portal.student-my-requests-page #requestsState .maintenance-reports-table .status-badge {
+    color: #dcebe1 !important;
   }
 }

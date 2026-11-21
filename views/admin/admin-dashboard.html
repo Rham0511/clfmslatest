@@ -6,7 +6,7 @@
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <link rel="stylesheet" href="/css/sidebar.css?v=91">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -1676,14 +1676,14 @@
             .chart-container { flex-basis: 240px; height: 240px; min-height: 0; }
         }
     </style>
-    <link rel="stylesheet" href="/css/sidebar.css?v=75">
+    <link rel="stylesheet" href="/css/sidebar.css?v=91">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   <style>
     html.theme-light body.app-shell.admin-dashboard-page,
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer,
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer .main-content {
-      background: #fff !important;
+      background: #FFFFFF !important;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer::before,
@@ -1755,6 +1755,10 @@
       background: #ffffff !important;
       color: #183b2b !important;
       box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.system-layout-page.admin-dashboard-page #mainContainer:has(#maintenance-view.active) > .main-content {
+      padding: .45rem .65rem 1rem !important;
     }
 
     html.theme-light body.app-shell .main-container.theme-light #maintenance-monitoring .search-box input::placeholder {
@@ -1883,23 +1887,6 @@
       --dashboard-surface: #f8fbf9;
     }
 
-    #mainContainer #dashboard-view .dashboard-section-heading {
-      display: flex;
-      min-width: 0;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: .15rem .1rem 0;
-    }
-
-    #mainContainer #dashboard-view .dashboard-section-heading h2 {
-      margin: .1rem 0 0;
-      color: var(--dashboard-card-text);
-      font-size: 1.25rem;
-      font-weight: 800;
-      letter-spacing: -.025em;
-    }
-
     #mainContainer #dashboard-view .dashboard-section-kicker,
     #mainContainer #dashboard-view .chart-kicker {
       margin: 0;
@@ -1909,43 +1896,6 @@
       letter-spacing: .15em;
       line-height: 1.3;
       text-transform: uppercase;
-    }
-
-    #mainContainer #dashboard-view .dashboard-section-kicker {
-      font-size: .82rem;
-      font-weight: 900;
-      letter-spacing: .15em;
-    }
-
-    #mainContainer #dashboard-view .dashboard-refresh-note {
-      display: inline-flex;
-      align-items: center;
-      gap: .48rem;
-      color: var(--dashboard-card-muted);
-      font-size: .75rem;
-      font-weight: 650;
-      white-space: nowrap;
-    }
-
-    #mainContainer #dashboard-view .dashboard-refresh-copy {
-      display: grid;
-      gap: .12rem;
-    }
-
-    #mainContainer #dashboard-view .dashboard-refresh-time {
-      color: var(--dashboard-card-muted);
-      font-size: .68rem;
-      font-variant-numeric: tabular-nums;
-      font-weight: 550;
-    }
-
-    #mainContainer #dashboard-view .dashboard-live-dot {
-      width: .48rem;
-      height: .48rem;
-      flex: 0 0 .48rem;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, .12), 0 0 12px rgba(34, 197, 94, .42);
     }
 
     #mainContainer #dashboard-view .dashboard-cards {
@@ -1989,6 +1939,83 @@
       gap: .5rem;
       margin: 0;
     }
+
+    #mainContainer #dashboard-view .dashboard-cards .dashboard-kpi-card {
+      min-height: 11.5rem;
+      justify-content: flex-start;
+      gap: .55rem;
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-total {
+      margin: .05rem 0 0;
+      color: var(--dashboard-card-text);
+      font-size: 1.85rem;
+      font-weight: 850;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .35rem .65rem;
+      margin: auto 0 0;
+      padding-top: .5rem;
+      border-top: 1px solid var(--dashboard-card-border);
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown > div {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: .35rem;
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown dt {
+      min-width: 0;
+      color: var(--dashboard-card-muted);
+      font-size: .64rem;
+      font-weight: 600;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown dd {
+      margin: 0;
+      color: var(--dashboard-card-text);
+      font-size: .7rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-serviceable dd,
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-active dd { color: #4ade80; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-unserviceable dd,
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-needs-review dd { color: #fb923c; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-lost dd { color: #fb7185; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-in-use dd,
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-students dd { color: #7dd3fc; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-maintenance dd,
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-admins dd { color: #fbbf24; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-archived dd,
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-retired dd { color: #cbd5e1; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-faculty dd { color: #c4b5fd; }
+    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-technicians dd { color: #5eead4; }
+
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-serviceable dd,
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-active dd { color: #15803d; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-unserviceable dd,
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-needs-review dd { color: #c2410c; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-lost dd { color: #be123c; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-in-use dd,
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-students dd { color: #0369a1; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-maintenance dd,
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-admins dd { color: #a16207; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-archived dd,
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-retired dd { color: #64748b; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-faculty dd { color: #6d28d9; }
+    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-technicians dd { color: #0f766e; }
 
     #mainContainer #dashboard-view .dashboard-cards .card-title {
       max-width: calc(100% - 3.15rem);
@@ -2076,7 +2103,7 @@
     }
 
     #mainContainer #dashboard-view .charts-section {
-      grid-template-columns: minmax(0, 1.08fr) repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: stretch;
       gap: .9rem;
       margin: 0;
@@ -2145,6 +2172,186 @@
       display: none;
     }
 
+    #mainContainer #dashboard-view .borrow-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .4rem;
+      box-sizing: border-box;
+      height: 2.6rem;
+      min-height: 2.6rem;
+      flex: 0 0 2.6rem;
+    }
+
+    #mainContainer #dashboard-view .borrow-summary-item {
+      display: flex;
+      min-width: 0;
+      height: 100%;
+      box-sizing: border-box;
+      align-items: center;
+      justify-content: space-between;
+      gap: .3rem;
+      padding: .38rem .48rem;
+      border: 1px solid transparent;
+      border-radius: .62rem;
+      font-size: .59rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    #mainContainer #dashboard-view .borrow-summary-item strong {
+      font-size: .76rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 850;
+    }
+
+    #mainContainer #dashboard-view .borrow-summary-item.is-borrowed {
+      border-color: rgba(245, 158, 11, .24);
+      background: rgba(245, 158, 11, .09);
+      color: #fbbf24;
+    }
+
+    #mainContainer #dashboard-view .borrow-summary-item.is-returned {
+      border-color: rgba(34, 197, 94, .24);
+      background: rgba(34, 197, 94, .09);
+      color: #4ade80;
+    }
+
+    #mainContainer #dashboard-view .borrow-summary-item.is-taken-over {
+      border-color: rgba(56, 189, 248, .24);
+      background: rgba(56, 189, 248, .09);
+      color: #7dd3fc;
+    }
+
+    #mainContainer.theme-light #dashboard-view .borrow-summary-item.is-borrowed { color: #92400e; }
+    #mainContainer.theme-light #dashboard-view .borrow-summary-item.is-returned { color: #166534; }
+    #mainContainer.theme-light #dashboard-view .borrow-summary-item.is-taken-over { color: #1d4ed8; }
+
+    #mainContainer #dashboard-view .chart-summary.doughnut-summary.category-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .35rem;
+      box-sizing: border-box;
+      height: 2.6rem;
+      min-height: 2.6rem;
+      flex: 0 0 2.6rem;
+    }
+
+    #mainContainer #dashboard-view .category-summary-item {
+      display: flex;
+      min-width: 0;
+      height: 100%;
+      box-sizing: border-box;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .12rem;
+      padding: .28rem .3rem;
+      border: 1px solid rgba(45, 212, 191, .22);
+      border-radius: .62rem;
+      background: rgba(45, 212, 191, .08);
+      color: #5eead4;
+      line-height: 1.15;
+    }
+
+    #mainContainer #dashboard-view .category-summary-item span {
+      overflow: hidden;
+      max-width: 100%;
+      font-size: .54rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #mainContainer #dashboard-view .category-summary-item strong {
+      font-size: .76rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 850;
+    }
+
+    #mainContainer.theme-light #dashboard-view .category-summary-item {
+      border-color: rgba(13, 148, 136, .2);
+      background: rgba(13, 148, 136, .07);
+      color: #0e7490;
+    }
+
+    #mainContainer #dashboard-view .chart-summary.doughnut-summary.maintenance-status-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .35rem;
+      box-sizing: border-box;
+      height: 2.6rem;
+      min-height: 2.6rem;
+      flex: 0 0 2.6rem;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item {
+      display: flex;
+      min-width: 0;
+      height: 100%;
+      box-sizing: border-box;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .12rem;
+      padding: .32rem .2rem;
+      border: 1px solid transparent;
+      border-radius: .62rem;
+      font-size: .56rem;
+      font-weight: 700;
+      line-height: 1.15;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item strong {
+      font-size: .78rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 850;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-pending {
+      border-color: rgba(245, 158, 11, .24);
+      background: rgba(245, 158, 11, .09);
+      color: #fbbf24;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-in-progress {
+      border-color: rgba(56, 189, 248, .24);
+      background: rgba(56, 189, 248, .09);
+      color: #7dd3fc;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-resolved {
+      border-color: rgba(34, 197, 94, .24);
+      background: rgba(34, 197, 94, .09);
+      color: #4ade80;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-overdue {
+      border-color: rgba(34, 197, 94, .2);
+      background: rgba(34, 197, 94, .07);
+      color: #4ade80;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-overdue.has-overdue {
+      border-color: rgba(248, 113, 113, .3);
+      background: rgba(248, 113, 113, .1);
+      color: #f87171;
+    }
+
+    #mainContainer #dashboard-view .maintenance-summary-item.is-overdue.is-unavailable {
+      border-color: rgba(148, 163, 184, .24);
+      background: rgba(148, 163, 184, .08);
+      color: #cbd5e1;
+    }
+
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-pending { color: #92400e; }
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-in-progress { color: #075985; }
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-resolved,
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-overdue { color: #166534; }
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-overdue.has-overdue { color: #b91c1c; }
+    #mainContainer.theme-light #dashboard-view .maintenance-summary-item.is-overdue.is-unavailable { color: #475569; }
+
     #mainContainer #dashboard-view .chart-container {
       box-sizing: border-box;
       width: 100%;
@@ -2163,8 +2370,8 @@
 
     @media (max-width: 1180px) {
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)) !important; }
-      #mainContainer #dashboard-view .charts-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      #mainContainer #dashboard-view .chart-card:first-child { grid-column: 1 / -1; }
+      #mainContainer #dashboard-view .charts-section { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #mainContainer #dashboard-view .charts-section .chart-card:first-child { grid-column: auto; }
       #mainContainer #dashboard-view .chart-container { height: 16.5rem; flex-basis: 16.5rem; }
     }
 
@@ -2178,17 +2385,17 @@
 
     @media (max-width: 520px) {
       #mainContainer #dashboard-view { gap: .8rem; }
-      #mainContainer #dashboard-view .dashboard-section-heading { align-items: flex-start; }
-      #mainContainer #dashboard-view .dashboard-section-heading h2 { font-size: 1rem; }
-      #mainContainer #dashboard-view .dashboard-refresh-note { max-width: 9rem; white-space: normal; font-size: .68rem; }
-      #mainContainer #dashboard-view .dashboard-refresh-time { font-size: .62rem; }
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .65rem !important; }
-      #mainContainer #dashboard-view .dashboard-cards .card { min-height: 7.6rem; padding: .8rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card { padding: .8rem; }
       #mainContainer #dashboard-view .dashboard-cards .card-icon { top: .85rem; right: .85rem; width: 2.25rem; height: 2.25rem; flex-basis: 2.25rem; font-size: .82rem; }
       #mainContainer #dashboard-view .dashboard-cards .card-title { font-size: .58rem; }
       #mainContainer #dashboard-view .dashboard-cards .card h3 { font-size: .73rem; }
       #mainContainer #dashboard-view .dashboard-cards .card-value,
       #mainContainer #dashboard-view .dashboard-cards .text-4xl { font-size: 1.7rem; }
+      #mainContainer #dashboard-view .dashboard-kpi-total { font-size: 1.55rem; }
+      #mainContainer #dashboard-view .dashboard-kpi-breakdown { grid-template-columns: minmax(0, 1fr); gap: .3rem; }
+      #mainContainer #dashboard-view .dashboard-kpi-breakdown dt { font-size: .62rem; }
+      #mainContainer #dashboard-view .dashboard-kpi-breakdown dd { font-size: .66rem; }
       #mainContainer #dashboard-view .chart-card { min-height: 20rem; padding: .9rem; }
       #mainContainer #dashboard-view .chart-container { height: 13.5rem; flex-basis: 13.5rem; padding: .35rem; }
     }
@@ -2206,20 +2413,40 @@
       --maintenance-ink: #f2fbf5;
       --maintenance-muted: #9eb8a8;
       --maintenance-border: rgba(110, 231, 183, .2);
-      margin-top: .9rem;
-      padding: clamp(1rem, 2vw, 1.6rem);
-      border: 1px solid var(--maintenance-border);
-      border-radius: 1.2rem;
-      background: linear-gradient(145deg, rgba(12, 37, 26, .96), rgba(7, 24, 17, .96));
-      box-shadow: 0 18px 44px rgba(0, 0, 0, .13);
+      box-sizing: border-box;
+      width: 100%;
+      margin-top: .15rem;
+      padding: 0 !important;
+      border: 0 !important;
+      border-color: transparent !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    #mainContainer:has(#maintenance-view.active) > .main-content {
+      padding: .45rem .65rem 1rem !important;
+      overflow-y: auto;
     }
 
     #mainContainer.theme-light #maintenance-monitoring {
       --maintenance-ink: #183b2b;
       --maintenance-muted: #617668;
       --maintenance-border: #c8ddd0;
-      background: linear-gradient(145deg, #ffffff, #f5faf6);
-      box-shadow: 0 16px 38px rgba(27, 74, 48, .07);
+      background: transparent !important;
+      background-image: none !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.system-layout-page.admin-dashboard-page #mainContainer #maintenance-monitoring {
+      padding: 0 !important;
+      border: 0 !important;
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
     }
 
     #mainContainer #maintenance-monitoring .maintenance-list-heading {
@@ -2303,8 +2530,101 @@
     }
 
     #mainContainer #maintenance-monitoring .maintenance-report-tabs {
+      display: flex;
+      flex: 1 1 auto;
+      flex-wrap: wrap;
+      align-items: center;
       gap: .55rem;
-      margin-bottom: 1.1rem;
+      margin: 0;
+      padding: 0 .4rem;
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs {
+      flex: 0 1 auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab {
+      display: inline-flex;
+      min-height: 2rem;
+      min-width: 8.15rem;
+      align-items: center;
+      justify-content: center;
+      gap: .42rem;
+      padding: .28rem .58rem;
+      border: 1px solid rgba(110, 231, 183, .2);
+      border-radius: .58rem;
+      background: transparent;
+      color: #a5c4b1;
+      font-size: .7rem;
+      font-weight: 750;
+      letter-spacing: -.01em;
+      line-height: 1.15;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+      transition: color .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab:hover {
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, .42);
+      background: rgba(34, 197, 94, .12);
+      color: #edf8f1;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 3px 10px rgba(0, 0, 0, .14);
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab.active {
+      border-color: rgba(74, 222, 128, .42);
+      background: linear-gradient(145deg, rgba(22, 163, 74, .55), rgba(11, 72, 43, .9));
+      color: #edf8f1;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 3px 10px rgba(0, 0, 0, .16);
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs .maintenance-tab-count {
+      display: inline-flex;
+      min-width: 1.25rem;
+      min-height: 1.25rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0 .28rem;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .16);
+      color: #b7f7cf;
+      font-size: .66rem;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab.active .maintenance-tab-count {
+      background: rgba(255, 255, 255, .16);
+      color: #fff;
+    }
+
+    @media (max-width: 767px) {
+      .system-dashboard-heading-main .maintenance-header-tabs {
+        max-width: 100%;
+        gap: .3rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .system-dashboard-heading-main .maintenance-header-tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab {
+        min-height: 1.85rem;
+        min-width: 7.2rem;
+        padding: .24rem .46rem;
+        font-size: .65rem;
+      }
+
+      .system-dashboard-heading-main .maintenance-header-tabs .maintenance-tab-count {
+        min-width: 1.1rem;
+        min-height: 1.1rem;
+        font-size: .6rem;
+      }
     }
 
     #mainContainer #maintenance-monitoring .maintenance-report-tab {
@@ -2367,7 +2687,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: .4rem;
+      gap: .45rem;
     }
 
     #mainContainer #maintenance-monitoring .status-filter {
@@ -2375,23 +2695,139 @@
       min-height: 2.45rem;
       align-items: center;
       justify-content: center;
-      gap: .4rem;
-      padding: .45rem .65rem;
+      gap: .5rem;
+      padding: .42rem .62rem;
       border: 1px solid var(--maintenance-border);
       border-width: 1px;
-      border-radius: 999px;
-      background: transparent;
+      border-radius: .72rem;
+      background: linear-gradient(145deg, rgba(15, 55, 37, .58), rgba(5, 29, 20, .72));
       color: var(--maintenance-muted);
-      font-size: .78rem;
-      font-weight: 700;
+      font-size: .74rem;
+      font-weight: 750;
+      letter-spacing: -.01em;
       white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+      transition: transform .16s ease, color .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
     }
 
-    #mainContainer #maintenance-monitoring .status-filter.active,
     #mainContainer #maintenance-monitoring .status-filter:hover {
-      border-color: #16834a;
-      background: #16834a;
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, .48);
+      background: linear-gradient(145deg, rgba(22, 101, 52, .72), rgba(8, 54, 32, .9));
+      color: #ecfdf3;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 4px 12px rgba(0, 0, 0, .14);
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"],
+    #mainContainer #maintenance-monitoring .status-filter.active {
+      border-color: rgba(74, 222, 128, .62);
+      background: linear-gradient(145deg, #16834a, #075c35);
       color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(6, 64, 43, .28);
+      font-weight: 800;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter .maintenance-filter-count {
+      display: inline-flex;
+      min-width: 1.28rem;
+      min-height: 1.28rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0 .28rem;
+      border: 1px solid rgba(110, 231, 183, .12);
+      border-radius: 999px;
+      background: rgba(34, 197, 94, .13);
+      color: #b7f7cf;
+      font-size: .64rem;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"] .maintenance-filter-count,
+    #mainContainer #maintenance-monitoring .status-filter.active .maintenance-filter-count {
+      border-color: rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .17);
+      color: #fff;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Pending"] {
+      border-color: rgba(234, 179, 8, .38);
+      background: rgba(133, 77, 14, .16);
+      color: #f7df91;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Pending"] .maintenance-filter-count {
+      border-color: rgba(250, 204, 21, .18);
+      background: rgba(234, 179, 8, .16);
+      color: #f7df91;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Pending"]:hover,
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Pending"][aria-pressed="true"] {
+      border-color: rgba(250, 204, 21, .72);
+      background: linear-gradient(145deg, rgba(161, 98, 7, .82), rgba(92, 54, 8, .9));
+      color: #fff8dc;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(161, 98, 7, .22);
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="In Progress"] {
+      border-color: rgba(56, 189, 248, .38);
+      background: rgba(14, 116, 144, .15);
+      color: #a9e7fb;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="In Progress"] .maintenance-filter-count {
+      border-color: rgba(56, 189, 248, .18);
+      background: rgba(14, 165, 233, .16);
+      color: #a9e7fb;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="In Progress"]:hover,
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="In Progress"][aria-pressed="true"] {
+      border-color: rgba(56, 189, 248, .72);
+      background: linear-gradient(145deg, rgba(3, 105, 161, .82), rgba(8, 61, 86, .9));
+      color: #e0f7ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(3, 105, 161, .22);
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Resolved"] {
+      border-color: rgba(52, 211, 153, .38);
+      background: rgba(6, 95, 70, .16);
+      color: #a7f3d0;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Resolved"] .maintenance-filter-count {
+      border-color: rgba(52, 211, 153, .18);
+      background: rgba(16, 185, 129, .16);
+      color: #a7f3d0;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Resolved"]:hover,
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Resolved"][aria-pressed="true"] {
+      border-color: rgba(52, 211, 153, .72);
+      background: linear-gradient(145deg, rgba(5, 150, 105, .82), rgba(6, 78, 59, .9));
+      color: #ecfdf5;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(5, 150, 105, .22);
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Rejected"] {
+      border-color: rgba(248, 113, 113, .38);
+      background: rgba(127, 29, 29, .16);
+      color: #fecaca;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Rejected"] .maintenance-filter-count {
+      border-color: rgba(248, 113, 113, .18);
+      background: rgba(239, 68, 68, .16);
+      color: #fecaca;
+    }
+
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Rejected"]:hover,
+    #mainContainer #maintenance-monitoring .status-filter[data-filter="Rejected"][aria-pressed="true"] {
+      border-color: rgba(248, 113, 113, .72);
+      background: linear-gradient(145deg, rgba(185, 28, 28, .82), rgba(92, 20, 20, .9));
+      color: #fff1f2;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(185, 28, 28, .22);
     }
 
     #mainContainer #maintenance-monitoring .maintenance-date-filter {
@@ -2418,29 +2854,213 @@
     }
 
     #mainContainer #maintenance-monitoring .overflow-x-auto {
-      overflow-x: auto;
+      width: 100%;
+      max-height: min(66vh, 42rem);
+      overflow-y: auto;
+      scrollbar-gutter: stable both-edges;
+      overflow-x: hidden;
       border: 1px solid var(--maintenance-border);
-      border-radius: .85rem;
+      border-radius: .75rem;
+      scrollbar-color: rgba(52, 211, 153, .72) rgba(4, 30, 20, .8);
+      scrollbar-width: thin;
+    }
+
+    #mainContainer #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar {
+      width: .62rem;
+      height: .62rem;
+    }
+
+    #mainContainer #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-track {
+      border-radius: 999px;
+      background: rgba(4, 30, 20, .82);
+    }
+
+    #mainContainer #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-thumb {
+      border: 2px solid rgba(4, 30, 20, .82);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #34d399, #087f4d);
+    }
+
+    #mainContainer #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #6ee7b7, #16a34a);
     }
 
     #mainContainer #maintenance-monitoring table {
       width: 100%;
-      min-width: 900px;
-      table-layout: auto;
+      min-width: 0;
+      table-layout: fixed;
     }
 
+    #mainContainer #maintenance-monitoring table th:nth-child(1),
+    #mainContainer #maintenance-monitoring table td:nth-child(1) { width: 19%; }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(2),
+    #mainContainer #maintenance-monitoring table td:nth-child(2) { width: 20%; }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(3),
+    #mainContainer #maintenance-monitoring table td:nth-child(3) { width: 21%; }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(4),
+    #mainContainer #maintenance-monitoring table td:nth-child(4) { width: 12%; }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(5),
+    #mainContainer #maintenance-monitoring table td:nth-child(5) { width: 16%; }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(6),
+    #mainContainer #maintenance-monitoring table td:nth-child(6) { width: 12%; }
+
     #mainContainer #maintenance-monitoring table thead th {
-      padding: .8rem .9rem !important;
-      background: rgba(18, 73, 47, .92) !important;
-      font-size: .72rem !important;
-      letter-spacing: .07em !important;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: .62rem .4rem !important;
+      border-bottom: 1px solid rgba(110, 231, 183, .28) !important;
+      background: linear-gradient(180deg, #14804d, #0d6940) !important;
+      font-size: .62rem !important;
+      letter-spacing: .045em !important;
       white-space: nowrap;
     }
 
     #mainContainer #maintenance-monitoring table tbody td {
-      padding: .85rem .9rem !important;
-      font-size: .84rem !important;
+      padding: .76rem .55rem !important;
+      border-bottom: 1px solid rgba(110, 231, 183, .1) !important;
+      font-size: .72rem !important;
       vertical-align: middle;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr,
+    #mainContainer #maintenance-monitoring table tbody tr:nth-child(even),
+    #mainContainer #maintenance-monitoring table tbody tr:nth-child(odd) {
+      background: rgba(8, 34, 23, .76) !important;
+      box-shadow: none !important;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:hover {
+      background: rgba(20, 72, 48, .82) !important;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody td:first-child {
+      padding-left: .8rem !important;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody td:last-child {
+      padding-right: .8rem !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-list-heading {
+      padding-top: 0;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-table-footer {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-top: .65rem;
+      padding: .55rem 4rem 0 0;
+      border-top: 1px solid rgba(110, 231, 183, .14);
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePaginationInfo {
+      color: var(--maintenance-muted) !important;
+      font-size: .75rem !important;
+      font-weight: 650 !important;
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: nowrap;
+      gap: .35rem !important;
+      margin-left: auto;
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePagination button {
+      min-width: 2rem;
+      height: 2rem;
+      padding: 0 .65rem !important;
+      border: 1px solid rgba(110, 231, 183, .2) !important;
+      border-radius: .6rem !important;
+      background: rgba(5, 33, 22, .76) !important;
+      color: #b7d9c5 !important;
+      font-size: .74rem !important;
+      font-weight: 700 !important;
+      line-height: 1 !important;
+      transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease;
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePagination button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(110, 231, 183, .48) !important;
+      background: rgba(15, 91, 56, .72) !important;
+      color: #f0fdf4 !important;
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePagination button[aria-current="page"] {
+      border-color: #27a768 !important;
+      background: linear-gradient(145deg, #16834a, #0d6940) !important;
+      color: #fff !important;
+      box-shadow: 0 3px 10px rgba(22, 131, 74, .22);
+    }
+
+    #mainContainer #maintenance-monitoring #maintenancePagination button:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 640px) {
+      #mainContainer #maintenance-monitoring .maintenance-table-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-right: 3.5rem;
+      }
+
+      #mainContainer #maintenance-monitoring #maintenancePagination {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:nth-child(odd) {
+      background: #102f22;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:nth-child(even) {
+      background: #102f22;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:hover {
+      background: #194533 !important;
+    }
+
+    #mainContainer #maintenance-monitoring table th:last-child,
+    #mainContainer #maintenance-monitoring table td:last-child {
+      position: sticky;
+      right: 0;
+      z-index: 1;
+      min-width: 5.2rem;
+      background: inherit !important;
+      box-shadow: none;
+    }
+
+    #mainContainer #maintenance-monitoring table th:last-child {
+      background: linear-gradient(180deg, #14804d, #0d6940) !important;
+      z-index: 3;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:nth-child(even) td:last-child {
+      background: inherit !important;
+    }
+
+    #mainContainer #maintenance-monitoring table tbody tr:hover td:last-child {
+      background: inherit !important;
+    }
+
+    html.theme-light #mainContainer #maintenance-monitoring table td:last-child {
+      background: #f5faf6;
+      box-shadow: -8px 0 12px rgba(27, 74, 48, .08);
     }
 
     #mainContainer #maintenance-monitoring .maintenance-report-row {
@@ -2504,6 +3124,70 @@
       color: #fecaca !important;
     }
 
+    #mainContainer #maintenance-monitoring .status-badge {
+      display: inline-flex;
+      min-width: 0;
+      min-height: 1.42rem;
+      align-items: center;
+      justify-content: center;
+      gap: .24rem;
+      padding: .2rem .4rem;
+      border-width: 1px !important;
+      border-radius: .42rem;
+      font-size: .56rem;
+      font-weight: 850;
+      letter-spacing: .025em;
+      line-height: 1;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge::before {
+      width: .28rem;
+      height: .28rem;
+      flex: 0 0 .28rem;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 0 .11rem color-mix(in srgb, currentColor 14%, transparent);
+      content: '';
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-pending {
+      border-color: rgba(250, 204, 21, .58) !important;
+      background: linear-gradient(145deg, rgba(133, 77, 14, .42), rgba(92, 54, 8, .3)) !important;
+      color: #fde68a !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-in-progress {
+      border-color: rgba(56, 189, 248, .58) !important;
+      background: linear-gradient(145deg, rgba(3, 105, 161, .38), rgba(8, 61, 86, .3)) !important;
+      color: #bae6fd !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-resolved {
+      border-color: rgba(52, 211, 153, .58) !important;
+      background: linear-gradient(145deg, rgba(5, 150, 105, .38), rgba(6, 78, 59, .3)) !important;
+      color: #a7f3d0 !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-rejected {
+      border-color: rgba(248, 113, 113, .58) !important;
+      background: linear-gradient(145deg, rgba(185, 28, 28, .38), rgba(92, 20, 20, .3)) !important;
+      color: #fecaca !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-cancelled {
+      border-color: rgba(248, 113, 113, .58) !important;
+      background: linear-gradient(145deg, rgba(185, 28, 28, .38), rgba(92, 20, 20, .3)) !important;
+      color: #fecaca !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge.status-secondary {
+      border-color: rgba(148, 163, 184, .42) !important;
+      background: linear-gradient(145deg, rgba(71, 85, 105, .32), rgba(30, 41, 59, .3)) !important;
+      color: #cbd5e1 !important;
+    }
+
     #mainContainer #maintenance-monitoring .maintenance-issue-title {
       display: block;
       max-width: 19rem;
@@ -2528,20 +3212,74 @@
 
     #mainContainer #maintenance-monitoring .maintenance-reported-date {
       display: block;
-      min-width: 10.5rem;
+      min-width: 0;
     }
 
     #mainContainer #maintenance-monitoring .maintenance-reported-date time {
       color: var(--maintenance-ink);
-      font-size: .76rem;
+      font-size: .66rem;
       font-weight: 700;
-      white-space: nowrap;
+      line-height: 1.25;
+      white-space: normal;
     }
 
     #mainContainer #maintenance-monitoring .maintenance-reported-date span {
       color: var(--maintenance-muted);
       font-size: .73rem;
       white-space: nowrap;
+    }
+
+    @media (max-width: 1100px) {
+      #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      #mainContainer #maintenance-monitoring .filter-group {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: .15rem;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-date-filter {
+        max-width: 14rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #mainContainer #maintenance-monitoring {
+        margin-top: .15rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-list-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: .65rem;
+        padding-bottom: .8rem;
+        margin-bottom: .8rem;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-list-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-report-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-report-tab {
+        min-height: 2.35rem;
+        padding-inline: .55rem;
+        font-size: .75rem;
+      }
     }
 
     #mainContainer #maintenance-monitoring .maintenance-loading-row,
@@ -2582,15 +3320,15 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: .4rem;
-      min-height: 2.15rem;
-      padding: .42rem .62rem;
+      width: 2rem;
+      min-height: 1.8rem;
+      padding: .3rem;
       border: 1px solid rgba(52, 211, 153, .38);
       border-radius: .62rem;
       background: rgba(34, 197, 94, .12);
       color: var(--maintenance-ink);
       font: inherit;
-      font-size: .74rem;
+      font-size: .72rem;
       font-weight: 750;
       white-space: nowrap;
       cursor: pointer;
@@ -2609,21 +3347,35 @@
     }
     #mainContainer #maintenanceDetailsModal {
       z-index: 2300;
+      left: var(--sidebar-width, 280px);
+      width: auto;
       padding: 1rem;
-      background: rgba(1, 18, 11, .72);
-      backdrop-filter: blur(8px);
+      background: rgba(1, 12, 8, .78);
+      backdrop-filter: blur(14px) saturate(1.15);
     }
     #mainContainer #maintenanceDetailsModal .maintenance-details-card {
       box-sizing: border-box;
-      width: min(720px, calc(100vw - 2rem));
-      max-height: min(86vh, 48rem);
-      border: 1px solid rgba(110, 231, 183, .26);
-      border-radius: 1rem;
-      background: linear-gradient(145deg, #0e2b1f, #071a12);
+      width: min(760px, calc(100% - 2rem));
+      height: min(78vh, 720px);
+      max-width: 760px;
+      max-height: min(88vh, 920px);
+      overflow: hidden;
+      border: 1px solid rgba(110, 231, 183, .3);
+      border-radius: 1.35rem;
+      background:
+        radial-gradient(circle at 100% 0, rgba(52, 211, 153, .1), transparent 30%),
+        linear-gradient(145deg, #102f22, #071a12 72%);
       color: #eaf7ef;
-      box-shadow: 0 26px 75px rgba(0, 0, 0, .3);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .48), 0 0 0 1px rgba(52, 211, 153, .05), 0 0 55px rgba(22, 131, 74, .08);
     }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-header { align-items: center; padding: 1rem 1.2rem; border-bottom-color: rgba(110, 231, 183, .18); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-header,
+    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { flex: 0 0 auto; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-header {
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      border-bottom-color: rgba(110, 231, 183, .2);
+      background: linear-gradient(180deg, rgba(20, 128, 77, .2), rgba(7, 26, 18, .05));
+    }
     #mainContainer #maintenanceDetailsModal .maintenance-details-kicker {
       margin: 0 0 .25rem;
       color: #6ee7b7;
@@ -2631,11 +3383,24 @@
       font-weight: 850;
       letter-spacing: .14em;
     }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2 { margin: 0; color: #f0fdf4; font-size: 1.15rem; font-weight: 850; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-body { padding: 1rem 1.2rem; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
-    #mainContainer #maintenanceDetailsModal .maintenance-detail-item { min-width: 0; padding: .7rem .75rem; border: 1px solid rgba(110, 231, 183, .14); border-radius: .7rem; background: rgba(3, 23, 15, .7); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2 { margin: 0; color: #f0fdf4; font-size: 1.25rem; font-weight: 850; letter-spacing: -.02em; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-body { flex: 1 1 0; min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem 1.5rem 1.4rem; scrollbar-width: thin; scrollbar-color: #16834a #092116; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item {
+      min-width: 0;
+      padding: .95rem 1rem;
+      border: 1px solid rgba(110, 231, 183, .16);
+      border-radius: .9rem;
+      background: linear-gradient(145deg, rgba(7, 39, 26, .9), rgba(3, 23, 15, .62));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 8px 20px rgba(0, 0, 0, .08);
+      transition: border-color .16s ease, transform .16s ease, background .16s ease;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(110, 231, 183, .35);
+      background: linear-gradient(145deg, rgba(9, 52, 34, .94), rgba(3, 28, 18, .72));
+    }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-item span {
       display: block;
       margin-bottom: .24rem;
@@ -2645,12 +3410,42 @@
       letter-spacing: .045em;
       text-transform: uppercase;
     }
-    #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong { display: block; overflow-wrap: anywhere; color: #eaf7ef; font-size: .86rem; font-weight: 650; line-height: 1.5; white-space: pre-wrap; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong { display: block; overflow-wrap: anywhere; color: #eaf7ef; font-size: .88rem; font-weight: 650; line-height: 1.45; white-space: pre-wrap; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter strong {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      white-space: normal;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter-avatar {
+      display: inline-flex;
+      width: 2.75rem;
+      height: 2.75rem;
+      flex: 0 0 2.75rem;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid rgba(110, 231, 183, .24);
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .12);
+      color: #bbf7d0;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter-name {
+      min-width: 0;
+      color: inherit;
+    }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: 1 / -1; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { display: flex; justify-content: flex-end; padding: .75rem 1.2rem 1rem; border-top: 1px solid rgba(110, 231, 183, .18); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { display: flex; justify-content: flex-end; padding: .9rem 1.5rem 1.1rem; border-top: 1px solid rgba(110, 231, 183, .2); background: rgba(3, 23, 15, .32); }
     #mainContainer #maintenanceDetailsModal .maintenance-details-close-button {
-      min-height: 2.35rem;
-      padding: .5rem .9rem;
+      min-height: 2.25rem;
+      padding: .48rem 1rem;
       border: 1px solid #16834a;
       border-radius: .65rem;
       background: #16834a;
@@ -2659,6 +3454,26 @@
       font-size: .82rem;
       font-weight: 750;
       cursor: pointer;
+      transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-close-button:hover {
+      transform: translateY(-1px);
+      background: #1a9a59;
+      box-shadow: 0 5px 14px rgba(22, 131, 74, .28);
+    }
+    #mainContainer #maintenanceDetailsModal .details-modal-close {
+      width: 2.35rem;
+      height: 2.35rem;
+      border: 1px solid rgba(110, 231, 183, .18);
+      border-radius: .75rem;
+      background: rgba(52, 211, 153, .1);
+      color: #a7f3d0;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    #mainContainer #maintenanceDetailsModal .details-modal-close:hover {
+      transform: rotate(4deg);
+      border-color: rgba(110, 231, 183, .46);
+      background: rgba(52, 211, 153, .2);
     }
     body.maintenance-details-open { overflow: hidden; }
 
@@ -2748,6 +3563,10 @@
     }
 
     @media (max-width: 700px) {
+      #mainContainer #maintenanceDetailsModal {
+        left: 0;
+        padding: .65rem;
+      }
       #mainContainer #maintenance-monitoring .maintenance-list-heading {
         flex-direction: column;
         gap: .8rem;
@@ -3075,34 +3894,34 @@
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-header {
-      border-color: #c8ddd0;
-      background: linear-gradient(115deg, #ffffff, #f2f8f4);
-      box-shadow: 0 4px 14px rgba(27, 74, 48, .07);
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: none;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-copy h2,
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat strong {
-      color: #183b2b;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-kicker {
-      color: #16834a;
+      color: #16A34A;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-copy > p:last-child,
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat span {
-      color: #617668;
+      color: #64748B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-stat {
-      border-color: #d4e4d9;
-      background: #f8fcf9;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-link:not(.availability-overview-link-primary) {
-      border-color: #c8ddd0;
-      background: #ffffff;
-      color: #17603c;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-overview-link-primary {
@@ -3112,71 +3931,71 @@
     }
 
     html.theme-light #mainContainer #equipment-availability-view .table-card.equipment-availability-page {
-      border-color: #cbded2;
-      background: linear-gradient(145deg, #ffffff, #f7fbf8);
-      color: #183b2b;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-toolbar input,
     html.theme-light #mainContainer #equipment-availability-view .availability-toolbar select {
-      border-color: #cbded2;
-      background: #ffffff;
-      color: #183b2b;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-toolbar input::placeholder {
-      color: #71867a;
+      color: #64748B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-clear-filters {
-      border-color: #cbded2;
-      background: #f3faf5;
-      color: #17603c;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-laboratory-section {
-      border-color: #d4e4d9;
+      border-color: #E5E7EB;
       background: #ffffff;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-laboratory-heading {
-      border-color: #d4e4d9;
-      background: linear-gradient(100deg, #e8f5ec, #f8fcf9);
-      color: #24563a;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-category {
-      border-color: #e2ece5;
+      border-color: #E5E7EB;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-category-toggle {
-      background: #f7fbf8;
-      color: #243c2e;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-category-toggle:hover {
-      background: #eaf6ee;
+      background: #DCFCE7;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-category-count {
-      border-color: #d4e4d9;
-      background: #eff8f2;
-      color: #547263;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #64748B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-table th {
-      background: #e7f3eb;
-      color: #285b40;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-table td {
-      border-color: #e2ece5;
-      color: #243c2e;
+      border-color: #E5E7EB;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-state.available {
-      background: #e3f6e9;
-      color: #17603c;
+      background: #DCFCE7;
+      color: #166534;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-state.borrowed {
@@ -3190,13 +4009,13 @@
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-history-button {
-      border-color: #c8ddd0;
-      background: #f2faf5;
-      color: #17603c;
+      border-color: #E5E7EB;
+      background: #FFFFFF;
+      color: #1E293B;
     }
 
     html.theme-light #mainContainer #equipment-availability-view .availability-results-count {
-      color: #617668;
+      color: #64748B;
     }
 
     @media (max-width: 1100px) {
@@ -3634,7 +4453,1511 @@
         padding: .55rem .58rem;
       }
     }
+
+    /* Maintenance Monitoring: final control and table contract.
+       Keep this scoped to the maintenance workspace so shared buttons and
+       tables on the rest of the dashboard retain their existing behavior. */
+    #mainContainer #maintenance-monitoring .overflow-x-auto {
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+    }
+
+    #mainContainer #maintenance-monitoring table {
+      min-width: 60rem;
+      table-layout: auto !important;
+    }
+
+    #mainContainer #maintenance-monitoring table th,
+    #mainContainer #maintenance-monitoring table td {
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-issue-title,
+    #mainContainer #maintenance-monitoring .maintenance-issue-description {
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      -webkit-line-clamp: unset;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
+      --maintenance-ink: #1f2937;
+      --maintenance-muted: #64748b;
+      --maintenance-border: #dce5df;
+      background: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+      :is(.maintenance-report-tab, .status-filter, .maintenance-date-filter .filter-select, .maintenance-details-button, #maintenancePagination button) {
+      box-sizing: border-box;
+      min-height: 2.35rem;
+      border: 1px solid #dce5df !important;
+      border-radius: .65rem;
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+      :is(.maintenance-report-tab:hover, .status-filter:hover, .maintenance-details-button:hover, #maintenancePagination button:hover:not(:disabled)) {
+      border-color: #86b99a !important;
+      background: #f0fdf4 !important;
+      color: #166534 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+      :is(.maintenance-report-tab.active, .status-filter.active, .status-filter[aria-pressed="true"], #maintenancePagination button[aria-current="page"]) {
+      border-color: #15803d !important;
+      background: #15803d !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter] {
+      border-color: #dce7e0 !important;
+      background: #ffffff !important;
+      color: #1e293b !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter][aria-pressed="true"],
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter].active {
+      border-color: #15803d !important;
+      background: #15803d !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter]:hover {
+      border-color: #087443 !important;
+      background: #e8f5ed !important;
+      color: #065f38 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter][aria-pressed="true"]:hover,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[data-filter].active:hover {
+      background: #15803d !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-tab-count,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-filter-count {
+      border: 0 !important;
+      background: #e8f5ec !important;
+      color: #166534 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+      :is(.maintenance-report-tab.active, .status-filter.active, .status-filter[aria-pressed="true"]) .maintenance-tab-count,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+      :is(.status-filter.active, .status-filter[aria-pressed="true"]) .maintenance-filter-count {
+      background: #ffffff !important;
+      color: #166534 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .filter-select {
+      border-color: #cbded2 !important;
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .overflow-x-auto {
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow-x: auto !important;
+      overflow-y: auto !important;
+      border: 1px solid #dce5df !important;
+      border-radius: .7rem;
+      background: #ffffff !important;
+      scrollbar-color: #86b99a #f1f5f3;
+      scrollbar-width: thin;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar {
+      width: .55rem;
+      height: .55rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-track {
+      background: #f1f5f3;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .overflow-x-auto::-webkit-scrollbar-thumb {
+      border: 1px solid #f1f5f3;
+      border-radius: 999px;
+      background: #86b99a;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table {
+      width: 100%;
+      min-width: 60rem;
+      table-layout: auto !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table td {
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(1) { min-width: 12rem; }
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(2) { min-width: 14rem; }
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(3) { min-width: 14rem; }
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(4) { min-width: 7.5rem; }
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(5) { min-width: 10rem; }
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(6) { min-width: 6.5rem; }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:nth-child(odd),
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:nth-child(even) {
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:nth-child(even) {
+      background: #f8fafc !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:hover,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:hover td:last-child {
+      background: #f0fdf4 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody td {
+      color: #1f2937 !important;
+      border-bottom-color: #dce5df !important;
+      vertical-align: top;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:last-child,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table td:last-child {
+      min-width: 6.5rem;
+      background: inherit !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-equipment-name {
+      color: #15803d !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-issue-title,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-issue-description,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-email,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reported-date span {
+      max-width: none !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      -webkit-line-clamp: unset !important;
+      color: #64748b !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-issue-title,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-name {
+      color: #1f2937 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge {
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs {
+      align-items: center;
+      gap: .45rem;
+      padding: 0 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab {
+      min-height: 2.2rem;
+      min-width: 8.25rem;
+      padding: .42rem .72rem;
+      border: 1px solid #dce7e0 !important;
+      border-radius: .65rem;
+      background: #ffffff !important;
+      color: #64748b !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab:hover {
+      border-color: #9bc9aa !important;
+      background: #e8f5ed !important;
+      color: #065f38 !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab.active {
+      border-color: #087443 !important;
+      background: #087443 !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs .maintenance-tab-count {
+      min-width: 1.25rem;
+      min-height: 1.25rem;
+      background: #e8f5ed !important;
+      color: #087443 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page .system-dashboard-heading-main .maintenance-header-tabs .maintenance-report-tab.active .maintenance-tab-count {
+      background: rgba(255, 255, 255, .2) !important;
+      color: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-heading {
+      gap: 1rem;
+      padding: .55rem 0 .8rem;
+      margin-bottom: .85rem;
+      border-bottom-color: #dce7e0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-kicker {
+      color: #087443;
+      font-size: .72rem;
+      letter-spacing: .18em;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-refresh-button {
+      min-height: 2.3rem;
+      width: 2.3rem;
+      border-color: #dce7e0 !important;
+      background: #ffffff !important;
+      color: #087443 !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-refresh-button:hover:not(:disabled) {
+      border-color: #087443 !important;
+      background: #e8f5ed !important;
+      color: #065f38 !important;
+      transform: none;
+    }
+
+    @media (max-width: 900px) {
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table {
+        min-width: 54rem;
+      }
+    }
+
+    /* Premium Maintenance Monitoring surface */
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
+      box-sizing: border-box;
+      padding: 1.5rem !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 20px !important;
+      background: #ffffff !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .04) !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-heading {
+      align-items: center;
+      padding: .25rem 0 1.15rem;
+      margin-bottom: 1.15rem;
+      border-bottom: 1px solid #eef2f0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-kicker {
+      margin: 0;
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-actions {
+      gap: .65rem;
+      padding-top: 0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-updated-label {
+      color: #64748b;
+      font-size: .75rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-refresh-button {
+      border-radius: 12px;
+      transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .table-header {
+      margin-bottom: 1rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .filter-toolbar.system-filter-row {
+      grid-template-columns: minmax(15rem, 1.2fr) minmax(25rem, 2fr) minmax(10rem, .7fr);
+      gap: .75rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box {
+      min-height: 2.5rem;
+      padding: 0 .85rem;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 14px;
+      background: #ffffff !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box:focus-within {
+      border-color: #86b99a !important;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .12) !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box > i {
+      color: #16a34a !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box input {
+      color: #0f172a !important;
+      font-size: .84rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .filter-group {
+      gap: .5rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter {
+      min-height: 2.5rem;
+      padding: .42rem .75rem;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 600;
+      transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter:hover {
+      transform: translateY(-1px) !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-filter-count,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-tab-count {
+      width: 1.35rem;
+      min-width: 1.35rem;
+      height: 1.35rem;
+      min-height: 1.35rem;
+      padding: 0;
+      border-radius: 999px;
+      font-size: .65rem;
+      font-weight: 700;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter {
+      gap: .35rem;
+      color: #64748b;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter .filter-select {
+      min-height: 2.5rem;
+      border-radius: 14px;
+      font-weight: 600;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter .filter-select:focus {
+      border-color: #86b99a !important;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .12) !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .overflow-x-auto {
+      border-color: #e5e7eb !important;
+      border-radius: 16px;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table {
+      border-collapse: separate;
+      border-spacing: 0 .45rem;
+      min-width: 62rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: .75rem .75rem !important;
+      border: 0 !important;
+      background: #f8fafc !important;
+      color: #475569 !important;
+      font-size: .68rem !important;
+      font-weight: 700;
+      letter-spacing: .06em !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody td {
+      padding: .95rem .75rem !important;
+      border-top: 1px solid #e5e7eb !important;
+      border-bottom: 1px solid #e5e7eb !important;
+      background: #ffffff !important;
+      vertical-align: middle;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:nth-child(even) td {
+      background: #fbfdfc !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:hover td {
+      background: #f0fdf4 !important;
+      border-color: #cfe8d7 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody td:first-child {
+      border-left: 1px solid #e5e7eb !important;
+      border-radius: 12px 0 0 12px;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody td:last-child {
+      border-right: 1px solid #e5e7eb !important;
+      border-radius: 0 12px 12px 0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-equipment-cell {
+      gap: .45rem;
+      min-width: 12rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-equipment-name {
+      font-size: .95rem;
+      font-weight: 700;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-equipment-id {
+      padding: .22rem .48rem;
+      border: 1px solid #b7dfc2;
+      border-radius: 999px;
+      background: #f0fdf4;
+      color: #166534;
+      font-size: .68rem;
+      font-weight: 700;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-equipment-location {
+      margin-top: .35rem;
+      color: #64748b;
+      font-size: .75rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-issue-title {
+      display: inline-block;
+      width: fit-content;
+      max-width: 100%;
+      padding: .22rem .5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155 !important;
+      font-weight: 600;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-issue-description {
+      margin-top: .3rem;
+      color: #64748b !important;
+      font-size: .75rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-name {
+      color: #1e293b !important;
+      font-weight: 600;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      min-width: 12rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-avatar {
+      display: inline-flex;
+      width: 2rem;
+      height: 2rem;
+      flex: 0 0 2rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #bbf7d0;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: .68rem;
+      font-weight: 700;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-copy {
+      min-width: 0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reported-date time {
+      display: grid;
+      gap: .2rem;
+      color: #1e293b !important;
+      white-space: normal;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-label {
+      color: #334155 !important;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-time-label {
+      color: #64748b !important;
+      font-size: .7rem;
+      font-weight: 500;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-email {
+      margin-top: .3rem;
+      color: #64748b !important;
+      font-size: .72rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge {
+      min-height: 1.7rem;
+      padding: .3rem .65rem;
+      border-radius: 999px;
+      font-size: .7rem;
+      font-weight: 700;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge::before {
+      display: none;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge.status-pending {
+      border-color: #fcd34d !important;
+      background: #fef3c7 !important;
+      color: #92400e !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge.status-in-progress {
+      border-color: #bfdbfe !important;
+      background: #dbeafe !important;
+      color: #1d4ed8 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge.status-resolved {
+      border-color: #bbf7d0 !important;
+      background: #dcfce7 !important;
+      color: #166534 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge.status-rejected,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-badge.status-cancelled {
+      border-color: #fecaca !important;
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-details-button {
+      width: 2.25rem;
+      min-height: 2.25rem;
+      padding: 0;
+      border-radius: 999px;
+      background: #ffffff !important;
+      color: #475569 !important;
+      transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-details-button:hover {
+      border-color: #86b99a !important;
+      background: #dcfce7 !important;
+      color: #15803d !important;
+      transform: scale(1.05) !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-table-footer {
+      margin-top: 1rem;
+      padding: 1rem .25rem 0;
+      border-top-color: #eef2f0;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring #maintenancePagination button {
+      min-width: 2.25rem;
+      min-height: 2.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
+        padding: 1rem !important;
+        border-radius: 16px !important;
+      }
+
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-list-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 640px) {
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
+        padding: .75rem !important;
+      }
+
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .filter-toolbar.system-filter-row {
+        gap: .6rem;
+      }
+
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-controls,
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-search-box,
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter {
+        width: 100%;
+        max-width: none;
+      }
+    }
+
+    /* Light theme tokens */
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal {
+      --surface: #ffffff;
+      --surface-muted: #f8faf9;
+      --border: #e3eae6;
+      --text: #14231b;
+      --text-muted: #6b7a72;
+      --primary: #15803d;
+      --primary-soft: #ecfdf3;
+    }
+
+    /* Light theme: table header and row treatment */
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table thead th,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table thead th:last-child {
+      background: #f4f8f5 !important;
+      background-image: none !important;
+      color: #5b6b62 !important;
+      border: 0 !important;
+      border-bottom: 1px solid #e3eae6 !important;
+      font-size: .7rem !important;
+      font-weight: 700 !important;
+      letter-spacing: .08em !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table tbody tr:first-child td {
+      box-shadow: none !important;
+    }
+
+    /* Light theme: report-details overlay and modal */
+    @keyframes maintenance-details-light-open {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal {
+      inset: 0 !important;
+      left: var(--sidebar-width, 280px) !important;
+      width: auto !important;
+      height: 100vh !important;
+      padding: 1rem !important;
+      background: rgba(15, 23, 42, .45) !important;
+      background-image: none !important;
+      backdrop-filter: blur(3px) !important;
+      -webkit-backdrop-filter: blur(3px) !important;
+    }
+
+    @media (max-width: 700px) {
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal {
+        left: 0 !important;
+        width: auto !important;
+      }
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal.show .maintenance-details-card {
+      animation: maintenance-details-light-open 180ms ease-out both;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-card {
+      width: min(760px, calc(100vw - 2rem)) !important;
+      max-width: 760px !important;
+      max-height: min(88vh, 920px) !important;
+      overflow: hidden;
+      border: 1px solid #e3eae6 !important;
+      border-radius: 16px !important;
+      background: #ffffff !important;
+      background-image: none !important;
+      color: #14231b !important;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, .18) !important;
+      backdrop-filter: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-header {
+      padding: 1.25rem 1.5rem !important;
+      border-bottom: 1px solid #eef2f0 !important;
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-kicker {
+      margin-bottom: .3rem;
+      color: #6b7a72 !important;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-title-row h2 {
+      color: #0f1f17 !important;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-body {
+      padding: 1.25rem 1.5rem 1.4rem;
+      scrollbar-color: #9ac9a9 #f1f5f3;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-grid {
+      gap: .85rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item {
+      min-width: 0;
+      padding: .9rem 1rem;
+      border: 1px solid #e3eae6 !important;
+      border-radius: 12px !important;
+      background: #f8faf9 !important;
+      background-image: none !important;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04) !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item:hover {
+      border-color: #cfe2d5 !important;
+      background: #f3f9f5 !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item-wide {
+      grid-column: 1 / -1;
+      padding: 1rem 1.1rem;
+      border-left: 3px solid #16a34a !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item span {
+      margin-bottom: .3rem;
+      color: #6b7a72 !important;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      line-height: 1.25;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item strong {
+      color: #14231b !important;
+      font-size: .94rem;
+      font-weight: 700;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-footer {
+      padding: .9rem 1.5rem 1.1rem;
+      border-top: 1px solid #eef2f0 !important;
+      background: #ffffff !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-close-button,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .details-modal-close {
+      border: 1px solid #d8e2dc !important;
+      background: #ffffff !important;
+      color: #14231b !important;
+      box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-close-button:hover,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .details-modal-close:hover {
+      border-color: #b9d7c3 !important;
+      background: #f1f7f3 !important;
+      color: #15803d !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .status-badge.status-pending {
+      border: 1px solid #f6de95 !important;
+      background: #fef6dc !important;
+      color: #b45309 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table th:nth-child(3),
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring table td:nth-child(3) {
+      min-width: 16rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-reporter-email {
+      max-width: 14rem !important;
+      overflow: hidden !important;
+      overflow-wrap: normal !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    /* Keep the active filter label readable even when it is not hovered. */
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter.active > span:not(.maintenance-filter-count),
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[aria-pressed="true"] > span:not(.maintenance-filter-count) {
+      color: #ffffff !important;
+      opacity: 1 !important;
+      -webkit-text-fill-color: #ffffff !important;
+      text-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter.active > .maintenance-filter-count,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .status-filter[aria-pressed="true"] > .maintenance-filter-count {
+      border-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #15803d !important;
+      opacity: 1 !important;
+      -webkit-text-fill-color: #15803d !important;
+    }
+
+    /* The label is a child span, so explicitly set it instead of relying on
+       inherited button color (which is overridden by the base status rules). */
+    #mainContainer #maintenance-monitoring .status-filter.active > span:first-child,
+    #mainContainer #maintenance-monitoring .status-filter[aria-pressed="true"] > span:first-child {
+      color: #ffffff !important;
+      opacity: 1 !important;
+      -webkit-text-fill-color: #ffffff !important;
+      text-shadow: none !important;
+    }
+
+    /* Status dropdown and toolbar layout. */
+    #mainContainer #maintenance-monitoring {
+      --status-surface: #07111f;
+      --status-menu-surface: #07111f;
+      --status-border: rgba(110, 231, 183, .25);
+      --status-text: #d8eee1;
+      --status-muted: #9dbdaa;
+      --status-hover: #102f22;
+      --status-active: rgba(22, 163, 74, .2);
+      --status-primary: #34d399;
+      --status-count-surface: rgba(34, 197, 94, .13);
+      --status-count-text: #b7f7cf;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
+      --surface: #ffffff;
+      --surface-muted: #f8faf9;
+      --border: #d8e2dc;
+      --text: #3f4f46;
+      --text-muted: #64748b;
+      --primary: #16a34a;
+      --status-surface: #ffffff;
+      --status-menu-surface: #ffffff;
+      --status-border: #d8e2dc;
+      --status-text: #3f4f46;
+      --status-muted: #64748b;
+      --status-hover: #f6fbf8;
+      --status-active: #ecfdf3;
+      --status-primary: #15803d;
+      --status-count-surface: #ecfdf3;
+      --status-count-text: #166534;
+    }
+
+    #mainContainer #maintenance-monitoring .table-header {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+      display: flex !important;
+      width: 100% !important;
+      min-width: 0;
+      align-items: center !important;
+      gap: 12px !important;
+      flex-wrap: nowrap !important;
+      grid-template-columns: none !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-controls {
+      width: auto !important;
+      min-width: 220px;
+      flex: 1 1 auto;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box {
+      display: flex;
+      width: 100% !important;
+      height: 42px;
+      min-height: 42px !important;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border: 1px solid var(--status-border) !important;
+      border-radius: 12px !important;
+      background: var(--status-surface) !important;
+      box-shadow: none !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box:focus-within {
+      border-color: #16a34a !important;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .15) !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box > i {
+      position: static !important;
+      top: auto !important;
+      left: auto !important;
+      transform: none !important;
+      flex: 0 0 auto;
+      color: var(--status-primary) !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box input {
+      width: auto !important;
+      min-width: 0;
+      flex: 1 1 auto;
+      height: 100%;
+      padding: 0 !important;
+      border: 0 !important;
+      outline: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      color: var(--status-text) !important;
+      font-size: .84rem;
+    }
+
+    #mainContainer #maintenance-monitoring #maintenanceSearchInput {
+      padding: 0 !important;
+    }
+
+    /* The shared sidebar stylesheet gives search inputs their own border with
+       higher specificity. Keep this field borderless so the wrapper is the
+       only visible search-bar outline. */
+    #mainContainer #maintenance-monitoring .maintenance-search-box > input#maintenanceSearchInput {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      border: 0 !important;
+      border-color: transparent !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      outline: 0 !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-search-box input::placeholder {
+      color: var(--status-muted) !important;
+      opacity: 1;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-dropdown {
+      position: relative;
+      z-index: 30;
+      width: 220px;
+      min-width: 220px;
+      flex: 0 0 220px;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger {
+      display: flex;
+      width: 100%;
+      height: 42px;
+      min-height: 42px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid var(--status-border) !important;
+      border-radius: 12px !important;
+      background: var(--status-surface) !important;
+      color: var(--status-text) !important;
+      font-size: .82rem;
+      font-weight: 600;
+      text-align: left;
+      transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger:hover,
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger:focus-visible,
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger.has-active-filter {
+      border-color: #16a34a !important;
+      background: #f3fbf6 !important;
+      outline: none;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger:focus-visible {
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, .15) !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger > i:first-child {
+      color: var(--status-primary);
+      flex: 0 0 auto;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-prefix,
+    #mainContainer #maintenance-monitoring .maintenance-status-selection {
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-selection {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-trigger-count,
+    #mainContainer #maintenance-monitoring .maintenance-status-option-count {
+      display: inline-flex;
+      min-width: 22px;
+      height: 22px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--status-count-surface);
+      color: var(--status-count-text);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-chevron {
+      margin-left: auto;
+      color: var(--status-muted);
+      font-size: .7rem;
+      transition: transform .15s ease;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-dropdown.is-open .maintenance-status-chevron {
+      transform: rotate(180deg);
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      display: none;
+      width: 100%;
+      min-width: 220px;
+      padding: 6px;
+      border: 1px solid var(--status-border);
+      border-radius: 12px;
+      background: var(--status-menu-surface);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+      z-index: 1000;
+    }
+
+    @keyframes maintenance-status-dropdown-open {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-dropdown.is-open .maintenance-status-menu {
+      display: block;
+      animation: maintenance-status-dropdown-open .15s ease-out;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option {
+      display: grid;
+      width: 100%;
+      min-height: 38px;
+      grid-template-columns: 16px 10px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--status-text);
+      font-size: .82rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option:hover,
+    #mainContainer #maintenance-monitoring .maintenance-status-option:focus-visible {
+      background: var(--status-hover);
+      outline: none;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] {
+      background: var(--status-active);
+      color: var(--status-primary);
+      font-weight: 700;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] .maintenance-status-option-count {
+      background: #15803d;
+      color: #ffffff;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option-check {
+      color: #16a34a;
+      font-size: .72rem;
+      visibility: hidden;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-option[aria-selected="true"] .maintenance-status-option-check {
+      visibility: visible;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #94a3b8;
+    }
+
+    #mainContainer #maintenance-monitoring .status-dot-pending { background: #f59e0b; }
+    #mainContainer #maintenance-monitoring .status-dot-in-progress { background: #0ea5e9; }
+    #mainContainer #maintenance-monitoring .status-dot-resolved { background: #16a34a; }
+    #mainContainer #maintenance-monitoring .status-dot-rejected { background: #dc2626; }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-filter {
+      display: flex;
+      width: 180px;
+      min-width: 180px;
+      flex: 0 0 180px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-filter > span {
+      flex: 0 0 auto;
+      color: var(--status-muted);
+      font-size: .75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select {
+      width: auto;
+      min-width: 0;
+      flex: 1 1 auto;
+      height: 42px;
+      min-height: 42px;
+      padding: 0 10px;
+      border: 1px solid var(--status-border) !important;
+      border-radius: 12px !important;
+      background: var(--status-surface) !important;
+      color: var(--status-text) !important;
+      font-size: .82rem;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-trigger,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-date-filter .filter-select {
+      background: #ffffff !important;
+      border-color: #d8e2dc !important;
+      color: #3f4f46 !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-trigger:hover,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-trigger:focus-visible,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-trigger.has-active-filter {
+      background: #f3fbf6 !important;
+      border-color: #16a34a !important;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-menu {
+      border-color: #d8e2dc;
+      background: #ffffff;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .12);
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option {
+      color: #3f4f46;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option:hover,
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option:focus-visible {
+      background: #f6fbf8;
+    }
+
+    html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring .maintenance-status-option[aria-selected="true"] {
+      background: #ecfdf3;
+      color: #166534;
+    }
+
+    /* Stack the three toolbar controls on narrow screens. */
+    @media (max-width: 767px) {
+      #mainContainer #maintenance-monitoring .filter-toolbar.system-filter-row {
+        align-items: stretch !important;
+        flex-direction: column;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-search-controls,
+      #mainContainer #maintenance-monitoring .maintenance-status-dropdown,
+      #mainContainer #maintenance-monitoring .maintenance-date-filter {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-date-filter .filter-select {
+        flex: 1 1 auto;
+      }
+    }
+
+    /* Maintenance table: remove the nested scrolling viewport. The page
+       remains the only vertical scrolling surface. */
+    #mainContainer #maintenance-monitoring {
+      scroll-margin-top: 5rem;
+    }
+
+    #mainContainer #maintenance-monitoring > .overflow-x-auto,
+    #mainContainer #maintenance-monitoring .overflow-x-auto {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      scrollbar-gutter: auto !important;
+    }
+
+    /* Desktop table contract: fixed percentage columns always fit the card. */
+    #mainContainer #maintenance-monitoring table {
+      display: table !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      table-layout: fixed !important;
+      border-collapse: collapse !important;
+      border-spacing: 0 !important;
+    }
+
+    #mainContainer #maintenance-monitoring table th,
+    #mainContainer #maintenance-monitoring table td {
+      box-sizing: border-box;
+      min-width: 0 !important;
+      max-width: none !important;
+      padding: 12px 10px !important;
+      vertical-align: middle !important;
+      white-space: normal !important;
+    }
+
+    #mainContainer #maintenance-monitoring table th:nth-child(1),
+    #mainContainer #maintenance-monitoring table td:nth-child(1) { width: 20% !important; }
+    #mainContainer #maintenance-monitoring table th:nth-child(2),
+    #mainContainer #maintenance-monitoring table td:nth-child(2) { width: 20% !important; }
+    #mainContainer #maintenance-monitoring table th:nth-child(3),
+    #mainContainer #maintenance-monitoring table td:nth-child(3) { width: 24% !important; }
+    #mainContainer #maintenance-monitoring table th:nth-child(4),
+    #mainContainer #maintenance-monitoring table td:nth-child(4) { width: 12% !important; }
+    #mainContainer #maintenance-monitoring table th:nth-child(5),
+    #mainContainer #maintenance-monitoring table td:nth-child(5) { width: 14% !important; }
+    #mainContainer #maintenance-monitoring table th:nth-child(6),
+    #mainContainer #maintenance-monitoring table td:nth-child(6) {
+      width: 10% !important;
+      text-align: center !important;
+    }
+
+    /* Prevent sticky table headers/action columns from creating clipped edges. */
+    #mainContainer #maintenance-monitoring table thead th,
+    #mainContainer #maintenance-monitoring table th:last-child,
+    #mainContainer #maintenance-monitoring table td:last-child {
+      position: static !important;
+      right: auto !important;
+      z-index: auto !important;
+      box-shadow: none !important;
+    }
+
+    /* Cell content: allow each information block to shrink and wrap. */
+    #mainContainer #maintenance-monitoring .maintenance-equipment-cell {
+      display: flex;
+      min-width: 0 !important;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-name,
+    #mainContainer #maintenance-monitoring .maintenance-equipment-location {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      white-space: normal !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-equipment-id {
+      flex: 0 0 auto;
+      white-space: nowrap !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-issue-title,
+    #mainContainer #maintenance-monitoring .maintenance-issue-description {
+      display: block;
+      width: auto;
+      max-width: 100% !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      -webkit-line-clamp: unset !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter {
+      display: flex;
+      min-width: 0 !important;
+      max-width: 100%;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-copy {
+      min-width: 0 !important;
+      max-width: 100%;
+      flex: 1 1 auto;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-name {
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal !important;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reporter-email {
+      min-width: 0;
+      max-width: 100% !important;
+      margin-top: 3px;
+      font-size: 12px !important;
+      white-space: normal !important;
+      overflow: visible !important;
+      overflow-wrap: anywhere !important;
+      word-break: normal !important;
+      text-overflow: clip !important;
+    }
+
+    #mainContainer #maintenance-monitoring .status-badge {
+      max-width: 100%;
+      padding: 4px 10px !important;
+      font-size: 11px !important;
+      line-height: 1.2;
+      white-space: nowrap !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reported-date,
+    #mainContainer #maintenance-monitoring .maintenance-reported-date time {
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-reported-date time {
+      display: flex !important;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 13px !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-date-label,
+    #mainContainer #maintenance-monitoring .maintenance-time-label {
+      white-space: normal !important;
+    }
+
+    #mainContainer #maintenance-monitoring table td:last-child {
+      text-align: center !important;
+    }
+
+    #mainContainer #maintenance-monitoring .maintenance-details-button {
+      width: 36px !important;
+      min-width: 36px !important;
+      height: 36px !important;
+      min-height: 36px !important;
+      margin: 0 auto;
+      padding: 0 !important;
+    }
+
+    /* Small-screen fallback: stack each report row as a readable card. */
+    @media (max-width: 899px) {
+      #mainContainer #maintenance-monitoring table {
+        display: block !important;
+      }
+
+      #mainContainer #maintenance-monitoring table thead {
+        display: none !important;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody {
+        display: block !important;
+        width: 100%;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody tr {
+        display: block !important;
+        width: 100%;
+        margin: 0 0 12px;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody tr:last-child {
+        margin-bottom: 0;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody td {
+        display: grid !important;
+        width: 100% !important;
+        grid-template-columns: minmax(7.5rem, 32%) minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+        padding: 10px !important;
+        text-align: left !important;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody td::before {
+        display: block;
+        color: var(--maintenance-muted, #64748b);
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .06em;
+        line-height: 1.25;
+        text-transform: uppercase;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody td[colspan] {
+        display: block !important;
+        text-align: center !important;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody td[colspan]::before {
+        display: none;
+        content: none;
+      }
+
+      #mainContainer #maintenance-monitoring table tbody td:last-child {
+        text-align: left !important;
+      }
+
+      #mainContainer #maintenance-monitoring .maintenance-details-button {
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item-wide {
+        grid-column: auto;
+      }
+    }
   </style>
+  <link rel="stylesheet" href="/css/maintenance-monitoring.css?v=4">
 </head>
 <body class="app-shell system-layout-page admin-dashboard-page">
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -3666,22 +5989,8 @@
                 </div>
             </div>
             <div id="dashboard-view" class="page-view active">
-                <div class="dashboard-section-heading">
-                    <div>
-                        <p class="dashboard-section-kicker">Campus snapshot</p>
-                        <h2>Operations overview</h2>
-                    </div>
-                    <span class="dashboard-refresh-note">
-                        <span class="dashboard-live-dot" aria-hidden="true"></span>
-                        <span class="dashboard-refresh-copy">
-                            <span>Data refreshes automatically</span>
-                            <time id="dashboardLastUpdated" class="dashboard-refresh-time">Last updated: waiting for refresh</time>
-                        </span>
-                    </span>
-                </div>
                 <!-- Dashboard Cards -->
                 <div class="dashboard-cards dashboard-kpi-grid">
-                    <!-- Equipment Statistics Cards -->
                     <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all">
                         <div class="card-header">
                             <div>
@@ -3692,82 +6001,88 @@
                                 <i class="fas fa-box"></i>
                             </div>
                         </div>
-                        <p id="dashboardTotalCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                        <p id="dashboardTotalCount" class="dashboard-kpi-total">0</p>
+                        <dl class="dashboard-kpi-breakdown" aria-label="Equipment status counts">
+                            <div class="kpi-serviceable"><dt>Serviceable</dt><dd id="dashboardServiceableCount">0</dd></div>
+                            <div class="kpi-unserviceable"><dt>Unserviceable</dt><dd id="dashboardUnserviceableCount">0</dd></div>
+                            <div class="kpi-lost"><dt>Lost</dt><dd id="dashboardLostCount">0</dd></div>
+                        </dl>
                     </a>
 
-                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all&amp;status=Serviceable">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/computer-labs">
                         <div class="card-header">
                             <div>
-                                <p class="card-title dashboard-kpi-overline text-emerald-300">Available</p>
-                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Serviceable</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Total</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Computer Labs</h3>
                             </div>
                             <div class="card-icon green dashboard-kpi-icon">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-building"></i>
                             </div>
                         </div>
-                        <p id="dashboardServiceableCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                        <p id="dashboardComputerLabsTotal" class="dashboard-kpi-total">—</p>
+                        <dl class="dashboard-kpi-breakdown" aria-label="Computer lab status counts">
+                            <div class="kpi-active"><dt>Active</dt><dd id="dashboardComputerLabsActive">—</dd></div>
+                            <div class="kpi-archived"><dt>Archived</dt><dd id="dashboardComputerLabsArchived">—</dd></div>
+                        </dl>
                     </a>
 
-                    <a class="card dashboard-summary-link dashboard-kpi-card dashboard-kpi-warning" href="/equipment-inventory?view=all&amp;status=Unserviceable">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/pc-set-management">
                         <div class="card-header">
                             <div>
-                                <p class="card-title dashboard-kpi-overline text-emerald-300">Inactive</p>
-                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Unserviceable</h3>
-                            </div>
-                            <div class="card-icon dashboard-kpi-icon dashboard-kpi-warning-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                        </div>
-                        <p id="dashboardUnserviceableCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
-                    </a>
-
-                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/equipment-inventory?view=all&amp;status=Lost">
-                        <div class="card-header">
-                            <div>
-                                <p class="card-title dashboard-kpi-overline text-emerald-300">Unavailable</p>
-                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Lost</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Total</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">PC Sets</h3>
                             </div>
                             <div class="card-icon purple dashboard-kpi-icon">
-                                <i class="fas fa-times-circle"></i>
+                                <i class="fas fa-desktop"></i>
                             </div>
                         </div>
-                        <p id="dashboardLostCount" class="dashboard-kpi-value text-4xl font-bold text-white">0</p>
+                        <p id="dashboardPCSetsTotal" class="dashboard-kpi-total">—</p>
+                        <dl class="dashboard-kpi-breakdown" aria-label="PC set status counts">
+                            <div class="kpi-active"><dt>Active</dt><dd id="dashboardPCSetsActive">—</dd></div>
+                            <div class="kpi-in-use"><dt>In Use</dt><dd id="dashboardPCSetsInUse">—</dd></div>
+                            <div class="kpi-maintenance"><dt>Maintenance</dt><dd id="dashboardPCSetsMaintenance">—</dd></div>
+                            <div class="kpi-needs-review"><dt>Needs Review</dt><dd id="dashboardPCSetsIncomplete">—</dd></div>
+                            <div class="kpi-retired"><dt>Retired</dt><dd id="dashboardPCSetsRetired">—</dd></div>
+                        </dl>
                     </a>
 
-                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/page/computer-labs#schedules">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/admin-user-management">
                         <div class="card-header">
                             <div>
-                                <p class="card-title dashboard-kpi-overline">Total</p>
-                                <h3 class="dashboard-kpi-label">Laboratory Sessions</h3>
+                                <p class="card-title dashboard-kpi-overline text-emerald-300">Total</p>
+                                <h3 class="dashboard-kpi-label text-slate-100 text-sm font-semibold mb-1">Users</h3>
                             </div>
-                            <div class="card-icon green dashboard-kpi-icon">
-                                <i class="fas fa-flask"></i>
+                            <div class="card-icon blue dashboard-kpi-icon">
+                                <i class="fas fa-users"></i>
                             </div>
                         </div>
-                        <div class="card-value dashboard-kpi-value" id="totalLaboratorySessionsCount">—</div>
+                        <p id="dashboardUsersTotal" class="dashboard-kpi-total">—</p>
+                        <dl class="dashboard-kpi-breakdown" aria-label="User counts by role">
+                            <div class="kpi-students"><dt>Students</dt><dd id="dashboardUsersStudents">—</dd></div>
+                            <div class="kpi-faculty"><dt>Faculty</dt><dd id="dashboardUsersFaculty">—</dd></div>
+                            <div class="kpi-technicians"><dt>Technicians</dt><dd id="dashboardUsersTechnicians">—</dd></div>
+                            <div class="kpi-admins"><dt>Admins</dt><dd id="dashboardUsersAdmins">—</dd></div>
+                        </dl>
                     </a>
                 </div>
 
                 <div class="charts-section">
                     <section class="chart-card" aria-labelledby="borrowChartTitle">
                         <div class="chart-heading"><span class="chart-icon borrow-chart-icon" aria-hidden="true"><i class="fas fa-arrow-right-arrow-left"></i></span><div><p class="chart-kicker">LOAN ACTIVITY</p><h2 class="chart-title" id="borrowChartTitle">Borrow Equipment</h2></div></div>
-                        <div class="chart-summary" id="borrowEquipmentSummary">Borrowed: 0 • Returned: 0 • Taken Over: 0</div>
                         <div class="chart-container">
-                            <canvas id="borrowEquipmentChart" role="img" aria-label="Bar chart showing borrowed, returned, and taken over equipment. Current totals are shown above."></canvas>
+                            <canvas id="borrowEquipmentChart" role="img" aria-label="Bar chart showing the number of items borrowed, returned, and taken over."></canvas>
                         </div>
                     </section>
                     <section class="chart-card" aria-labelledby="equipmentChartTitle">
-                        <div class="chart-heading"><span class="chart-icon equipment-chart-icon" aria-hidden="true"><i class="fas fa-boxes-stacked"></i></span><div><p class="chart-kicker">INVENTORY HEALTH</p><h2 class="chart-title" id="equipmentChartTitle">Equipment Status</h2></div></div>
-                        <div class="chart-summary doughnut-summary" id="equipmentStatusSummary" aria-hidden="true">Serviceable: 0 • Unserviceable: 0 • Lost: 0</div>
+                        <div class="chart-heading"><span class="chart-icon equipment-chart-icon" aria-hidden="true"><i class="fas fa-boxes-stacked"></i></span><div><p class="chart-kicker">INVENTORY MIX</p><h2 class="chart-title" id="equipmentChartTitle">Equipment by Category</h2></div></div>
                         <div class="chart-container">
-                            <canvas id="equipmentStatusChart" role="img" aria-label="Doughnut chart showing serviceable, unserviceable, and lost equipment. Current totals are shown above."></canvas>
+                            <canvas id="equipmentCategoryChart" role="img" aria-label="Doughnut chart showing equipment counts by category."></canvas>
                         </div>
                     </section>
                     <section class="chart-card" aria-labelledby="maintenanceChartTitle">
                         <div class="chart-heading"><span class="chart-icon maintenance-chart-icon" aria-hidden="true"><i class="fas fa-screwdriver-wrench"></i></span><div><p class="chart-kicker">SERVICE QUEUE</p><h2 class="chart-title" id="maintenanceChartTitle">Maintenance Reports</h2></div></div>
-                        <div class="chart-summary doughnut-summary" id="maintenanceStatusSummary" aria-hidden="true">Pending: 0 • In Progress: 0 • Resolved: 0</div>
                         <div class="chart-container">
-                            <canvas id="maintenanceStatusChart" role="img" aria-label="Doughnut chart showing pending, in progress, and resolved maintenance reports. Current totals are shown above."></canvas>
+                            <canvas id="maintenanceStatusChart" role="img" aria-label="Doughnut chart showing pending, in progress, and resolved maintenance reports."></canvas>
                         </div>
                     </section>
                 </div>
@@ -3780,6 +6095,14 @@
                         <div>
                             <p class="maintenance-list-kicker">SERVICE DESK</p>
                         </div>
+                        <div class="maintenance-report-tabs" role="tablist" aria-label="Maintenance reports by reporter">
+                            <button type="button" id="maintenanceStudentReportsTab" class="maintenance-report-tab active" role="tab" aria-selected="true" tabindex="0" data-reporter-role="student">
+                                <span>Student Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="student">0</span>
+                            </button>
+                            <button type="button" id="maintenanceFacultyReportsTab" class="maintenance-report-tab" role="tab" aria-selected="false" tabindex="-1" data-reporter-role="faculty">
+                                <span>Faculty Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="faculty">0</span>
+                            </button>
+                        </div>
                         <div class="maintenance-list-actions">
                             <span id="maintenanceLastUpdated" class="maintenance-updated-label" aria-live="polite">Last updated: waiting for refresh</span>
                             <button type="button" id="refreshMaintenanceData" class="maintenance-refresh-button" aria-label="Refresh reports" title="Refresh reports">
@@ -3787,29 +6110,56 @@
                             </button>
                         </div>
                     </div>
-                    <div class="maintenance-report-tabs" role="tablist" aria-label="Maintenance reports by reporter">
-                        <button type="button" id="maintenanceStudentReportsTab" class="maintenance-report-tab active" role="tab" aria-selected="true" data-reporter-role="student">
-                            <span>Student Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="student">0</span>
-                        </button>
-                        <button type="button" id="maintenanceFacultyReportsTab" class="maintenance-report-tab" role="tab" aria-selected="false" data-reporter-role="faculty">
-                            <span>Faculty Reports</span><span class="maintenance-tab-count" data-maintenance-role-count="faculty">0</span>
-                        </button>
-                    </div>
                     <div class="table-header" style="align-items: flex-start; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
                         <div class="filter-toolbar system-filter-row">
                             <div class="maintenance-search-controls">
                                 <div class="search-box maintenance-search-box">
                                     <i class="fas fa-search" aria-hidden="true"></i>
-                                    <input id="maintenanceSearchInput" type="search" placeholder="Search equipment, reporter, issue" aria-label="Search equipment, reporter, or issue" autocomplete="off" style="width: 100%;">
+                                    <input id="maintenanceSearchInput" type="search" placeholder="Search equipment, reporter, issue" aria-label="Search equipment, reporter, or issue" autocomplete="off">
                                     <button type="button" id="maintenanceSearchClear" class="maintenance-search-clear" aria-label="Clear search" title="Clear search" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
                                 </div>
                             </div>
-                            <div class="filter-group" role="group" aria-label="Filter reports by status">
-                                <button type="button" class="status-filter active" data-filter="All" aria-pressed="true"><span>All</span><span class="maintenance-filter-count" data-maintenance-count="All">0</span></button>
-                                <button type="button" class="status-filter" data-filter="Pending" aria-pressed="false"><span>Pending</span><span class="maintenance-filter-count" data-maintenance-count="Pending">0</span></button>
-                                <button type="button" class="status-filter" data-filter="In Progress" aria-pressed="false"><span>In Progress</span><span class="maintenance-filter-count" data-maintenance-count="In Progress">0</span></button>
-                                <button type="button" class="status-filter" data-filter="Resolved" aria-pressed="false"><span>Resolved</span><span class="maintenance-filter-count" data-maintenance-count="Resolved">0</span></button>
-                                <button type="button" class="status-filter" data-filter="Rejected" aria-pressed="false"><span>Rejected</span><span class="maintenance-filter-count" data-maintenance-count="Rejected">0</span></button>
+                            <!-- Status filters: one accessible custom dropdown replaces the pill row. -->
+                            <div class="maintenance-status-dropdown" id="maintenanceStatusDropdown">
+                                <button type="button" class="maintenance-status-trigger" id="maintenanceStatusTrigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <i class="fas fa-filter" aria-hidden="true"></i>
+                                    <span class="maintenance-status-prefix">Status:</span>
+                                    <span class="maintenance-status-selection" id="maintenanceStatusSelection">All</span>
+                                    <span class="maintenance-status-trigger-count" id="maintenanceStatusTriggerCount">0</span>
+                                    <i class="fas fa-chevron-down maintenance-status-chevron" aria-hidden="true"></i>
+                                </button>
+                                <div class="maintenance-status-menu" id="maintenanceStatusMenu" role="listbox" aria-label="Filter reports by status" tabindex="-1">
+                                    <button type="button" class="maintenance-status-option" role="option" data-filter="All" aria-selected="true" tabindex="0">
+                                        <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
+                                        <span class="maintenance-status-dot status-dot-all" aria-hidden="true"></span>
+                                        <span class="maintenance-status-option-label">All</span>
+                                        <span class="maintenance-status-option-count" data-maintenance-count="All">0</span>
+                                    </button>
+                                    <button type="button" class="maintenance-status-option" role="option" data-filter="Pending" aria-selected="false" tabindex="-1">
+                                        <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
+                                        <span class="maintenance-status-dot status-dot-pending" aria-hidden="true"></span>
+                                        <span class="maintenance-status-option-label">Pending</span>
+                                        <span class="maintenance-status-option-count" data-maintenance-count="Pending">0</span>
+                                    </button>
+                                    <button type="button" class="maintenance-status-option" role="option" data-filter="In Progress" aria-selected="false" tabindex="-1">
+                                        <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
+                                        <span class="maintenance-status-dot status-dot-in-progress" aria-hidden="true"></span>
+                                        <span class="maintenance-status-option-label">In Progress</span>
+                                        <span class="maintenance-status-option-count" data-maintenance-count="In Progress">0</span>
+                                    </button>
+                                    <button type="button" class="maintenance-status-option" role="option" data-filter="Resolved" aria-selected="false" tabindex="-1">
+                                        <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
+                                        <span class="maintenance-status-dot status-dot-resolved" aria-hidden="true"></span>
+                                        <span class="maintenance-status-option-label">Resolved</span>
+                                        <span class="maintenance-status-option-count" data-maintenance-count="Resolved">0</span>
+                                    </button>
+                                    <button type="button" class="maintenance-status-option" role="option" data-filter="Rejected" aria-selected="false" tabindex="-1">
+                                        <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
+                                        <span class="maintenance-status-dot status-dot-rejected" aria-hidden="true"></span>
+                                        <span class="maintenance-status-option-label">Rejected</span>
+                                        <span class="maintenance-status-option-count" data-maintenance-count="Rejected">0</span>
+                                    </button>
+                                </div>
                             </div>
                             <label class="maintenance-date-filter">
                                 <span>Date range</span>
@@ -3841,7 +6191,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+                <div class="maintenance-table-footer">
                     <div id="maintenancePaginationInfo" class="text-sm text-slate-400">Showing 0 of 0</div>
                     <div id="maintenancePagination" class="flex flex-wrap items-center gap-2"></div>
                 </div>
@@ -3963,7 +6313,6 @@
         const maintenanceSummaryEndpoint = '/api/maintenance-summary';
 
         const dashboardState = {
-            laboratoryScheduleCount: null,
             summary: {
                 totalSessions: 0,
                 attendanceSessionsConducted: 0,
@@ -3981,7 +6330,28 @@
                 equipmentTotal: 0,
                 serviceableCount: 0,
                 unserviceableCount: 0,
-                lostCount: 0
+                lostCount: 0,
+                categoryCounts: null
+            },
+            computerLabs: {
+                total: null,
+                active: null,
+                archived: null
+            },
+            pcSets: {
+                total: null,
+                active: null,
+                inUse: null,
+                maintenance: null,
+                incomplete: null,
+                retired: null
+            },
+            users: {
+                total: null,
+                students: null,
+                faculty: null,
+                technicians: null,
+                admins: null
             },
             borrow: {
                 totalBorrowed: 0,
@@ -3994,7 +6364,8 @@
                 totalRequests: 0,
                 pendingRequests: 0,
                 inProgressRequests: 0,
-                resolvedRequests: 0
+                resolvedRequests: 0,
+                overdueRequests: null
             },
             recent: {
                 attendance: null,
@@ -4007,7 +6378,7 @@
         };
 
         let borrowEquipmentChart = null;
-        let equipmentStatusChart = null;
+        let equipmentCategoryChart = null;
         let maintenanceStatusChart = null;
         let equipmentAvailabilityRows = [];
 
@@ -4340,23 +6711,9 @@
             }
         }
 
-        function updateDashboardLastUpdated() {
-            const timestamp = document.getElementById('dashboardLastUpdated');
-            if (!timestamp) return;
-
-            const updatedAt = new Date();
-            timestamp.dateTime = updatedAt.toISOString();
-            timestamp.textContent = `Last updated: ${new Intl.DateTimeFormat(undefined, {
-                hour: 'numeric',
-                minute: '2-digit'
-            }).format(updatedAt)}`;
-        }
-
         function renderSummary(summary) {
-            setSummaryValue('totalLaboratorySessionsCount', dashboardState.laboratoryScheduleCount ?? '—');
             setSummaryValue('attendanceSessionsConductedCount', summary.attendanceSessionsConducted ?? 0);
 
-            // Update equipment stats cards on dashboard
             const equipmentTotal = (dashboardState.equipment.serviceableCount || 0) +
                                    (dashboardState.equipment.unserviceableCount || 0) +
                                    (dashboardState.equipment.lostCount || 0);
@@ -4365,25 +6722,30 @@
             setSummaryValue('dashboardUnserviceableCount', dashboardState.equipment.unserviceableCount || 0);
             setSummaryValue('dashboardLostCount', dashboardState.equipment.lostCount || 0);
 
-            const unserviceableCount = Number(dashboardState.equipment.unserviceableCount) || 0;
-            document.querySelector('#dashboard-view .dashboard-kpi-warning')?.classList.toggle('has-alert', unserviceableCount > 0);
+            const setCount = (id, value) => setSummaryValue(id, value ?? '—');
+            setCount('dashboardComputerLabsTotal', dashboardState.computerLabs.total);
+            setCount('dashboardComputerLabsActive', dashboardState.computerLabs.active);
+            setCount('dashboardComputerLabsArchived', dashboardState.computerLabs.archived);
+            setCount('dashboardPCSetsTotal', dashboardState.pcSets.total);
+            setCount('dashboardPCSetsActive', dashboardState.pcSets.active);
+            setCount('dashboardPCSetsInUse', dashboardState.pcSets.inUse);
+            setCount('dashboardPCSetsMaintenance', dashboardState.pcSets.maintenance);
+            setCount('dashboardPCSetsIncomplete', dashboardState.pcSets.incomplete);
+            setCount('dashboardPCSetsRetired', dashboardState.pcSets.retired);
+            setCount('dashboardUsersTotal', dashboardState.users.total);
+            setCount('dashboardUsersStudents', dashboardState.users.students);
+            setCount('dashboardUsersFaculty', dashboardState.users.faculty);
+            setCount('dashboardUsersTechnicians', dashboardState.users.technicians);
+            setCount('dashboardUsersAdmins', dashboardState.users.admins);
         }
 
-        function renderAnalyticsSummary() {
-            const borrowSummary = document.getElementById('borrowEquipmentSummary');
-            const equipmentSummary = document.getElementById('equipmentStatusSummary');
-            const maintenanceSummary = document.getElementById('maintenanceStatusSummary');
-
-            if (borrowSummary) {
-                borrowSummary.textContent = `Borrowed: ${dashboardState.borrow.borrowed} • Returned: ${dashboardState.borrow.returned} • Taken Over: ${dashboardState.borrow.takenOver}`;
-            }
-
-            if (equipmentSummary) {
-                equipmentSummary.textContent = `Serviceable: ${dashboardState.equipment.serviceableCount} • Unserviceable: ${dashboardState.equipment.unserviceableCount} • Lost: ${dashboardState.equipment.lostCount}`;
-            }
-
-            if (maintenanceSummary) {
-                maintenanceSummary.textContent = `Pending: ${dashboardState.maintenance.pendingRequests} • In Progress: ${dashboardState.maintenance.inProgressRequests} • Resolved: ${dashboardState.maintenance.resolvedRequests}`;
+        function syncMaintenanceReportTabsPlacement() {
+            const tabs = document.querySelector('.maintenance-report-tabs');
+            const maintenanceHeading = document.querySelector('#maintenance-monitoring .maintenance-list-heading');
+            const maintenanceActions = document.querySelector('#maintenance-monitoring .maintenance-list-actions');
+            if (tabs && maintenanceHeading && tabs.parentElement !== maintenanceHeading) {
+                tabs.classList.remove('maintenance-header-tabs');
+                maintenanceHeading.insertBefore(tabs, maintenanceActions || null);
             }
         }
 
@@ -4394,6 +6756,8 @@
             const trimmedPath = window.location.pathname.replace(/\/+$/, '');
             const isMaintenanceView = trimmedPath === '/maintenance-monitoring' || window.location.hash === '#maintenance-monitoring';
             const isAvailabilityView = window.location.hash === '#equipment-availability';
+
+            syncMaintenanceReportTabsPlacement();
 
             if (dashboardView) {
                 dashboardView.classList.toggle('active', !isMaintenanceView && !isAvailabilityView);
@@ -4415,12 +6779,12 @@
 
         function renderCharts() {
             const borrowCanvas = document.getElementById('borrowEquipmentChart');
-            const equipmentCanvas = document.getElementById('equipmentStatusChart');
+            const categoryCanvas = document.getElementById('equipmentCategoryChart');
             const maintenanceCanvas = document.getElementById('maintenanceStatusChart');
-            if (!borrowCanvas || !equipmentCanvas || !maintenanceCanvas) return;
+            if (!borrowCanvas || !categoryCanvas || !maintenanceCanvas) return;
 
             const borrowContext = borrowCanvas.getContext('2d');
-            const equipmentContext = equipmentCanvas.getContext('2d');
+            const categoryContext = categoryCanvas.getContext('2d');
             const maintenanceContext = maintenanceCanvas.getContext('2d');
             const isLightTheme = document.documentElement.classList.contains('theme-light') ||
                 document.getElementById('mainContainer')?.classList.contains('theme-light');
@@ -4429,10 +6793,16 @@
             const legendTextColor = isLightTheme ? '#33483a' : '#d3e3d9';
             const gridColor = isLightTheme ? 'rgba(31, 41, 55, .12)' : 'rgba(255, 255, 255, 0.08)';
             const doughnutBorderColor = isLightTheme ? '#f8fbf8' : 'rgba(7, 21, 15, 0.9)';
-            const legendLabelsWithValues = (chart) => Chart.defaults.plugins.legend.labels.generateLabels(chart).map((item) => {
-                const value = chart.data.datasets[item.datasetIndex]?.data?.[item.index] ?? 0;
-                return { ...item, text: `${item.text} (${value})` };
-            });
+            const legendLabelsWithValues = (chart) => {
+                const generateLabels = Chart.overrides?.[chart.config.type]?.plugins?.legend?.labels?.generateLabels ||
+                    Chart.defaults.plugins.legend.labels.generateLabels;
+                return generateLabels(chart).map((item) => {
+                    const datasetIndex = Number.isInteger(item.datasetIndex) ? item.datasetIndex : 0;
+                    const dataIndex = Number.isInteger(item.index) ? item.index : 0;
+                    const value = chart.data.datasets[datasetIndex]?.data?.[dataIndex] ?? 0;
+                    return { ...item, text: `${item.text} (${value})` };
+                });
+            };
             const doughnutCenterTotalPlugin = {
                 id: 'doughnutCenterTotal',
                 afterDraw(chart) {
@@ -4482,22 +6852,36 @@
                 Number(dashboardState.borrow.returned) || 0,
                 Number(dashboardState.borrow.takenOver) || 0
             ];
-            const equipmentValues = [
-                Number(dashboardState.equipment.serviceableCount) || 0,
-                Number(dashboardState.equipment.unserviceableCount) || 0,
-                Number(dashboardState.equipment.lostCount) || 0
+            const borrowPalette = [
+                { border: '#F59E0B', background: 'rgba(245, 158, 11, .38)', start: 'rgba(245, 158, 11, .14)', end: 'rgba(245, 158, 11, .58)', hover: 'rgba(245, 158, 11, .66)' },
+                { border: '#22C55E', background: 'rgba(34, 197, 94, .34)', start: 'rgba(34, 197, 94, .12)', end: 'rgba(34, 197, 94, .54)', hover: 'rgba(34, 197, 94, .64)' },
+                { border: '#38BDF8', background: 'rgba(56, 189, 248, .34)', start: 'rgba(56, 189, 248, .12)', end: 'rgba(56, 189, 248, .54)', hover: 'rgba(56, 189, 248, .64)' }
             ];
+            const categoryEntries = Object.entries(dashboardState.equipment.categoryCounts || {})
+                .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]));
+            const hasCategoryData = categoryEntries.length > 0;
+            const categoryLabels = hasCategoryData
+                ? categoryEntries.map(([category]) => category)
+                : ['No category data'];
+            const categoryValues = hasCategoryData
+                ? categoryEntries.map(([, count]) => count)
+                : [0];
+            const categoryPalette = ['#22C55E', '#38BDF8', '#F59E0B', '#A78BFA', '#F472B6', '#2DD4BF', '#FB923C', '#94A3B8'];
             const maintenanceValues = [
                 Number(dashboardState.maintenance.pendingRequests) || 0,
                 Number(dashboardState.maintenance.inProgressRequests) || 0,
                 Number(dashboardState.maintenance.resolvedRequests) || 0
             ];
+            const overdueCount = dashboardState.maintenance.overdueRequests;
             borrowCanvas.setAttribute('aria-label', `Loan activity. Borrowed: ${borrowValues[0]}; Returned: ${borrowValues[1]}; Taken over: ${borrowValues[2]}.`);
-            equipmentCanvas.setAttribute('aria-label', `Inventory health. Total: ${equipmentValues.reduce((sum, value) => sum + value, 0)}. Serviceable: ${equipmentValues[0]}; Unserviceable: ${equipmentValues[1]}; Lost: ${equipmentValues[2]}.`);
-            maintenanceCanvas.setAttribute('aria-label', `Service queue. Total: ${maintenanceValues.reduce((sum, value) => sum + value, 0)}. Pending: ${maintenanceValues[0]}; In progress: ${maintenanceValues[1]}; Resolved: ${maintenanceValues[2]}.`);
+            const categoryDescription = hasCategoryData
+                ? categoryEntries.map(([category, count]) => `${category}: ${count}`).join('; ')
+                : 'No equipment category data available';
+            categoryCanvas.setAttribute('aria-label', `Equipment by category. Total: ${hasCategoryData ? categoryValues.reduce((sum, value) => sum + value, 0) : 0}. ${categoryDescription}.`);
+            maintenanceCanvas.setAttribute('aria-label', `Service queue. Total: ${maintenanceValues.reduce((sum, value) => sum + value, 0)}. Pending: ${maintenanceValues[0]}; In progress: ${maintenanceValues[1]}; Resolved: ${maintenanceValues[2]}; Overdue for at least 3 days: ${Number.isInteger(overdueCount) ? overdueCount : 'unavailable'}.`);
 
             try { if (borrowEquipmentChart) borrowEquipmentChart.destroy(); } catch (e) {}
-            try { if (equipmentStatusChart) equipmentStatusChart.destroy(); } catch (e) {}
+            try { if (equipmentCategoryChart) equipmentCategoryChart.destroy(); } catch (e) {}
             try { if (maintenanceStatusChart) maintenanceStatusChart.destroy(); } catch (e) {}
 
             borrowEquipmentChart = new Chart(borrowContext, {
@@ -4507,10 +6891,21 @@
                     datasets: [{
                         label: 'Borrow Equipment',
                         data: borrowValues,
-                        backgroundColor: ['rgba(34, 197, 94, 0.3)', 'rgba(74, 222, 128, 0.22)', 'rgba(22, 163, 74, 0.24)'],
-                        borderColor: ['#22C55E', '#4ADE80', '#16A34A'],
+                        backgroundColor: (context) => {
+                            const colors = borrowPalette[context.dataIndex] || borrowPalette[0];
+                            const { ctx, chartArea } = context.chart;
+                            if (!chartArea) return colors.background;
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, colors.start);
+                            gradient.addColorStop(1, colors.end);
+                            return gradient;
+                        },
+                        hoverBackgroundColor: borrowPalette.map(({ hover }) => hover),
+                        borderColor: borrowPalette.map(({ border }) => border),
                         borderWidth: 2,
                         borderRadius: 12,
+                        borderSkipped: false,
+                        hoverBorderWidth: 3,
                         maxBarThickness: 34,
                         categoryPercentage: 0.72,
                         barPercentage: 0.9
@@ -4550,13 +6945,13 @@
                 plugins: [barValueLabelsPlugin]
             });
 
-            equipmentStatusChart = new Chart(equipmentContext, {
+            equipmentCategoryChart = new Chart(categoryContext, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Serviceable', 'Unserviceable', 'Lost'],
+                    labels: categoryLabels,
                     datasets: [{
-                        data: equipmentValues,
-                        backgroundColor: ['#22C55E', '#D97706', '#86A893'],
+                        data: categoryValues,
+                        backgroundColor: categoryLabels.map((_, index) => categoryPalette[index % categoryPalette.length]),
                         borderColor: doughnutBorderColor,
                         borderWidth: 2,
                         hoverOffset: 10
@@ -4604,7 +6999,11 @@
                     labels: ['Pending', 'In Progress', 'Resolved'],
                     datasets: [{
                         data: maintenanceValues,
-                        backgroundColor: [isLightTheme ? '#D97706' : '#F59E0B', '#22C55E', '#4D765A'],
+                        backgroundColor: [
+                            isLightTheme ? '#D97706' : '#F59E0B',
+                            isLightTheme ? '#0284C7' : '#38BDF8',
+                            isLightTheme ? '#15803D' : '#22C55E'
+                        ],
                         borderColor: doughnutBorderColor,
                         borderWidth: 2,
                         hoverOffset: 10
@@ -4671,9 +7070,24 @@
                     fetch('/api/maintenance', { cache: 'no-store' }),
                     fetch('/api/equipment', { cache: 'no-store' }),
                     fetch('/api/borrow-records', { cache: 'no-store' }),
-                    fetch('/api/laboratory-schedules', { cache: 'no-store' })
+                    fetch('/api/laboratory-schedules', { cache: 'no-store' }),
+                    fetch('/api/computer-labs', { cache: 'no-store' }),
+                    fetch('/api/archived-records', { cache: 'no-store' }),
+                    fetch('/api/equipment-sets', { cache: 'no-store' }),
+                    fetch('/api/users', { cache: 'no-store' })
                 ]);
-                const [equipmentResult, maintenanceResult, maintenanceListResult, equipmentListResult, borrowResult, schedulesResult] = results;
+                const [
+                    equipmentResult,
+                    maintenanceResult,
+                    maintenanceListResult,
+                    equipmentListResult,
+                    borrowResult,
+                    schedulesResult,
+                    computerLabsResult,
+                    archivedRecordsResult,
+                    pcSetsResult,
+                    usersResult
+                ] = results;
                 const getResponse = (result, endpoint) => {
                     if (result.status === 'rejected') {
                         console.error(`Unable to fetch ${endpoint}.`, result.reason);
@@ -4687,6 +7101,21 @@
                 const equipmentListResponse = getResponse(equipmentListResult, '/api/equipment');
                 const borrowResponse = getResponse(borrowResult, '/api/borrow-records');
                 const schedulesResponse = getResponse(schedulesResult, '/api/laboratory-schedules');
+                const readCollection = async (result, endpoint, selectRecords = (payload) => payload) => {
+                    const response = getResponse(result, endpoint);
+                    if (!response) return null;
+                    if (!response.ok) {
+                        console.error(`Unable to fetch ${endpoint} (${response.status}).`);
+                        return null;
+                    }
+                    const payload = await response.json();
+                    const records = selectRecords(payload);
+                    if (!Array.isArray(records)) {
+                        console.error(`${endpoint} returned an invalid response.`);
+                        return null;
+                    }
+                    return records;
+                };
 
                 if (equipmentResponse?.ok) {
                     const equipmentData = await equipmentResponse.json();
@@ -4708,15 +7137,90 @@
                 let borrowRecords = [];
 
                 if (maintenanceListResponse?.ok) {
-                    maintenanceRequests = await maintenanceListResponse.json();
+                    const maintenancePayload = await maintenanceListResponse.json();
+                    if (Array.isArray(maintenancePayload)) {
+                        maintenanceRequests = maintenancePayload;
+                        const overdueThreshold = Date.now() - (3 * 24 * 60 * 60 * 1000);
+                        dashboardState.maintenance.overdueRequests = maintenanceRequests.filter((record) => {
+                            const status = String(record.status || '').trim().toLowerCase().replace(/[\s_-]+/g, ' ');
+                            if (status !== 'pending' && status !== 'in progress') return false;
+                            const reportedAt = Date.parse(
+                                record.dateReported || record.created_at || record.createdAt || record.date || ''
+                            );
+                            return Number.isFinite(reportedAt) && reportedAt <= overdueThreshold;
+                        }).length;
+                    } else {
+                        console.error('/api/maintenance returned an invalid response for overdue report totals.');
+                    }
+                } else if (maintenanceListResponse) {
+                    console.error(`Unable to fetch /api/maintenance (${maintenanceListResponse.status}).`);
                 }
 
                 if (equipmentListResponse?.ok) {
                     equipmentRecords = await equipmentListResponse.json();
+                    if (Array.isArray(equipmentRecords)) {
+                        dashboardState.equipment.categoryCounts = equipmentRecords.reduce((counts, record) => {
+                            const category = String(record.category || '').trim() || 'Uncategorized';
+                            counts[category] = (counts[category] || 0) + 1;
+                            return counts;
+                        }, {});
+                    } else {
+                        console.error('/api/equipment returned an invalid response for category totals.');
+                        equipmentRecords = [];
+                    }
                 }
 
                 if (borrowResponse?.ok) {
                     borrowRecords = await borrowResponse.json();
+                }
+
+                const [computerLabs, archivedRecords, pcSets, users] = await Promise.all([
+                    readCollection(computerLabsResult, '/api/computer-labs'),
+                    readCollection(archivedRecordsResult, '/api/archived-records', (payload) => payload?.records),
+                    readCollection(pcSetsResult, '/api/equipment-sets', (payload) => payload?.sets),
+                    readCollection(usersResult, '/api/users')
+                ]);
+
+                if (computerLabs && archivedRecords) {
+                    const userCampus = String(window.__CURRENT_USER__?.campus || '')
+                        .trim()
+                        .replace(/\s*Campus\s*$/i, '')
+                        .toLocaleLowerCase();
+                    const archivedLabs = archivedRecords.filter((record) => {
+                        if (record.entityType !== 'computer-lab') return false;
+                        if (!userCampus) return true;
+                        return String(record.details || '')
+                            .split(/[·,]/)
+                            .some((part) => part.trim().replace(/\s*Campus\s*$/i, '').toLocaleLowerCase() === userCampus);
+                    }).length;
+                    dashboardState.computerLabs.active = computerLabs.length;
+                    dashboardState.computerLabs.archived = archivedLabs;
+                    dashboardState.computerLabs.total = computerLabs.length + archivedLabs;
+                }
+
+                if (pcSets) {
+                    const statusCounts = pcSets.reduce((counts, set) => {
+                        const status = String(set.status || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+                        if (status === 'active') counts.active += 1;
+                        else if (status === 'in_use') counts.inUse += 1;
+                        else if (status === 'maintenance') counts.maintenance += 1;
+                        else if (status === 'incomplete') counts.incomplete += 1;
+                        else if (status === 'retired') counts.retired += 1;
+                        return counts;
+                    }, { active: 0, inUse: 0, maintenance: 0, incomplete: 0, retired: 0 });
+                    dashboardState.pcSets = { total: pcSets.length, ...statusCounts };
+                }
+
+                if (users) {
+                    const roleCounts = users.reduce((counts, user) => {
+                        const role = String(user.role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+                        if (role === 'student') counts.students += 1;
+                        else if (role === 'faculty' || role === 'instructor') counts.faculty += 1;
+                        else if (role === 'technician') counts.technicians += 1;
+                        else if (role.includes('admin')) counts.admins += 1;
+                        return counts;
+                    }, { students: 0, faculty: 0, technicians: 0, admins: 0 });
+                    dashboardState.users = { total: users.length, ...roleCounts };
                 }
 
                 let schedules = [];
@@ -4726,17 +7230,21 @@
                         throw new Error('Laboratory schedules returned an invalid response.');
                     }
                     schedules = schedulesPayload;
-                    dashboardState.laboratoryScheduleCount = schedules.length;
                 } else if (schedulesResponse) {
                     throw new Error(`Unable to fetch laboratory schedules (${schedulesResponse.status}).`);
                 }
 
-                const activeBorrowRecords = Array.isArray(borrowRecords) ? borrowRecords : [];
-                dashboardState.borrow.totalBorrowed = activeBorrowRecords.length;
-                dashboardState.borrow.borrowed = activeBorrowRecords.filter((record) => String(record.status || '').toLowerCase() === 'borrowed').length;
-                dashboardState.borrow.returned = activeBorrowRecords.filter((record) => String(record.status || '').toLowerCase() === 'returned').length;
-                dashboardState.borrow.takenOver = activeBorrowRecords.filter((record) =>
-                    String(record.status || '').toLowerCase() === 'borrowed' && record.wasTakenOver
+                const borrowActivityRecords = Array.isArray(borrowRecords) ? borrowRecords : [];
+                const issuedStatuses = new Set(['borrowed', 'returned', 'lost', 'pending replacement']);
+                dashboardState.borrow.totalBorrowed = borrowActivityRecords.length;
+                dashboardState.borrow.borrowed = borrowActivityRecords.filter((record) =>
+                    issuedStatuses.has(String(record.status || '').trim().toLowerCase())
+                ).length;
+                dashboardState.borrow.returned = borrowActivityRecords.filter((record) =>
+                    String(record.status || '').trim().toLowerCase() === 'returned'
+                ).length;
+                dashboardState.borrow.takenOver = borrowActivityRecords.filter((record) =>
+                    Boolean(record.takenOverBy)
                 ).length;
                 dashboardState.borrow.pendingReplacement = 0;
 
@@ -4745,11 +7253,9 @@
                 dashboardState.recent.equipmentNeedsAttention = findEquipmentNeedsAttention(equipmentRecords);
                 dashboardState.recent.schedule = findLatestSchedule(Array.isArray(schedules) ? schedules : []);
 
-                renderAnalyticsSummary();
                 renderCharts();
             } catch (error) {
                 console.error('Unable to load analytics summary data.', error);
-                renderAnalyticsSummary();
                 renderCharts();
             }
         }
@@ -4760,11 +7266,15 @@
             if (window.syncBorrowSidebarBadge) {
                 window.syncBorrowSidebarBadge();
             }
-            updateDashboardLastUpdated();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             updateMaintenanceMonitoringVisibility();
+            [0, 100, 300].forEach((delay) => {
+                window.setTimeout(() => {
+                    syncMaintenanceReportTabsPlacement();
+                }, delay);
+            });
             const mainContainer = document.getElementById('mainContainer');
             let chartThemeIsLight = document.documentElement.classList.contains('theme-light') || mainContainer?.classList.contains('theme-light');
             const chartThemeObserver = new MutationObserver(() => {
@@ -4850,7 +7360,7 @@
             }
         });
     </script>
-    <script src="/js/sidebar-component.js?v=77" defer></script>
-    <script src="/js/admin-maintenance.js?v=8" defer></script>
+    <script src="/js/sidebar-component.js?v=106" defer></script>
+    <script src="/js/admin-maintenance.js?v=18" defer></script>
 </body>
 </html>

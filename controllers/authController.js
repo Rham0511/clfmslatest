@@ -875,11 +875,6 @@ export const uploadStudentPhoto = async (req, res) => {
     return res.status(404).json({ success: false, error: "User not found." });
   }
 
-  const role = String(user.role || "").trim().toLowerCase();
-  if (!["student", "faculty", "instructor"].includes(role)) {
-    return res.status(403).json({ success: false, error: "Only student and faculty accounts can upload profile photos." });
-  }
-
   const matches = image.match(/^data:(image\/(jpeg|jpg|png|webp));base64,(.*)$/i);
   if (!matches) {
     return res.status(400).json({ success: false, error: "Invalid image upload format." });

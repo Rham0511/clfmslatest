@@ -6,10 +6,10 @@
   <title>Archived Records</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
   <style>
     body.app-shell.archived-records-page {
       --archive-page: #07130d;
@@ -25,26 +25,37 @@
       color: var(--archive-text);
     }
     html.theme-light body.app-shell.archived-records-page {
-      --archive-page: #eef4f0;
-      --archive-panel: linear-gradient(145deg, #fff, #f7faf8);
-      --archive-surface: #f6faf7;
-      --archive-text: #17271e;
-      --archive-muted: #5e7567;
-      --archive-line: rgba(22, 101, 52, .17);
-      --archive-accent: #168044;
-      --archive-danger: #b91c1c;
+      --archive-page: #f4f7f5;
+      --archive-panel: #ffffff;
+      --archive-surface: #ffffff;
+      --archive-text: #1f2937;
+      --archive-muted: #64748b;
+      --archive-line: #dce5df;
+      --archive-accent: #16a34a;
+      --archive-danger: #ef4444;
+      background: var(--archive-page);
     }
-    body.archived-records-page .main-container { box-sizing: border-box; margin-left: var(--sidebar-width, 250px); padding: 0; }
-    body.archived-records-page .page-content { padding: 0 1rem 1rem !important; }
+    body.archived-records-page .main-container { box-sizing: border-box; width: auto; max-width: none; min-width: 0; margin-left: var(--sidebar-width, 250px); padding: 0; }
+    html body.app-shell.archived-records-page .main-container { background: transparent !important; }
+    html body.app-shell.archived-records-page .main-container::before,
+    html body.app-shell.archived-records-page .main-container::after { display: none !important; }
+    html body.app-shell.archived-records-page .page-content { box-sizing: border-box; width: 100%; max-width: none; margin: 0; padding: .45rem .65rem 1rem !important; background: transparent !important; }
+    html body.app-shell.archived-records-page .page-content::before { display: none !important; content: none !important; }
+    html body.app-shell.archived-records-page .archived-records-content { padding-top: .65rem; }
     body.archived-records-page .system-dashboard-heading { position: sticky; top: 0; z-index: 90; box-sizing: border-box; min-height: 3.55rem; margin: 0 -1rem .85rem; padding: .55rem 1rem; border: 0; border-bottom: 1px solid var(--archive-line); border-radius: 0; background: color-mix(in srgb, var(--archive-surface) 94%, transparent); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); backdrop-filter: blur(14px); }
+    html body.app-shell.archived-records-page .comlab-page-header-spacer {
+      height: 3.45rem !important;
+      min-height: 3.45rem !important;
+      margin: 0 0 .75rem !important;
+    }
+    html body.app-shell.archived-records-page .archived-records-content {
+      padding-top: .75rem;
+    }
     body.archived-records-page .system-dashboard-heading h1 { color: var(--archive-text) !important; font-size: 1rem; letter-spacing: -.01em; }
     body.archived-records-page .system-dashboard-heading p { margin-top: .12rem; color: var(--archive-muted) !important; font-size: .72rem; }
     .archived-records-content { width: 100%; min-width: 0; }
-    .archive-page-actions { display: flex; justify-content: flex-end; margin: 0 0 .65rem; }
-    .archive-back-link { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; border-radius: .58rem; padding: .45rem .75rem; background: #15803d; color: #fff; font-size: .78rem; font-weight: 750; text-decoration: none; }
-    .archive-back-link:hover { background: #16a34a; }
-    body.archived-records-page .archived-records-panel { width: 100%; min-width: 0; overflow: hidden; border: 1px solid var(--archive-line); border-radius: .95rem; background: var(--archive-panel); box-shadow: 0 12px 32px rgba(0, 0, 0, .1); }
-    .archive-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; padding: .8rem .9rem; border-bottom: 1px solid var(--archive-line); background: color-mix(in srgb, var(--archive-surface) 82%, transparent); }
+    html body.app-shell.archived-records-page .archived-records-panel { box-sizing: border-box; width: 100%; min-width: 0; overflow: visible; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+    .archive-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; padding: .7rem 0; border-bottom: 1px solid var(--archive-line); background: transparent; }
     .archive-toolbar-copy { display: grid; min-width: 8rem; gap: .15rem; margin-right: auto; }
     .archive-toolbar-copy strong { color: var(--archive-text); font-size: .88rem; }
     .archive-toolbar-copy span { color: var(--archive-muted); font-size: .72rem; }
@@ -60,17 +71,42 @@
     .archive-action-button.primary { border-color: #15803d; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
     .archive-action-button.danger { border-color: color-mix(in srgb, var(--archive-danger) 45%, transparent); color: var(--archive-danger); }
     .archive-action-button:disabled { opacity: .52; cursor: not-allowed; }
-    .archive-table-wrap { max-width: 100%; overflow: auto; scrollbar-color: rgba(74, 222, 128, .42) transparent; }
-    .archived-records-table { border-collapse: separate; border-spacing: 0; color: var(--archive-text); }
+    .archive-table-wrap { box-sizing: border-box; width: 100%; max-width: 100%; max-height: min(68vh, 42rem); overflow: auto; border: 1px solid var(--archive-line); border-radius: .78rem; background: var(--archive-surface); scrollbar-color: rgba(74, 222, 128, .55) transparent; scrollbar-width: thin; overscroll-behavior: contain; }
+    .archived-records-table { width: 100%; min-width: 900px; table-layout: fixed; border-collapse: collapse !important; border-spacing: 0 !important; color: var(--archive-text); }
     .archived-records-table th,
-    .archived-records-table td { padding: .72rem .78rem; border-bottom: 1px solid var(--archive-line); text-align: left; vertical-align: middle; }
-    .archived-records-table th { position: sticky; top: 0; z-index: 1; background: #123a28; color: #e7f8ed; font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-    .archived-records-table tbody tr { background: var(--archive-surface); transition: background .14s; }
+    .archived-records-table td { padding: .65rem .72rem !important; border-bottom: 1px solid var(--archive-line) !important; text-align: left; vertical-align: middle; }
+    .archived-records-table th { position: sticky; top: 0; z-index: 1; background: linear-gradient(180deg, #11643d, #0d5133) !important; color: #e7f8ed !important; font-size: .67rem !important; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .archived-records-table tbody tr,
+    .archived-records-table tbody tr:nth-child(even),
+    .archived-records-table tbody tr:nth-child(odd) { background: color-mix(in srgb, var(--archive-surface) 92%, var(--archive-page)) !important; box-shadow: none !important; transition: background .14s; }
+    html body.app-shell.archived-records-page .page-content .archived-records-table tbody tr:nth-child(even) {
+      background: color-mix(in srgb, var(--archive-surface) 92%, var(--archive-accent)) !important;
+    }
     .archived-records-table tbody tr.is-search-hidden { display: none; }
-    .archived-records-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--archive-surface) 75%, var(--archive-panel)); }
-    .archived-records-table tbody tr:hover { background: color-mix(in srgb, var(--archive-surface) 82%, var(--archive-accent)); }
-    .archived-records-table tbody td { color: var(--archive-text); font-size: .77rem; line-height: 1.45; }
-    .archived-records-table tbody td:nth-child(4) { min-width: 15rem; overflow-wrap: anywhere; }
+    .archived-records-table tbody tr:hover { background: color-mix(in srgb, var(--archive-surface) 82%, var(--archive-accent)) !important; }
+    .archived-records-table tbody td { color: var(--archive-text) !important; font-size: .76rem; line-height: 1.4; }
+    .archived-records-table tbody tr:last-child td { border-bottom: 0 !important; }
+    .archived-records-table th:first-child, .archived-records-table td:first-child { text-align: center; }
+    .archived-records-table td:nth-child(4) { color: var(--archive-muted) !important; overflow-wrap: anywhere; }
+    .archived-records-table td:nth-child(5) { color: var(--archive-muted) !important; font-size: .7rem; }
+    .archived-records-table th:nth-child(1), .archived-records-table td:nth-child(1) { width: 4%; }
+    .archived-records-table th:nth-child(2), .archived-records-table td:nth-child(2) { width: 14%; }
+    .archived-records-table th:nth-child(3), .archived-records-table td:nth-child(3) { width: 16%; }
+    .archived-records-table th:nth-child(4), .archived-records-table td:nth-child(4) { width: 26%; overflow-wrap: anywhere; }
+    .archived-records-table th:nth-child(5), .archived-records-table td:nth-child(5) { width: 16%; }
+    .archived-records-table th:nth-child(6), .archived-records-table td:nth-child(6) { width: 24%; }
+    .archived-records-table .archive-actions { flex-wrap: nowrap; gap: .3rem; }
+    .archived-records-table .archive-action-button { min-height: 2rem; gap: .32rem; padding: .38rem .48rem; font-size: .68rem; white-space: nowrap; }
+    html body.app-shell.archived-records-page .page-content .archived-records-table tbody tr,
+    html body.app-shell.archived-records-page .page-content .archived-records-table tbody tr:nth-child(even),
+    html body.app-shell.archived-records-page .page-content .archived-records-table tbody tr:nth-child(odd) {
+      border-radius: 0 !important;
+      background: color-mix(in srgb, var(--archive-surface) 92%, var(--archive-page)) !important;
+      box-shadow: none !important;
+    }
+    html body.app-shell.archived-records-page .page-content .archived-records-table tbody tr:hover {
+      background: color-mix(in srgb, var(--archive-surface) 82%, var(--archive-accent)) !important;
+    }
     .archive-record-title { color: var(--archive-text); font-weight: 750; }
     .archive-type-badge { display: inline-flex; padding: .24rem .48rem; border: 1px solid var(--archive-line); border-radius: 999px; background: color-mix(in srgb, var(--archive-surface) 80%, var(--archive-accent)); color: var(--archive-accent); font-size: .66rem; font-weight: 750; white-space: nowrap; }
     .archive-empty { display: grid; min-height: 9rem; place-content: center; justify-items: center; gap: .45rem; padding: 1.2rem; color: var(--archive-muted); text-align: center; }
@@ -78,9 +114,20 @@
     .archive-empty strong { color: var(--archive-text); font-size: .86rem; }
     .archive-empty span { font-size: .74rem; }
     .archive-empty[hidden] { display: none; }
+    .archive-pagination-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .65rem 4.75rem 0 .15rem; }
+    .archive-pagination-info { color: var(--archive-muted); font-size: .74rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .archive-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .35rem; margin-left: auto; }
+    .archive-page-button { display: inline-flex; min-width: 2.15rem; min-height: 2.1rem; align-items: center; justify-content: center; padding: .35rem .62rem; border: 1px solid var(--archive-line); border-radius: .62rem; background: var(--archive-surface); color: var(--archive-text); font-size: .73rem; font-weight: 750; cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+    .archive-page-button:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--archive-accent); background: color-mix(in srgb, var(--archive-surface) 75%, var(--archive-accent)); }
+    .archive-page-button[aria-current="page"] { border-color: #168044; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
+    .archive-page-button:disabled { opacity: .42; cursor: not-allowed; }
+    .archive-pagination-ellipsis { padding: 0 .1rem; color: var(--archive-muted); font-size: .75rem; }
+    .archive-pagination[hidden], .archive-pagination-footer[hidden] { display: none !important; }
+    html body.app-shell.archived-records-page main .archive-pagination .archive-page-button { min-height: 2rem !important; padding: .3rem .58rem !important; border-radius: .58rem; font-size: .72rem !important; line-height: 1 !important; }
+    html body.app-shell.archived-records-page main .archived-records-table .archive-action-button { min-height: 2rem !important; padding: .35rem .45rem !important; font-size: .68rem !important; line-height: 1 !important; }
     .archive-toast { box-sizing: border-box; position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 10000; width: min(28rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); overflow-wrap: anywhere; border: 1px solid #34d399; border-radius: .75rem; background: #0b3b28; padding: .75rem 1rem; color: #fff; font-size: .82rem; font-weight: 700; line-height: 1.4; box-shadow: 0 10px 25px rgba(0, 0, 0, .25); }
     .archive-select { accent-color: #168044; }
-    @media (max-width: 768px) { body.archived-records-page .main-container { margin-left: 0; } }
+    @media (max-width: 768px) { body.archived-records-page .main-container { width: 100%; margin-left: 0; } }
     @media (max-width: 640px) {
       body.archived-records-page .page-content { padding: 0 .65rem .75rem !important; }
       html body.archived-records-page .comlab-slim-page-header:not(#comlab-header-specificity) {
@@ -155,19 +202,28 @@
         padding: 0 !important;
       }
       html body.archived-records-page .comlab-slim-page-header .system-profile-badge-copy { display: none !important; }
-      html body.archived-records-page .comlab-page-header-spacer { height: 2.8rem !important; min-height: 2.8rem !important; }
-      .archive-page-actions { margin-top: .15rem; }
+      html body.archived-records-page .comlab-page-header-spacer {
+        height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+        margin: 0 0 .55rem !important;
+      }
+      html body.app-shell.archived-records-page .archived-records-content {
+        padding-top: .25rem;
+      }
       .archive-toolbar-copy, .archive-search-wrap { flex: 1 1 100%; }
       .archive-select-all { flex: 1 1 auto; }
       .archive-actions { flex: 1 1 100%; }
       .archive-actions .archive-action-button { flex: 1 1 0; }
       .archive-result-count { order: 3; width: 100%; }
       .archived-records-table th, .archived-records-table td { padding: .6rem .62rem; }
+      .archive-pagination-footer { align-items: flex-start; flex-direction: column; padding-right: 4.75rem; }
+      .archive-pagination { width: 100%; justify-content: flex-end; }
     }
   </style>
-  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=5">
 </head>
-<body class="app-shell system-layout-page archived-records-page">
+<body class="app-shell system-layout-page admin-shell archived-records-page">
+  <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
   <div id="shared-sidebar"></div>
   <div class="main-container">
     <main class="page-content p-3 md:p-5">
@@ -184,9 +240,6 @@
           <div class="system-dashboard-heading-actions">
           </div>
         </header>
-        <div class="archive-page-actions">
-          <a href="/equipment-inventory" class="archive-back-link focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300">Back to Inventory</a>
-        </div>
         <section class="archived-records-panel w-full min-w-0" aria-label="Archived records">
           <div class="archive-toolbar">
             <div class="archive-toolbar-copy"><strong>Archived items</strong><span id="archiveResultCount" aria-live="polite">Loading records…</span></div>
@@ -205,6 +258,10 @@
             <thead><tr><th><input id="selectAllArchivedHeader" class="archive-select h-4 w-4" type="checkbox" aria-label="Select all archived records"></th><th>Record</th><th>Type</th><th>Details</th><th>Archived</th><th>Action</th></tr></thead>
             <tbody id="archiveRows"><tr><td colspan="6"><div class="archive-empty"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><strong>Loading archived records</strong><span>Please wait while the archive is loaded.</span></div></td></tr></tbody>
           </table></div>
+          <div id="archivePaginationFooter" class="archive-pagination-footer" hidden>
+            <span id="archivePaginationInfo" class="archive-pagination-info" aria-live="polite"></span>
+            <nav id="archivePagination" class="archive-pagination" aria-label="Archived records pages"></nav>
+          </div>
         </section>
         <p id="archiveError" class="mt-4 hidden text-red-300" role="alert"></p>
       </div>
@@ -225,6 +282,12 @@
     archiveSearch.value = new URLSearchParams(window.location.search).get('search') || '';
     const archiveResultCount = document.getElementById('archiveResultCount');
     const refreshArchivedButton = document.getElementById('refreshArchived');
+    const archiveTableWrap = document.querySelector('.archive-table-wrap');
+    const archivePaginationFooter = document.getElementById('archivePaginationFooter');
+    const archivePaginationInfo = document.getElementById('archivePaginationInfo');
+    const archivePagination = document.getElementById('archivePagination');
+    const archivePageSize = 5;
+    let archiveCurrentPage = 1;
     const archiveEmpty = (title, message, icon = 'fa-box-open') => `<tr><td colspan="6"><div class="archive-empty"><i class="fas ${icon}" aria-hidden="true"></i><strong>${title}</strong><span>${message}</span></div></td></tr>`;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -271,17 +334,23 @@
     function applyArchiveSearch() {
       const query = archiveSearch.value.trim().toLocaleLowerCase();
       const rows = [...archiveRows.querySelectorAll('tr')].filter((row) => row.querySelector('[data-select-archive]'));
-      let visibleCount = 0;
-      rows.forEach((row) => {
-        const matches = !query || row.textContent.toLocaleLowerCase().includes(query);
-        row.classList.toggle('is-search-hidden', !matches);
-        if (matches) visibleCount += 1;
-      });
+      const matchingRows = rows.filter((row) => !query || row.textContent.toLocaleLowerCase().includes(query));
+      const totalPages = Math.max(1, Math.ceil(matchingRows.length / archivePageSize));
+      archiveCurrentPage = Math.min(Math.max(1, archiveCurrentPage), totalPages);
+      const startIndex = (archiveCurrentPage - 1) * archivePageSize;
+      const pageRows = matchingRows.slice(startIndex, startIndex + archivePageSize);
+      const visibleRows = new Set(pageRows);
+      rows.forEach((row) => row.classList.toggle('is-search-hidden', !visibleRows.has(row)));
       archiveResultCount.textContent = query
-        ? `Showing ${visibleCount} of ${rows.length} records`
+        ? `${matchingRows.length} matching record${matchingRows.length === 1 ? '' : 's'}`
         : `${rows.length} archived record${rows.length === 1 ? '' : 's'}`;
+      archivePaginationFooter.hidden = matchingRows.length <= archivePageSize;
+      archivePaginationInfo.textContent = matchingRows.length
+        ? `Showing ${startIndex + 1}–${Math.min(startIndex + archivePageSize, matchingRows.length)} of ${matchingRows.length}`
+        : '';
+      renderArchivePagination(totalPages);
       let noMatchesRow = archiveRows.querySelector('#archiveNoMatches');
-      if (query && rows.length && visibleCount === 0) {
+      if (query && rows.length && matchingRows.length === 0) {
         if (!noMatchesRow) {
           noMatchesRow = document.createElement('tr');
           noMatchesRow.id = 'archiveNoMatches';
@@ -293,6 +362,52 @@
         noMatchesRow.hidden = true;
       }
       updateArchiveSelection();
+    }
+
+    function renderArchivePagination(totalPages) {
+      archivePagination.replaceChildren();
+      const addButton = (label, page, { active = false, disabled = false, ariaLabel = label } = {}) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'archive-page-button';
+        button.textContent = label;
+        button.disabled = disabled;
+        button.setAttribute('aria-label', ariaLabel);
+        if (active) button.setAttribute('aria-current', 'page');
+        button.addEventListener('click', () => {
+          archiveCurrentPage = page;
+          applyArchiveSearch();
+          archiveTableWrap.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        archivePagination.appendChild(button);
+      };
+
+      addButton('Previous', archiveCurrentPage - 1, {
+        disabled: archiveCurrentPage <= 1,
+        ariaLabel: 'Previous page'
+      });
+
+      const pages = totalPages <= 5
+        ? Array.from({ length: totalPages }, (_, index) => index + 1)
+        : [...new Set([1, archiveCurrentPage - 1, archiveCurrentPage, archiveCurrentPage + 1, totalPages])]
+          .filter((page) => page >= 1 && page <= totalPages)
+          .sort((a, b) => a - b);
+      let previousPage = 0;
+      pages.forEach((page) => {
+        if (previousPage && page - previousPage > 1) {
+          const ellipsis = document.createElement('span');
+          ellipsis.className = 'archive-pagination-ellipsis';
+          ellipsis.textContent = '…';
+          archivePagination.appendChild(ellipsis);
+        }
+        addButton(String(page), page, { active: page === archiveCurrentPage, ariaLabel: `Page ${page}` });
+        previousPage = page;
+      });
+
+      addButton('Next', archiveCurrentPage + 1, {
+        disabled: archiveCurrentPage >= totalPages,
+        ariaLabel: 'Next page'
+      });
     }
 
     async function requestArchiveRestore(archiveId) {
@@ -358,6 +473,7 @@
         if (!payload.records.length) {
           archiveRows.innerHTML = archiveEmpty('No archived records', 'Items archived from active lists will appear here.');
           archiveResultCount.textContent = '0 archived records';
+          archivePaginationFooter.hidden = true;
           updateArchiveSelection();
           return;
         }
@@ -374,6 +490,7 @@
       } catch (error) {
         archiveRows.innerHTML = archiveEmpty('Unable to load archive', 'Try refreshing the list in a moment.', 'fa-triangle-exclamation');
         archiveResultCount.textContent = 'Archive unavailable';
+        archivePaginationFooter.hidden = true;
         updateArchiveSelection();
         archiveError.textContent = error.message || 'Unable to load archived records.';
         archiveError.classList.remove('hidden');
@@ -437,7 +554,10 @@
       });
     });
 
-    archiveSearch.addEventListener('input', applyArchiveSearch);
+    archiveSearch.addEventListener('input', () => {
+      archiveCurrentPage = 1;
+      applyArchiveSearch();
+    });
     refreshArchivedButton.addEventListener('click', loadArchivedRecords);
     window.comlabRecordsSync?.subscribe(async (change) => {
       await loadArchivedRecords({ quiet: true });

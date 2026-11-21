@@ -613,33 +613,55 @@ html.theme-light body.admin-borrow-equipment-page .summary-card .value {
 }
 
 html.theme-light body.admin-borrow-equipment-page .table-wrap {
-  border-color: #d5e3d9;
-  background: #fff;
-  scrollbar-color: #91b69d #eef4f0;
+  border-color: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  scrollbar-color: #CBD5E1 #FFFFFF !important;
 }
 
 html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar,
 html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
-  background: #eef4f0;
+  background: #FFFFFF !important;
 }
 
 html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
-  border-color: #eef4f0;
-  background: #91b69d;
+  border-color: #FFFFFF !important;
+  background: #CBD5E1 !important;
 }
 
+html.theme-light body.admin-borrow-equipment-page .table-wrap table,
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody,
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr,
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody td {
+  border-color: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap thead,
+html.theme-light body.admin-borrow-equipment-page .table-wrap thead tr,
 html.theme-light body.admin-borrow-equipment-page .table-wrap thead th {
-  border-color: #d2e2d7;
-  background: #e8f2eb;
-  color: #244a33;
+  border-color: #E2E8F0 !important;
+  background: #F8FAFC !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #334155 !important;
 }
 
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even) {
-  background: #f6faf7;
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even),
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even) td {
+  background: #F8FAFC !important;
 }
 
 html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:hover {
-  background: #edf7f0;
+  background: #E8F5ED !important;
+}
+
+html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:hover td {
+  background: #E8F5ED !important;
 }
 
 html.theme-light body.admin-borrow-equipment-page .table-wrap tbody td {

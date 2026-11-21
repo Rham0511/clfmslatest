@@ -2768,19 +2768,18 @@ const pageConfigs = {
           white-space: nowrap;
         }
         #systemAuditPanel .audit-log-timestamp span:last-child { color: #a7f3d0; font-size: .78rem !important; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody td { border-color: #edf2ee; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody td { border-color: #dce5df; color: #1f2937 !important; }
         body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody tr:nth-child(even) { background: #fafcfb; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody tr:hover { background: #effaf2; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody td { color: #14532d !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table tbody tr:hover { background: #f0fdf4; }
         body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table thead th,
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table thead th * { color: #000000 !important; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .pill-action { color: #166534 !important; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .pill-module { color: #14532d !important; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-actor-meta { color: #15803d !important; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-description { color: #166534; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp { color: #166534; }
-        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp span:last-child { color: #15803d; }
-        body.app-shell .main-container.theme-light #systemAuditPanel #auditLogsSummary { color: #166534 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-logs-table thead th * { color: #1f2937 !important; background: #f8fafc !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .pill-action { color: #16a34a !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .pill-module { color: #1f2937 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-actor-meta { color: #64748b !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-description { color: #1f2937 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp { color: #1f2937 !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel .audit-log-timestamp span:last-child { color: #64748b !important; }
+        body.app-shell .main-container.theme-light #systemAuditPanel #auditLogsSummary { color: #64748b !important; }
         #equipmentAuditTrailPanel { padding: .85rem; }
         #equipmentAuditTrailPanel > div:first-child { gap: .6rem; margin-bottom: .65rem !important; }
         #equipmentAuditTrailPanel > div:first-child h3 { font-size: 1.5rem; line-height: 1.3; font-weight: 800; }
@@ -3600,15 +3599,15 @@ const pageConfigs = {
           width: 2.65rem;
           height: 2.65rem;
           place-items: center;
-          border: 1px solid #9bbda3;
+          border: 1px solid rgba(74, 222, 128, .38);
           border-radius: .85rem;
-          background: #fff;
-          color: #14532d;
+          background: #0a2117;
+          color: #d1fae5;
           font-size: 1.1rem;
           cursor: pointer;
           transition: background .16s ease, border-color .16s ease, transform .16s ease;
         }
-        .report-actions-toggle:hover { background: #f0fdf4; border-color: #4b8b5b; }
+        .report-actions-toggle:hover { background: #123c2a; border-color: #4ade80; }
         .report-actions-menu {
           position: absolute;
           z-index: 50;
@@ -3618,10 +3617,10 @@ const pageConfigs = {
           width: min(15rem, calc(100vw - 3rem));
           gap: .2rem;
           padding: .4rem;
-          border: 1px solid #cbd5e1;
+          border: 1px solid rgba(74, 222, 128, .28);
           border-radius: .9rem;
-          background: #fff;
-          color: #172a20;
+          background: #092016;
+          color: #e5f5eb;
           box-shadow: 0 16px 36px rgba(15, 23, 42, .2);
         }
         .report-actions-menu[hidden] { display: none !important; }
@@ -3641,10 +3640,10 @@ const pageConfigs = {
           text-align: left;
           cursor: pointer;
         }
-        .report-actions-menu-item:hover:not(:disabled) { background: #f0fdf4; }
+        .report-actions-menu-item:hover:not(:disabled) { background: #123c2a; }
         .report-actions-menu-item:disabled { cursor: not-allowed; opacity: .45; }
-        .report-actions-menu-item i { width: 1rem; color: #16834c; text-align: center; }
-        .report-actions-menu-divider { height: 1px; margin: .2rem .35rem; background: #dbe7df; }
+        .report-actions-menu-item i { width: 1rem; color: #6ee7b7; text-align: center; }
+        .report-actions-menu-divider { height: 1px; margin: .2rem .35rem; background: rgba(167, 243, 208, .16); }
         body.app-shell .main-container.theme-dark .report-filter-grid > div > label {
           color: #b6d7c8;
         }
@@ -3662,6 +3661,29 @@ const pageConfigs = {
         }
         body.app-shell .main-container.theme-dark .report-actions-menu-item:hover:not(:disabled) { background: #123c2a; }
         body.app-shell .main-container.theme-dark .report-actions-menu-divider { background: rgba(167, 243, 208, .16); }
+        body.app-shell .main-container.theme-light .report-actions-toggle {
+          border-color: #9bbda3;
+          background: #fff;
+          color: #14532d;
+        }
+        body.app-shell .main-container.theme-light .report-actions-toggle:hover {
+          border-color: #4b8b5b;
+          background: #f0fdf4;
+        }
+        body.app-shell .main-container.theme-light .report-actions-menu {
+          border-color: #cbd5e1;
+          background: #fff;
+          color: #172a20;
+        }
+        body.app-shell .main-container.theme-light .report-actions-menu-item:hover:not(:disabled) {
+          background: #f0fdf4;
+        }
+        body.app-shell .main-container.theme-light .report-actions-menu-item i {
+          color: #16834c;
+        }
+        body.app-shell .main-container.theme-light .report-actions-menu-divider {
+          background: #dbe7df;
+        }
         @media (max-width: 820px) {
           .report-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -3732,51 +3754,81 @@ const pageConfigs = {
         }
         .report-card-surface {
           background: var(--panel);
-          border: 1px solid var(--border);
-          box-shadow: var(--shadow);
+          border: 0;
+          box-shadow: none;
         }
         body.app-shell .main-container.theme-dark .report-card-surface {
-          background: linear-gradient(180deg, #0f241b, #0a1d15) !important;
-          border-color: rgba(74,222,128,.18) !important;
+          background: var(--app-card-bg, #0D2B20) !important;
+          border: 0 !important;
+          box-shadow: none !important;
           color: #f8fafc !important;
         }
         body.app-shell .main-container.theme-light .report-card-surface {
           background: #ffffff !important;
-          border-color: #d7e3da !important;
+          border: 0 !important;
           color: #1f2937 !important;
-          box-shadow: 0 8px 24px rgba(31,41,55,.07) !important;
+          box-shadow: none !important;
         }
         .report-table-shell {
-          max-height: min(56vh, 42rem);
+          max-height: min(42vh, 25rem);
           overflow: auto !important;
-          background: #07150f !important;
-          border: 1px solid rgba(74,222,128,.18) !important;
-          border-radius: .9rem !important;
+          background: var(--app-table-bg, #07150f) !important;
+          border: 0 !important;
+          border-radius: 0 !important;
           box-shadow: none !important;
+          outline: 0 !important;
           padding: 0 !important;
-          scrollbar-gutter: stable;
+          scrollbar-gutter: auto !important;
+          scrollbar-width: thin;
+          scrollbar-color: #318451 #07150f;
+        }
+        .report-table-shell::-webkit-scrollbar {
+          width: .6rem;
+          height: .6rem;
+          background: #07150f;
+        }
+        .report-table-shell::-webkit-scrollbar-track {
+          border-radius: 999px;
+          background: #07150f;
+        }
+        .report-table-shell::-webkit-scrollbar-thumb {
+          border: 1px solid #07150f;
+          border-radius: 999px;
+          background: #318451;
+        }
+        .report-table-shell::-webkit-scrollbar-thumb:hover {
+          background: #397f58;
+        }
+        .report-table-shell::-webkit-scrollbar-corner {
+          background: #07150f;
         }
         #reportPreviewTable {
+          margin: 0 !important;
+          border: 0 !important;
+          outline: 0 !important;
           border-collapse: collapse !important;
           border-spacing: 0 !important;
         }
         #reportPreviewTable thead,
         .report-preview-table thead tr {
           background: #04120c !important;
+          border: 0 !important;
+          outline: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
         }
         #reportPreviewTable thead th,
         #reportPreviewTable thead th.theme-locked-table-header {
           position: sticky !important;
-          top: 0;
+          top: 0 !important;
           z-index: 5;
           color: #d1fae5 !important;
           font-size: .95rem !important;
           padding: .9rem 1rem !important;
           background: #04120c !important;
           border: 0 !important;
-          border-bottom: 1px solid rgba(6, 78, 59, .5) !important;
+          border-bottom: 0 !important;
+          outline: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
           text-align: left !important;
@@ -3788,17 +3840,20 @@ const pageConfigs = {
         body.app-shell .main-container.theme-dark .report-preview-table thead th {
           background: #04120c !important;
           color: #f9fafb !important;
-          border-bottom: 1px solid rgba(148,163,184,.22) !important;
+          border: 0 !important;
+          border-bottom: 0 !important;
         }
         body.app-shell .main-container.theme-light .report-preview-table thead,
         body.app-shell .main-container.theme-light .report-preview-table thead tr,
         body.app-shell .main-container.theme-light .report-preview-table thead th {
           background: #0a2e1d !important;
           color: #d1fae5 !important;
-          border-bottom: 1px solid #174b34 !important;
+          border: 0 !important;
+          border-bottom: 0 !important;
         }
         #reportPreviewTable tbody {
           background: #07150f !important;
+          border: 0 !important;
         }
         body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr {
           background: #07150f !important;
@@ -3809,21 +3864,21 @@ const pageConfigs = {
           color: #f9fafb !important;
         }
         body.app-shell .main-container.theme-dark .report-table-shell {
-          background: #07150f !important;
-          border-color: rgba(148,163,184,.2) !important;
+          background: var(--app-table-bg, #07150f) !important;
+          scrollbar-color: #318451 #07150f;
         }
         body.app-shell .main-container.theme-dark #reportPreviewTable tbody tr:nth-child(even) {
           background: #0a1d15 !important;
         }
         body.app-shell .main-container.theme-dark #reportPreviewTable tbody td {
-          border-bottom-color: rgba(148,163,184,.18) !important;
+          border: 0 !important;
+          border-bottom: 0 !important;
         }
         body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr:hover {
           background: #0a2e1d !important;
         }
         body.app-shell .main-container.theme-light .report-table-shell {
           background: #ffffff !important;
-          border-color: #cbd8cf !important;
         }
         body.app-shell .main-container.theme-light #reportPreviewTable tbody {
           background: #ffffff !important;
@@ -3834,7 +3889,7 @@ const pageConfigs = {
           color: #1f2937 !important;
         }
         body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:nth-child(even) {
-          background: #f5f8f6 !important;
+          background: #ffffff !important;
           color: #1f2937 !important;
         }
         body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:hover {
@@ -3848,14 +3903,15 @@ const pageConfigs = {
           line-height: 1.5 !important;
           padding: .9rem 1rem !important;
           border: 0 !important;
-          border-bottom: 1px solid rgba(74, 222, 128, .2) !important;
+          border-bottom: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
         }
         body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody td,
         body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr > td {
           color: #1f2937 !important;
-          border-bottom-color: #dfe7e1 !important;
+          border: 0 !important;
+          border-bottom: 0 !important;
         }
         body.app-shell .main-container.theme-light #previewReportTitle,
         body.app-shell .main-container.theme-light #reportCountText,
@@ -3909,13 +3965,13 @@ const pageConfigs = {
         .report-empty-state p { margin: .25rem 0 0; color: inherit; opacity: .78; }
         #summaryCards > div {
           background: var(--panel);
-          border: 1px solid var(--border);
-          box-shadow: var(--shadow);
+          border: 1px solid var(--app-border, var(--border));
+          box-shadow: none;
         }
         body.app-shell .main-container.theme-light #summaryCards > div {
-          border-color: #d1d5db !important;
+          border-color: #e5e7eb !important;
           background: #ffffff !important;
-          box-shadow: 0 4px 12px rgba(17, 24, 39, .08) !important;
+          box-shadow: none !important;
         }
         body.app-shell .main-container.theme-light #summaryCards > div > p {
           color: #000 !important;
@@ -4199,14 +4255,14 @@ const pageConfigs = {
           <div class="reports-export-notice rounded-3xl border border-emerald-700/60 bg-[#06100b] px-4 py-3 text-sm text-emerald-100/70">Preview and exports follow the selected filters.</div>
         </div>
 
-        <div id="summaryCards" class="panel-card mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
+        <div id="summaryCards" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
 
-        <div class="report-table-shell panel-card mt-5 overflow-x-auto rounded-3xl p-2">
-          <table id="reportPreviewTable" class="report-preview-table min-w-full border-collapse text-left text-sm text-emerald-50/90">
-            <thead class="bg-[#06100b]">
-              <tr id="reportTableHeader"></tr>
+        <div class="report-table-shell mt-5 overflow-x-auto rounded-3xl" style="border:0!important;outline:0!important;box-shadow:none!important">
+          <table id="reportPreviewTable" class="report-preview-table min-w-full border-collapse text-left text-sm text-emerald-50/90" style="border:0!important;outline:0!important;box-shadow:none!important;border-collapse:collapse">
+            <thead class="bg-[#06100b]" style="border:0!important;outline:0!important;box-shadow:none!important">
+              <tr id="reportTableHeader" style="border:0!important;outline:0!important;box-shadow:none!important"></tr>
             </thead>
-            <tbody id="reportTableBody"></tbody>
+            <tbody id="reportTableBody" style="border:0!important;outline:0!important;box-shadow:none!important"></tbody>
           </table>
         </div>
         <div id="reportPagination" class="mt-3 flex flex-wrap items-center justify-end gap-2"></div>
@@ -4241,7 +4297,7 @@ const pageConfigs = {
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.0/jspdf.plugin.autotable.min.js"></script>
-      <script src="/js/reports-page.js?v=20261104"></script>
+      <script src="/js/reports-page.js?v=20261121-no-table-lines"></script>
     `
   },
   "maintenance-queue": {
@@ -4665,7 +4721,8 @@ const serveHtmlPage = (req, res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.type("html").send(hydratedHtml);
+    const isEmbeddedShell = req.query?.embedded === "app-shell" || req.query?.embedded === "facilities";
+    res.type("html").send(prepareAppShellContentHtml(hydratedHtml, isEmbeddedShell));
   };
 
   loadDashboard().catch(error => {
@@ -4674,7 +4731,29 @@ const serveHtmlPage = (req, res) => {
   });
 };
 
-const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "", currentUserRole = "", embeddedSchedule = false) => {
+function prepareAppShellContentHtml(html, isEmbedded) {
+  if (!isEmbedded) return html;
+  const embeddedStyle = `<style id="app-shell-content-style">
+    #shared-sidebar, .sidebar-overlay { display: none !important; }
+    body.app-content-embedded :is(.top-header, .comlab-slim-page-header, .comlab-page-header-spacer, #mobileMenuToggle, #qr-scan-float-btn, #comlab-help-float-btn, #comlab-help-panel) { display: none !important; }
+    body.app-content-embedded .system-dashboard-heading:not(.facilities-heading) { display: none !important; }
+    body.app-content-embedded.student-portal:not(.faculty-portal):not(.faculty-page) :is(.student-page-header, .audit-page-heading, .page-header-card, .attendance-page-header) { display: none !important; }
+    html body.app-content-embedded .main-container,
+    html body.app-content-embedded .page-content,
+    html body.app-content-embedded .facilities-main,
+    html body.app-content-embedded .main-container.computer-labs-page { box-sizing: border-box !important; width: 100% !important; max-width: none !important; min-height: 100vh; margin-left: 0 !important; transform: none !important; animation: none !important; transition: none !important; }
+    body.app-content-embedded .main-container *:not(.fa-spin) { animation: none !important; transition: none !important; }
+  </style>`;
+  const withBodyClass = html.replace(/<body\b([^>]*)>/i, (match, attributes) => {
+    if (/\bclass\s*=/.test(attributes)) {
+      return match.replace(/class\s*=\s*(["'])(.*?)\1/i, (classMatch, quote, classes) => `class=${quote}app-content-embedded ${classes}${quote}`);
+    }
+    return `<body class="app-content-embedded"${attributes}>`;
+  });
+  return withBodyClass.replace(/<\/head>/i, `${embeddedStyle}</head>`);
+}
+
+const renderFeaturePage = (config, currentUserName = "Administrator", pageName = "", currentUserCampus = "", currentUserRole = "", embeddedSchedule = false, embeddedAppShell = false) => {
   const hideTopHeaderPages = ["user-management", "reports", "audit-logs"];
   const showTopHeader = !hideTopHeaderPages.includes(pageName);
   const pageContentStyle = hideTopHeaderPages.includes(pageName) ? ' style="padding-top: 0.35rem !important;"' : "";
@@ -4698,13 +4777,13 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
       </style>`
     : "";
   const reportsStylesheet = pageName === "reports"
-    ? '<link rel="stylesheet" href="/css/reports.css?v=2">'
+    ? '<link rel="stylesheet" href="/css/reports.css?v=21">'
     : "";
   const adminMobilePolishStyles = ["laboratory-schedules", "reports"].includes(pageName)
     ? '<link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">'
     : "";
   const auditLogsStylesheet = pageName === "audit-logs"
-    ? '<link rel="stylesheet" href="/css/audit-logs.css?v=11">'
+    ? '<link rel="stylesheet" href="/css/audit-logs.css?v=19">'
     : "";
   const auditLogsScript = pageName === "audit-logs"
     ? '<script src="/js/audit-logs-page.js?v=20261104-fix1" defer></script>'
@@ -4715,6 +4794,12 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     role: currentUserRole,
     campus: currentUserCampus
   });
+  const pageContent = pageName === "audit-logs" && embeddedAppShell
+    ? config.content.replace(
+      /<div class="audit-header-spacer" aria-hidden="true"><\/div>\s*<header class="system-dashboard-heading audit-fixed-header comlab-slim-page-header"[\s\S]*?<\/header>\s*/,
+      ""
+    )
+    : config.content;
   const facultySidebarScripts = isFaculty
     ? '<script>window.__CURRENT_USER__ = {name: ' + inlineJson(currentUserName) + ', role: "faculty", campus: ' + inlineJson(currentUserCampus || "") + '};</script><script src="/js/student-sidebar-config.js?v=29" defer></script>'
     : "";
@@ -4744,7 +4829,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   ${scheduleStylesheet}
   ${adminMobilePolishStyles}
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
@@ -4775,7 +4860,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=74">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   ${dashboardHeaderStylesheet}
   ${scheduleStylesheet}
   ${reportsStylesheet}
@@ -4813,11 +4898,11 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     </div>` : ""}
 
     <main class="page-content"${pageContentStyle}>
-      ${config.content}
+      ${pageContent}
     </main>
   </div>
   ${facultySidebarScripts}
-  ${embeddedSchedule ? "" : '<script src="/js/sidebar-component.js?v=77" defer></script>'}
+  ${embeddedSchedule ? "" : '<script src="/js/sidebar-component.js?v=106" defer></script>'}
 </body>
 </html>`;
 };
@@ -4904,14 +4989,15 @@ const serveFeaturePage = async (req, res) => {
     }
   }
 
-  res.send(renderFeaturePage(
+  res.send(prepareAppShellContentHtml(renderFeaturePage(
     config,
     currentUserName,
     page,
     currentUserCampus,
     currentUserRole,
-    page === "laboratory-schedules" && ["1", "standalone-v2"].includes(String(req.query.embedded || ""))
-  ));
+    page === "laboratory-schedules" && ["1", "standalone-v2"].includes(String(req.query.embedded || "")),
+    req.query?.embedded === "app-shell"
+  ), req.query?.embedded === "app-shell"));
 };
 
 // ==================== Laboratory Schedule Helper Functions ====================
@@ -5378,7 +5464,8 @@ router.get("/student/borrow-equipment", async (req, res) => {
 
     const html = await fs.promises.readFile(path.join(__dirname, "../views/student/student-borrow-equipment.html"), "utf8");
     const hydratedHtml = html.replaceAll("__CURRENT_USER_JSON__", JSON.stringify(currentUser));
-    res.type("html").send(hydratedHtml.replace("window.__CURRENT_USER__ = __CURRENT_USER_JSON__;", `window.__CURRENT_USER__ = ${JSON.stringify(currentUser)};`));
+    const pageHtml = hydratedHtml.replace("window.__CURRENT_USER__ = __CURRENT_USER_JSON__;", `window.__CURRENT_USER__ = ${JSON.stringify(currentUser)};`);
+    res.type("html").send(prepareAppShellContentHtml(pageHtml, req.query?.embedded === "app-shell"));
   } catch (error) {
     console.error("Failed to render student borrow page:", error);
     res.status(500).send("Failed to load Borrow Equipment page.");

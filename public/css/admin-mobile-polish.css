@@ -304,6 +304,65 @@
   }
 }
 
+/* Final cascade guard for this page's light theme, after shared responsive rules. */
+html.theme-light body.app-shell.technician-accomplishments-page :is(.main-container, .wrap, .hero, .panel, .report, .detail-field, .time-details span, .stats span) {
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  border-color: #dce5df !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+  min-height: 100vh !important;
+  margin-left: var(--sidebar-width, 280px) !important;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) 1.5rem !important;
+  background: #f4f7f5 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .wrap {
+  width: calc(100% - var(--sidebar-width, 280px)) !important;
+  max-width: calc(100% - var(--sidebar-width, 280px)) !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page :is(.main-container, .wrap)::before,
+html.theme-light body.app-shell.technician-accomplishments-page :is(.main-container, .wrap)::after,
+html.theme-light body.app-shell.technician-accomplishments-page .page-content::before {
+  display: none !important;
+  opacity: 0 !important;
+  background: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel :is(input, select, textarea) {
+  border-color: #dce5df !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .report:hover {
+  background: #f0fdf4 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, .08) !important;
+}
+
+@media (max-width: 767px) {
+  html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+    margin-left: 0 !important;
+    padding: 4rem .75rem 1rem !important;
+  }
+}
+
 @media (max-width: 480px) {
   html body.app-shell:is(
     .equipment-assignment-page,
@@ -327,6 +386,250 @@
     font-size: .68rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+/* Technician Accomplishments: keep the review workspace on one clean surface
+   in light mode. The shared shell has legacy dark panel rules with !important,
+   so this page-specific layer is intentionally loaded last and scoped tightly. */
+html.theme-light body.app-shell.technician-accomplishments-page {
+  --page: #f4f7f5 !important;
+  --panel: #ffffff !important;
+  --surface: #ffffff !important;
+  --text: #1f2937 !important;
+  --muted: #64748b !important;
+  --line: #dce5df !important;
+  --accent: #15803d !important;
+  background: #f4f7f5 !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+  box-sizing: border-box !important;
+  width: calc(100% - var(--sidebar-width, 280px)) !important;
+  max-width: calc(100% - var(--sidebar-width, 280px)) !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .wrap {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+  min-height: 100vh !important;
+  width: calc(100% - var(--sidebar-width, 280px)) !important;
+  max-width: calc(100% - var(--sidebar-width, 280px)) !important;
+  margin-left: var(--sidebar-width, 280px) !important;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) 1.5rem !important;
+  background: #f4f7f5 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .main-container::before,
+html.theme-light body.app-shell.technician-accomplishments-page .main-container::after,
+html.theme-light body.app-shell.technician-accomplishments-page .page-content::before,
+html.theme-light body.app-shell.technician-accomplishments-page .wrap::before,
+html.theme-light body.app-shell.technician-accomplishments-page .wrap::after {
+  display: none !important;
+  background: none !important;
+  opacity: 0 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .hero,
+html.theme-light body.app-shell.technician-accomplishments-page .panel,
+html.theme-light body.app-shell.technician-accomplishments-page .report,
+html.theme-light body.app-shell.technician-accomplishments-page .detail-field,
+html.theme-light body.app-shell.technician-accomplishments-page .time-details span,
+html.theme-light body.app-shell.technician-accomplishments-page .stats span {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: #dce5df !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .hero {
+  min-height: 3.1rem !important;
+  margin: 0 0 .9rem !important;
+  padding: .75rem 1rem !important;
+  border-radius: .75rem !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  border-radius: .85rem !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .toolbar {
+  display: grid !important;
+  grid-template-columns: minmax(10rem, auto) minmax(0, 1fr) !important;
+  align-items: end !important;
+  gap: .8rem !important;
+  margin-bottom: .9rem !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .toolbar > div:first-child {
+  min-width: 10rem !important;
+  margin: 0 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .filters {
+  display: grid !important;
+  min-width: 0 !important;
+  grid-template-columns: minmax(12rem, 1fr) minmax(9rem, .7fr) minmax(8rem, .7fr) 2.35rem !important;
+  align-items: end !important;
+  gap: .5rem !important;
+  flex: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .search-field,
+html.theme-light body.app-shell.technician-accomplishments-page .filter-field {
+  min-width: 0 !important;
+  width: auto !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel input,
+html.theme-light body.app-shell.technician-accomplishments-page .panel select,
+html.theme-light body.app-shell.technician-accomplishments-page .panel textarea {
+  border: 1px solid #dce5df !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel :is(input, select, textarea):focus {
+  border-color: #15803d !important;
+  outline: 2px solid rgba(21, 128, 61, .2) !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .filter-field > span,
+html.theme-light body.app-shell.technician-accomplishments-page .count,
+html.theme-light body.app-shell.technician-accomplishments-page .sub,
+html.theme-light body.app-shell.technician-accomplishments-page .preview,
+html.theme-light body.app-shell.technician-accomplishments-page .notice,
+html.theme-light body.app-shell.technician-accomplishments-page .pagination,
+html.theme-light body.app-shell.technician-accomplishments-page .page-controls label,
+html.theme-light body.app-shell.technician-accomplishments-page .detail-label {
+  color: #64748b !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page :is(.toolbar > div:first-child strong, .name, .preview-equipment, .detail-value, .report, .report a) {
+  color: #1f2937 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .report:hover {
+  border-color: #15803d !important;
+  background: #f0fdf4 !important;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, .08) !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .details,
+html.theme-light body.app-shell.technician-accomplishments-page .pagination {
+  border-color: #dce5df !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .badge {
+  border-color: #b7d8c1 !important;
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .badge.approved {
+  border-color: #86efac !important;
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .badge.reviewed {
+  border-color: #facc15 !important;
+  background: #fef3c7 !important;
+  color: #854d0e !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .badge.draft {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .btn.feedback,
+html.theme-light body.app-shell.technician-accomplishments-page .page-controls .btn {
+  border-color: #dce5df !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .btn.feedback:hover:not(:disabled),
+html.theme-light body.app-shell.technician-accomplishments-page .page-controls .btn:hover:not(:disabled) {
+  border-color: #15803d !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+@media (max-width: 900px) {
+  html.theme-light body.app-shell.technician-accomplishments-page .toolbar {
+    display: block !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .toolbar > div:first-child {
+    margin-bottom: .7rem !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .filters {
+    grid-template-columns: minmax(0, 1fr) minmax(8rem, .7fr) minmax(8rem, .7fr) 2.35rem !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .filters .search-field {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+    margin-left: 0 !important;
+    padding: 4rem .75rem 1rem !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .toolbar {
+    display: block !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.35rem !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .filters .search-field {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  html.theme-light body.app-shell.technician-accomplishments-page .filters {
+    grid-template-columns: minmax(0, 1fr) 2.35rem !important;
+  }
+
+  html.theme-light body.app-shell.technician-accomplishments-page .filter-field {
+    grid-column: 1 / -1 !important;
   }
 }
 
@@ -960,4 +1263,89 @@ html body.app-shell.admin-profile-page #mainContainer.theme-light .admin-profile
   html body.app-shell.admin-profile-page .admin-profile-submit {
     min-height: 2.8rem !important;
   }
+}
+
+/* Keep the technician review page's light surfaces last in the cascade. */
+html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+  width: calc(100% - var(--sidebar-width, 280px)) !important;
+  max-width: calc(100% - var(--sidebar-width, 280px)) !important;
+  margin-left: var(--sidebar-width, 280px) !important;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) 1.5rem !important;
+  background: #f4f7f5 !important;
+  background-image: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .wrap,
+html.theme-light body.app-shell.technician-accomplishments-page .panel,
+html.theme-light body.app-shell.technician-accomplishments-page .report,
+html.theme-light body.app-shell.technician-accomplishments-page .detail-field,
+html.theme-light body.app-shell.technician-accomplishments-page .time-details span,
+html.theme-light body.app-shell.technician-accomplishments-page .stats span {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: #dce5df !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .panel :is(input, select, textarea) {
+  border-color: #dce5df !important;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page :is(.main-container, .wrap)::before,
+html.theme-light body.app-shell.technician-accomplishments-page :is(.main-container, .wrap)::after,
+html.theme-light body.app-shell.technician-accomplishments-page .page-content::before {
+  display: none !important;
+  opacity: 0 !important;
+  background: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page .report:hover {
+  background: #f0fdf4 !important;
+  border-color: #15803d !important;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, .08) !important;
+}
+
+@media (max-width: 767px) {
+  html.theme-light body.app-shell.technician-accomplishments-page .main-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    padding: 4rem .75rem 1rem !important;
+  }
+}
+
+html body.app-shell.technician-accomplishments-page.app-content-embedded > .main-container {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page.app-content-embedded > .main-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+}
+
+html.theme-light body.app-shell.technician-accomplishments-page.app-content-embedded .wrap {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 1480px !important;
+  margin-right: auto !important;
+  margin-left: auto !important;
 }

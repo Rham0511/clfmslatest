@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Computer Labs | ComLab Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=75">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <style>
     :root { color-scheme: light dark; }
@@ -28,18 +28,18 @@
       font-family: Inter, "Segoe UI", sans-serif;
     }
     html.theme-light body.app-shell {
-      --page-bg: #eef4f0;
-      --panel-bg: linear-gradient(145deg, #fff, #f8fbf9);
-      --surface: #f6faf7;
-      --text: #16271d;
-      --muted: #5c7566;
-      --label: #294a37;
-      --line: rgba(22, 101, 52, .17);
-      --accent: #168044;
+      --page-bg: #f4f7f5;
+      --panel-bg: #ffffff;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --label: #1f2937;
+      --line: #dce5df;
+      --accent: #16a34a;
       --accent-strong: #15803d;
-      --soft: rgba(34, 197, 94, .1);
-      --danger: #a9362d;
-      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page-bg);
+      --soft: #f0fdf4;
+      --danger: #ef4444;
+      background: var(--page-bg);
     }
     .main-container {
       box-sizing: border-box;
@@ -51,7 +51,7 @@
       display: flex;
       min-height: 100dvh;
       flex-direction: column;
-      padding-top: calc(2.8rem + .55rem);
+      padding-top: 0;
       padding-bottom: .9rem;
     }
     .labs-wrap {
@@ -62,16 +62,6 @@
       flex: 1 1 auto;
       flex-direction: column;
       margin: 0;
-    }
-    .computer-labs-page .page-heading { display: none; }
-    /* Hide any shared-header spacer regardless of where the shared script inserts it. */
-    html body.app-shell.computer-labs-admin-page .comlab-page-header-spacer:not(#comlab-header-specificity):not(#comlab-header-specificity-2) {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      min-height: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
     }
     .labs-page-tabs {
       box-sizing: border-box;
@@ -91,6 +81,15 @@
       scrollbar-width: none;
     }
     .labs-page-tabs::-webkit-scrollbar { display: none; }
+    .labs-context-bar {
+      display: flex;
+      width: 100%;
+      min-height: 2.2rem;
+      align-items: center;
+      justify-content: flex-start;
+      gap: .55rem;
+      margin: 0 0 .55rem;
+    }
     .labs-page-tab {
       display: inline-flex;
       min-height: 2rem;
@@ -129,7 +128,7 @@
     .schedule-tab-panel {
       display: flex;
       box-sizing: border-box;
-      height: max(25rem, calc(100dvh - 4.25rem));
+      height: max(25rem, calc(100dvh - 7rem - env(safe-area-inset-top, 0px)));
       min-height: 0;
       flex: 0 0 auto;
       overflow: visible;
@@ -152,17 +151,14 @@
       .computer-labs-page .labs-page-tab { min-height: 1.8rem; padding: .25rem .4rem; font-size: .65rem; }
       .schedule-tab-panel { border-radius: 0; }
     }
-    .page-heading { overflow: visible; }
     .labs-header-actions { display: flex; align-items: center; gap: .45rem; }
     .labs-header-actions .comlab-notification-button { order: 1; }
-    .labs-header-actions .campus-chip { order: 2; }
     .labs-header-actions .system-profile-badge { order: 3; }
     @media (max-width: 768px) {
-      .main-container.computer-labs-page { padding-top: calc(env(safe-area-inset-top, 0px) + 2.8rem + .55rem); }
+      .main-container.computer-labs-page { padding-top: 0; }
       .labs-page-tabs { max-width: min(100%, 19rem); }
     }
     @media (max-width: 480px) {
-      html body.app-shell.computer-labs-admin-page .comlab-slim-page-header .campus-chip { display: none !important; }
       .labs-page-tabs { max-width: min(100%, 15rem); }
     }
     @media (max-width: 1023px) {
@@ -189,17 +185,6 @@
         margin-left: auto !important;
       }
     }
-    .campus-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: .38rem;
-      border: 1px solid var(--line);
-      background: var(--surface);
-      color: var(--label);
-      font-size: .72rem;
-    }
-    .campus-chip strong { color: var(--text); }
-    .campus-chip i { color: var(--accent); }
     .labs-overview {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -552,22 +537,18 @@
   <div id="shared-sidebar"></div>
   <main class="main-container computer-labs-page">
     <div class="labs-wrap">
-      <header class="page-heading" data-comlab-no-header-spacer="true">
+      <header class="page-heading">
         <button id="mobileMenuToggle" class="menu-toggle" type="button" onclick="toggleSidebar()" aria-label="Open navigation" aria-expanded="false">
           <i class="fas fa-bars" aria-hidden="true"></i>
         </button>
-        <div class="heading-copy">
-          <p class="eyebrow">Facilities management</p>
-          <p>Add and manage the computer laboratories registered at your campus.</p>
-          <nav class="labs-page-tabs" role="tablist" aria-label="Computer lab sections">
-            <button id="computerLabsTab" class="labs-page-tab" type="button" role="tab" aria-selected="true" aria-controls="computerLabsTabPanel" data-labs-tab="labs"><i class="fa-solid fa-building" aria-hidden="true"></i> Computer Labs</button>
-            <button id="laboratorySchedulesTab" class="labs-page-tab" type="button" role="tab" aria-selected="false" aria-controls="laboratorySchedulesTabPanel" data-labs-tab="schedules" tabindex="-1"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Schedules</button>
-          </nav>
-        </div>
-        <div class="header-actions labs-header-actions">
-          <div class="campus-chip"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Campus</span><strong id="campusName">Loading…</strong></div>
-        </div>
+        <div class="header-actions labs-header-actions"></div>
       </header>
+      <div class="labs-context-bar">
+        <nav class="labs-page-tabs" role="tablist" aria-label="Computer lab sections">
+          <button id="computerLabsTab" class="labs-page-tab" type="button" role="tab" aria-selected="true" aria-controls="computerLabsTabPanel" data-labs-tab="labs"><i class="fa-solid fa-building" aria-hidden="true"></i> Computer Labs</button>
+          <button id="laboratorySchedulesTab" class="labs-page-tab" type="button" role="tab" aria-selected="false" aria-controls="laboratorySchedulesTabPanel" data-labs-tab="schedules" tabindex="-1"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Schedules</button>
+        </nav>
+      </div>
       <section id="computerLabsTabPanel" class="labs-tab-panel" role="tabpanel" aria-labelledby="computerLabsTab" data-labs-panel="labs">
       <section class="labs-overview" aria-label="Computer lab overview">
         <article class="overview-stat"><span class="overview-stat-icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="overview-stat-copy"><span>Computer labs</span><strong id="totalLabs">—</strong></span></article>
@@ -673,7 +654,6 @@
     let labsLoadPromise = null;
     let labRevision = null;
     const assignedCampus = String(window.__CURRENT_USER__?.campus || '').trim();
-    document.getElementById('campusName').textContent = assignedCampus || 'No campus assigned';
     const directoryHeading = document.getElementById('lab-list-title');
     if (directoryHeading && assignedCampus) {
       const campusSuffix = /\bcampus$/i.test(assignedCampus) ? '' : ' Campus';
@@ -960,6 +940,6 @@
       labList.querySelectorAll('.lab-card.menu-open').forEach((card) => card.classList.remove('menu-open'));
     });
   </script>
-  <script src="/js/sidebar-component.js?v=78" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>

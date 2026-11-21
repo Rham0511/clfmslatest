@@ -1,3 +1,14 @@
+(function() {
+  try {
+    const saved = localStorage.getItem('comlab-main-theme');
+    const isLight = saved === 'light';
+    document.documentElement.classList.toggle('theme-light', isLight);
+    document.documentElement.classList.toggle('theme-dark', !isLight);
+    document.documentElement.classList.toggle('dark', !isLight);
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  } catch (e) {}
+})();
+
 const defaultSidebarItems = [
   { label: 'Dashboard', href: '/admin-dashboard', icon: 'fas fa-chart-line' },
   { label: 'Maintenance Monitoring', href: '/maintenance-monitoring', icon: 'fas fa-screwdriver-wrench' },
@@ -17,6 +28,8 @@ const defaultSidebarItems = [
 
 const isFacilitiesEmbeddedPage = new URLSearchParams(window.location.search).get('embedded') === 'facilities';
 if (isFacilitiesEmbeddedPage) document.body?.classList.add('facilities-embedded');
+const isAppContentEmbeddedPage = new URLSearchParams(window.location.search).get('embedded') === 'app-shell';
+if (isAppContentEmbeddedPage) document.body?.classList.add('app-content-embedded');
 
 const defaultSidebarHeader = {
   iconClass: 'fas fa-server',
@@ -53,6 +66,7 @@ function getSidebarConfig() {
 
 function getSidebarItems() {
   const config = getSidebarConfig();
+  const isAdminShell = document.body.classList.contains('admin-shell');
   if (Array.isArray(config.items) && config.items.length > 0) {
     const items = [...config.items];
     const role = String(window.__CURRENT_USER__?.role || config.role || '')
@@ -136,7 +150,7 @@ function getSidebarItems() {
     .trim()
     .toLowerCase()
     .replace(/[\s_-]+/g, '');
-  return role.includes('admin')
+  return role.includes('admin') || isAdminShell
     ? normalizeAdminFacilityItems(defaultSidebarItems).filter((item) => normalizeRoute(String(item.href || '').split(/[?#]/, 1)[0]) !== '/page/laboratory-schedules')
     : defaultSidebarItems;
 }
@@ -511,6 +525,10 @@ function setSidebarState(isOpen) {
 
   const shouldUseMobileLayout = window.innerWidth < 1024;
   const shouldOpen = shouldUseMobileLayout ? isOpen : true;
+  const mobileHeaderBottom = shouldUseMobileLayout && document.body.classList.contains('student-portal')
+    ? Math.max(0, Math.ceil(document.querySelector('.comlab-slim-page-header')?.getBoundingClientRect().bottom || 0))
+    : 0;
+  document.documentElement.style.setProperty('--comlab-mobile-sidebar-top', `${mobileHeaderBottom}px`);
 
   sidebar.classList.toggle('mobile-open', shouldOpen);
   sidebar.classList.toggle('mobile-closed', !shouldOpen && shouldUseMobileLayout);
@@ -545,8 +563,273 @@ function closeSidebarOnMobile() {
   }
 }
 
+function isInternalShellNavigation(url) {
+  if (url.origin !== window.location.origin) return false;
+  if (url.pathname === '/logout' || url.pathname === '/login' || url.pathname.startsWith('/api/')) return false;
+  return !url.pathname.startsWith('/css/') && !url.pathname.startsWith('/js/') && !url.pathname.startsWith('/img/');
+}
+
+function updateAppShellHeader(frameDocument, requestedUrl) {
+  const header = document.querySelector('.comlab-slim-page-header');
+  const rawPageTitle = String(frameDocument?.title || '').trim();
+  const targetUrl = requestedUrl ? new URL(requestedUrl.href) : null;
+  const matchingItems = targetUrl
+    ? getSidebarItems().filter((item) => normalizeRoute(new URL(item.href, targetUrl).pathname) === normalizeRoute(targetUrl.pathname))
+    : [];
+  const matchingItem = matchingItems.find((item) => {
+    const itemUrl = new URL(item.href, targetUrl);
+    return itemUrl.hash === targetUrl.hash && itemUrl.searchParams.get('view') === targetUrl.searchParams.get('view');
+  }) || matchingItems.find((item) => {
+    const itemUrl = new URL(item.href, targetUrl);
+    return !itemUrl.hash && !itemUrl.searchParams.has('view');
+  }) || matchingItems[0];
+  let pageTitle = matchingItem?.label || rawPageTitle.split(/\s*[|•]\s*/)[0].trim();
+  if (/^comlab student portal$/i.test(pageTitle)) {
+    pageTitle = frameDocument?.querySelector('.system-dashboard-heading h1')?.textContent.trim() || pageTitle;
+  }
+  if (!header || !pageTitle) return;
+
+  let title = header.querySelector('h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title');
+  if (!title) {
+    title = document.createElement('h1');
+    title.className = 'comlab-page-heading-title';
+    const target = header.matches('.top-header')
+      ? header.querySelector('.top-header-card') || header
+      : header;
+    const actions = target.querySelector('.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons');
+    if (actions?.parentElement === target) target.insertBefore(title, actions);
+    else target.prepend(title);
+  }
+  const headingMain = header.querySelector('.system-dashboard-heading-main, .header-left, .student-page-heading, .heading-copy');
+  if (headingMain && title.parentElement !== headingMain) {
+    headingMain.prepend(title);
+  }
+  title.textContent = pageTitle;
+  title.style.setProperty('display', 'block', 'important');
+  title.style.setProperty(
+    'color',
+    document.documentElement.classList.contains('theme-light') ? '#1F2937' : '#E6F5EC',
+    'important'
+  );
+  const suffix = rawPageTitle.match(/\s*[|•]\s*.+$/)?.[0] || ' | ComLab';
+  document.title = `${pageTitle}${suffix}`;
+}
+
+function updateAppShellFrameLayout(frame, hasHeaderSpacer = false) {
+  const header = document.querySelector('.comlab-slim-page-header');
+  if (!header) return;
+
+  const headerBottom = Math.max(0, header.getBoundingClientRect().bottom);
+  if (!headerBottom) return;
+
+  if (hasHeaderSpacer) {
+    frame.style.marginTop = '0';
+    return;
+  }
+
+  frame.style.marginTop = `${headerBottom}px`;
+  frame.style.height = `calc(100vh - ${headerBottom}px)`;
+  frame.style.minHeight = `calc(100vh - ${headerBottom}px)`;
+}
+
+function syncStudentAppShellFrameTheme(frame) {
+  const isLight = document.documentElement.classList.contains('theme-light');
+  try {
+    const frameDoc = frame.contentDocument;
+    if (frameDoc) {
+      frameDoc.documentElement.classList.toggle('dark', !isLight);
+      frameDoc.documentElement.classList.toggle('theme-light', isLight);
+      frameDoc.documentElement.classList.toggle('theme-dark', !isLight);
+      frameDoc.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      frameDoc.body?.classList.toggle('theme-light', isLight);
+      frameDoc.body?.classList.toggle('theme-dark', !isLight);
+      frameDoc.body?.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      frameDoc.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
+        container.classList.toggle('theme-light', isLight);
+        container.classList.toggle('theme-dark', !isLight);
+      });
+    }
+  } catch (error) {}
+
+  const applyFrameTheme = frame.contentWindow?.applyMainTheme;
+  if (typeof applyFrameTheme === 'function') {
+    applyFrameTheme(isLight ? 'light' : 'dark');
+  }
+}
+
+let appShellHistoryIndex = Number(window.history.state?.appShellIndex) || 0;
+
+function loadAdminContent(url, { updateHistory = true, direction = 'forward' } = {}) {
+  const contentContainer = document.querySelector(
+    '.main-container, .facilities-main, .audit-page-content, body > .page-shell'
+  );
+  if (!contentContainer) return false;
+  const nestedPageHeader = contentContainer.querySelector('.comlab-slim-page-header');
+  const existingShellHeader = Array.from(document.querySelectorAll('.comlab-slim-page-header'))
+    .find((header) => !contentContainer.contains(header));
+  if (nestedPageHeader) {
+    if (existingShellHeader) {
+      nestedPageHeader.remove();
+    } else {
+      document.body.append(nestedPageHeader);
+    }
+  }
+  const currentRole = getCurrentComLabRole();
+  contentContainer.style.setProperty('padding-left', '0', 'important');
+  contentContainer.style.setProperty('padding-right', '0', 'important');
+  const appShellHeaderSpacer = currentRole === 'admin'
+    ? document.querySelector('.comlab-page-header-spacer')
+    : null;
+  const appShellHeaderSpacerStyle = appShellHeaderSpacer
+    ? window.getComputedStyle(appShellHeaderSpacer)
+    : null;
+  const appShellHeaderOffset = appShellHeaderSpacer && appShellHeaderSpacerStyle
+    ? appShellHeaderSpacer.getBoundingClientRect().height
+      + (parseFloat(appShellHeaderSpacerStyle.marginTop) || 0)
+      + (parseFloat(appShellHeaderSpacerStyle.marginBottom) || 0)
+    : 0;
+  if (currentRole === 'student') {
+    ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'].forEach((property) => {
+      contentContainer.style.setProperty(property, '0', 'important');
+    });
+  }
+  if (document.body.classList.contains('faculty-page')) {
+    contentContainer.style.setProperty('padding-top', '0', 'important');
+    contentContainer.style.setProperty('padding-bottom', '0', 'important');
+    if (contentContainer.classList.contains('audit-page-content')) {
+      contentContainer.style.setProperty('height', 'auto', 'important');
+      contentContainer.style.setProperty('overflow', 'visible', 'important');
+    }
+  }
+
+  const contentUrl = new URL(url.href);
+  contentUrl.searchParams.set('embedded', 'app-shell');
+  updateAppShellHeader(null, url);
+  const frame = document.createElement('iframe');
+  frame.className = 'app-content-frame';
+  if (direction === 'back') frame.classList.add('app-content-frame-back');
+  frame.title = 'ComLab page content';
+  frame.style.display = 'block';
+  frame.style.width = '100%';
+  frame.style.height = '100vh';
+  frame.style.minHeight = '100vh';
+  frame.style.border = '0';
+  frame.style.visibility = 'hidden';
+  if (appShellHeaderSpacer && appShellHeaderOffset > 0) {
+    frame.style.height = `calc(100vh - ${appShellHeaderOffset}px)`;
+    frame.style.minHeight = `calc(100vh - ${appShellHeaderOffset}px)`;
+  }
+  updateAppShellFrameLayout(frame, Boolean(appShellHeaderSpacer));
+  frame.src = contentUrl.href;
+  frame.addEventListener('load', () => {
+    try {
+      const frameDocument = frame.contentDocument;
+      if (!frameDocument) return;
+      frameDocument.body?.classList.add('app-content-embedded');
+      frameDocument.querySelectorAll(
+        '#shared-sidebar, .sidebar-overlay, .sidebar, .comlab-slim-page-header, .comlab-page-header-spacer, .audit-header-spacer, .top-header, #mobileMenuToggle'
+      ).forEach((element) => element.remove());
+      if (
+        frameDocument.body?.classList.contains('student-portal')
+        && !frameDocument.body.classList.contains('faculty-portal')
+        && !frameDocument.body.classList.contains('faculty-page')
+      ) {
+        frameDocument.querySelectorAll('#qr-scan-float-btn, #comlab-help-float-btn')
+          .forEach((button) => button.style.setProperty('display', 'none', 'important'));
+        frameDocument.querySelectorAll(
+          '.student-page-header, .audit-page-heading, .page-header-card, .attendance-page-header'
+        ).forEach((header) => {
+          header.style.setProperty('display', 'none', 'important');
+        });
+      }
+      const embeddedStyle = frameDocument.createElement('style');
+      embeddedStyle.textContent = '#shared-sidebar,.sidebar-overlay,.top-header,.comlab-slim-page-header,.comlab-page-header-spacer,#mobileMenuToggle,#qr-scan-float-btn,#comlab-help-float-btn,#comlab-help-panel,.hero:not(.report-hero),.page-heading:not(.facilities-heading){display:none!important}body:not(.facilities-embedded) :is(.hero:not(.report-hero),.page-heading:not(.facilities-heading)){display:none!important}.system-dashboard-heading:not(.facilities-heading),body.student-portal:not(.faculty-portal):not(.faculty-page) :is(.student-page-header,.audit-page-heading,.page-header-card,.attendance-page-header){display:none!important}html body.app-content-embedded .main-container,html body.app-content-embedded .facilities-main{box-sizing:border-box!important;width:100%!important;max-width:none!important;min-height:100vh;margin-left:0!important;transition:none!important;transform:none!important;animation:none!important}html body.app-content-embedded .main-container.computer-labs-page{width:100%!important;margin-left:0!important}.page-content{transition:none!important;transform:none!important;animation:none!important}.main-container *:not(.fa-spin),.facilities-main *:not(.fa-spin){animation:none!important;transition:none!important}html body.app-content-embedded.faculty-page>.main-container,html body.app-content-embedded.faculty-page>.audit-page-content,html body.app-content-embedded.faculty-page>.page-shell{padding-top:3rem!important}@media(max-width:1023px){html body.app-content-embedded.faculty-page>.main-container,html body.app-content-embedded.faculty-page>.audit-page-content,html body.app-content-embedded.faculty-page>.page-shell{padding-top:5rem!important}}';
+      embeddedStyle.textContent += 'html body.app-content-embedded .system-dashboard-heading:not(.facilities-heading),html body.app-content-embedded .comlab-slim-page-header:not(#comlab-header-specificity),html body.app-content-embedded .comlab-page-header-spacer{display:none!important}';
+      embeddedStyle.textContent += 'html body.app-content-embedded .facilities-heading{display:none!important}';
+      if (
+        frameDocument.body?.classList.contains('student-portal')
+        && !frameDocument.body.classList.contains('faculty-portal')
+        && !frameDocument.body.classList.contains('faculty-page')
+      ) {
+        embeddedStyle.textContent += 'html body.app-content-embedded.student-portal:not(.faculty-portal):not(.faculty-page) > .main-container,html body.app-content-embedded.student-portal:not(.faculty-portal):not(.faculty-page) > .audit-page-content{padding-top:0!important}html body.app-content-embedded.student-portal:not(.faculty-portal):not(.faculty-page) > .page-shell{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding-top:0!important;padding-right:clamp(.65rem,3vw,1rem)!important;padding-left:clamp(.65rem,3vw,1rem)!important}';
+      }
+      frameDocument.head?.appendChild(embeddedStyle);
+      syncStudentAppShellFrameTheme(frame);
+      updateAppShellHeader(frameDocument, url);
+      frame.style.animation = 'none';
+      void frame.offsetWidth;
+      frame.style.visibility = 'visible';
+      frame.style.animation = '';
+      frameDocument.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link) return;
+        const targetUrl = new URL(link.href, frameDocument.baseURI);
+        if (!isInternalShellNavigation(targetUrl)) return;
+        event.preventDefault();
+        loadAdminContent(targetUrl);
+      });
+    } catch (error) {
+      // Cross-origin content is intentionally left to the browser.
+    }
+  });
+  if (appShellHeaderSpacer) {
+    contentContainer.replaceChildren(appShellHeaderSpacer, frame);
+  } else {
+    contentContainer.replaceChildren(frame);
+  }
+  if (updateHistory) {
+    contentContainer.scrollTo(0, 0);
+    window.scrollTo(0, 0);
+    appShellHistoryIndex += 1;
+    window.history.pushState({ appShell: true, appShellIndex: appShellHistoryIndex }, '', url.href);
+  }
+  markActiveItem();
+  closeSidebarOnMobile();
+  return true;
+}
+
+function initializeAdminContentNavigation() {
+  if (isAppContentEmbeddedPage) return;
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('.sidebar-nav-link[href]');
+    if (!link) return;
+    const targetUrl = new URL(link.href, window.location.href);
+    if (!isInternalShellNavigation(targetUrl)) return;
+    if (!loadAdminContent(targetUrl)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  window.addEventListener('popstate', (event) => {
+    const targetHistoryIndex = Number(event.state?.appShellIndex) || 0;
+    loadAdminContent(new URL(window.location.href), {
+      updateHistory: false,
+      direction: targetHistoryIndex < appShellHistoryIndex ? 'back' : 'forward'
+    });
+    appShellHistoryIndex = targetHistoryIndex;
+  });
+  window.addEventListener('resize', () => {
+    const frame = document.querySelector('.app-content-frame');
+    if (frame) {
+      updateAppShellFrameLayout(frame, Boolean(document.querySelector('.comlab-page-header-spacer')));
+    }
+  });
+}
+
 function setProfileAvatarContent(element, initials, photoUrl) {
   if (!element) return;
+  const isAdminHeaderAvatar = getCurrentComLabRole() === 'admin'
+    && element.matches('.system-profile-badge-avatar, .user-avatar, .faculty-profile-avatar');
+  if (isAdminHeaderAvatar) {
+    element.style.setProperty('box-sizing', 'border-box', 'important');
+    element.style.setProperty('width', '1.75rem', 'important');
+    element.style.setProperty('height', '1.75rem', 'important');
+    element.style.setProperty('min-width', '1.75rem', 'important');
+    element.style.setProperty('flex', '0 0 1.75rem', 'important');
+    element.style.setProperty('overflow', 'hidden', 'important');
+    element.style.setProperty('padding', '0', 'important');
+    element.style.setProperty('border', '0', 'important');
+    element.style.setProperty('border-radius', '50%', 'important');
+  }
   const url = typeof photoUrl === 'string' ? photoUrl.trim() : '';
   if (!url) {
     element.textContent = initials;
@@ -559,6 +842,32 @@ function setProfileAvatarContent(element, initials, photoUrl) {
   image.src = url;
   image.alt = 'Profile photo';
   image.draggable = false;
+  if (isAdminHeaderAvatar) {
+    image.style.setProperty('display', 'block', 'important');
+    image.style.setProperty('width', '100%', 'important');
+    image.style.setProperty('height', '100%', 'important');
+    image.style.setProperty('max-width', '100%', 'important');
+    image.style.setProperty('max-height', '100%', 'important');
+    image.style.setProperty('object-fit', 'contain', 'important');
+    image.style.setProperty('border-radius', '50%', 'important');
+  }
+  if (
+    document.body.classList.contains('admin-profile-page') &&
+    element.matches('.system-profile-badge-avatar, [data-admin-profile-initials]')
+  ) {
+    element.style.setProperty('overflow', 'hidden', 'important');
+    element.style.setProperty('border', '0', 'important');
+    element.style.setProperty('border-radius', '50%', 'important');
+    element.style.setProperty('outline', '0', 'important');
+    element.style.setProperty('box-shadow', 'none', 'important');
+    image.style.setProperty('display', 'block', 'important');
+    image.style.setProperty('width', '100%', 'important');
+    image.style.setProperty('height', '100%', 'important');
+    image.style.setProperty('border', '0', 'important');
+    image.style.setProperty('border-radius', '50%', 'important');
+    image.style.setProperty('clip-path', 'circle(50% at 50% 50%)', 'important');
+    image.style.setProperty('-webkit-clip-path', 'circle(50% at 50% 50%)', 'important');
+  }
   image.addEventListener('error', () => {
     element.textContent = initials;
     element.classList.remove('has-profile-photo');
@@ -631,27 +940,34 @@ function hydrateStudentPageHeader() {
 const COMLAB_MAIN_THEME_KEY = 'comlab-main-theme';
 const COMLAB_MAIN_THEME_CONTAINERS = [
   '.main-container',
+  '.main-content',
   'body.student-borrow-equipment-page > .page-shell',
   'body.faculty-borrow-equipment-page > .page-shell',
-  '.audit-page-content'
+  '.page-shell',
+  '.audit-page-content',
+  '.facilities-main',
+  '.assignment-content',
+  '#shared-sidebar',
+  '#sidebar',
+  '.sidebar',
+  '.comlab-slim-page-header'
 ].join(', ');
-
-function isDarkOnlyPage() {
-  return document.body.matches('.laboratory-schedules-page, .schedule-page')
-    || /laboratory schedules/i.test(document.title)
-    || ['/page/laboratory-schedules', '/faculty-laboratory-schedules'].includes(window.location.pathname);
-}
 
 function isDashboardThemeManagedPage() {
   return document.body.matches('[data-theme-managed-by-dashboard]');
 }
 
 function applyMainTheme(theme) {
-  const darkOnlyPage = isDarkOnlyPage();
-  const selectedTheme = !darkOnlyPage && theme === 'light' ? 'light' : 'dark';
+  const selectedTheme = theme === 'light' ? 'light' : 'dark';
   const isLight = selectedTheme === 'light';
   document.documentElement.classList.toggle('dark', !isLight);
   document.documentElement.classList.toggle('theme-light', isLight);
+  document.documentElement.classList.toggle('theme-dark', !isLight);
+  document.documentElement.setAttribute('data-theme', selectedTheme);
+  document.body?.classList.toggle('theme-light', isLight);
+  document.body?.classList.toggle('theme-dark', !isLight);
+  document.body?.setAttribute('data-theme', selectedTheme);
+
   document.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
     container.classList.toggle('theme-light', isLight);
     container.classList.toggle('theme-dark', !isLight);
@@ -667,7 +983,41 @@ function applyMainTheme(theme) {
     toggle.title = `Switch application to ${isLight ? 'dark' : 'light'} mode`;
     toggle.innerHTML = `<i class="fas ${isLight ? 'fa-moon' : 'fa-sun'}" aria-hidden="true"></i>`;
   });
+
+  const shellTitle = document.querySelector('.comlab-slim-page-header :is(h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title)');
+  if (shellTitle) {
+    shellTitle.style.setProperty('color', isLight ? '#1F2937' : '#E6F5EC', 'important');
+  }
+
+  document.querySelectorAll('.system-profile-badge, .student-page-user, header .user-profile').forEach((badge) => {
+    badge.classList.toggle('theme-light', isLight);
+    badge.classList.toggle('theme-dark', !isLight);
+    if (isLight) {
+      badge.classList.remove('bg-[#04281b]', 'text-white');
+      badge.querySelectorAll('.system-profile-badge-avatar, .student-page-user-initials, .user-avatar')
+        .forEach((avatar) => avatar.classList.remove('bg-[#06402b]', 'text-emerald-300'));
+      badge.querySelectorAll('.system-profile-badge-name, .student-page-user-name, .user-name')
+        .forEach((name) => name.classList.remove('text-white'));
+      badge.querySelectorAll('.system-profile-badge-copy, .student-page-user-copy')
+        .forEach((copy) => copy.classList.remove('text-white'));
+      badge.querySelectorAll('.system-profile-badge-role, .student-page-user-role, .user-role')
+        .forEach((role) => role.classList.remove('text-emerald-400'));
+    } else {
+      badge.classList.add('bg-[#04281b]', 'text-white');
+      badge.querySelectorAll('.system-profile-badge-avatar, .student-page-user-initials, .user-avatar')
+        .forEach((avatar) => avatar.classList.add('bg-[#06402b]', 'text-emerald-300'));
+      badge.querySelectorAll('.system-profile-badge-name, .student-page-user-name, .user-name')
+        .forEach((name) => name.classList.add('text-white'));
+      badge.querySelectorAll('.system-profile-badge-copy, .student-page-user-copy')
+        .forEach((copy) => copy.classList.add('text-white'));
+      badge.querySelectorAll('.system-profile-badge-role, .student-page-user-role, .user-role')
+        .forEach((role) => role.classList.add('text-emerald-400'));
+    }
+  });
+
+  document.querySelectorAll('iframe.app-content-frame, iframe.facilities-frame, iframe[data-comlab-frame]').forEach(syncStudentAppShellFrameTheme);
 }
+window.applyMainTheme = applyMainTheme;
 
 function applyFixedTableHeaderClasses(container) {
   const fixedHeaders = [];
@@ -760,6 +1110,44 @@ function ensureCompactPageHeaderTitles() {
 
   headers.forEach((header) => {
     if (header.closest('#shared-sidebar, .sidebar')) return;
+    const existingShellHeader = Array.from(document.body.children)
+      .find((candidate) => candidate !== header && candidate.matches('.comlab-slim-page-header'));
+    if (existingShellHeader && !existingShellHeader.contains(header)) {
+      const duplicatesShellControls = header.querySelector(
+        '[data-comlab-notification-button], .comlab-notification-button'
+      ) && header.querySelector('.system-profile-badge, .user-profile');
+      if (duplicatesShellControls && !header.querySelector(titleSelector)) {
+        header.remove();
+      } else {
+        header.classList.remove('comlab-slim-page-header');
+        delete header.dataset.comlabFixedPageHeader;
+      }
+      return;
+    }
+    if (header.matches('.facilities-heading')) {
+      header.classList.add('comlab-slim-page-header');
+      header.dataset.comlabManagedHeader = 'true';
+      header.dataset.comlabFixedPageHeader = 'true';
+      if (!header.previousElementSibling?.matches('.comlab-page-header-spacer')) {
+        const spacer = document.createElement('div');
+        spacer.className = 'comlab-page-header-spacer';
+        spacer.setAttribute('aria-hidden', 'true');
+        header.parentElement?.insertBefore(spacer, header);
+      }
+      return;
+    }
+    if (header.matches('.page-heading') && document.body.classList.contains('computer-labs-admin-page')) {
+      header.classList.add('comlab-slim-page-header');
+      header.dataset.comlabFixedPageHeader = 'true';
+      if (!header.previousElementSibling?.matches('.comlab-page-header-spacer')) {
+        const spacer = document.createElement('div');
+        spacer.className = 'comlab-page-header-spacer';
+        spacer.setAttribute('aria-hidden', 'true');
+        header.parentElement?.insertBefore(spacer, header);
+      }
+      document.body.append(header);
+      return;
+    }
     if (header.parentElement?.closest(selector)) return;
     if (header.dataset.comlabFixedPageHeader === 'true') return;
 
@@ -776,6 +1164,19 @@ function ensureCompactPageHeaderTitles() {
       const actions = target.querySelector('.system-dashboard-heading-actions, .header-actions, .header-right, .header-icons');
       if (actions?.parentElement === target) target.insertBefore(title, actions);
       else target.prepend(title);
+    }
+    const heading = header.querySelector(`${titleSelector}, .comlab-page-heading-title`);
+    const headingMain = header.querySelector('.system-dashboard-heading-main, .header-left, .student-page-heading, .heading-copy');
+    if (heading && headingMain && heading.parentElement !== headingMain) {
+      headingMain.prepend(heading);
+    }
+    if (heading) {
+      heading.style.setProperty('display', 'block', 'important');
+      heading.style.setProperty(
+        'color',
+        document.documentElement.classList.contains('theme-light') ? '#1F2937' : '#E6F5EC',
+        'important'
+      );
     }
 
     if (header.dataset.comlabNoHeaderSpacer !== 'true') {
@@ -819,11 +1220,39 @@ function ensureRoleNotificationButtons() {
   };
   const destination = destinations[role];
 
-  document.querySelectorAll('.comlab-slim-page-header').forEach((header) => {
+  document.querySelectorAll(
+    '.comlab-slim-page-header, .facilities-heading, .computer-labs-admin-page .page-heading'
+  ).forEach((header) => {
     let button = header.querySelector('#adminBorrowNotificationsButton, [data-comlab-notification-button]');
-    const actions = header.querySelector(
+    let actions = header.querySelector(
       '.system-dashboard-heading-actions, .student-dashboard-profile-column, .header-actions, .header-right, .header-icons, .borrow-header-actions, .attendance-header-actions, .report-issue-header-actions, .my-requests-header-actions, .student-profile-header-actions'
-    ) || header;
+    );
+
+    // Some page-specific headers (notably Technician Accomplishments) are
+    // promoted into the shared slim header without an action-group wrapper.
+    // Create the wrapper once so notification, theme, and profile controls
+    // stay together on the right side of the header.
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.className = 'system-dashboard-heading-actions';
+      actions.setAttribute('data-comlab-header-actions', 'true');
+
+      const directThemeControls = Array.from(header.children)
+        .find((child) => child.classList.contains('profile-theme-controls'));
+      const directProfile = Array.from(header.children)
+        .find((child) => child.matches('.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link, .technician-profile-identity'));
+
+      if (directThemeControls) actions.append(directThemeControls);
+      if (directProfile) actions.append(directProfile);
+      header.append(actions);
+    }
+    header.classList.add('comlab-shared-header');
+    actions.classList.add('comlab-shared-header-actions');
+    actions.style.setProperty('display', 'flex', 'important');
+    actions.style.setProperty('align-items', 'center', 'important');
+    actions.style.setProperty('justify-content', 'flex-end', 'important');
+    actions.style.setProperty('flex-wrap', 'nowrap', 'important');
+    actions.style.setProperty('gap', '.45rem', 'important');
 
     if (!header.querySelector('.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link, .technician-profile-identity')) {
       const profile = document.createElement('div');
@@ -910,6 +1339,15 @@ function ensureRoleNotificationButtons() {
         badge.style.setProperty('pointer-events', 'none', 'important');
       }
     }
+
+    const setActionOrder = (selector, order) => {
+      const action = actions.querySelector(selector);
+      action?.style.setProperty('order', String(order), 'important');
+    };
+    setActionOrder('.comlab-notification-button, [data-comlab-notification-button]', 1);
+    setActionOrder('[data-theme-toggle-anchor], .profile-theme-controls, .profile-theme-toggle, [data-main-theme-toggle]', 2);
+    setActionOrder('.system-profile-badge, .student-page-user, .user-profile, .faculty-profile-link, .technician-profile-identity', 3);
+    setActionOrder('.campus-chip', 4);
   });
 }
 
@@ -1263,9 +1701,7 @@ async function refreshRoleNotificationCount() {
 
 function initializeMainThemeToggle() {
   const savedTheme = localStorage.getItem(COMLAB_MAIN_THEME_KEY);
-  const darkOnlyPage = isDarkOnlyPage();
-  const isStudentPortalPage = document.body.classList.contains('student-portal');
-  const initialTheme = !darkOnlyPage && (savedTheme === 'light' || (isStudentPortalPage && !savedTheme)) ? 'light' : 'dark';
+  const initialTheme = savedTheme === 'light' ? 'light' : 'dark';
   applyMainTheme(initialTheme);
 
   document.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
@@ -1297,24 +1733,21 @@ function initializeMainThemeToggle() {
         'theme-dark'
       );
     });
-    profileBadge.classList.add('profile-theme-static', 'bg-[#04281b]', 'text-white');
-    profileBadge.querySelectorAll('.system-profile-badge-avatar, .student-page-user-initials, .user-avatar')
-      .forEach((avatar) => avatar.classList.add('bg-[#06402b]', 'text-emerald-300'));
-    profileBadge.querySelectorAll('.system-profile-badge-name, .student-page-user-name, .user-name')
-      .forEach((name) => name.classList.add('text-white'));
-    profileBadge.querySelectorAll('.system-profile-badge-copy, .student-page-user-copy')
-      .forEach((copy) => copy.classList.add('text-white'));
-    profileBadge.querySelectorAll('.system-profile-badge-role, .student-page-user-role, .user-role')
-      .forEach((role) => role.classList.add('text-emerald-400'));
+    profileBadge.classList.add('profile-theme-static');
+    if (initialTheme === 'light') {
+      profileBadge.classList.add('theme-light');
+    } else {
+      profileBadge.classList.add('bg-[#04281b]', 'text-white');
+      profileBadge.querySelectorAll('.system-profile-badge-avatar, .student-page-user-initials, .user-avatar')
+        .forEach((avatar) => avatar.classList.add('bg-[#06402b]', 'text-emerald-300'));
+      profileBadge.querySelectorAll('.system-profile-badge-name, .student-page-user-name, .user-name')
+        .forEach((name) => name.classList.add('text-white'));
+      profileBadge.querySelectorAll('.system-profile-badge-copy, .student-page-user-copy')
+        .forEach((copy) => copy.classList.add('text-white'));
+      profileBadge.querySelectorAll('.system-profile-badge-role, .student-page-user-role, .user-role')
+        .forEach((role) => role.classList.add('text-emerald-400'));
+    }
   });
-
-  if (darkOnlyPage) {
-    document.querySelectorAll('.profile-theme-controls, [data-main-theme-toggle]').forEach((element) => {
-      if (!element.closest('#shared-sidebar, .sidebar')) element.remove();
-    });
-    applyMainTheme('dark');
-    return;
-  }
 
   if (isDashboardThemeManagedPage()) {
     document.querySelectorAll('.profile-theme-controls, [data-main-theme-toggle]').forEach((element) => {
@@ -1396,8 +1829,12 @@ window.addEventListener('storage', (event) => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (isFacilitiesEmbeddedPage) {
+  if (isFacilitiesEmbeddedPage || isAppContentEmbeddedPage) {
     document.getElementById('shared-sidebar')?.remove();
+    document.querySelectorAll(
+      '.comlab-slim-page-header, .comlab-page-header-spacer, .top-header, #mobileMenuToggle'
+    ).forEach((element) => element.remove());
+    applyMainTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
     return;
   }
   hydrateStudentPageHeader();
@@ -1446,12 +1883,19 @@ window.addEventListener('DOMContentLoaded', () => {
         existingToggle.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
         existingToggle.classList.remove('menu-toggle', 'block', 'lg:hidden');
         existingToggle.classList.add('student-page-menu');
-        if (!existingToggle.closest('.student-page-header')) {
-          const header = document.querySelector('.student-page-header') || document.querySelector('.page-header-card');
-          if (header && !header.contains(existingToggle)) {
-            const heading = header.querySelector('.student-page-heading') || header;
-            heading.insertBefore(existingToggle, heading.firstChild);
-          }
+        const header = existingToggle.closest(
+          '.comlab-slim-page-header, .system-dashboard-heading, .student-page-header, .page-header-card, header'
+        ) || document.querySelector(
+          '.comlab-slim-page-header, .system-dashboard-heading, .student-page-header, .page-header-card, header'
+        );
+        if (header) {
+          const headingMain = header.querySelector(
+            '.system-dashboard-heading-main, .student-page-heading, .header-left, .heading-copy'
+          );
+          const firstContent = headingMain?.parentElement === header
+            ? headingMain
+            : header.firstElementChild;
+          header.insertBefore(existingToggle, firstContent);
         }
       } else {
         existingToggle.classList.add('menu-toggle', 'block', 'lg:hidden');
@@ -1460,7 +1904,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (isStudentPortal) {
-      const header = document.querySelector('.student-page-header');
+      const header = document.querySelector(
+        '.comlab-slim-page-header, .system-dashboard-heading, .student-page-header, .page-header-card, header'
+      );
       if (header) {
         const btn = document.createElement('button');
         btn.id = 'mobileMenuToggle';
@@ -1470,8 +1916,13 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.setAttribute('aria-expanded', 'false');
         btn.setAttribute('onclick', 'toggleSidebar()');
         btn.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
-        const heading = header.querySelector('.student-page-heading') || header;
-        heading.insertBefore(btn, heading.firstChild);
+        const headingMain = header.querySelector(
+          '.system-dashboard-heading-main, .student-page-heading, .header-left, .heading-copy'
+        );
+        const firstContent = headingMain?.parentElement === header
+          ? headingMain
+          : header.firstElementChild;
+        header.insertBefore(btn, firstContent);
         return;
       }
     }
@@ -1493,6 +1944,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(btn);
   };
   ensureMobileToggle();
+  initializeAdminContentNavigation();
   // ensure overlay click closes sidebar (defensive)
   const overlayEl = document.getElementById('sidebarOverlay');
   if (overlayEl) overlayEl.addEventListener('click', () => { closeSidebar(); const mb=document.getElementById('mobileMenuToggle'); if (mb) mb.setAttribute('aria-expanded', 'false'); });

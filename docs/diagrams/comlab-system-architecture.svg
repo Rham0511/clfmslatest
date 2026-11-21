@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#12372a}
+      .subtitle{font:400 18px Arial,sans-serif;fill:#5b6b64}
+      .layer{font:700 14px Arial,sans-serif;fill:#668176}
+      .label{font:700 19px Arial,sans-serif;fill:#17352b}
+      .small{font:400 15px Arial,sans-serif;fill:#53655d}
+      .card{fill:#fff;stroke:#315a49;stroke-width:3}
+      .green{fill:#edf6f2;stroke:#2f7d62;stroke-width:3}
+      .yellow{fill:#fff7df;stroke:#c58d2b;stroke-width:3}
+      .arrow{stroke:#4a685b;stroke-width:3;fill:none;marker-end:url(#m)}
+      .dashed{stroke:#789087;stroke-width:2.5;fill:none;stroke-dasharray:8 7}
+    </style>
+    <marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a685b"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7faf8"/>
+  <text x="70" y="65" class="title">ComLab - System Architecture Diagram</text>
+  <text x="70" y="98" class="subtitle">Three-tier web architecture with role-based access and QR integrations</text>
+
+  <!-- Presentation tier -->
+  <rect x="70" y="140" width="1460" height="190" rx="18" fill="#f1f6f3" stroke="#b7c9c1" stroke-width="2"/>
+  <text x="95" y="170" class="layer">PRESENTATION TIER</text>
+
+  <rect x="130" y="195" width="260" height="100" rx="14" class="card"/>
+  <circle cx="180" cy="245" r="28" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M168 245 h24 M180 233 v24" stroke="#315a49" stroke-width="4"/>
+  <text x="225" y="238" text-anchor="middle" class="label">Web Browser</text>
+  <text x="225" y="267" text-anchor="middle" class="small">HTML / CSS / JavaScript</text>
+
+  <rect x="440" y="195" width="260" height="100" rx="14" class="card"/>
+  <rect x="490" y="220" width="44" height="50" rx="5" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M500 236 h24 M500 246 h24 M500 256 h16" stroke="#315a49" stroke-width="3"/>
+  <text x="620" y="238" text-anchor="middle" class="label">Admin / Faculty</text>
+  <text x="620" y="267" text-anchor="middle" class="small">Role dashboards</text>
+
+  <rect x="750" y="195" width="260" height="100" rx="14" class="card"/>
+  <rect x="800" y="220" width="44" height="50" rx="5" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <path d="M810 236 h24 M810 246 h24 M810 256 h16" stroke="#315a49" stroke-width="3"/>
+  <text x="930" y="238" text-anchor="middle" class="label">Student</text>
+  <text x="930" y="267" text-anchor="middle" class="small">Requests / attendance</text>
+
+  <rect x="1060" y="195" width="260" height="100" rx="14" class="card"/>
+  <rect x="1110" y="220" width="44" height="50" rx="5" fill="#dfeee8" stroke="#315a49" stroke-width="3"/>
+  <circle cx="1132" cy="244" r="12" fill="#fff" stroke="#315a49" stroke-width="3"/>
+  <text x="1240" y="238" text-anchor="middle" class="label">Technician</text>
+  <text x="1240" y="267" text-anchor="middle" class="small">Maintenance tasks</text>
+
+  <!-- Application tier -->
+  <rect x="70" y="370" width="1460" height="250" rx="18" fill="#edf6f2" stroke="#9bc1b0" stroke-width="2"/>
+  <text x="95" y="400" class="layer">APPLICATION TIER - NODE.JS / EXPRESS</text>
+
+  <rect x="125" y="430" width="210" height="145" rx="14" class="green"/>
+  <text x="230" y="470" text-anchor="middle" class="label">Routes</text>
+  <text x="230" y="500" text-anchor="middle" class="small">HTTP endpoints</text>
+  <text x="230" y="530" text-anchor="middle" class="small">Sessions and validation</text>
+
+  <rect x="375" y="430" width="210" height="145" rx="14" class="green"/>
+  <text x="480" y="470" text-anchor="middle" class="label">Controllers</text>
+  <text x="480" y="500" text-anchor="middle" class="small">Business workflows</text>
+  <text x="480" y="530" text-anchor="middle" class="small">Role authorization</text>
+
+  <rect x="625" y="430" width="210" height="145" rx="14" class="green"/>
+  <text x="730" y="470" text-anchor="middle" class="label">Models</text>
+  <text x="730" y="500" text-anchor="middle" class="small">Sequelize ORM</text>
+  <text x="730" y="530" text-anchor="middle" class="small">Data operations</text>
+
+  <rect x="875" y="430" width="210" height="145" rx="14" class="green"/>
+  <text x="980" y="470" text-anchor="middle" class="label">Views / HBS</text>
+  <text x="980" y="500" text-anchor="middle" class="small">Server-rendered UI</text>
+  <text x="980" y="530" text-anchor="middle" class="small">Static public assets</text>
+
+  <rect x="1125" y="430" width="210" height="145" rx="14" class="green"/>
+  <text x="1230" y="470" text-anchor="middle" class="label">Services</text>
+  <text x="1230" y="500" text-anchor="middle" class="small">QR / Audit / Email</text>
+  <text x="1230" y="530" text-anchor="middle" class="small">Reports / Archiving</text>
+
+  <!-- Data tier -->
+  <rect x="70" y="660" width="1460" height="170" rx="18" fill="#fffaf0" stroke="#dcc78a" stroke-width="2"/>
+  <text x="95" y="690" class="layer">DATA / EXTERNAL TIER</text>
+
+  <rect x="220" y="710" width="300" height="90" rx="14" class="yellow"/>
+  <ellipse cx="280" cy="755" rx="36" ry="28" fill="#fff" stroke="#c58d2b" stroke-width="3"/>
+  <text x="420" y="748" text-anchor="middle" class="label">MySQL Database</text>
+  <text x="420" y="778" text-anchor="middle" class="small">Persistent application records</text>
+
+  <rect x="650" y="710" width="300" height="90" rx="14" class="yellow"/>
+  <rect x="700" y="735" width="50" height="38" rx="5" fill="#fff" stroke="#c58d2b" stroke-width="3"/>
+  <path d="M710 745 h30 M710 755 h30" stroke="#c58d2b" stroke-width="3"/>
+  <text x="850" y="748" text-anchor="middle" class="label">SMTP / Email</text>
+  <text x="850" y="778" text-anchor="middle" class="small">Verification and notices</text>
+
+  <rect x="1080" y="710" width="300" height="90" rx="14" class="yellow"/>
+  <rect x="1130" y="730" width="48" height="48" rx="4" fill="#fff" stroke="#c58d2b" stroke-width="3"/>
+  <path d="M1138 738 h32 v32 h-32 z M1146 746 h16 v16 h-16 z" fill="#fff7df" stroke="#c58d2b" stroke-width="2"/>
+  <text x="1280" y="748" text-anchor="middle" class="label">QR / PC Scanners</text>
+  <text x="1280" y="778" text-anchor="middle" class="small">Attendance and equipment</text>
+
+  <!-- Connections -->
+  <path d="M800 330 C800 350 800 360 800 370" class="arrow"/>
+  <path d="M800 620 C800 640 800 650 800 660" class="arrow"/>
+  <path d="M335 500 C350 500 360 500 375 500" class="arrow"/>
+  <path d="M585 500 C600 500 610 500 625 500" class="arrow"/>
+  <path d="M835 500 C850 500 860 500 875 500" class="arrow"/>
+  <path d="M1085 500 C1100 500 1110 500 1125 500" class="arrow"/>
+  <path d="M950 710 C950 650 980 620 980 575" class="dashed"/>
+  <path d="M1230 710 C1230 650 1230 620 1230 575" class="dashed"/>
+
+  <text x="1450" y="860" text-anchor="end" class="small">ComLab - 2026</text>
+</svg>

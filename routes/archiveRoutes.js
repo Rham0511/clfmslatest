@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { User } from "../models/userModel.js";
 import {
@@ -21,10 +22,13 @@ async function requireAdminPage(req, res, next) {
   if (!req.session?.userId) return res.redirect("/login");
 
   try {
-    const user = await User.findByPk(req.session.userId, { attributes: ["role"] });
+    const user = await User.findByPk(req.session.userId, {
+      attributes: ["name", "email", "role", "campus", "photo"]
+    });
     if (!user || !adminRoles.has(String(user.role || "").trim().toLowerCase().replace(/[_-]+/g, ""))) {
       return res.status(403).send("Forbidden: administrator access required.");
     }
+    req.archivePageUser = user;
     return next();
   } catch (error) {
     console.error("Failed to authorize archived records page:", error);
@@ -32,9 +36,24 @@ async function requireAdminPage(req, res, next) {
   }
 }
 
-router.get("/archived-records", requireAdminPage, (req, res) => {
+router.get("/archived-records", requireAdminPage, async (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.sendFile(path.join(__dirname, "../views/admin/archived-records.html"));
+  try {
+    const user = req.archivePageUser;
+    const currentUser = {
+      name: user.name || "Administrator",
+      email: user.email || "",
+      role: user.role || "admin",
+      campus: user.campus || "",
+      photo: user.photo || null
+    };
+    const html = await fs.promises.readFile(path.join(__dirname, "../views/admin/archived-records.html"), "utf8");
+    const safeUserJson = JSON.stringify(currentUser).replaceAll("<", "\\u003c");
+    res.type("html").send(html.replaceAll("__CURRENT_USER_JSON__", safeUserJson));
+  } catch (error) {
+    console.error("Failed to render archived records page:", error);
+    res.status(500).send("Failed to load archived records page.");
+  }
 });
 router.get("/api/archived-records/revision", getArchivedRecordsRevision);
 router.get("/api/archived-records", listArchivedRecords);

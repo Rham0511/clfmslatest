@@ -6,7 +6,7 @@
   <title>Equipment Borrowed | ComLab</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="/css/sidebar.css?v=75" />
+  <link rel="stylesheet" href="/css/sidebar.css?v=91" />
   <style>
     :root {
       color-scheme: dark;
@@ -119,20 +119,20 @@
     #mainContainer.theme-light .table-wrap,
     #mainContainer.theme-light .modal-card,
     #mainContainer.theme-light > .top-header {
-      border: 2px solid #9fb8a5;
+      border: 1px solid #dce5df;
       background: #ffffff;
-      color: #111827;
-      box-shadow: 0 8px 24px rgba(31, 41, 55, .07);
+      color: #1f2937;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
     }
 
     #mainContainer.theme-light .table-wrap table th,
     #mainContainer.theme-light .table-wrap table td {
-      border-bottom: 1.5px solid #b8cbbb;
+      border-bottom: 1px solid #dce5df;
     }
 
     #mainContainer.theme-light .system-filter-row input,
     #mainContainer.theme-light .system-filter-row select {
-      border: 2px solid #9fb8a5;
+      border: 1px solid #dce5df;
     }
 
     #mainContainer.theme-light .table-wrap {
@@ -1186,20 +1186,44 @@
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap {
-      border-color: #d2e2d7;
-      background: #ffffff;
+      border-color: #E2E8F0 !important;
+      background: #FFFFFF !important;
+      background-image: none !important;
+      box-shadow: none !important;
     }
 
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr {
-      background: #ffffff;
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap table,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
+      border-color: #E2E8F0 !important;
+      background: #FFFFFF !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      color: #1E293B !important;
     }
 
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even) {
-      background: #f4f8f5;
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead tr,
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead th {
+      border-color: #E2E8F0 !important;
+      background: #F8FAFC !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      color: #334155 !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even),
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even) td {
+      background: #F8FAFC !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover {
-      background: #e8f5ec;
+      background: #E8F5ED !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover td {
+      background: #E8F5ED !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
@@ -1256,7 +1280,7 @@
       color: #526b5b;
     }
   </style>
-  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=12">
+  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=14">
   <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell system-layout-page admin-borrow-equipment-page">
@@ -1654,7 +1678,7 @@
     </div>
   </div>
 
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
   <script>
     const borrowModal = document.getElementById('borrowModalOverlay');
     const returnModal = document.getElementById('returnModalOverlay');

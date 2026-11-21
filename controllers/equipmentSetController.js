@@ -108,7 +108,7 @@ export async function getAllPCSets(req, res) {
     if (!access) return;
     await ensureArchiveRecordsTable();
     const campusScope = access.campusVariants.length
-      ? `AND (COALESCE(componentStats.campus, stationLab.campus) IN (${access.campusVariants.map(() => '?').join(',')})
+      ? `AND (CONVERT(COALESCE(componentStats.campus, stationLab.campus) USING utf8mb4) COLLATE utf8mb4_unicode_ci IN (${access.campusVariants.map(() => '?').join(',')})
           OR (componentStats.campus IS NULL AND stationLab.campus IS NULL AND es.createdBy = ?))`
       : '';
     const campusParams = access.campusVariants.length
@@ -196,7 +196,7 @@ export async function getAllPCSets(req, res) {
           SELECT 1 FROM archived_records ar
           WHERE ar.entityType = 'equipment' AND BINARY ar.entityId = BINARY equipment.equipmentId
         )
-        ${access.campusVariants.length ? `AND equipment.campus IN (${access.campusVariants.map(() => '?').join(',')})` : ''}
+        ${access.campusVariants.length ? `AND CONVERT(equipment.campus USING utf8mb4) COLLATE utf8mb4_unicode_ci IN (${access.campusVariants.map(() => '?').join(',')})` : ''}
       ORDER BY campus, category, name, equipmentId
     `, access.campusVariants.length ? access.campusVariants : []);
 

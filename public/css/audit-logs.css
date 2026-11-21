@@ -85,9 +85,21 @@ html body.app-shell.audit-logs-page .audit-fixed-header h1 {
 html body.app-shell.audit-logs-page .audit-header-spacer {
   display: block;
   width: 100%;
-  height: 2.75rem;
-  margin: 0 0 .65rem;
+  height: 3.45rem;
+  margin: 0 0 .75rem;
   pointer-events: none;
+}
+
+html body.app-shell.audit-logs-page .page-content {
+  padding-top: .25rem !important;
+}
+
+html body.app-shell.audit-logs-page.app-content-embedded .audit-fixed-header {
+  display: none !important;
+}
+
+html body.app-shell.audit-logs-page.app-content-embedded .audit-header-spacer {
+  display: none !important;
 }
 
 html body.app-shell.audit-logs-page .audit-fixed-header .system-dashboard-heading-actions {
@@ -310,6 +322,41 @@ html body.app-shell.audit-logs-page #systemAuditPanel #printAuditLogs {
   border-color: #28583a !important;
   background: #10291b !important;
   color: #d9f1e1 !important;
+}
+
+html body.app-shell.audit-logs-page #systemAuditPanel .system-audit-table-wrap {
+  height: clamp(9rem, calc(100vh - 21rem), 38rem) !important;
+  height: clamp(9rem, calc(100dvh - 21rem), 38rem) !important;
+  max-height: none !important;
+}
+
+@media (max-width: 767px) {
+  html body.app-shell.audit-logs-page #systemAuditPanel .system-audit-table-wrap {
+    height: clamp(7rem, calc(100vh - 30rem), 24rem) !important;
+    height: clamp(7rem, calc(100dvh - 30rem), 24rem) !important;
+    min-height: 0 !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-filter-group:nth-child(4) {
+    grid-column: 1;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-action-buttons {
+    grid-column: 2 !important;
+    justify-content: stretch !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-action-buttons > button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-right: .4rem !important;
+    padding-left: .4rem !important;
+    font-size: .64rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-filter-group:nth-child(4),
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-action-buttons {
+    grid-column: 1 / -1 !important;
+  }
 }
 
 /* Give each audit table its own scroll area while keeping its column labels visible. */
@@ -742,7 +789,11 @@ body.app-shell.audit-logs-page .main-container.theme-light #closeEquipmentTrailD
     font-size: .5rem !important;
     white-space: nowrap !important;
   }
-  html body.app-shell.audit-logs-page .audit-header-spacer { height: 2.8rem !important; min-height: 2.8rem !important; }
+  html body.app-shell.audit-logs-page .audit-header-spacer {
+    height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+    margin-bottom: .55rem !important;
+  }
   html body.app-shell.audit-logs-page .page-content { padding-right: .55rem !important; padding-left: .55rem !important; }
   html body.app-shell.audit-logs-page .audit-tabs { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   html body.app-shell.audit-logs-page .audit-tabs .audit-view-tab { min-height: 2.5rem; padding: .35rem .25rem !important; font-size: .66rem !important; }
@@ -753,7 +804,14 @@ body.app-shell.audit-logs-page .main-container.theme-light #closeEquipmentTrailD
   html body.app-shell.audit-logs-page #systemAuditPanel > .mt-4,
   html body.app-shell.audit-logs-page .pc-logs-footer,
   html body.app-shell.audit-logs-page .equipment-trail-footer { align-items: flex-start; flex-direction: column; }
-  html body.app-shell.audit-logs-page #systemAuditPanel > .mt-4 > div:last-child { width: 100%; flex-wrap: wrap; justify-content: flex-end; }
+  html body.app-shell.audit-logs-page #systemAuditPanel > .mt-4 > div:last-child {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding-right: 4.25rem;
+  }
   html body.app-shell.audit-logs-page #loginLogoutAuditPanel .pc-logs-toolbar { align-items: stretch; flex-direction: column; }
   html body.app-shell.audit-logs-page #loginLogoutAuditPanel .pc-logs-filter-grid { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   html body.app-shell.audit-logs-page .equipment-trail-pagination { max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }
@@ -762,6 +820,81 @@ body.app-shell.audit-logs-page .main-container.theme-light #closeEquipmentTrailD
 @media (max-width: 390px) {
   html body.app-shell.audit-logs-page #systemAuditPanel .audit-filters-shell,
   html body.app-shell.audit-logs-page #loginLogoutAuditPanel .pc-logs-filter-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  html body.app-shell.audit-logs-page #systemAuditPanel .system-audit-table-wrap {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table thead {
+    display: none !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody {
+    display: grid;
+    gap: .45rem;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    padding: .3rem;
+    border: 1px solid #214b32;
+    border-radius: .55rem;
+    background: #0b1d14 !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(3.8rem, .42fr) minmax(0, 1fr);
+    align-items: start;
+    gap: .25rem .4rem;
+    min-width: 0;
+    padding: .34rem .38rem !important;
+    border: 0 !important;
+    overflow-wrap: anywhere;
+    font-size: .69rem !important;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(1),
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(1)::before { content: "Actor"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(2)::before { content: "Role"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(3)::before { content: "Action"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(4)::before { content: "Module"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(5)::before { content: "Description"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td:nth-child(6)::before { content: "Date / Time"; }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td::before {
+    color: #a8c3b2;
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td[colspan] {
+    display: block;
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table tbody td[colspan]::before {
+    content: none;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-logs-table .action-pill {
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  html body.app-shell.audit-logs-page #systemAuditPanel .audit-log-description {
+    max-width: none;
+    overflow-wrap: anywhere;
+  }
 }
 
 html body.app-shell.audit-logs-page #equipmentAuditTrailPanel .equipment-trail-action--info {

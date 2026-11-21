@@ -1,5 +1,268 @@
-<footer class="mt-8 py-4 text-center text-gray-500 text-sm">
-  <!-- Footer removed -->
+<footer class="comlab-footer-root">
+  <div class="comlab-footer-glow-line"></div>
+  <div class="comlab-footer-container">
+    <div class="comlab-footer-grid">
+      <!-- Col 1: University & Department Branding -->
+      <div class="comlab-footer-col comlab-footer-brand-col">
+        <div class="comlab-footer-brand-row">
+          <img src="/images/minsu-logo.png.jpg" alt="Mindoro State University Logo" class="comlab-footer-logo" />
+          <div class="comlab-footer-brand-text">
+            <span class="comlab-footer-univ-name">Mindoro State University</span>
+            <span class="comlab-footer-dept-name">College of Computer Studies</span>
+          </div>
+        </div>
+        <p class="comlab-footer-tagline">
+          Computer Laboratory Facilities Management System — supporting academic excellence through streamlined lab management, equipment tracking.
+        <div class="comlab-footer-meta-item">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Bongabong Campus, Labasan, Bongabong, Oriental Mindoro</span>
+        </div>
+      </div>
+
+      <!-- Col 2: Laboratory Office & Schedule -->
+      <div class="comlab-footer-col comlab-footer-office-col">
+        <h4 class="comlab-footer-title">Laboratory Office</h4>
+        <div class="comlab-footer-contact-list">
+          <div class="comlab-footer-contact-item">
+            <i class="fas fa-clock"></i>
+            <span>Operating Hours: Mon – Fri, 7:00 AM – 6:00 PM</span>
+          </div>
+          <div class="comlab-footer-contact-item">
+            <i class="fas fa-desktop"></i>
+            <span>Computer Laboratories 1, 2, &amp; 3</span>
+          </div>
+          <div class="comlab-footer-contact-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>Exclusive Access for Enrolled Students &amp; Faculty</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Copyright & System Status -->
+    <div class="comlab-footer-bottom">
+      <div class="comlab-footer-copy">
+        &copy; 2026 <strong>Mindoro State University</strong> — College of Computer Studies. All rights reserved.
+      </div>
+      <div class="comlab-footer-badge">
+        <span class="comlab-footer-dot"></span>
+        <span>ComLab Facilities Management System</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .comlab-footer-root {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(3, 12, 9, 0.94) 0%, rgba(2, 7, 5, 0.99) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: #94a3b8;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .comlab-footer-glow-line {
+      height: 1px;
+      width: 100%;
+      background: linear-gradient(90deg,
+        rgba(16, 185, 129, 0) 0%,
+        rgba(16, 185, 129, 0.45) 30%,
+        rgba(52, 211, 153, 0.7) 50%,
+        rgba(16, 185, 129, 0.45) 70%,
+        rgba(16, 185, 129, 0) 100%
+      );
+    }
+
+    .comlab-footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.75rem 1.75rem 1.5rem;
+    }
+
+    .comlab-footer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr);
+      gap: 3.5rem;
+      align-items: start;
+      justify-content: space-between;
+    }
+
+    .comlab-footer-brand-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .comlab-footer-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .comlab-footer-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(52, 211, 153, 0.35);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .comlab-footer-brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .comlab-footer-univ-name {
+      color: #f8fafc;
+      font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .comlab-footer-dept-name {
+      color: #34d399;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .comlab-footer-tagline {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.84rem;
+      line-height: 1.6;
+      max-width: 48ch;
+    }
+
+    .comlab-footer-meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #a7f3d0;
+      font-size: 0.78rem;
+      margin-top: 0.2rem;
+    }
+
+    .comlab-footer-meta-item i {
+      color: #34d399;
+      font-size: 0.85rem;
+    }
+
+    .comlab-footer-office-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comlab-footer-title {
+      margin: 0 0 1.1rem 0;
+      color: #f1f5f9;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .comlab-footer-title::after {
+      content: '';
+      height: 2px;
+      width: 24px;
+      background: #10b981;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .comlab-footer-contact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .comlab-footer-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #cbd5e1;
+      font-size: 0.84rem;
+    }
+
+    .comlab-footer-contact-item i {
+      color: #34d399;
+      font-size: 0.9rem;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .comlab-footer-bottom {
+      margin-top: 2.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      font-size: 0.77rem;
+      color: #64748b;
+    }
+
+    .comlab-footer-copy strong {
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .comlab-footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #a7f3d0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .comlab-footer-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+      animation: comlabPulse 2.5s infinite;
+    }
+
+    @keyframes comlabPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    @media (max-width: 768px) {
+      .comlab-footer-container {
+        padding: 2rem 1.25rem 1.25rem;
+      }
+      .comlab-footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      .comlab-footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+  </style>
 </footer>
 </body>
 </html>

@@ -1,0 +1,1159 @@
+:root {
+  color-scheme: dark;
+  --app-bg: #061A13;
+  --app-sidebar-bg: #081F16;
+  --app-header-bg: #071D14;
+  --app-content-bg: #091F17;
+  --app-card-bg: #0D2B20;
+  --app-table-bg: #0A2119;
+  --app-table-header-bg: #103B2B;
+  --app-table-row-bg: #0A2119;
+  --app-table-row-alt-bg: #0C281D;
+  --app-input-bg: #0A2119;
+  --app-border: #174B35;
+  --app-accent: #16A36A;
+  --app-accent-hover: #1BC47D;
+  --app-hover-bg: #123B2B;
+  --app-nav-active-bg: #0D3525;
+  --app-text: #E6F5EC;
+  --app-text-secondary: #A7C5B4;
+  --app-shadow: 0 12px 32px rgba(0, 0, 0, .22);
+}
+
+html.theme-light {
+  color-scheme: light;
+  --app-bg: #FFFFFF;
+  --app-sidebar-bg: #FFFFFF;
+  --app-header-bg: #FFFFFF;
+  --app-content-bg: #FFFFFF;
+  --app-card-bg: #FFFFFF;
+  --app-table-bg: #FFFFFF;
+  --app-table-header-bg: #FFFFFF;
+  --app-table-row-bg: #FFFFFF;
+  --app-table-row-alt-bg: #FFFFFF;
+  --app-input-bg: #FFFFFF;
+  --app-border: #E5E7EB;
+  --app-accent: #16A34A;
+  --app-accent-hover: #16A34A;
+  --app-hover-bg: #DCFCE7;
+  --app-nav-active-bg: #DCFCE7;
+  --app-text: #1E293B;
+  --app-text-secondary: #64748B;
+  --app-shadow: none;
+}
+
+html.theme-dark {
+  color-scheme: dark;
+  --app-bg: #061A13;
+  --app-sidebar-bg: #081F16;
+  --app-header-bg: #071D14;
+  --app-content-bg: #091F17;
+  --app-card-bg: #0D2B20;
+  --app-table-bg: #0A2119;
+  --app-table-header-bg: #103B2B;
+  --app-table-row-bg: #0A2119;
+  --app-table-row-alt-bg: #0C281D;
+  --app-input-bg: #0A2119;
+  --app-border: #174B35;
+  --app-accent: #16A36A;
+  --app-accent-hover: #1BC47D;
+  --app-hover-bg: #123B2B;
+  --app-nav-active-bg: #0D3525;
+  --app-text: #E6F5EC;
+  --app-text-secondary: #A7C5B4;
+  --app-shadow: 0 12px 32px rgba(0, 0, 0, .22);
+}
+
+html body.app-shell {
+  color-scheme: inherit;
+  color: var(--app-text) !important;
+  background: var(--app-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container,
+  .main-content,
+  .page-content,
+  .facilities-main,
+  .page-shell,
+  .audit-page-content,
+  .assignment-content
+) {
+  color: var(--app-text) !important;
+  background: var(--app-content-bg) !important;
+  background-image: none !important;
+}
+
+html.theme-dark body.app-shell :is(.main-container.theme-dark, .facilities-main.theme-dark, .page-content.theme-dark, .page-shell.theme-dark, .audit-page-content.theme-dark) {
+  color: var(--app-text) !important;
+  background: var(--app-content-bg) !important;
+  background-image: none !important;
+}
+
+html.theme-dark body.app-shell :is(.sidebar, #sidebar, .sidebar-header, .sidebar-footer) {
+  border-color: var(--app-border) !important;
+  background: var(--app-sidebar-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .system-dashboard-heading,
+  .top-header,
+  .top-header-card,
+  .maintenance-header-card,
+  .student-page-header,
+  .page-header-card,
+  .comlab-slim-page-header
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-header-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+  box-shadow: var(--app-shadow) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(
+  .system-dashboard-heading,
+  .top-header,
+  .top-header-card,
+  .maintenance-header-card,
+  .student-page-header,
+  .page-header-card,
+  .comlab-slim-page-header
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-header-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(
+  .main-container,
+  .main-content,
+  .page-content,
+  .facilities-main,
+  .page-shell,
+  .audit-page-content,
+  .assignment-content
+) {
+  color: var(--app-text) !important;
+  background: var(--app-content-bg) !important;
+}
+
+html body.app-shell :is(
+  .sidebar,
+  #sidebar
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-sidebar-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(
+  .sidebar-header,
+  .system-dashboard-heading,
+  .top-header,
+  .top-header-card,
+  .maintenance-header-card,
+  .student-page-header,
+  .page-header-card,
+  .comlab-slim-page-header
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-header-bg) !important;
+  color: var(--app-text) !important;
+  box-shadow: var(--app-shadow) !important;
+}
+
+html body.app-shell :is(
+  .system-dashboard-heading,
+  .top-header,
+  .top-header-card,
+  .maintenance-header-card,
+  .student-page-header,
+  .page-header-card,
+  .comlab-slim-page-header
+) :is(h1, h2, h3, p, .page-title, .header-title, .header-subtitle) {
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(
+  .card,
+  .chart-card,
+  .table-card,
+  .summary-card,
+  .dashboard-kpi-card,
+  .stat-card,
+  .metric-card,
+  .section-shell,
+  .glass-card,
+  .table-shell,
+  .filter-control,
+  .equipment-card,
+  .maintenance-details-card,
+  .maintenance-summary-card,
+  .technician-profile-card,
+  .technician-profile-summary,
+  .technician-profile-details,
+  .accomplishment-report-card,
+  .page-card,
+  .panel-card,
+  .details-modal-card,
+  .availability-modal-card,
+  .availability-summary-item,
+  .attendance-page-card,
+  .attendance-summary-card
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(
+  .card-title,
+  .summary-card .label,
+  .table-title,
+  .breadcrumb,
+  .header-subtitle,
+  .header-eyebrow,
+  .sidebar-tagline,
+  .system-filter-row label
+) {
+  color: var(--app-text-secondary) !important;
+}
+
+html body.app-shell .sidebar-logo-text,
+html body.app-shell .sidebar-nav-label,
+html body.app-shell .nav-item {
+  color: var(--app-text) !important;
+}
+
+html.theme-light body.app-shell :is(
+  .sidebar-logo-text,
+  .sidebar-nav-label,
+  .nav-item,
+  .sidebar-tagline
+) {
+  color: var(--app-text) !important;
+}
+
+html body.app-shell .nav-item {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+html body.app-shell .nav-item:hover,
+html body.app-shell .nav-item.active,
+html body.app-shell .nav-item[aria-current="page"] {
+  border-color: var(--app-border) !important;
+  background: var(--app-nav-active-bg) !important;
+  color: var(--app-accent-hover) !important;
+}
+
+html body.app-shell :is(
+  .system-profile-badge,
+  .user-profile,
+  .profile-dropdown,
+  .profile-menu,
+  .notification-dropdown,
+  .notification-popover,
+  .dropdown-menu,
+  .facilities-management-dropdown,
+  [role="menu"]
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(
+  .profile-theme-toggle,
+  .comlab-notification-button,
+  #mobileMenuToggle,
+  .menu-toggle,
+  .facilities-management-trigger
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-accent) !important;
+}
+
+html body.app-shell :is(
+  .profile-theme-toggle,
+  .comlab-notification-button,
+  #mobileMenuToggle,
+  .menu-toggle,
+  .facilities-management-trigger
+):hover {
+  border-color: var(--app-accent) !important;
+  background: var(--app-content-bg) !important;
+  color: var(--app-accent-hover) !important;
+}
+
+html body.app-shell :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
+) {
+  border-color: var(--app-border) !important;
+  background-color: var(--app-input-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(input, textarea)::placeholder {
+  color: var(--app-text-secondary) !important;
+  opacity: 1;
+}
+
+html body.app-shell select :is(option, optgroup) {
+  background: var(--app-input-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(.tab-switcher .action-btn:not(.primary), .pagination-btn:not(.active)) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text-secondary) !important;
+}
+
+html body.app-shell :is(.tab-switcher .action-btn:not(.primary), .pagination-btn:not(.active)):hover:not(:disabled) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-table-header-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(.tab-switcher .action-btn.primary, .pagination-btn.active) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-accent) !important;
+  color: #FFFFFF !important;
+}
+
+html body.app-shell :is(
+  .table-wrap,
+  .table-scroll-wrapper,
+  .assignment-table-scroll,
+  .attendance-table-wrap,
+  .table-shell
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-table-bg) !important;
+}
+
+html body.app-shell table {
+  background: var(--app-table-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell table :is(thead, thead tr, th) {
+  border-color: var(--app-border) !important;
+  background: var(--app-table-header-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell table tbody,
+html body.app-shell table tbody tr {
+  background: var(--app-table-row-bg) !important;
+}
+
+html body.app-shell table tbody tr:nth-child(even) {
+  background: var(--app-table-row-alt-bg) !important;
+}
+
+html body.app-shell table tbody tr:hover {
+  background: var(--app-hover-bg) !important;
+}
+
+html body.app-shell table tbody td {
+  border-color: var(--app-border) !important;
+  color: var(--app-text) !important;
+}
+
+html:not(.theme-light) body.app-shell :is(
+  .text-gray-900,
+  .text-gray-800,
+  .text-gray-700,
+  .text-gray-600,
+  .text-slate-900,
+  .text-slate-800,
+  .text-slate-700,
+  .text-slate-600,
+  .text-black
+) {
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .text-white,
+  .text-gray-50,
+  .text-gray-100,
+  .text-gray-200,
+  .text-gray-300,
+  .text-slate-50,
+  .text-slate-100,
+  .text-slate-200,
+  .text-slate-300,
+  .text-emerald-100,
+  .text-emerald-200,
+  .text-green-100,
+  .text-green-200
+) {
+  color: var(--app-text) !important;
+}
+
+html:not(.theme-light) body.app-shell :is(
+  .text-gray-500,
+  .text-gray-400,
+  .text-gray-300,
+  .text-slate-500,
+  .text-slate-400,
+  .text-slate-300
+) {
+  color: var(--app-text-secondary) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  [class*="bg-white"],
+  [class*="bg-gray-50"],
+  [class*="bg-gray-100"],
+  [class*="bg-gray-700"],
+  [class*="bg-gray-800"],
+  [class*="bg-gray-900"],
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-slate-700"],
+  [class*="bg-slate-800"],
+  [class*="bg-slate-900"],
+  [class*="bg-emerald-700"],
+  [class*="bg-emerald-800"],
+  [class*="bg-emerald-900"],
+  [class*="bg-emerald-950"],
+  [class*="bg-green-700"],
+  [class*="bg-green-800"],
+  [class*="bg-green-900"],
+  [class*="bg-green-950"],
+  [class*="bg-neutral-700"],
+  [class*="bg-neutral-800"],
+  [class*="bg-neutral-900"],
+  [class*="bg-zinc-700"],
+  [class*="bg-zinc-800"],
+  [class*="bg-zinc-900"],
+  [class*="bg-black"],
+  [class*="bg-[#020617]"],
+  [class*="bg-[#07111f]"],
+  [class*="bg-[#0b1728]"]
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(
+  [class*="card"],
+  [class*="panel"],
+  [class*="surface"],
+  [class*="shell"],
+  [class*="table-wrap"],
+  [class*="table-card"],
+  [class*="table-container"],
+  [class*="table-content"],
+  [class*="filter"],
+  [class*="toolbar"],
+  [class*="summary"],
+  [class*="stat"],
+  [class*="metric"],
+  [class*="dropdown"],
+  [class*="menu"],
+  [class*="hero"],
+  [class*="page"],
+  [class*="page-header"],
+  [class*="content-card"],
+  [class*="section-card"]
+):not([class*="overlay"]):not([class*="badge"]):not([class*="button"]):not(button):not([role="button"]) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(table, thead, thead tr, th, tbody, tbody tr, td, tfoot, tfoot tr, tfoot td) {
+  border-color: var(--app-border) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(table, tbody, tbody tr, td, tfoot, tfoot tr, tfoot td) {
+  background-color: var(--app-table-row-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(thead, thead tr, th) {
+  background-color: var(--app-table-header-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) tbody tr:nth-child(even) {
+  background-color: var(--app-table-row-alt-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) tbody tr:hover {
+  background-color: var(--app-hover-bg) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #systemAuditPanel,
+  #loginLogoutAuditPanel,
+  #equipmentAuditTrailPanel
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #systemAuditPanel,
+  #loginLogoutAuditPanel,
+  #equipmentAuditTrailPanel
+) :is(
+  .audit-filters-shell,
+  .system-audit-table-wrap,
+  .audit-logs-table,
+  .pc-logs-filter-grid,
+  .pc-logs-table-wrap,
+  .equipment-trail-table-wrap,
+  .equipment-trail-modal-card,
+  .equipment-trail-modal-card .detail-button,
+  .details-modal-card
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #systemAuditPanel,
+  #loginLogoutAuditPanel,
+  #equipmentAuditTrailPanel
+) :is(
+  .audit-logs-table thead,
+  .audit-logs-table thead tr,
+  .audit-logs-table thead th,
+  .pc-logs-table thead,
+  .pc-logs-table thead tr,
+  .pc-logs-table thead th,
+  .equipment-trail-table-wrap thead,
+  .equipment-trail-table-wrap thead tr,
+  .equipment-trail-table-wrap thead th
+) {
+  background: var(--app-table-header-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #systemAuditPanel,
+  #loginLogoutAuditPanel,
+  #equipmentAuditTrailPanel
+) :is(
+  .audit-logs-table tbody,
+  .audit-logs-table tbody tr,
+  .audit-logs-table tbody td,
+  .pc-logs-table tbody,
+  .pc-logs-table tbody tr,
+  .pc-logs-table tbody td,
+  .equipment-trail-table-wrap tbody,
+  .equipment-trail-table-wrap tbody tr,
+  .equipment-trail-table-wrap tbody td
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-table-row-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #systemAuditPanel,
+  #loginLogoutAuditPanel,
+  #equipmentAuditTrailPanel
+) :is(
+  .audit-logs-table tbody tr:nth-child(even),
+  .pc-logs-table tbody tr:nth-child(even),
+  .equipment-trail-table-wrap tbody tr:nth-child(even)
+) {
+  background: var(--app-table-row-alt-bg) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  .report-filter-grid,
+  .report-actions-menu,
+  .report-preview-table,
+  .report-preview-table thead,
+  .report-preview-table thead tr,
+  .report-preview-table thead th,
+  #reportPreviewTable tbody tr,
+  #reportPreviewTable tbody tr:nth-child(even),
+  #reportPreviewTable tbody td,
+  #summaryCards > div.report-summary-warning
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  #reportPreviewTable thead,
+  #reportPreviewTable thead tr,
+  #reportPreviewTable thead th
+) {
+  background: var(--app-table-header-bg) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark #reportPreviewTable tbody tr:nth-child(even) {
+  background: var(--app-table-row-alt-bg) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  .report-actions-toggle,
+  button[onclick*="exportReport"],
+  #resetReportFilters
+) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-accent) !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark :is(
+  .report-actions-toggle:hover,
+  button[onclick*="exportReport"]:hover,
+  #resetReportFilters:hover
+) {
+  background: var(--app-hover-bg) !important;
+  color: var(--app-accent) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark .report-actions-menu-item {
+  border-color: transparent !important;
+  background: #FFFFFF !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell .main-container.theme-dark .report-actions-menu-item:hover:not(:disabled) {
+  background: var(--app-hover-bg) !important;
+  color: var(--app-accent) !important;
+}
+
+html body.app-shell :is(.modal-card, .modal-content, .details-modal, .dialog, .qr-scanner-dialog, #comlab-help-panel) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell :is(.modal-card, .modal-content, .details-modal, .dialog, #comlab-help-panel)
+  :is(h1, h2, h3, h4, p, label, input, select, textarea) {
+  color: var(--app-text) !important;
+}
+
+html.theme-light body.app-shell [class*="bg-white"],
+html.theme-light body.app-shell [class*="bg-gray-50"],
+html.theme-light body.app-shell [class*="bg-gray-100"],
+html.theme-light body.app-shell [class*="bg-slate-50"],
+html.theme-light body.app-shell [class*="bg-slate-100"] {
+  background: var(--app-card-bg) !important;
+}
+
+html.theme-light body.app-shell :is(.sidebar, #sidebar, .sidebar-header, .sidebar-footer) {
+  background: var(--app-sidebar-bg) !important;
+}
+
+html.theme-light body.app-shell :is(.text-white, .text-slate-100, .text-slate-200, .text-gray-100, .text-gray-200) {
+  color: var(--app-text) !important;
+}
+
+html.theme-light body.app-shell .nav-item:hover,
+html.theme-light body.app-shell .nav-item.active,
+html.theme-light body.app-shell .nav-item[aria-current="page"] {
+  background: #E8F5ED !important;
+  color: var(--app-accent) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .summary-card .summary-icon,
+  .system-profile-badge,
+  .system-profile-badge-avatar,
+  .student-page-user-initials,
+  .user-avatar
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-nav-active-bg) !important;
+  color: var(--app-accent) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .system-profile-badge-name,
+  .system-profile-badge-copy,
+  .student-page-user-name,
+  .student-page-user-copy,
+  .user-name,
+  .system-profile-badge-role,
+  .student-page-user-role,
+  .user-role
+) {
+  color: var(--app-text) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .primary,
+  .primary-button,
+  .btn-primary,
+  .action-primary,
+  .button-primary,
+  [data-action="primary"],
+  .summary-card[aria-pressed="true"]
+) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-accent) !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .primary:hover:not(:disabled),
+  .primary-button:hover:not(:disabled),
+  .btn-primary:hover:not(:disabled),
+  .action-primary:hover:not(:disabled),
+  .button-primary:hover:not(:disabled),
+  [data-action="primary"]:hover:not(:disabled),
+  .summary-card[aria-pressed="true"]:hover
+) {
+  border-color: var(--app-accent) !important;
+  background: #15803D !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell .modal-overlay,
+html.theme-light body.app-shell .details-modal,
+html.theme-light body.app-shell .modal {
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.app-shell *,
+  html body.app-shell *::before,
+  html body.app-shell *::after {
+    transition-duration: .01ms !important;
+  }
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody {
+  border-color: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  color: #1E293B !important;
+  scrollbar-color: #CBD5E1 #FFFFFF !important;
+  scrollbar-width: thin !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead tr,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead th {
+  border-color: #E2E8F0 !important;
+  background: #F8FAFC !important;
+  background-color: #F8FAFC !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  color: #334155 !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td {
+  border-color: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  color: #1E293B !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:nth-child(even),
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:nth-child(even) td {
+  background: #F8FAFC !important;
+  background-color: #F8FAFC !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover td {
+  background: #E8F5ED !important;
+  background-color: #E8F5ED !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::before,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::after {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-track {
+  background: #FFFFFF !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-thumb {
+  border: 2px solid #FFFFFF !important;
+  border-radius: 999px !important;
+  background: #CBD5E1 !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td :is(
+  .text-white,
+  .text-gray-50,
+  .text-gray-100,
+  .text-gray-200,
+  .text-gray-300,
+  .text-slate-50,
+  .text-slate-100,
+  .text-slate-200,
+  .text-slate-300,
+  .text-emerald-100,
+  .text-emerald-200,
+  .text-green-100,
+  .text-green-200
+) {
+  color: #1E293B !important;
+}
+
+html body.app-shell #sidebar .sidebar-header {
+  box-sizing: border-box !important;
+  min-height: 5.35rem !important;
+  padding: .92rem .95rem .88rem !important;
+  border-bottom: 1px solid var(--app-border) !important;
+  background: var(--app-sidebar-bg) !important;
+  box-shadow: none !important;
+}
+
+html body.app-shell #sidebar .sidebar-logo {
+  min-height: 3.5rem !important;
+  align-items: center !important;
+  gap: .78rem !important;
+  padding: 0 !important;
+}
+
+html body.app-shell #sidebar .sidebar-logo > i {
+  box-sizing: border-box !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  flex: 0 0 2.75rem !important;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 20%, var(--app-border)) !important;
+  border-radius: .82rem !important;
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-sidebar-bg)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), 0 2px 6px rgba(15, 23, 42, .04) !important;
+  color: var(--app-accent) !important;
+  font-size: 1.05rem !important;
+  line-height: 1 !important;
+}
+
+html body.app-shell #sidebar .sidebar-brand-copy {
+  min-width: 0 !important;
+  gap: .18rem !important;
+}
+
+html body.app-shell #sidebar .sidebar-logo-text {
+  color: var(--app-text) !important;
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+  font-size: 1.48rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -.045em !important;
+  line-height: 1.02 !important;
+  text-shadow: none !important;
+}
+
+html body.app-shell #sidebar .sidebar-tagline {
+  max-width: 100% !important;
+  margin: 0 !important;
+  color: var(--app-text-secondary) !important;
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+  font-size: .54rem !important;
+  font-weight: 750 !important;
+  letter-spacing: .145em !important;
+  line-height: 1.48 !important;
+  text-transform: uppercase !important;
+  overflow-wrap: normal !important;
+}
+
+@media (max-width: 767px) {
+  html body.app-shell #sidebar .sidebar-header {
+    min-height: 5.15rem !important;
+    padding: .82rem .88rem !important;
+  }
+
+  html body.app-shell #sidebar .sidebar-logo {
+    gap: .68rem !important;
+  }
+
+  html body.app-shell #sidebar .sidebar-logo > i {
+    width: 2.6rem !important;
+    height: 2.6rem !important;
+    flex-basis: 2.6rem !important;
+  }
+
+  html body.app-shell #sidebar .sidebar-logo-text {
+    font-size: 1.38rem !important;
+  }
+
+  html body.app-shell #sidebar .sidebar-tagline {
+    font-size: .51rem !important;
+    letter-spacing: .13em !important;
+  }
+}
+
+html.theme-light body.app-shell #sidebar .sidebar-header {
+  border-bottom-color: #E2E8F0 !important;
+  background: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell #sidebar .sidebar-logo > i {
+  border-color: #DCE5DF !important;
+  background: #F0FDF4 !important;
+  color: #16A34A !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell #sidebar .sidebar-logo-text {
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell #sidebar .sidebar-tagline {
+  color: #64748B !important;
+}
+
+html body.app-shell *,
+html body.app-shell *::before,
+html body.app-shell *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.theme-light body.app-shell,
+html.theme-light body.app-shell .main-container,
+html.theme-light body.app-shell .main-content,
+html.theme-light body.app-shell .page-content,
+html.theme-light body.app-shell .facilities-main,
+html.theme-light body.app-shell .page-shell,
+html.theme-light body.app-shell .audit-page-content,
+html.theme-light body.app-shell .assignment-content,
+html.theme-light body.app-shell #mainContainer {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell :is(
+  .sidebar,
+  #sidebar,
+  .sidebar-header,
+  .sidebar-footer,
+  .top-header,
+  .top-header-card,
+  .system-dashboard-heading,
+  .maintenance-header-card,
+  .student-page-header,
+  .page-header-card,
+  .comlab-slim-page-header
+) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell :is(
+  .card,
+  .chart-card,
+  .chart-container,
+  .table-card,
+  .summary-card,
+  .dashboard-kpi-card,
+  .stat-card,
+  .metric-card,
+  .section-shell,
+  .glass-card,
+  .table-shell,
+  .filter-control,
+  .equipment-card,
+  .maintenance-details-card,
+  .maintenance-summary-card,
+  .technician-profile-card,
+  .technician-profile-summary,
+  .technician-profile-details,
+  .accomplishment-report-card,
+  .page-card,
+  .panel-card,
+  .details-modal-card,
+  .availability-modal-card,
+  .availability-summary-item,
+  .attendance-page-card,
+  .attendance-summary-card,
+  .availability-overview-header,
+  .availability-overview-stat,
+  .availability-laboratory-section,
+  .availability-laboratory-heading,
+  .availability-category-toggle,
+  .availability-category-count,
+  .equipment-availability-page,
+  .inventory-summary-card,
+  .inventory-section,
+  .campus-inventory-section,
+  .equipment-category-row
+) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell :is(
+  .table-wrap,
+  .table-scroll-wrapper,
+  .assignment-table-scroll,
+  .attendance-table-wrap,
+  .table-shell,
+  .overflow-x-auto:has(table)
+) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell table,
+html.theme-light body.app-shell table :is(thead, tbody, tfoot, tr, th, td) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell table tbody tr:hover,
+html.theme-light body.app-shell table tbody tr:hover td {
+  background: #DCFCE7 !important;
+  background-color: #DCFCE7 !important;
+}
+
+html.theme-light body.app-shell :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea
+) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell [class*="bg-white"],
+html.theme-light body.app-shell [class*="bg-gray-"],
+html.theme-light body.app-shell [class*="bg-slate-"],
+html.theme-light body.app-shell [class*="bg-zinc-"],
+html.theme-light body.app-shell [class*="bg-neutral-"],
+html.theme-light body.app-shell [class*="bg-stone-"],
+html.theme-light body.app-shell [class*="bg-black"] {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+}
+
+html.theme-light body.app-shell :is(.sidebar, #sidebar, .sidebar-header, .sidebar-footer) {
+  border-color: #E5E7EB !important;
+  background: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell :is(.text-white, .text-slate-100, .text-slate-200, .text-gray-100, .text-gray-200) {
+  color: #1E293B !important;
+}
+
+html.theme-light body.app-shell .nav-item:hover,
+html.theme-light body.app-shell .nav-item.active,
+html.theme-light body.app-shell .nav-item[aria-current="page"],
+html.theme-light body.app-shell .facilities-tab[aria-selected="true"] {
+  border-color: #E5E7EB !important;
+  background: #DCFCE7 !important;
+  color: #16A34A !important;
+}
+
+html.theme-light body.app-shell :is(
+  .primary,
+  .primary-button,
+  .btn-primary,
+  .action-primary,
+  .button-primary,
+  [data-action="primary"],
+  .availability-overview-link-primary
+) {
+  border-color: #16A34A !important;
+  background: #16A34A !important;
+  background-color: #16A34A !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell :is(
+  .primary,
+  .primary-button,
+  .btn-primary,
+  .action-primary,
+  .button-primary,
+  [data-action="primary"],
+  .availability-overview-link-primary
+) :is(i, span, svg) {
+  color: inherit !important;
+}

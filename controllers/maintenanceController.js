@@ -639,7 +639,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
         {
           model: User,
           as: "reporter",
-          attributes: ["id", "name", "email", "role", "program", "year", "section", "college"]
+          attributes: ["id", "name", "email", "role", "program", "year", "section", "college", "photo"]
         },
         {
           model: User,
@@ -684,7 +684,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
     const fallbackReporters = fallbackReporterIds.length
       ? await User.findAll({
           where: { id: { [Op.in]: fallbackReporterIds } },
-          attributes: ["id", "name", "email", "role", "program", "year", "section", "college"]
+          attributes: ["id", "name", "email", "role", "program", "year", "section", "college", "photo"]
         })
       : [];
     const fallbackReportersById = new Map(fallbackReporters.map((reporter) => {
@@ -721,6 +721,7 @@ export const getAllMaintenanceRequests = async (req, res) => {
         reporter,
         reporterName: reporter?.name || data.student_name || "Guest Student",
         reporterEmail: reporter?.email || null,
+        reporterPhoto: reporter?.photo || null,
         reporterRole: reporter?.role || null,
         reporterProgram: linkedReporter?.program || studentReporter?.program || null,
         reporterYear: linkedReporter?.year || studentReporter?.year || null,
@@ -767,7 +768,7 @@ export const getMaintenanceRequestById = async (req, res) => {
         {
           model: User,
           as: "reporter",
-          attributes: ["id", "name", "email"]
+          attributes: ["id", "name", "email", "role", "photo"]
         },
         {
           model: User,
@@ -807,6 +808,9 @@ export const getMaintenanceRequestById = async (req, res) => {
       campus: data.campus || data.equipment?.campus || null,
       equipmentStatus: data.equipment?.status || "Serviceable",
       reporterName: data.reporter?.name || data.student_name || "Guest Student",
+      reporterEmail: data.reporter?.email || null,
+      reporterPhoto: data.reporter?.photo || null,
+      reporterRole: data.reporter?.role || null,
       technicianName: data.technician?.name || null,
       equipmentName: data.equipment?.name || data.equipment_id || "Unknown Equipment"
     });

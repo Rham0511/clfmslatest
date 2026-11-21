@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Technician Accomplishments | ComLab</title>
-  <link rel="stylesheet" href="/css/sidebar.css?v=75"><link rel="stylesheet" href="/css/system-layout.css?v=8">
+  <link rel="stylesheet" href="/css/sidebar.css?v=91"><link rel="stylesheet" href="/css/system-layout.css?v=9">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body.app-shell {
@@ -21,14 +21,31 @@
       font-family: Inter, "Segoe UI", sans-serif;
     }
     html.theme-light body.app-shell {
-      --page: #eef4f0;
-      --panel: #fff;
-      --surface: #f7faf8;
-      --text: #17271e;
-      --muted: #5e7567;
-      --line: rgba(22, 101, 52, .17);
-      --accent: #168044;
-      background: radial-gradient(ellipse at 82% 0%, rgba(34, 197, 94, .08), transparent 38%), var(--page);
+      --page: #f4f7f5;
+      --panel: #ffffff;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #dce5df;
+      --accent: #16a34a;
+      background: var(--page);
+    }
+    html.theme-light body.app-shell.technician-accomplishments-page .hero {
+      background: #ffffff !important;
+      border: 1px solid #dce5df !important;
+      color: #1f2937 !important;
+      border-radius: .9rem !important;
+    }
+    html.theme-light body.app-shell.technician-accomplishments-page .hero h1 {
+      color: #1f2937 !important;
+    }
+    html.theme-light body.app-shell.technician-accomplishments-page .hero p {
+      color: #64748b !important;
+    }
+    html.theme-light body.app-shell.technician-accomplishments-page .hero-icon {
+      background: #f0fdf4 !important;
+      border: 1px solid #dce5df !important;
+      color: #16a34a !important;
     }
     .main-container { box-sizing: border-box; min-height: 100vh; margin-left: var(--sidebar-width, 250px); padding: clamp(.85rem, 2vw, 1.4rem); }
     .wrap { width: 100%; max-width: 1480px; margin: 0 auto; }
@@ -83,6 +100,18 @@
     .recommendation { margin: .55rem 0 0; }
     .detail-stats { margin-top: .55rem; }
     .empty[hidden] { display: none; }
+    html body.app-shell.technician-accomplishments-page .comlab-slim-page-header.hero > div:first-child h1 {
+      display: block !important;
+      visibility: visible !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      color: var(--text) !important;
+      font-size: 1rem !important;
+      font-weight: 800 !important;
+      line-height: 1.2 !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
     .time-details { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .55rem; }
     .time-details span { padding: .32rem .48rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--panel); color: var(--muted); font-size: .7rem; }
     .time-details strong { color: var(--text); }
@@ -133,9 +162,30 @@
         flex: 1 1 auto !important;
       }
     }
+    /* Keep the review workspace below the fixed slim header on every viewport.
+       The shared spacer is part of this page's normal flow; fixed headers do not
+       reserve that space automatically. */
+    html body.app-shell.technician-accomplishments-page .comlab-page-header-spacer {
+      height: 3.45rem !important;
+      min-height: 3.45rem !important;
+      margin: 0 0 .75rem !important;
+    }
+    html body.app-shell.technician-accomplishments-page .main-container {
+      padding-top: 1rem !important;
+    }
+    @media (max-width: 767px) {
+      html body.app-shell.technician-accomplishments-page .comlab-page-header-spacer {
+        height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(3.45rem + env(safe-area-inset-top, 0px)) !important;
+        margin: 0 0 .55rem !important;
+      }
+      html body.app-shell.technician-accomplishments-page .main-container {
+        padding: 1rem .75rem 1rem !important;
+      }
+    }
     @media (prefers-reduced-motion: reduce) { .report, .btn { transition-duration: .01ms; } }
   </style>
-  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
+  <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=5">
 </head>
 <body class="app-shell admin-shell system-layout-page technician-accomplishments-page">
   <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -324,6 +374,6 @@
       load();
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=77" defer></script>
+  <script src="/js/sidebar-component.js?v=106" defer></script>
 </body>
 </html>
