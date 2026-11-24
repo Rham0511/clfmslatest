@@ -256,7 +256,7 @@ html body.admin-borrow-equipment-page .table-wrap {
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #34744d #0a1d13;
+  scrollbar-color: var(--app-accent) var(--app-table-bg);
   border-radius: .72rem;
   scroll-margin-top: 3.3rem;
   -webkit-overflow-scrolling: touch;
@@ -266,22 +266,22 @@ html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar {
   display: block !important;
   width: .62rem;
   height: .62rem;
-  background: #0a1d13;
+  background: var(--app-table-bg);
 }
 
 html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
   border-radius: 999px;
-  background: #0a1d13;
+  background: var(--app-table-bg);
 }
 
 html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
-  border: 1px solid #0a1d13;
+  border: 1px solid var(--app-table-bg);
   border-radius: 999px;
-  background: #34744d;
+  background: var(--app-accent);
 }
 
 html body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #4ade80;
+  background: var(--app-accent-hover);
 }
 
 html body.admin-borrow-equipment-page .table-wrap thead th {
@@ -289,25 +289,25 @@ html body.admin-borrow-equipment-page .table-wrap thead th {
   top: 0 !important;
   z-index: 3 !important;
   padding: .58rem .62rem !important;
-  background: #123a28 !important;
-  color: #e4f5e9 !important;
+  background: var(--app-table-header-bg) !important;
+  color: var(--app-text) !important;
   font-size: .66rem !important;
   letter-spacing: .055em !important;
 }
 
 html body.admin-borrow-equipment-page .table-wrap > table {
   width: 100%;
-  min-width: 760px;
+  min-width: 1000px;
   height: 100%;
   table-layout: fixed;
 }
 
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(1) { width: 16%; }
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(2) { width: 17%; }
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(3) { width: 12%; }
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(4) { width: 13%; }
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(5) { width: 15%; }
-html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(6) { width: 13%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(1) { width: 15%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(2) { width: 15%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(3) { width: 11%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(4) { width: 15%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(5) { width: 14%; }
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(6) { width: 16%; }
 html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) > table th:nth-child(7) { width: 14%; }
 
 /* Audit rows show only a quick summary; the View action opens the full event. */
@@ -328,6 +328,11 @@ html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelle
   word-break: normal;
   white-space: normal;
   vertical-align: middle;
+}
+
+html body.admin-borrow-equipment-page #borrowRecordsTablePanel:not([aria-labelledby="tabAudit"]) .borrow-current-holder-name {
+  display: block;
+  font-weight: 700;
 }
 
 html body.admin-borrow-equipment-page #borrowRecordsTablePanel[aria-labelledby="tabAudit"] thead th,
@@ -612,63 +617,6 @@ html.theme-light body.admin-borrow-equipment-page .summary-card .value {
   color: #172b22;
 }
 
-html.theme-light body.admin-borrow-equipment-page .table-wrap {
-  border-color: #E2E8F0 !important;
-  background: #FFFFFF !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  scrollbar-color: #CBD5E1 #FFFFFF !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar,
-html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-track {
-  background: #FFFFFF !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap::-webkit-scrollbar-thumb {
-  border-color: #FFFFFF !important;
-  background: #CBD5E1 !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap table,
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody,
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr,
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody td {
-  border-color: #E2E8F0 !important;
-  background: #FFFFFF !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  color: #1E293B !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap thead,
-html.theme-light body.admin-borrow-equipment-page .table-wrap thead tr,
-html.theme-light body.admin-borrow-equipment-page .table-wrap thead th {
-  border-color: #E2E8F0 !important;
-  background: #F8FAFC !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  color: #334155 !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even),
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:nth-child(even) td {
-  background: #F8FAFC !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:hover {
-  background: #E8F5ED !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody tr:hover td {
-  background: #E8F5ED !important;
-}
-
-html.theme-light body.admin-borrow-equipment-page .table-wrap tbody td {
-  border-color: #e2ebe5;
-  color: #293d31 !important;
-}
-
 html.theme-light body.admin-borrow-equipment-page .empty-state {
   border-color: #d4e4d8;
   background: #f7faf8;
@@ -889,4 +837,123 @@ html body.admin-borrow-equipment-page #mainContainer > .page-card {
 
 html body.admin-borrow-equipment-page #mainContainer > .page-card > .page-panel {
   min-height: 100%;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel {
+  border: 1px solid #145A3E !important;
+  background: #082B20 !important;
+  color: #E5F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table,
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody {
+  border-color: #145A3E !important;
+  background: #082B20 !important;
+  background-color: #082B20 !important;
+  background-image: none !important;
+  color: #E5F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel thead,
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel thead tr,
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel thead th {
+  border-color: #145A3E !important;
+  background: #0B241B !important;
+  background-color: #0B241B !important;
+  background-image: none !important;
+  color: #D1FAE5 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody tr,
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td {
+  border-color: #145A3E !important;
+  background-image: none !important;
+  color: #E5F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody tr {
+  background: #0B2D22 !important;
+  background-color: #0B2D22 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody tr:nth-child(even) {
+  background: #103829 !important;
+  background-color: #103829 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody tr:hover,
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody tr:hover td {
+  background: #164B35 !important;
+  background-color: #164B35 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel :is(
+  .text-xs,
+  .audit-time,
+  .audit-secondary
+) {
+  color: #A7C8B5 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-approved {
+  border-color: #15803D !important;
+  background: #064E3B !important;
+  color: #86EFAC !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-rejected {
+  border-color: #991B1B !important;
+  background: #7F1D1D !important;
+  color: #FECACA !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-returned {
+  border-color: #15803D !important;
+  background: #064E3B !important;
+  color: #BBF7D0 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-cancelled {
+  border-color: #365C4B !important;
+  background: #1F3A31 !important;
+  color: #D1D5DB !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-pending {
+  border-color: #A16207 !important;
+  background: #78350F !important;
+  color: #FDE68A !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn {
+  border-color: #145A3E !important;
+  background: #0D3525 !important;
+  color: #D1FAE5 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn:hover:not(:disabled) {
+  border-color: #1D8057 !important;
+  background: #164B35 !important;
+  color: #E5F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn.primary {
+  border-color: #0B6B46 !important;
+  background: #0B5A3D !important;
+  color: #D1FAE5 !important;
+}
+
+html.theme-dark body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn :is(i, svg) {
+  color: inherit !important;
+}
+
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .status-badge.status-cancelled {
+  border-color: #D1D5DB;
+  background: #F3F4F6;
+  color: #4B5563;
 }

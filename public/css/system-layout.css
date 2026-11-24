@@ -169,12 +169,6 @@ body.system-layout-page .faculty-metric-grid {
   gap: 1rem !important;
 }
 
-@media (min-width: 1024px) {
-  body.system-layout-page.faculty-dashboard-page .faculty-metric-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  }
-}
-
 body.system-layout-page .summary-card {
   box-sizing: border-box;
   min-height: 9rem;
@@ -313,7 +307,7 @@ body.system-layout-page .assignment-controls select {
   font-size: .9rem;
 }
 
-body.system-layout-page table thead th {
+body.system-layout-page:not(.reports-page) table thead th {
   padding: .9rem 1rem !important;
   background: #15803d !important;
   color: #ffffff !important;
@@ -327,13 +321,13 @@ body.system-layout-page table thead th {
 }
 
 body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table thead th {
-  padding: 1rem 1.25rem !important;
-  background: #22c55e !important;
-  color: #052e16 !important;
-  border-bottom: 1px solid #86efac !important;
-  font-size: 1.1rem !important;
-  font-weight: 900 !important;
-  letter-spacing: .035em !important;
+  padding: .8rem 1.15rem !important;
+  background: var(--app-table-header-bg, #071a13) !important;
+  color: var(--app-text, #e6f5ec) !important;
+  border-bottom: 1px solid var(--app-border, #174b35) !important;
+  font-size: .76rem !important;
+  font-weight: 750 !important;
+  letter-spacing: .08em !important;
 }
 
 body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table thead th:first-child {
@@ -344,7 +338,7 @@ body.system-layout-page.faculty-dashboard-page table.faculty-dashboard-table the
   border-top-right-radius: .65rem;
 }
 
-body.system-layout-page main table tbody td {
+body.system-layout-page:not(.reports-page) main table tbody td {
   font-size: .9rem;
   line-height: 1.5;
 }
@@ -998,30 +992,53 @@ body.system-layout-page .main-container .borrow-summary-grid .dashboard-kpi-card
   justify-content: space-between;
 }
 
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-grid .dashboard-kpi-card {
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-grid .dashboard-kpi-card {
   border-color: #c9ddd0 !important;
   background: linear-gradient(145deg, #ffffff, #f3f8f5) !important;
   box-shadow: 0 8px 22px rgba(27, 74, 48, .08), inset 0 1px 0 rgba(255, 255, 255, .85) !important;
   color: #14251b !important;
 }
 
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-icon {
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-icon {
   border-color: rgba(22, 131, 74, .18) !important;
   background: #e4f4e9 !important;
   color: #16834a !important;
 }
 
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-label,
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .card-title {
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-label,
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-card .card-title {
   color: #536b5b !important;
 }
 
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-overline {
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-overline {
   color: #54715d !important;
 }
 
-html.theme-light body.system-layout-page .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-value {
+html.theme-light body.system-layout-page:not(.faculty-dashboard-page) .main-container.theme-light .dashboard-kpi-card .dashboard-kpi-value {
   color: #17291e !important;
+}
+
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-grid .dashboard-kpi-card {
+  border-color: var(--faculty-card-border, var(--app-border)) !important;
+  background: var(--faculty-card-bg, var(--app-card-bg)) !important;
+  box-shadow: var(--faculty-card-shadow, var(--app-shadow)) !important;
+  color: var(--app-text) !important;
+}
+
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-card .dashboard-kpi-icon {
+  border-color: var(--faculty-card-border, var(--app-border)) !important;
+  background: var(--faculty-green-soft, var(--app-hover-bg)) !important;
+  color: var(--faculty-green, var(--app-accent)) !important;
+}
+
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-card .dashboard-kpi-label,
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-card .card-title,
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-card .dashboard-kpi-overline {
+  color: var(--faculty-muted, var(--app-text-secondary)) !important;
+}
+
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-card .dashboard-kpi-value {
+  color: var(--app-text) !important;
 }
 
 @media (max-width: 767px) {
@@ -1060,5 +1077,27 @@ html.theme-light body.system-layout-page .main-container.theme-light .dashboard-
 @media (prefers-reduced-motion: reduce) {
   body.system-layout-page .main-container .dashboard-kpi-card {
     transition: none !important;
+  }
+}
+
+html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 359px) {
+  html body.system-layout-page.faculty-dashboard-page .main-container .dashboard-kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }

@@ -31,6 +31,7 @@
         let equipmentData = [];
         let isRefreshingLastBorrowers = false;
         let equipmentCategories = [];
+        let equipmentInventoryCategoryNames = [];
         let addInventorySets = [];
         let equipmentCampusSummary = {};
         let equipmentFilterSummary = null;
@@ -593,10 +594,12 @@
             const url = new URL('/api/equipment', window.location.origin);
             const search = document.getElementById('searchInput')?.value?.trim() || '';
             const status = document.getElementById('statusFilter')?.value || '';
+            const category = document.getElementById('equipmentCategoryFilter')?.value || '';
             const laboratory = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
             const campus = document.getElementById('campusFilter')?.value || '';
             if (search) url.searchParams.set('search', search);
             if (status) url.searchParams.set('status', status);
+            if (category) url.searchParams.set('category', category);
             if (laboratory) url.searchParams.set('laboratory', laboratory);
             if (campus) url.searchParams.set('campus', campus);
             if (inventoryAssignmentFilter) url.searchParams.set('assignment', inventoryAssignmentFilter);
@@ -636,18 +639,57 @@
             if (datalist) datalist.innerHTML = '';
             const componentSelect = document.getElementById('addEquipmentName');
             if (componentSelect) componentSelect.replaceChildren(new Option('Select component type', ''));
+            const categoryFilter = document.getElementById('equipmentCategoryFilter');
+            const selectedCategory = categoryFilter?.value || '';
+            if (categoryFilter) {
+                categoryFilter.replaceChildren(
+                    new Option('PC Sets Only', 'pc-sets'),
+                    new Option('All Categories', '')
+                );
+            }
             equipmentCategories.forEach((category) => {
+                const categoryName = String(category.name || '').trim();
+                if (!categoryName) return;
                 if (datalist) {
                     const option = document.createElement('option');
-                    option.value = category.name;
+                    option.value = categoryName;
+                    option.label = getEquipmentCategoryLabel(categoryName);
                     datalist.appendChild(option);
                 }
-                if (componentSelect) componentSelect.add(new Option(category.name, category.name));
+                if (componentSelect) componentSelect.add(new Option(getEquipmentCategoryLabel(categoryName), categoryName));
             });
+            equipmentInventoryCategoryNames.forEach((categoryName) => {
+                if (categoryFilter) categoryFilter.add(new Option(getEquipmentCategoryLabel(categoryName), categoryName));
+            });
+            if (categoryFilter && [...categoryFilter.options].some((option) => option.value === selectedCategory)) {
+                categoryFilter.value = selectedCategory;
+            } else if (categoryFilter) {
+                categoryFilter.value = '';
+            }
+        }
+
+        function getEquipmentCategoryLabel(categoryName) {
+            return String(categoryName).trim().toLowerCase() === 'system unit'
+                ? 'System Unit (CPU)'
+                : categoryName;
+        }
+
+        async function fetchEquipmentCategoryNames() {
+            const response = await fetch('/api/equipment', { cache: 'no-store' });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(payload?.error || 'Failed to load equipment categories.');
+            if (!Array.isArray(payload)) throw new Error('Equipment category response was invalid.');
+            return [...new Set(payload
+                .map((item) => String(item.category || '').trim())
+                .filter(Boolean))]
+                .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }));
         }
 
         async function loadCategories() {
-            equipmentCategories = await fetchCategories();
+            [equipmentCategories, equipmentInventoryCategoryNames] = await Promise.all([
+                fetchCategories(),
+                fetchEquipmentCategoryNames()
+            ]);
             renderEquipmentTypeDatalist();
         }
 
@@ -658,9 +700,11 @@
             }
             const search = document.getElementById('searchInput')?.value?.trim() || '';
             const status = document.getElementById('statusFilter')?.value || '';
+            const category = document.getElementById('equipmentCategoryFilter')?.value || '';
             const laboratory = normalizeComLabKey(document.getElementById('pcSetLabFilter')?.value);
             if (search) url.searchParams.set('search', search);
             if (status) url.searchParams.set('status', status);
+            if (category) url.searchParams.set('category', category);
             if (laboratory) url.searchParams.set('laboratory', laboratory);
             if (inventoryAssignmentFilter) url.searchParams.set('assignment', inventoryAssignmentFilter);
             url.searchParams.set('sortBy', 'name');
@@ -868,14 +912,17 @@
 
         async function selectInventorySummaryFilter(filter) {
             const viewMode = document.getElementById('viewModeFilter');
+            const categoryFilter = document.getElementById('equipmentCategoryFilter');
             const validFilters = ['equipment', 'pc-sets', 'assigned', 'unassigned', 'missing'];
             if (!validFilters.includes(filter)) return;
 
             inventoryAssignmentFilter = filter === 'assigned' || filter === 'unassigned' ? filter : '';
             if (filter === 'pc-sets') {
                 viewMode.value = 'pc-sets';
+                if (categoryFilter) categoryFilter.value = 'pc-sets';
             } else {
                 viewMode.value = 'all';
+                if (categoryFilter) categoryFilter.value = '';
             }
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = filter === 'missing' ? 'Missing' : '';
@@ -1110,9 +1157,40 @@
             document.getElementById('editEquipmentName').value = name.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
             document.getElementById('editCampus').value = campus;
             document.getElementById('editLaboratoryRoom').value = laboratoryRoom || '';
-            document.getElementById('editEquipmentStatusHidden').value = status || 'Serviceable';
+            const statusSelect = document.getElementById('editEquipmentStatus');
+            const statusHint = document.getElementById('editStatusHint');
+            const workflowStatuses = new Set(['Missing', 'Under Maintenance']);
+            const currentStatus = status || 'Serviceable';
+            const statusOptions = [...document.getElementById('statusFilter').options]
+                .filter((option) => option.value)
+                .map((option) => {
+                    const statusOption = new Option(option.textContent, option.value);
+                    statusOption.disabled = workflowStatuses.has(option.value);
+                    return statusOption;
+                });
+            const isEditableStatus = statusOptions.some((option) => option.value === currentStatus && !option.disabled);
+            statusSelect.replaceChildren(...statusOptions);
+            if (isEditableStatus) {
+                statusSelect.disabled = false;
+                statusSelect.value = currentStatus;
+                statusHint.textContent = 'Choose an available status. Missing and Under Maintenance use dedicated workflows.';
+            } else {
+                if (!statusOptions.some((option) => option.value === currentStatus)) {
+                    const currentOption = new Option(currentStatus, currentStatus, true, true);
+                    currentOption.disabled = true;
+                    statusSelect.add(currentOption, 0);
+                }
+                statusSelect.value = currentStatus;
+                statusSelect.disabled = true;
+                statusHint.textContent = currentStatus === 'Missing'
+                    ? 'Use “Mark as Found” to restore this item; missing reports require a reason.'
+                    : currentStatus === 'Under Maintenance'
+                        ? 'Use the maintenance workflow to change this item’s status.'
+                        : 'This status can only be changed through its dedicated workflow.';
+            }
             document.getElementById('editSerialNumber').value = serialNumber || '';
             document.getElementById('editSetId').value = setId || '';
+            document.querySelector('#editModal .modal-content').scrollTop = 0;
             openModal('editModal');
         }
 
@@ -1159,6 +1237,135 @@
             });
         }
 
+        function closeAddSetPickerOptions() {
+            const options = document.getElementById('addSetOptions');
+            const search = document.getElementById('addSetSearch');
+            if (options) options.hidden = true;
+            if (search) search.setAttribute('aria-expanded', 'false');
+        }
+
+        function renderAddSetPickerOptions(query = '') {
+            const select = document.getElementById('addSetId');
+            const optionsList = document.getElementById('addSetOptions');
+            const search = document.getElementById('addSetSearch');
+            if (!select || !optionsList || !search) return;
+
+            const normalizedQuery = String(query || '').trim().toLowerCase();
+            const availableOptions = [...select.options].filter((option) =>
+                option.value && (
+                    !normalizedQuery ||
+                    option.textContent.toLowerCase().includes(normalizedQuery)
+                )
+            );
+            const visibleOptions = availableOptions.slice(0, 6);
+            optionsList.replaceChildren();
+
+            const addOption = (label, value, isSelected = false) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'add-set-option';
+                button.setAttribute('role', 'option');
+                button.setAttribute('aria-selected', String(isSelected));
+                button.dataset.addSetId = value;
+                button.textContent = label;
+                optionsList.appendChild(button);
+            };
+
+            addOption('Not assigned to a PC set', '');
+            visibleOptions.forEach((option) => {
+                addOption(option.textContent, option.value, option.value === select.value);
+            });
+
+            if (!visibleOptions.length) {
+                const empty = document.createElement('p');
+                empty.className = 'add-set-empty';
+                empty.textContent = 'No PC sets match your search.';
+                optionsList.appendChild(empty);
+            } else if (availableOptions.length > visibleOptions.length) {
+                const note = document.createElement('p');
+                note.className = 'add-set-empty';
+                note.textContent = `Showing ${visibleOptions.length} of ${availableOptions.length} matches. Keep typing to narrow the list.`;
+                optionsList.appendChild(note);
+            }
+
+            optionsList.hidden = false;
+            search.setAttribute('aria-expanded', 'true');
+        }
+
+        function syncAddSetPickerSelection() {
+            const select = document.getElementById('addSetId');
+            const selectedPanel = document.getElementById('addSetSelected');
+            const selectedLabel = document.getElementById('addSetSelectedLabel');
+            const searchWrap = document.getElementById('addSetSearchWrap');
+            const search = document.getElementById('addSetSearch');
+            if (!select || !selectedPanel || !selectedLabel || !searchWrap || !search) return;
+
+            const selectedOption = select.selectedOptions[0];
+            const hasSelection = Boolean(select.value && selectedOption);
+            selectedPanel.hidden = !hasSelection;
+            searchWrap.hidden = hasSelection;
+            selectedLabel.textContent = hasSelection ? selectedOption.textContent : '';
+            if (!hasSelection) search.value = '';
+            closeAddSetPickerOptions();
+        }
+
+        function bindAddSetPicker() {
+            const picker = document.getElementById('addSetPicker');
+            const search = document.getElementById('addSetSearch');
+            const optionsList = document.getElementById('addSetOptions');
+            const select = document.getElementById('addSetId');
+            if (!picker || !search || !optionsList || !select) return;
+
+            search.addEventListener('focus', () => renderAddSetPickerOptions(search.value));
+            search.addEventListener('input', () => renderAddSetPickerOptions(search.value));
+            search.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeAddSetPickerOptions();
+                } else if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    optionsList.querySelector('[role="option"]')?.focus();
+                }
+            });
+            optionsList.addEventListener('click', (event) => {
+                const option = event.target.closest('[data-add-set-id]');
+                if (!option) return;
+                select.value = option.dataset.addSetId || '';
+                syncAddSetPickerSelection();
+                syncAddEquipmentSetFields();
+            });
+            optionsList.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeAddSetPickerOptions();
+                    search.focus();
+                } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    const choices = [...optionsList.querySelectorAll('[role="option"]')];
+                    const currentIndex = choices.indexOf(document.activeElement);
+                    const nextIndex = currentIndex + (event.key === 'ArrowDown' ? 1 : -1);
+                    if (nextIndex < 0) search.focus();
+                    else choices[Math.min(nextIndex, choices.length - 1)]?.focus();
+                }
+            });
+            document.getElementById('changeAddSetSelection')?.addEventListener('click', () => {
+                document.getElementById('addSetSearchWrap').hidden = false;
+                document.getElementById('addSetSelected').hidden = true;
+                search.value = '';
+                search.focus();
+            });
+            document.getElementById('clearAddSetSelection')?.addEventListener('click', () => {
+                select.value = '';
+                syncAddSetPickerSelection();
+                syncAddEquipmentSetFields();
+                search.focus();
+            });
+            document.addEventListener('click', (event) => {
+                if (!picker.contains(event.target)) {
+                    closeAddSetPickerOptions();
+                    syncAddSetPickerSelection();
+                }
+            });
+        }
+
         function renderAddComponentSetOptions(selectedSetId = '') {
             const select = document.getElementById('addSetId');
             if (!select) return;
@@ -1168,7 +1375,7 @@
             getComponentSetOptions(category).forEach((set) => {
                 const lab = normalizeSetLaboratory(set.location);
                 const campus = getCampusOption(set.campus || getCurrentUserCampus());
-                const option = new Option(`${set.displaySetId || set.setId} — ${set.setName || 'PC set'}${lab ? ` · ComLab ${lab.slice(-1)}` : ''}`, set.setId);
+                const option = new Option(set.setName || 'PC set', set.setId);
                 option.dataset.campus = campus;
                 option.dataset.laboratoryRoom = lab;
                 select.add(option);
@@ -1176,6 +1383,7 @@
             if (selectedSetId && [...select.options].some((option) => option.value === selectedSetId)) {
                 select.value = selectedSetId;
             }
+            syncAddSetPickerSelection();
         }
 
         async function loadAddInventorySets() {
@@ -1266,6 +1474,7 @@
         async function openAddInventoryModal(preferredMode = '') {
             const form = document.getElementById('addInventoryForm');
             if (form) form.reset();
+            syncAddSetPickerSelection();
             initializeCampusDefaults();
             const currentView = document.getElementById('viewModeFilter')?.value;
             const mode = preferredMode || (currentView === 'pc-sets' ? 'pc-set' : 'equipment');
@@ -1333,9 +1542,10 @@
                 name: document.getElementById('editEquipmentName')?.value?.trim() || '',
                 campus: document.getElementById('editCampus')?.value || '',
                 laboratoryRoom: document.getElementById('editLaboratoryRoom')?.value?.trim() || '',
-                status: document.getElementById('editEquipmentStatusHidden')?.value || 'Serviceable',
                 serialNumber: document.getElementById('editSerialNumber')?.value?.trim() || null,
             };
+            const statusSelect = document.getElementById('editEquipmentStatus');
+            if (!statusSelect.disabled) data.status = statusSelect.value;
             // Only send setId if the field has a value (don't accidentally clear it)
             const editSetIdVal = document.getElementById('editSetId')?.value?.trim();
             if (editSetIdVal !== undefined) data.setId = editSetIdVal || null;
@@ -1400,6 +1610,13 @@
                 await filterEquipment();
             }
             renderStats();
+        }
+
+        async function changeInventoryCategory() {
+            const selectedCategory = document.getElementById('equipmentCategoryFilter')?.value || '';
+            const viewMode = document.getElementById('viewModeFilter');
+            if (viewMode) viewMode.value = selectedCategory === 'pc-sets' ? 'pc-sets' : 'all';
+            await changeViewMode();
         }
 
         async function loadPCSets() {
@@ -1871,7 +2088,7 @@
 
                 const label = document.createElement('span');
                 label.className = 'text-slate-200';
-                label.textContent = category.name;
+                label.textContent = getEquipmentCategoryLabel(category.name);
 
                 const button = document.createElement('button');
                 button.type = 'button';
@@ -1901,6 +2118,42 @@
                 const result = await response.json().catch(() => ({}));
                 alert(result.error || 'Failed to archive equipment type.');
             }
+        }
+
+        function centerQrCanvasContent(canvas, size) {
+            const context = canvas.getContext('2d');
+            if (!context) return;
+
+            const imageData = context.getImageData(0, 0, size, size);
+            const pixels = imageData.data;
+            let minX = size;
+            let minY = size;
+            let maxX = -1;
+            let maxY = -1;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const pixel = (y * size + x) * 4;
+                    if (pixels[pixel] < 64 && pixels[pixel + 1] < 64 && pixels[pixel + 2] < 64) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+
+            if (maxX < minX || maxY < minY) return;
+
+            const qrMatrix = context.getImageData(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            context.globalAlpha = 1;
+            context.fillStyle = '#F4FFF1';
+            context.fillRect(0, 0, size, size);
+            context.putImageData(
+                qrMatrix,
+                Math.floor((size - qrMatrix.width) / 2),
+                Math.floor((size - qrMatrix.height) / 2)
+            );
         }
 
         function generateQrCode(payload) {
@@ -1942,6 +2195,7 @@
                     padding: 16,
                     level: 'H'
                 });
+                centerQrCanvasContent(qrElement, size);
             } catch (error) {
                 console.warn('Failed to render QR code.', error);
                 if (context) {
@@ -2100,6 +2354,7 @@
                     qrElement.height = size;
                     context.clearRect(0, 0, qrElement.width, qrElement.height);
                     context.drawImage(img, 0, 0, qrElement.width, qrElement.height);
+                    centerQrCanvasContent(qrElement, size);
                 };
                 img.src = qrImage;
             }
@@ -2351,6 +2606,7 @@ document.getElementById('equipmentTable').addEventListener('click', handleEquipm
         document.addEventListener('DOMContentLoaded', async () => {
             hydrateAdminProfile();
             initializeCampusDefaults();
+            bindAddSetPicker();
             const labSelect = document.getElementById('addLaboratoryRoom');
             if (labSelect) {
                 try {
@@ -2380,6 +2636,11 @@ document.getElementById('equipmentTable').addEventListener('click', handleEquipm
             const requestedStatus = inventoryParams.get('status');
             const viewModeFilter = document.getElementById('viewModeFilter');
             const statusFilter = document.getElementById('statusFilter');
+            const categoryFilter = document.getElementById('equipmentCategoryFilter');
+            if (requestedView === 'pc-sets' && viewModeFilter) {
+                viewModeFilter.value = 'pc-sets';
+                if (categoryFilter) categoryFilter.value = 'pc-sets';
+            }
             if (requestedView === 'all' && viewModeFilter) viewModeFilter.value = 'all';
             if (requestedStatus && statusFilter && [...statusFilter.options].some((option) => option.value === requestedStatus)) {
                 statusFilter.value = requestedStatus;
@@ -2387,7 +2648,11 @@ document.getElementById('equipmentTable').addEventListener('click', handleEquipm
             const showLabFilter = viewModeFilter?.value === 'pc-sets';
             document.querySelector('.inventory-filter-row.system-filter-row')?.classList.toggle('pc-set-filter-mode', showLabFilter);
             await loadCategories();
-            await loadEquipment(1, true);
+            if (requestedView === 'pc-sets') {
+                await changeViewMode();
+            } else {
+                await loadEquipment(1, true);
+            }
             window.setInterval(refreshLastBorrowers, 30000);
             document.addEventListener('visibilitychange', refreshLastBorrowers);
         });

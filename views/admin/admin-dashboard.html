@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title></title>
+    <meta name="app-hide-page-title" content="true">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=91">
+    <link rel="stylesheet" href="/css/sidebar.css?v=94">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -1676,7 +1677,7 @@
             .chart-container { flex-basis: 240px; height: 240px; min-height: 0; }
         }
     </style>
-    <link rel="stylesheet" href="/css/sidebar.css?v=91">
+    <link rel="stylesheet" href="/css/sidebar.css?v=94">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   <style>
@@ -1891,9 +1892,9 @@
     #mainContainer #dashboard-view .chart-kicker {
       margin: 0;
       color: #4ade80;
-      font-size: .62rem;
-      font-weight: 850;
-      letter-spacing: .15em;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
       line-height: 1.3;
       text-transform: uppercase;
     }
@@ -1941,13 +1942,13 @@
     }
 
     #mainContainer #dashboard-view .dashboard-cards .dashboard-kpi-card {
-      min-height: 11.5rem;
+      min-height: 12rem;
       justify-content: flex-start;
       gap: .55rem;
     }
 
     #mainContainer #dashboard-view .dashboard-kpi-total {
-      margin: .05rem 0 0;
+      margin: .75rem 0 0;
       color: var(--dashboard-card-text);
       font-size: 1.85rem;
       font-weight: 850;
@@ -1955,83 +1956,22 @@
       font-variant-numeric: tabular-nums;
     }
 
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .35rem .65rem;
-      margin: auto 0 0;
-      padding-top: .5rem;
-      border-top: 1px solid var(--dashboard-card-border);
-    }
-
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown > div {
-      display: flex;
-      min-width: 0;
-      align-items: center;
-      justify-content: space-between;
-      gap: .35rem;
-    }
-
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown dt {
-      min-width: 0;
-      color: var(--dashboard-card-muted);
-      font-size: .64rem;
-      font-weight: 600;
-      line-height: 1.25;
-      overflow-wrap: anywhere;
-    }
-
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown dd {
-      margin: 0;
-      color: var(--dashboard-card-text);
-      font-size: .7rem;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-serviceable dd,
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-active dd { color: #4ade80; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-unserviceable dd,
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-needs-review dd { color: #fb923c; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-lost dd { color: #fb7185; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-in-use dd,
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-students dd { color: #7dd3fc; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-maintenance dd,
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-admins dd { color: #fbbf24; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-archived dd,
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-retired dd { color: #cbd5e1; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-faculty dd { color: #c4b5fd; }
-    #mainContainer #dashboard-view .dashboard-kpi-breakdown .kpi-technicians dd { color: #5eead4; }
-
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-serviceable dd,
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-active dd { color: #15803d; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-unserviceable dd,
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-needs-review dd { color: #c2410c; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-lost dd { color: #be123c; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-in-use dd,
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-students dd { color: #0369a1; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-maintenance dd,
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-admins dd { color: #a16207; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-archived dd,
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-retired dd { color: #64748b; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-faculty dd { color: #6d28d9; }
-    #mainContainer.theme-light #dashboard-view .dashboard-kpi-breakdown .kpi-technicians dd { color: #0f766e; }
-
     #mainContainer #dashboard-view .dashboard-cards .card-title {
       max-width: calc(100% - 3.15rem);
       color: var(--dashboard-card-muted) !important;
-      font-size: .64rem;
-      font-weight: 850;
-      letter-spacing: .14em;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
       line-height: 1.3;
+      text-transform: uppercase;
     }
 
     #mainContainer #dashboard-view .dashboard-cards .card h3 {
       max-width: 100%;
       margin: .24rem 0 0;
       color: var(--dashboard-card-text) !important;
-      font-size: .82rem;
-      font-weight: 700;
+      font-size: 1rem;
+      font-weight: 600;
       line-height: 1.3;
     }
 
@@ -2153,8 +2093,8 @@
     #mainContainer #dashboard-view .chart-title {
       margin: .12rem 0 0;
       color: var(--dashboard-card-text);
-      font-size: .98rem;
-      font-weight: 800;
+      font-size: 1.125rem;
+      font-weight: 700;
       letter-spacing: -.018em;
       line-height: 1.25;
     }
@@ -2193,13 +2133,13 @@
       padding: .38rem .48rem;
       border: 1px solid transparent;
       border-radius: .62rem;
-      font-size: .59rem;
-      font-weight: 700;
+      font-size: .75rem;
+      font-weight: 500;
       line-height: 1.2;
     }
 
     #mainContainer #dashboard-view .borrow-summary-item strong {
-      font-size: .76rem;
+      font-size: .875rem;
       font-variant-numeric: tabular-nums;
       font-weight: 850;
     }
@@ -2256,14 +2196,14 @@
     #mainContainer #dashboard-view .category-summary-item span {
       overflow: hidden;
       max-width: 100%;
-      font-size: .54rem;
-      font-weight: 700;
+      font-size: .75rem;
+      font-weight: 500;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     #mainContainer #dashboard-view .category-summary-item strong {
-      font-size: .76rem;
+      font-size: .875rem;
       font-variant-numeric: tabular-nums;
       font-weight: 850;
     }
@@ -2296,15 +2236,15 @@
       padding: .32rem .2rem;
       border: 1px solid transparent;
       border-radius: .62rem;
-      font-size: .56rem;
-      font-weight: 700;
+      font-size: .75rem;
+      font-weight: 500;
       line-height: 1.15;
       text-align: center;
       white-space: nowrap;
     }
 
     #mainContainer #dashboard-view .maintenance-summary-item strong {
-      font-size: .78rem;
+      font-size: .875rem;
       font-variant-numeric: tabular-nums;
       font-weight: 850;
     }
@@ -2356,8 +2296,8 @@
       box-sizing: border-box;
       width: 100%;
       min-height: 0;
-      height: 15.5rem;
-      flex: 0 0 15.5rem;
+      height: 16.5rem;
+      flex: 0 0 16.5rem;
       padding: .5rem;
       border: 1px solid var(--dashboard-card-border);
       border-radius: .9rem;
@@ -2372,15 +2312,15 @@
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)) !important; }
       #mainContainer #dashboard-view .charts-section { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #mainContainer #dashboard-view .charts-section .chart-card:first-child { grid-column: auto; }
-      #mainContainer #dashboard-view .chart-container { height: 16.5rem; flex-basis: 16.5rem; }
+      #mainContainer #dashboard-view .chart-container { height: 17rem; flex-basis: 17rem; }
     }
 
     @media (max-width: 768px) {
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
       #mainContainer #dashboard-view .charts-section { grid-template-columns: minmax(0, 1fr); }
       #mainContainer #dashboard-view .chart-card:first-child { grid-column: auto; }
-      #mainContainer #dashboard-view .chart-card { min-height: 21rem; }
-      #mainContainer #dashboard-view .chart-container { height: 14.5rem; flex-basis: 14.5rem; }
+      #mainContainer #dashboard-view .chart-card { min-height: 23rem; }
+      #mainContainer #dashboard-view .chart-container { height: 16rem; flex-basis: 16rem; }
     }
 
     @media (max-width: 520px) {
@@ -2388,20 +2328,29 @@
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: .65rem !important; }
       #mainContainer #dashboard-view .dashboard-cards .card { padding: .8rem; }
       #mainContainer #dashboard-view .dashboard-cards .card-icon { top: .85rem; right: .85rem; width: 2.25rem; height: 2.25rem; flex-basis: 2.25rem; font-size: .82rem; }
-      #mainContainer #dashboard-view .dashboard-cards .card-title { font-size: .58rem; }
-      #mainContainer #dashboard-view .dashboard-cards .card h3 { font-size: .73rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card-title { font-size: .75rem; }
+      #mainContainer #dashboard-view .dashboard-cards .card h3 { font-size: 1rem; }
       #mainContainer #dashboard-view .dashboard-cards .card-value,
       #mainContainer #dashboard-view .dashboard-cards .text-4xl { font-size: 1.7rem; }
       #mainContainer #dashboard-view .dashboard-kpi-total { font-size: 1.55rem; }
-      #mainContainer #dashboard-view .dashboard-kpi-breakdown { grid-template-columns: minmax(0, 1fr); gap: .3rem; }
-      #mainContainer #dashboard-view .dashboard-kpi-breakdown dt { font-size: .62rem; }
-      #mainContainer #dashboard-view .dashboard-kpi-breakdown dd { font-size: .66rem; }
-      #mainContainer #dashboard-view .chart-card { min-height: 20rem; padding: .9rem; }
-      #mainContainer #dashboard-view .chart-container { height: 13.5rem; flex-basis: 13.5rem; padding: .35rem; }
+      #mainContainer #dashboard-view .chart-card { min-height: 22rem; padding: .9rem; }
+      #mainContainer #dashboard-view .chart-container { height: 15rem; flex-basis: 15rem; padding: .35rem; }
     }
 
     @media (max-width: 360px) {
       #mainContainer #dashboard-view .dashboard-cards { grid-template-columns: minmax(0, 1fr) !important; }
+    }
+
+    body.app-shell.admin-dashboard-page #shared-sidebar #sidebar .nav-item {
+      font-size: .875rem !important;
+      font-weight: 500 !important;
+      line-height: 1.35 !important;
+    }
+
+    @media (min-width: 640px) {
+      #mainContainer #dashboard-view .dashboard-cards .card h3 { font-size: 1.125rem; }
+      #mainContainer #dashboard-view .chart-title { font-size: 1.25rem; }
+      body.app-shell.admin-dashboard-page #shared-sidebar #sidebar .nav-item { font-size: 15px !important; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3346,19 +3295,29 @@
       outline-offset: 2px;
     }
     #mainContainer #maintenanceDetailsModal {
-      z-index: 2300;
-      left: var(--sidebar-width, 280px);
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      left: 0;
+      right: 0;
       width: auto;
       padding: 1rem;
-      background: rgba(1, 12, 8, .78);
-      backdrop-filter: blur(14px) saturate(1.15);
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      overflow: hidden;
+      background: rgba(2, 18, 11, .3) !important;
+      background-image: none !important;
+      backdrop-filter: blur(10px) saturate(1.12) !important;
+      -webkit-backdrop-filter: blur(10px) saturate(1.12) !important;
     }
     #mainContainer #maintenanceDetailsModal .maintenance-details-card {
       box-sizing: border-box;
-      width: min(760px, calc(100% - 2rem));
-      height: min(78vh, 720px);
-      max-width: 760px;
-      max-height: min(88vh, 920px);
+      width: min(768px, 100%);
+      height: auto;
+      max-width: 768px;
+      max-height: calc(100vh - 2rem);
+      margin: 0;
       overflow: hidden;
       border: 1px solid rgba(110, 231, 183, .3);
       border-radius: 1.35rem;
@@ -3366,30 +3325,32 @@
         radial-gradient(circle at 100% 0, rgba(52, 211, 153, .1), transparent 30%),
         linear-gradient(145deg, #102f22, #071a12 72%);
       color: #eaf7ef;
-      box-shadow: 0 28px 80px rgba(0, 0, 0, .48), 0 0 0 1px rgba(52, 211, 153, .05), 0 0 55px rgba(22, 131, 74, .08);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, .3), 0 0 0 1px rgba(52, 211, 153, .07);
+      transform: none;
     }
+    body.maintenance-details-open #mainContainer { z-index: 10000; }
     #mainContainer #maintenanceDetailsModal .maintenance-details-header,
     #mainContainer #maintenanceDetailsModal .maintenance-details-footer { flex: 0 0 auto; }
     #mainContainer #maintenanceDetailsModal .maintenance-details-header {
       align-items: center;
-      padding: 1.2rem 1.5rem;
+      padding: .75rem 1rem;
       border-bottom-color: rgba(110, 231, 183, .2);
       background: linear-gradient(180deg, rgba(20, 128, 77, .2), rgba(7, 26, 18, .05));
     }
     #mainContainer #maintenanceDetailsModal .maintenance-details-kicker {
       margin: 0 0 .25rem;
       color: #6ee7b7;
-      font-size: .65rem;
-      font-weight: 850;
-      letter-spacing: .14em;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
     }
     #mainContainer #maintenanceDetailsModal .maintenance-details-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2 { margin: 0; color: #f0fdf4; font-size: 1.25rem; font-weight: 850; letter-spacing: -.02em; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-body { flex: 1 1 0; min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem 1.5rem 1.4rem; scrollbar-width: thin; scrollbar-color: #16834a #092116; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2 { margin: 0; color: #f0fdf4; font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-body { flex: 0 1 auto; min-height: 0; max-height: calc(100vh - 12rem); overflow-y: auto; overscroll-behavior: contain; padding: .75rem 1rem; scrollbar-width: thin; scrollbar-color: #16834a #092116; }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-item {
       min-width: 0;
-      padding: .95rem 1rem;
+      padding: .6rem .8rem;
       border: 1px solid rgba(110, 231, 183, .16);
       border-radius: .9rem;
       background: linear-gradient(145deg, rgba(7, 39, 26, .9), rgba(3, 23, 15, .62));
@@ -3403,25 +3364,26 @@
     }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-item span {
       display: block;
-      margin-bottom: .24rem;
+      margin-bottom: .16rem;
       color: #9eb8a8;
-      font-size: .68rem;
-      font-weight: 750;
-      letter-spacing: .045em;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
       text-transform: uppercase;
     }
-    #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong { display: block; overflow-wrap: anywhere; color: #eaf7ef; font-size: .88rem; font-weight: 650; line-height: 1.45; white-space: pre-wrap; }
+    #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong { display: block; overflow-wrap: anywhere; color: #eaf7ef; font-size: .875rem; font-weight: 600; line-height: 1.35; white-space: pre-wrap; }
+    #mainContainer #maintenanceDetailsModal [data-maintenance-modal-status] { padding: .25rem .75rem; font-size: .75rem; font-weight: 600; line-height: 1.25; }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter strong {
       display: flex;
       align-items: center;
-      gap: .65rem;
+      gap: .45rem;
       white-space: normal;
     }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-reporter-avatar {
       display: inline-flex;
-      width: 2.75rem;
-      height: 2.75rem;
-      flex: 0 0 2.75rem;
+      width: 2rem;
+      height: 2rem;
+      flex: 0 0 2rem;
       align-items: center;
       justify-content: center;
       overflow: hidden;
@@ -3442,10 +3404,10 @@
       color: inherit;
     }
     #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: 1 / -1; }
-    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { display: flex; justify-content: flex-end; padding: .9rem 1.5rem 1.1rem; border-top: 1px solid rgba(110, 231, 183, .2); background: rgba(3, 23, 15, .32); }
+    #mainContainer #maintenanceDetailsModal .maintenance-details-footer { display: flex; justify-content: flex-end; padding: .55rem 1rem .7rem; border-top: 1px solid rgba(110, 231, 183, .2); background: rgba(3, 23, 15, .32); }
     #mainContainer #maintenanceDetailsModal .maintenance-details-close-button {
-      min-height: 2.25rem;
-      padding: .48rem 1rem;
+      min-height: 2rem;
+      padding: .35rem .8rem;
       border: 1px solid #16834a;
       border-radius: .65rem;
       background: #16834a;
@@ -3565,7 +3527,7 @@
     @media (max-width: 700px) {
       #mainContainer #maintenanceDetailsModal {
         left: 0;
-        padding: .65rem;
+        padding: .75rem;
       }
       #mainContainer #maintenance-monitoring .maintenance-list-heading {
         flex-direction: column;
@@ -3583,8 +3545,9 @@
         grid-template-columns: minmax(0, 1fr);
         align-items: stretch;
       }
-      #mainContainer #maintenanceDetailsModal .maintenance-details-grid { grid-template-columns: minmax(0, 1fr); }
-      #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: auto; }
+      #mainContainer #maintenanceDetailsModal .maintenance-details-card { width: 100%; max-height: calc(100vh - 1.5rem); }
+      #mainContainer #maintenanceDetailsModal .maintenance-details-body { max-height: calc(100vh - 10rem); padding: .65rem; }
+      #mainContainer #maintenanceDetailsModal .maintenance-detail-item-wide { grid-column: 1 / -1; }
     }
 
     /* Compact, complete workspace for the Equipment Availability view. */
@@ -5162,14 +5125,19 @@
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal {
       inset: 0 !important;
-      left: var(--sidebar-width, 280px) !important;
+      left: 0 !important;
+      right: 0 !important;
       width: auto !important;
       height: 100vh !important;
       padding: 1rem !important;
-      background: rgba(15, 23, 42, .45) !important;
+      box-sizing: border-box !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 10000 !important;
+      background: rgba(15, 23, 42, .3) !important;
       background-image: none !important;
-      backdrop-filter: blur(3px) !important;
-      -webkit-backdrop-filter: blur(3px) !important;
+      backdrop-filter: blur(10px) saturate(1.12) !important;
+      -webkit-backdrop-filter: blur(10px) saturate(1.12) !important;
     }
 
     @media (max-width: 700px) {
@@ -5184,21 +5152,23 @@
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-card {
-      width: min(760px, calc(100vw - 2rem)) !important;
-      max-width: 760px !important;
-      max-height: min(88vh, 920px) !important;
+      width: min(768px, calc(100vw - 2rem)) !important;
+      height: auto !important;
+      max-width: 768px !important;
+      max-height: calc(100vh - 2rem) !important;
+      margin: 0 !important;
       overflow: hidden;
       border: 1px solid #e3eae6 !important;
       border-radius: 16px !important;
       background: #ffffff !important;
       background-image: none !important;
       color: #14231b !important;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, .18) !important;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, .16), 0 2px 8px rgba(15, 23, 42, .08) !important;
       backdrop-filter: none !important;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-header {
-      padding: 1.25rem 1.5rem !important;
+      padding: .75rem 1rem !important;
       border-bottom: 1px solid #eef2f0 !important;
       background: #ffffff !important;
     }
@@ -5206,30 +5176,31 @@
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-kicker {
       margin-bottom: .3rem;
       color: #6b7a72 !important;
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: .12em;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-title-row h2 {
       color: #0f1f17 !important;
       font-size: 1.25rem;
-      font-weight: 800;
+      font-weight: 700;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-body {
-      padding: 1.25rem 1.5rem 1.4rem;
+      max-height: calc(100vh - 12rem);
+      padding: .75rem 1rem;
       scrollbar-color: #9ac9a9 #f1f5f3;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-grid {
-      gap: .85rem;
+      gap: .65rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item {
       min-width: 0;
-      padding: .9rem 1rem;
+      padding: .6rem .8rem;
       border: 1px solid #e3eae6 !important;
       border-radius: 12px !important;
       background: #f8faf9 !important;
@@ -5246,14 +5217,14 @@
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item-wide {
       grid-column: 1 / -1;
-      padding: 1rem 1.1rem;
+      padding: .65rem .8rem;
       border-left: 3px solid #16a34a !important;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item span {
-      margin-bottom: .3rem;
+      margin-bottom: .16rem;
       color: #6b7a72 !important;
-      font-size: 11px;
+      font-size: .75rem;
       font-weight: 600;
       letter-spacing: .08em;
       line-height: 1.25;
@@ -5261,14 +5232,14 @@
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item strong {
       color: #14231b !important;
-      font-size: .94rem;
-      font-weight: 700;
-      line-height: 1.45;
+      font-size: .875rem;
+      font-weight: 600;
+      line-height: 1.35;
       overflow-wrap: anywhere;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-footer {
-      padding: .9rem 1.5rem 1.1rem;
+      padding: .55rem 1rem .7rem;
       border-top: 1px solid #eef2f0 !important;
       background: #ffffff !important;
     }
@@ -5344,11 +5315,11 @@
       --status-border: rgba(110, 231, 183, .25);
       --status-text: #d8eee1;
       --status-muted: #9dbdaa;
-      --status-hover: #102f22;
-      --status-active: rgba(22, 163, 74, .2);
-      --status-primary: #34d399;
-      --status-count-surface: rgba(34, 197, 94, .13);
-      --status-count-text: #b7f7cf;
+      --status-hover: #103b2b;
+      --status-active: #153d30;
+      --status-primary: #a7f3d0;
+      --status-count-surface: #1b4a3a;
+      --status-count-text: #d1fae5;
     }
 
     html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring {
@@ -5948,16 +5919,24 @@
     }
 
     @media (max-width: 640px) {
-      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-grid {
-        grid-template-columns: 1fr;
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item-wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (min-width: 640px) {
+      #mainContainer #maintenanceDetailsModal .maintenance-details-title-row h2,
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-details-title-row h2 {
+        font-size: 1.5rem;
       }
 
-      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item-wide {
-        grid-column: auto;
+      #mainContainer #maintenanceDetailsModal .maintenance-detail-item strong,
+      html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenanceDetailsModal .maintenance-detail-item strong {
+        font-size: 1rem;
       }
     }
   </style>
-  <link rel="stylesheet" href="/css/maintenance-monitoring.css?v=4">
+  <link rel="stylesheet" href="/css/maintenance-monitoring.css?v=12">
 </head>
 <body class="app-shell system-layout-page admin-dashboard-page">
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
@@ -6002,11 +5981,6 @@
                             </div>
                         </div>
                         <p id="dashboardTotalCount" class="dashboard-kpi-total">0</p>
-                        <dl class="dashboard-kpi-breakdown" aria-label="Equipment status counts">
-                            <div class="kpi-serviceable"><dt>Serviceable</dt><dd id="dashboardServiceableCount">0</dd></div>
-                            <div class="kpi-unserviceable"><dt>Unserviceable</dt><dd id="dashboardUnserviceableCount">0</dd></div>
-                            <div class="kpi-lost"><dt>Lost</dt><dd id="dashboardLostCount">0</dd></div>
-                        </dl>
                     </a>
 
                     <a class="card dashboard-summary-link dashboard-kpi-card" href="/computer-labs">
@@ -6020,10 +5994,6 @@
                             </div>
                         </div>
                         <p id="dashboardComputerLabsTotal" class="dashboard-kpi-total">—</p>
-                        <dl class="dashboard-kpi-breakdown" aria-label="Computer lab status counts">
-                            <div class="kpi-active"><dt>Active</dt><dd id="dashboardComputerLabsActive">—</dd></div>
-                            <div class="kpi-archived"><dt>Archived</dt><dd id="dashboardComputerLabsArchived">—</dd></div>
-                        </dl>
                     </a>
 
                     <a class="card dashboard-summary-link dashboard-kpi-card" href="/pc-set-management">
@@ -6037,16 +6007,9 @@
                             </div>
                         </div>
                         <p id="dashboardPCSetsTotal" class="dashboard-kpi-total">—</p>
-                        <dl class="dashboard-kpi-breakdown" aria-label="PC set status counts">
-                            <div class="kpi-active"><dt>Active</dt><dd id="dashboardPCSetsActive">—</dd></div>
-                            <div class="kpi-in-use"><dt>In Use</dt><dd id="dashboardPCSetsInUse">—</dd></div>
-                            <div class="kpi-maintenance"><dt>Maintenance</dt><dd id="dashboardPCSetsMaintenance">—</dd></div>
-                            <div class="kpi-needs-review"><dt>Needs Review</dt><dd id="dashboardPCSetsIncomplete">—</dd></div>
-                            <div class="kpi-retired"><dt>Retired</dt><dd id="dashboardPCSetsRetired">—</dd></div>
-                        </dl>
                     </a>
 
-                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/admin-user-management">
+                    <a class="card dashboard-summary-link dashboard-kpi-card" href="/user-management">
                         <div class="card-header">
                             <div>
                                 <p class="card-title dashboard-kpi-overline text-emerald-300">Total</p>
@@ -6057,12 +6020,6 @@
                             </div>
                         </div>
                         <p id="dashboardUsersTotal" class="dashboard-kpi-total">—</p>
-                        <dl class="dashboard-kpi-breakdown" aria-label="User counts by role">
-                            <div class="kpi-students"><dt>Students</dt><dd id="dashboardUsersStudents">—</dd></div>
-                            <div class="kpi-faculty"><dt>Faculty</dt><dd id="dashboardUsersFaculty">—</dd></div>
-                            <div class="kpi-technicians"><dt>Technicians</dt><dd id="dashboardUsersTechnicians">—</dd></div>
-                            <div class="kpi-admins"><dt>Admins</dt><dd id="dashboardUsersAdmins">—</dd></div>
-                        </dl>
                     </a>
                 </div>
 
@@ -6128,7 +6085,7 @@
                                     <span class="maintenance-status-trigger-count" id="maintenanceStatusTriggerCount">0</span>
                                     <i class="fas fa-chevron-down maintenance-status-chevron" aria-hidden="true"></i>
                                 </button>
-                                <div class="maintenance-status-menu" id="maintenanceStatusMenu" role="listbox" aria-label="Filter reports by status" tabindex="-1">
+                                <div class="maintenance-status-menu" id="maintenanceStatusMenu" role="listbox" aria-label="Filter reports by status" aria-hidden="true" tabindex="-1">
                                     <button type="button" class="maintenance-status-option" role="option" data-filter="All" aria-selected="true" tabindex="0">
                                         <i class="fas fa-check maintenance-status-option-check" aria-hidden="true"></i>
                                         <span class="maintenance-status-dot status-dot-all" aria-hidden="true"></span>
@@ -6174,7 +6131,7 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto maintenance-table-scroll" tabindex="0" role="region" aria-label="Maintenance reports table">
                     <table>
                         <thead>
                             <tr>
@@ -6718,25 +6675,11 @@
                                    (dashboardState.equipment.unserviceableCount || 0) +
                                    (dashboardState.equipment.lostCount || 0);
             setSummaryValue('dashboardTotalCount', equipmentTotal);
-            setSummaryValue('dashboardServiceableCount', dashboardState.equipment.serviceableCount || 0);
-            setSummaryValue('dashboardUnserviceableCount', dashboardState.equipment.unserviceableCount || 0);
-            setSummaryValue('dashboardLostCount', dashboardState.equipment.lostCount || 0);
 
             const setCount = (id, value) => setSummaryValue(id, value ?? '—');
             setCount('dashboardComputerLabsTotal', dashboardState.computerLabs.total);
-            setCount('dashboardComputerLabsActive', dashboardState.computerLabs.active);
-            setCount('dashboardComputerLabsArchived', dashboardState.computerLabs.archived);
             setCount('dashboardPCSetsTotal', dashboardState.pcSets.total);
-            setCount('dashboardPCSetsActive', dashboardState.pcSets.active);
-            setCount('dashboardPCSetsInUse', dashboardState.pcSets.inUse);
-            setCount('dashboardPCSetsMaintenance', dashboardState.pcSets.maintenance);
-            setCount('dashboardPCSetsIncomplete', dashboardState.pcSets.incomplete);
-            setCount('dashboardPCSetsRetired', dashboardState.pcSets.retired);
             setCount('dashboardUsersTotal', dashboardState.users.total);
-            setCount('dashboardUsersStudents', dashboardState.users.students);
-            setCount('dashboardUsersFaculty', dashboardState.users.faculty);
-            setCount('dashboardUsersTechnicians', dashboardState.users.technicians);
-            setCount('dashboardUsersAdmins', dashboardState.users.admins);
         }
 
         function syncMaintenanceReportTabsPlacement() {
@@ -6791,6 +6734,7 @@
             const axisTextColor = isLightTheme ? '#43594b' : '#B6D7C8';
             const labelTextColor = isLightTheme ? '#355642' : '#c7f9d6';
             const legendTextColor = isLightTheme ? '#33483a' : '#d3e3d9';
+            const chartLabelFontSize = ({ chart }) => chart.width >= 480 ? 14 : 12;
             const gridColor = isLightTheme ? 'rgba(31, 41, 55, .12)' : 'rgba(255, 255, 255, 0.08)';
             const doughnutBorderColor = isLightTheme ? '#f8fbf8' : 'rgba(7, 21, 15, 0.9)';
             const legendLabelsWithValues = (chart) => {
@@ -6821,7 +6765,7 @@
                     ctx.font = '800 23px system-ui, sans-serif';
                     ctx.fillText(String(total), centerX, centerY - 5);
                     ctx.fillStyle = isLightTheme ? '#617668' : '#a7c2b2';
-                    ctx.font = '700 9px system-ui, sans-serif';
+                    ctx.font = '600 12px system-ui, sans-serif';
                     ctx.letterSpacing = '1px';
                     ctx.fillText('TOTAL', centerX, centerY + 15);
                     ctx.restore();
@@ -6838,7 +6782,7 @@
                             const y = value === 0 ? bar.base - 4 : bar.y - 5;
                             ctx.save();
                             ctx.fillStyle = axisTextColor;
-                            ctx.font = '700 11px system-ui, sans-serif';
+                            ctx.font = '600 12px system-ui, sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'bottom';
                             ctx.fillText(String(value), bar.x, y);
@@ -6934,11 +6878,11 @@
                         y: {
                             beginAtZero: true,
                             grid: { color: gridColor, drawBorder: false },
-                            ticks: { color: axisTextColor, font: { size: 10 } }
+                            ticks: { color: axisTextColor, font: { size: chartLabelFontSize, weight: 500 } }
                         },
                         x: {
                             grid: { display: false, drawBorder: false },
-                            ticks: { color: labelTextColor, font: { size: 10 } }
+                            ticks: { color: labelTextColor, font: { size: chartLabelFontSize, weight: 500 } }
                         }
                     }
                 },
@@ -6968,7 +6912,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                font: { size: 10, weight: 650 },
+                                font: { size: chartLabelFontSize, weight: 500 },
                                 color: legendTextColor,
                                 usePointStyle: true,
                                 pointStyle: 'circle',
@@ -7020,7 +6964,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                font: { size: 10, weight: 650 },
+                                font: { size: chartLabelFontSize, weight: 500 },
                                 color: legendTextColor,
                                 usePointStyle: true,
                                 pointStyle: 'circle',
@@ -7360,7 +7304,7 @@
             }
         });
     </script>
-    <script src="/js/sidebar-component.js?v=106" defer></script>
-    <script src="/js/admin-maintenance.js?v=18" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
+    <script src="/js/admin-maintenance.js?v=23" defer></script>
 </body>
 </html>

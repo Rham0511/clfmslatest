@@ -3429,7 +3429,7 @@ html.theme-light body.app-shell.student-portal:not(#student-light-theme-override
   color: #9b2634 !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   :is(
     #shared-sidebar,
     #sidebar,
@@ -3438,57 +3438,74 @@ html.theme-light body.app-shell.student-portal:not(#student-light-theme-override
     .sidebar-panel,
     .sidebar-content,
     .sidebar-header,
+    .sidebar-footer,
     .sidebar-nav,
     .sidebar-menu,
     .mobile-sidebar,
     .system-sidebar,
     .side-nav
   ) {
-  background-color: #071a12 !important;
+  background-color: #ffffff !important;
   background-image: none !important;
-  border-color: rgba(74, 222, 128, .2) !important;
+  border-color: #e2e8f0 !important;
   box-shadow: none !important;
-  color: #e8f5ed !important;
+  color: #1e293b !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .nav-item {
   border-color: transparent !important;
   background: transparent !important;
-  color: #a9c8b7 !important;
+  color: #1e293b !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .nav-item > i {
   border-color: transparent !important;
-  background-color: rgba(34, 197, 94, .075) !important;
-  color: #4ade80 !important;
+  background-color: #f0fdf4 !important;
+  color: #16a34a !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .nav-item:hover {
-  border-color: rgba(74, 222, 128, .18) !important;
-  background: #0c3625 !important;
-  color: #e8f5ed !important;
+  border-color: #e2e8f0 !important;
+  background: #f0fdf4 !important;
+  color: #15803d !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .nav-item.active,
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .nav-item[aria-current="page"] {
-  border-color: rgba(74, 222, 128, .34) !important;
-  background: #10452e !important;
-  color: #effcf3 !important;
+  border-color: #bbf7d0 !important;
+  background: #dcfce7 !important;
+  color: #15803d !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .sidebar-logo-text {
-  color: #e8f5ed !important;
+  color: #1e293b !important;
 }
 
-html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)
+html.theme-light body.app-shell.student-portal
   #sidebar .sidebar-tagline {
-  color: #95b5a4 !important;
+  color: #64748b !important;
+}
+
+html.theme-light body.app-shell.student-portal
+  #sidebar .sidebar-close-btn {
+  border-color: #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.student-portal
+  #sidebar .sidebar-close-btn:hover,
+html.theme-light body.app-shell.student-portal
+  #sidebar .sidebar-close-btn:focus-visible {
+  background: #dcfce7 !important;
+  color: #15803d !important;
 }
 
 html.theme-light body.app-shell.student-portal:not(#student-light-theme-override):not(#student-light-theme-override-2):not(#student-light-theme-override-3)

@@ -10,18 +10,29 @@
   <link rel="stylesheet" href="/css/faculty-portal.css?v=5">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <style>
-    :root {
-      color-scheme: dark;
-      --mir-border: rgba(74, 222, 128, .16);
+    body.faculty-mir-items-page {
+      --mir-border: var(--app-border, #174b35);
+      --mir-panel: var(--app-card-bg, #0d2b20);
+      --mir-toolbar: var(--app-table-header-bg, #071a13);
+      --mir-row: var(--app-table-row-bg, #0a2119);
+      --mir-row-alt: var(--app-table-row-alt-bg, #0c281d);
+      --mir-hover: var(--app-hover-bg, #123b2b);
+      --mir-text: var(--app-text, #e6f5ec);
+      --mir-muted: var(--app-text-secondary, #a7c5b4);
+      --mir-accent: var(--app-accent, #16a36a);
+      --mir-status-text: #86efac;
+      --mir-warning: #fcd34d;
     }
 
-    body {
+    html.theme-light body.faculty-mir-items-page {
+      --mir-status-text: #166534;
+      --mir-warning: #92400e;
+    }
+
+    body.faculty-mir-items-page {
       min-height: 100vh;
-      color: #f8fafc;
-      background:
-        radial-gradient(ellipse at 8% 0%, rgba(16, 185, 129, .15), transparent 34rem),
-        radial-gradient(ellipse at 95% 15%, rgba(20, 83, 45, .12), transparent 30rem),
-        linear-gradient(160deg, #06130e 0%, #06111a 55%, #020617 100%);
+      color: var(--mir-text);
+      background: var(--app-bg, #061a13);
     }
 
     .main-container {
@@ -42,19 +53,18 @@
       min-height: 5.25rem;
       margin-bottom: 0;
       padding: .75rem 1.1rem;
-      border: 1px solid rgba(74, 222, 128, .2);
+      border: 1px solid var(--mir-border);
       border-radius: 1.35rem;
-      background:
-        radial-gradient(ellipse at 10% 0%, rgba(16, 185, 129, .15), transparent 60%),
-        linear-gradient(130deg, rgba(8, 30, 21, .98), rgba(4, 17, 14, .96) 65%, rgba(5, 23, 19, .98));
+      background: var(--app-header-bg, #071d14);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 18px 40px rgba(0, 0, 0, .2);
+      color: var(--mir-text);
     }
 
     .mir-table-panel {
       overflow: hidden;
       border: 1px solid var(--mir-border);
       border-radius: 1.25rem;
-      background: rgba(3, 14, 11, .94);
+      background: var(--mir-panel);
       box-shadow: 0 20px 50px rgba(0, 0, 0, .2);
     }
 
@@ -64,8 +74,8 @@
       justify-content: stretch;
       gap: 1rem;
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(74, 222, 128, .12);
-      background: linear-gradient(90deg, rgba(9, 34, 24, .8), rgba(5, 19, 15, .74));
+      border-bottom: 1px solid var(--mir-border);
+      background: var(--mir-toolbar);
     }
 
     .mir-filters {
@@ -79,18 +89,18 @@
       box-sizing: border-box;
       min-height: 2.8rem;
       min-width: 10.5rem;
-      border: 1px solid rgba(74, 222, 128, .17);
-      border-radius: .85rem;
-      background: rgba(2, 10, 8, .86);
+      border: 1px solid var(--mir-border);
+      border-radius: .75rem;
+      background: var(--app-input-bg, #0a2119);
       padding: .65rem 2rem .65rem .8rem;
-      color: #d1fae5;
+      color: var(--mir-text);
       font-size: .8rem;
       outline: none;
     }
 
     .mir-category-select:focus {
-      border-color: rgba(52, 211, 153, .65);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+      border-color: var(--mir-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--mir-accent) 20%, transparent);
     }
 
     .mir-search {
@@ -103,31 +113,31 @@
       box-sizing: border-box;
       min-height: 2.8rem;
       width: 100%;
-      border: 1px solid rgba(74, 222, 128, .17);
-      border-radius: .85rem;
-      background: rgba(2, 10, 8, .86);
+      border: 1px solid var(--mir-border);
+      border-radius: .75rem;
+      background: var(--app-input-bg, #0a2119);
       padding: .65rem 2.8rem .65rem 2.55rem;
-      color: #ecfdf5;
+      color: var(--mir-text);
       font-size: .83rem;
       outline: none;
       transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
     .mir-search input::placeholder {
-      color: #71877e;
+      color: var(--mir-muted);
     }
 
     .mir-search input:focus {
-      border-color: rgba(52, 211, 153, .65);
-      background: #06140f;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+      border-color: var(--mir-accent);
+      background: var(--app-input-bg, #0a2119);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--mir-accent) 20%, transparent);
     }
 
     .mir-search-icon {
       position: absolute;
       top: 50%;
       left: .9rem;
-      color: #6ee7b7;
+      color: var(--mir-accent);
       transform: translateY(-50%);
       pointer-events: none;
     }
@@ -143,15 +153,15 @@
       border: 0;
       border-radius: .55rem;
       background: transparent;
-      color: #94a3b8;
+      color: var(--mir-muted);
       cursor: pointer;
       transform: translateY(-50%);
     }
 
     .mir-clear-search:hover,
     .mir-clear-search:focus-visible {
-      background: rgba(52, 211, 153, .1);
-      color: #a7f3d0;
+      background: var(--mir-hover);
+      color: var(--mir-accent);
       outline: none;
     }
 
@@ -159,20 +169,20 @@
       display: flex;
       align-items: center;
       gap: .5rem;
-      color: #8da99c;
+      color: var(--mir-muted);
       font-size: .75rem;
       white-space: nowrap;
     }
 
     .mir-summary i {
-      color: #34d399;
+      color: var(--mir-accent);
       font-size: .65rem;
     }
 
     .mir-table-scroll {
       width: 100%;
       min-width: 0;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     .mir-table-scroll::-webkit-scrollbar {
@@ -181,13 +191,13 @@
     }
 
     .mir-table-scroll::-webkit-scrollbar-track {
-      background: rgba(3, 14, 11, .9);
+      background: var(--mir-panel);
     }
 
     .mir-table-scroll::-webkit-scrollbar-thumb {
-      border: 2px solid rgba(3, 14, 11, .9);
+      border: 2px solid var(--mir-panel);
       border-radius: 999px;
-      background: rgba(52, 211, 153, .46);
+      background: var(--mir-accent);
     }
 
     .mir-table {
@@ -198,33 +208,33 @@
       text-align: left;
     }
 
-    .mir-table th:nth-child(1) { width: 20%; }
+    .mir-table th:nth-child(1) { width: 19%; }
     .mir-table th:nth-child(2) { width: 14%; }
-    .mir-table th:nth-child(3) { width: 14%; }
-    .mir-table th:nth-child(4) { width: 17%; }
-    .mir-table th:nth-child(5) { width: 13%; }
-    .mir-table th:nth-child(6) { width: 14%; }
+    .mir-table th:nth-child(3) { width: 16%; }
+    .mir-table th:nth-child(4) { width: 16%; }
+    .mir-table th:nth-child(5) { width: 12%; }
+    .mir-table th:nth-child(6) { width: 15%; }
     .mir-table th:nth-child(7) { width: 8%; }
 
     .mir-table th {
       position: sticky;
       top: 0;
       z-index: 2;
-      border-bottom: 1px solid rgba(74, 222, 128, .16);
-      background: #0a2118;
-      color: #b7e8d1;
-      padding: 0 .25rem;
+      border-bottom: 1px solid var(--mir-border);
+      background: var(--app-table-header-bg, #071a13);
+      color: var(--mir-text);
+      padding: .25rem .4rem;
       white-space: normal;
     }
 
     .mir-table th + th {
-      border-left: 1px solid rgba(74, 222, 128, .08);
+      border-left: 1px solid var(--mir-border);
     }
 
     .mir-table th[aria-sort="ascending"],
     .mir-table th[aria-sort="descending"] {
-      background: linear-gradient(180deg, #145438, #0d3a29);
-      box-shadow: inset 0 -2px 0 rgba(110, 231, 183, .7);
+      background: var(--mir-hover);
+      box-shadow: inset 0 -2px 0 var(--mir-accent);
     }
 
     .mir-table th:last-child {
@@ -235,14 +245,14 @@
       display: flex;
       width: 100%;
       min-width: 0;
-      min-height: 2.9rem;
+      min-height: 3.1rem;
       align-items: center;
       justify-content: space-between;
       gap: .3rem;
-      padding: .55rem .35rem;
+      padding: .55rem .45rem;
       white-space: normal;
       color: inherit;
-      font-size: .56rem;
+      font-size: .72rem;
       font-weight: 800;
       letter-spacing: .025em;
       line-height: 1.15;
@@ -250,8 +260,8 @@
     }
 
     .mir-table th:last-child {
-      color: #b7e8d1;
-      font-size: .56rem;
+      color: var(--mir-text);
+      font-size: .72rem;
       font-weight: 800;
       letter-spacing: .025em;
       text-transform: uppercase;
@@ -259,22 +269,31 @@
 
     .mir-sort-button:hover,
     .mir-sort-button:focus-visible {
-      color: #ecfdf5;
-      outline: 2px solid rgba(52, 211, 153, .8);
+      color: var(--mir-accent);
+      outline: 2px solid var(--mir-accent);
       outline-offset: -3px;
     }
 
     .mir-table td {
-      border-bottom: 1px solid rgba(74, 222, 128, .1);
-      padding: .7rem .55rem;
+      border-bottom: 1px solid var(--mir-border);
+      padding: .8rem .65rem;
       overflow-wrap: anywhere;
-      color: #e2e8f0;
-      font-size: .76rem;
+      color: var(--mir-text);
+      font-size: .84rem;
+      line-height: 1.45;
       vertical-align: middle;
     }
 
     .mir-table tbody tr:nth-child(even) {
-      background: rgba(15, 35, 27, .28);
+      background: var(--mir-row-alt);
+    }
+
+    body.app-shell.system-layout-page .mir-table tbody tr {
+      background: var(--mir-row) !important;
+    }
+
+    body.app-shell.system-layout-page .mir-table tbody tr:nth-child(even) {
+      background: var(--mir-row-alt) !important;
     }
 
     .mir-table tbody tr {
@@ -282,7 +301,11 @@
     }
 
     .mir-table tbody tr:hover {
-      background: rgba(16, 185, 129, .09);
+      background: var(--mir-hover);
+    }
+
+    body.app-shell.system-layout-page .mir-table tbody tr:hover {
+      background: var(--mir-hover) !important;
     }
 
     body.app-shell.system-layout-page .mir-table {
@@ -293,10 +316,11 @@
 
     body.app-shell.system-layout-page .mir-table thead th {
       padding: .35rem .3rem !important;
-      background: linear-gradient(180deg, #0d3324, #09271c) !important;
-      color: #d1fae5 !important;
-      font-size: .6rem !important;
-      line-height: 1.15 !important;
+      border-color: var(--mir-border) !important;
+      background: var(--app-table-header-bg, #071a13) !important;
+      color: var(--mir-text) !important;
+      font-size: .75rem !important;
+      line-height: 1.3 !important;
       letter-spacing: .025em !important;
       white-space: normal !important;
     }
@@ -305,12 +329,12 @@
       display: flex !important;
       width: 100% !important;
       min-width: 0 !important;
-      min-height: 2.5rem !important;
+      min-height: 3rem !important;
       justify-content: space-between !important;
       gap: .2rem !important;
-      padding: .35rem .2rem !important;
+      padding: .5rem .35rem !important;
       color: inherit !important;
-      font-size: .56rem !important;
+      font-size: .72rem !important;
       line-height: 1.15 !important;
       letter-spacing: .02em !important;
       white-space: normal !important;
@@ -320,17 +344,24 @@
       text-align: center !important;
     }
 
+    body.app-shell.system-layout-page .mir-table thead th[aria-sort="ascending"],
+    body.app-shell.system-layout-page .mir-table thead th[aria-sort="descending"] {
+      background: var(--mir-hover) !important;
+      box-shadow: inset 0 -2px 0 var(--mir-accent) !important;
+    }
+
     body.app-shell.system-layout-page .mir-table tbody td {
       padding: .65rem .45rem !important;
-      color: #e2e8f0 !important;
-      font-size: .74rem !important;
-      line-height: 1.35 !important;
+      border-color: var(--mir-border) !important;
+      color: var(--mir-text) !important;
+      font-size: .84rem !important;
+      line-height: 1.45 !important;
       overflow-wrap: anywhere !important;
     }
 
     .mir-item-name {
       display: block;
-      color: #f0fdf4;
+      color: var(--mir-text);
       font-weight: 750;
       overflow-wrap: anywhere;
     }
@@ -338,7 +369,7 @@
     .mir-item-category {
       display: block;
       margin-top: .2rem;
-      color: #8da99c;
+      color: var(--mir-muted);
       font-size: .68rem;
       font-weight: 600;
     }
@@ -348,11 +379,11 @@
       max-width: 100%;
       align-items: center;
       gap: .38rem;
-      border: 1px solid rgba(74, 222, 128, .15);
+      border: 1px solid var(--mir-border);
       border-radius: 999px;
-      background: rgba(16, 185, 129, .08);
+      background: var(--app-nav-active-bg, #0d3525);
       padding: .3rem .58rem;
-      color: #a7f3d0;
+      color: var(--mir-text);
       font-size: .7rem;
       font-weight: 700;
       white-space: normal;
@@ -360,21 +391,21 @@
     }
 
     .mir-pill--status {
-      border-color: rgba(96, 165, 250, .16);
-      background: rgba(59, 130, 246, .08);
-      color: #bfdbfe;
+      border-color: var(--mir-border);
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--mir-status-text);
     }
 
     .mir-condition-note {
       display: block;
       margin-top: .3rem;
-      color: #83988e;
+      color: var(--mir-muted);
       font-size: .68rem;
     }
 
     .mir-empty {
       padding: 3rem 1.5rem !important;
-      color: #91a59c !important;
+      color: var(--mir-muted) !important;
       text-align: center;
     }
 
@@ -384,10 +415,10 @@
       height: 3rem;
       margin: 0 auto .8rem;
       place-items: center;
-      border: 1px solid rgba(74, 222, 128, .14);
+      border: 1px solid var(--mir-border);
       border-radius: 1rem;
-      background: rgba(16, 185, 129, .07);
-      color: #6ee7b7;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--mir-accent);
     }
 
     .mir-actions-cell {
@@ -400,10 +431,10 @@
       width: 2.25rem;
       height: 2.25rem;
       place-items: center;
-      border: 1px solid rgba(74, 222, 128, .16);
+      border: 1px solid var(--mir-border);
       border-radius: .7rem;
-      background: rgba(16, 185, 129, .07);
-      color: #a7f3d0;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--mir-accent);
       cursor: pointer;
       transition: background .16s ease, border-color .16s ease, transform .16s ease;
     }
@@ -411,13 +442,13 @@
     .mir-action-trigger:hover,
     .mir-action-trigger[aria-expanded="true"] {
       transform: translateY(-1px);
-      border-color: rgba(74, 222, 128, .38);
-      background: rgba(16, 185, 129, .16);
-      color: #ecfdf5;
+      border-color: var(--mir-accent);
+      background: var(--mir-hover);
+      color: var(--mir-text);
     }
 
     .mir-action-trigger:focus-visible {
-      outline: 2px solid #34d399;
+      outline: 2px solid var(--mir-accent);
       outline-offset: 2px;
     }
 
@@ -429,9 +460,9 @@
       max-height: calc(100vh - 1rem);
       overflow-y: auto;
       padding: .4rem;
-      border: 1px solid rgba(74, 222, 128, .19);
+      border: 1px solid var(--mir-border);
       border-radius: .9rem;
-      background: #071711;
+      background: var(--mir-panel);
       box-shadow: 0 16px 35px rgba(0, 0, 0, .48);
     }
 
@@ -450,7 +481,7 @@
       border-radius: .6rem;
       background: transparent;
       padding: .55rem .7rem;
-      color: #d1fae5;
+      color: var(--mir-text);
       font-size: .79rem;
       font-weight: 650;
       text-align: left;
@@ -459,28 +490,28 @@
 
     .mir-action-item i {
       width: 1rem;
-      color: #6ee7b7;
+      color: var(--mir-accent);
       text-align: center;
     }
 
     .mir-action-item:hover,
     .mir-action-item:focus-visible {
       outline: none;
-      background: rgba(16, 185, 129, .15);
-      color: #fff;
+      background: var(--mir-hover);
+      color: var(--mir-accent);
     }
 
     .mir-action-item--warning {
-      color: #fcd34d;
+      color: var(--mir-warning, #fcd34d);
     }
 
     .mir-action-item--warning i {
-      color: #fbbf24;
+      color: var(--mir-warning, #fbbf24);
     }
 
     .mir-action-item--warning:hover,
     .mir-action-item--warning:focus-visible {
-      background: rgba(133, 77, 14, .38);
+      background: color-mix(in srgb, var(--mir-warning, #fbbf24) 14%, var(--mir-panel));
     }
 
     .mir-modal-backdrop {
@@ -503,10 +534,11 @@
       width: min(100%, 38rem);
       max-height: min(85vh, 48rem);
       overflow: auto;
-      border: 1px solid rgba(74, 222, 128, .2);
+      border: 1px solid var(--mir-border);
       border-radius: 1.2rem;
-      background: #071711;
+      background: var(--mir-panel);
       box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+      color: var(--mir-text);
     }
 
     .mir-modal-header {
@@ -514,7 +546,7 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 1rem;
-      border-bottom: 1px solid rgba(74, 222, 128, .13);
+      border-bottom: 1px solid var(--mir-border);
       padding: 1.15rem 1.25rem;
     }
 
@@ -524,16 +556,16 @@
       height: 2.25rem;
       flex: 0 0 2.25rem;
       place-items: center;
-      border: 1px solid rgba(148, 163, 184, .16);
+      border: 1px solid var(--mir-border);
       border-radius: .7rem;
-      background: rgba(148, 163, 184, .06);
-      color: #cbd5e1;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--mir-muted);
       cursor: pointer;
     }
 
     .mir-modal-close:hover {
-      background: rgba(148, 163, 184, .12);
-      color: #fff;
+      background: var(--mir-hover);
+      color: var(--mir-text);
     }
 
     .mir-modal-body {
@@ -541,7 +573,7 @@
     }
 
     .mir-history-event {
-      border-left: 2px solid rgba(52, 211, 153, .35);
+      border-left: 2px solid var(--mir-accent);
       padding: .1rem 0 .25rem 1rem;
     }
 
@@ -554,17 +586,26 @@
       min-height: 7rem;
       width: 100%;
       resize: vertical;
-      border: 1px solid rgba(74, 222, 128, .18);
+      border: 1px solid var(--mir-border);
       border-radius: .85rem;
-      background: #020a08;
+      background: var(--app-input-bg, #0a2119);
       padding: .8rem;
-      color: #ecfdf5;
+      color: var(--mir-text);
       outline: none;
     }
 
     .mir-reason-field:focus {
-      border-color: rgba(52, 211, 153, .65);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, .1);
+      border-color: var(--mir-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--mir-accent) 20%, transparent);
+    }
+
+    .mir-table-footer {
+      border-color: var(--mir-border) !important;
+      background: var(--mir-toolbar);
+    }
+
+    .mir-table-footer > span {
+      color: var(--mir-muted) !important;
     }
 
     @keyframes mirMenuIn {
@@ -596,14 +637,14 @@
       }
 
       .mir-table td {
-        padding: .55rem .25rem;
-        font-size: .64rem;
+        padding: .55rem .35rem;
+        font-size: .75rem;
       }
 
       body.app-shell.system-layout-page .mir-table tbody td {
-        padding: .45rem .2rem !important;
-        font-size: .6rem !important;
-        line-height: 1.25 !important;
+        padding: .55rem .35rem !important;
+        font-size: .75rem !important;
+        line-height: 1.35 !important;
       }
 
       .mir-sort-button {
@@ -614,22 +655,28 @@
       }
 
       body.app-shell.system-layout-page .mir-table thead th .mir-sort-button {
-        min-height: 2.4rem !important;
-        padding: .3rem .1rem !important;
-        font-size: .45rem !important;
+        min-height: 2.6rem !important;
+        padding: .35rem .15rem !important;
+        font-size: .56rem !important;
         letter-spacing: 0 !important;
       }
 
       .mir-pill {
         max-width: 100%;
-        padding: .22rem .3rem;
-        font-size: .58rem;
+        padding: .25rem .35rem;
+        font-size: .66rem;
         white-space: normal;
       }
 
       .mir-action-trigger {
-        width: 1.8rem;
-        height: 1.8rem;
+        width: 2.25rem;
+        height: 2.25rem;
+      }
+    }
+
+    @media (min-width: 761px) and (max-width: 1120px) {
+      body.app-shell.system-layout-page .mir-table {
+        min-width: 900px !important;
       }
     }
 
@@ -653,9 +700,9 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         margin: 0 .65rem .75rem;
         overflow: hidden;
-        border: 1px solid rgba(74, 222, 128, .16);
+        border: 1px solid var(--mir-border);
         border-radius: .9rem;
-        background: linear-gradient(145deg, rgba(11, 42, 29, .9), rgba(5, 24, 17, .96));
+        background: var(--mir-panel);
         box-shadow: 0 8px 20px rgba(0, 0, 0, .14);
       }
 
@@ -665,17 +712,22 @@
         grid-template-columns: minmax(0, 1fr);
         align-content: start;
         gap: .28rem;
-        border-bottom: 1px solid rgba(74, 222, 128, .09);
+        border-bottom: 1px solid var(--mir-border);
         padding: .65rem .7rem !important;
         text-align: left;
+        color: var(--mir-text);
+      }
+
+      body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row td:first-child {
+        grid-column: 1 / -1;
       }
 
       body.app-shell.system-layout-page .mir-table tbody tr.mir-data-row td::before {
         content: attr(data-label);
-        color: #80bda0;
-        font-size: .57rem;
+        color: var(--mir-muted);
+        font-size: .66rem;
         font-weight: 800;
-        letter-spacing: .06em;
+        letter-spacing: .045em;
         line-height: 1.2;
         text-transform: uppercase;
       }
@@ -780,7 +832,7 @@
             </tbody>
             </table>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-emerald-400/10 px-4 py-3">
+        <div class="mir-table-footer flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3">
           <p id="mirResultCount" class="mir-summary" aria-live="polite"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>Loading your MR items...</p>
           <span class="text-[.68rem] font-semibold uppercase tracking-[.12em] text-slate-600">MR accountability</span>
         </div>
@@ -1308,6 +1360,6 @@
     loadMirItems();
   </script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

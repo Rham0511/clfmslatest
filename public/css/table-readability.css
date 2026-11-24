@@ -13,7 +13,7 @@ body.app-shell main button:not(.menu-toggle):not(#mobileMenuToggle) {
   font-weight: 600 !important;
 }
 
-body.app-shell table thead th {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) thead th {
   padding: .8rem .9rem !important;
   background-color: #046a38 !important;
   border-color: rgba(134, 239, 172, .38) !important;
@@ -23,7 +23,7 @@ body.app-shell table thead th {
   line-height: 1.4 !important;
 }
 
-body.app-shell table tbody td {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td {
   padding: .8rem .9rem !important;
   color: #d1fae5 !important;
   font-size: .9375rem !important;
@@ -31,36 +31,36 @@ body.app-shell table tbody td {
   line-height: 1.5 !important;
 }
 
-body.app-shell table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
   color: #a7f3d0 !important;
   font-size: .875rem !important;
   font-weight: 500 !important;
   line-height: 1.4 !important;
 }
 
-body.app-shell table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
-body.app-shell table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
   color: #a7f3d0 !important;
 }
 
-body.app-shell table tbody td :is([class*="bg-slate-"], [class*="bg-gray-"], [class*="bg-blue-"]) {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is([class*="bg-slate-"], [class*="bg-gray-"], [class*="bg-blue-"]) {
   background-color: rgba(4, 106, 56, .2) !important;
   border-color: rgba(74, 222, 128, .35) !important;
 }
 
-body.app-shell table tbody :is(tr, td)[class*="bg-slate-"],
-body.app-shell table tbody :is(tr, td)[class*="bg-gray-"],
-body.app-shell table tbody :is(tr, td)[class*="bg-blue-"] {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody :is(tr, td)[class*="bg-slate-"],
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody :is(tr, td)[class*="bg-gray-"],
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody :is(tr, td)[class*="bg-blue-"] {
   background-color: rgba(4, 106, 56, .12) !important;
 }
 
-body.app-shell table tbody td :is([class*="badge"], [class*="status"], [class*="pill"]) {
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is([class*="badge"], [class*="status"], [class*="pill"]) {
   font-size: .875rem !important;
   font-weight: 600 !important;
   line-height: 1.35 !important;
 }
 
-body.app-shell table tbody td button,
+body.app-shell:not(.reports-page) table:not(.faculty-dashboard-table) tbody td button,
 body.app-shell [class*="pagination"] button,
 body.app-shell button[class*="pagination"],
 body.app-shell [id*="Pagination"] button,
@@ -76,8 +76,8 @@ body.app-shell .attendance-pagination button {
   font-weight: 600 !important;
 }
 
-body.app-shell.theme-light table tbody td,
-body.app-shell .main-container.theme-light table tbody td {
+body.app-shell.theme-light:not(.reports-page) table:not(.faculty-dashboard-table) tbody td,
+body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody td {
   color: #14532d !important;
 }
 
@@ -86,20 +86,20 @@ body.app-shell .main-container.theme-light main :is([class*="text-slate-"], [cla
   color: #166534 !important;
 }
 
-body.app-shell.theme-light table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]),
-body.app-shell .main-container.theme-light table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
+body.app-shell.theme-light:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]),
+body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody td :is(small, [class~="text-xs"], [class~="text-sm"], [class*="text-[."], [class*="meta"], [class*="subtext"], [class*="secondary"]) {
   color: #166534 !important;
 }
 
-body.app-shell.theme-light table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
-body.app-shell.theme-light table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
-body.app-shell .main-container.theme-light table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
-body.app-shell .main-container.theme-light table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
+body.app-shell.theme-light:not(.reports-page) table:not(.faculty-dashboard-table) tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell.theme-light:not(.reports-page) table:not(.faculty-dashboard-table) tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody td:is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]),
+body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody td :is([class*="text-slate-"], [class*="text-gray-"], [class*="text-blue-"]) {
   color: #166534 !important;
 }
 
-body.app-shell.theme-light table thead th,
-body.app-shell .main-container.theme-light table thead th {
+body.app-shell.theme-light:not(.reports-page) table:not(.faculty-dashboard-table) thead th,
+body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table thead th {
   background-color: #046a38 !important;
   color: #f0fdf4 !important;
 }

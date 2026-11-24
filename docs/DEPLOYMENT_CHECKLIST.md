@@ -7,15 +7,13 @@
    For individual student attendance QR codes, apply
    [`migrations/031_student_bound_attendance_qr.sql`](../migrations/031_student_bound_attendance_qr.sql)
    before using the Faculty Attendance QR action. Faculty select only BYOD
-   students from the class roster; lab-PC users continue with the existing
-   PC station QR flow, which this change does not modify.
+   students from the class roster; lab-PC users continue with the PC station
+   QR flow described in [`PC_STATION_QR.md`](./PC_STATION_QR.md).
    For class-list imports on laboratory schedules, apply
    [`migrations/032_fix_class_list_entries_id.sql`](../migrations/032_fix_class_list_entries_id.sql)
    so roster rows receive generated primary keys.
-   For PC station login/logout QR activity, apply
-   [`migrations/030_pc_station_sessions.sql`](../migrations/030_pc_station_sessions.sql)
-   to the configured ComLab database before testing a station scan. Verify the
-   `pc_station_sessions` table exists.
+   The application creates the `pc_station_sessions` table during database
+   initialization. Verify it exists before testing station scans.
    For computer-lab management and its archive/restore cascade, apply
    [`migrations/035_computer_labs.sql`](../migrations/035_computer_labs.sql)
    through [`migrations/038_use_registered_comlab_labels.sql`](../migrations/038_use_registered_comlab_labels.sql)

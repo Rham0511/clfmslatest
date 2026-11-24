@@ -140,7 +140,10 @@ export const listEquipmentAvailability = async (req, res) => {
     const response = equipment.filter((item) => !archivedEquipment.has(String(item.equipmentId))).map((item) => {
       const itemRecords = validRecords.filter((record) => isMatchingEquipmentReference(record, item));
       const status = String(item.status || "Serviceable");
-      const unavailable = ["unserviceable", "lost", "missing", "under maintenance", "in use", "for repair", "for disposal"].includes(status.toLowerCase());
+      const categoryOrName = `${String(item.category || "")} ${String(item.name || "")}`.trim().toLowerCase();
+      const nonBorrowable = /\b(?:air\s*con(?:ditioner)?|ac|cbt|cabinets?)\b/.test(categoryOrName);
+      const unavailable = nonBorrowable ||
+        ["unserviceable", "lost", "missing", "under maintenance", "in use", "for repair", "for disposal"].includes(status.toLowerCase());
       const currentlyBorrowed = !unavailable && itemRecords.some((record) => isCurrentlyBorrowed(record, now));
       const assignment = assignmentByEquipment.get(Number(item.id));
       const hasCurrentAccountability = Boolean(assignment);
@@ -161,8 +164,10 @@ export const listEquipmentAvailability = async (req, res) => {
         campus: item.campus,
         status,
         availability,
-        availabilityReason: unavailable
-          ? "Equipment condition/status does not allow borrowing"
+        availabilityReason: nonBorrowable
+          ? "Air conditioners/AC units, CBT equipment, and cabinets cannot be borrowed"
+          : unavailable
+            ? "Equipment condition/status does not allow borrowing"
           : currentlyBorrowed
             ? "Currently borrowed"
             : hasCurrentAccountability

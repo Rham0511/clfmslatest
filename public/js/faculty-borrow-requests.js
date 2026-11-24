@@ -79,8 +79,12 @@
 
     const rows = pageRecords.map((record) => {
       const status = String(record.status || 'Pending');
-      const statusClass = statusClasses[status.toLowerCase()] || 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
-      const equipment = `<div class="borrow-request-name">${escapeHtml(record.equipmentName || '—')}</div><div class="borrow-request-meta">${escapeHtml(record.equipmentId || '')}</div>`;
+      const requestStatus = status.trim().toLowerCase();
+      const statusClass = statusClasses[requestStatus] || 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
+      const chairQuantity = /\bchairs?\b/i.test(record.equipmentName || '')
+        ? `${Number(record.quantity || 1)} chair${Number(record.quantity || 1) === 1 ? '' : 's'}`
+        : '';
+      const equipment = `<div class="borrow-request-name">${escapeHtml(record.equipmentName || '—')}</div><div class="borrow-request-meta">${escapeHtml(record.equipmentId || '')}${chairQuantity ? ` · ${escapeHtml(chairQuantity)}` : ''}</div>`;
       const statusBadge = `<span class="borrow-request-status ${statusClass}">${escapeHtml(status)}</span>`;
       if (isStudentTab) {
         const studentDetails = [record.borrowerProgram, record.borrowerYear, record.borrowerSection].filter(Boolean).join(' · ');
@@ -99,15 +103,26 @@
           <td data-label="Requested">${formatDate(record.borrowDate)} ${escapeHtml(record.borrowStartTime || '')}</td>
           <td data-label="Reason">${escapeHtml(record.purpose || '—')}</td>
           <td data-label="Status">${statusBadge}</td>
-          <td data-label="Action"><div class="borrow-request-actions">${actions.join('') || '—'}</div></td>
+          <td data-label="Action"><div class="borrow-request-actions">${actions.join('') || (['returned', 'rejected', 'cancelled'].includes(requestStatus) ? '—' : 'No action available')}</div></td>
         </tr>`;
       }
 
       const reason = status.toLowerCase() === 'rejected' ? record.remarks || 'No reason provided' : '—';
-      const returnAction = record.isMyRequest && record.requesterUserId && record.canRequestReturn &&
-        ['student', 'faculty', 'instructor'].includes(userRole)
-        ? `<button type="button" data-request-return="${escapeHtml(record.id)}">Request return</button>`
-        : '';
+      const isCurrentBorrow = ['borrowed', 'active', 'checked out', 'overdue'].includes(requestStatus) ||
+        (requestStatus === 'approved' && !record.returnDate);
+      const canManageCurrentBorrow = record.canReturnBorrow === true ||
+        (record.isMyRequest === true && isCurrentBorrow);
+      const returnAction = canManageCurrentBorrow
+        ? `<div class="borrow-request-action-row"><button type="button" data-return-current-borrow="${escapeHtml(record.id)}"><i class="fas fa-rotate-left" aria-hidden="true"></i> Return</button></div>`
+        : requestStatus === 'pending'
+          ? 'Waiting for approval'
+          : ['returned', 'rejected', 'cancelled'].includes(requestStatus)
+            ? '—'
+            : requestStatus === 'pending replacement'
+              ? 'Replacement review'
+              : requestStatus === 'lost'
+                ? 'Contact the MR / Accountable Officer'
+                : 'No action available';
       const accountability = [
         record.currentAccountableFacultyName ? `Accountable: ${record.currentAccountableFacultyName}` : '',
         record.isLastBorrower ? 'You are the last borrower; accountability is assigned to you.' : '',
@@ -122,7 +137,7 @@
         <td data-label="Return date">${formatDate(record.returnDate || record.expectedReturnDate)} ${escapeHtml(record.returnTime || record.expectedReturnTime || '')}</td>
         <td data-label="Status">${statusBadge}${record.approvedByName ? `<div class="borrow-request-meta">${status.toLowerCase() === 'rejected' ? 'Rejected' : 'Approved'} by ${escapeHtml(record.approvedByName)}</div>` : ''}${accountability}</td>
         <td data-label="Reason">${escapeHtml(reason)}</td>
-        <td data-label="Action"><div class="borrow-request-actions">${returnAction || '—'}</div></td>
+        <td data-label="Action"><div class="borrow-request-actions">${returnAction}</div></td>
       </tr>`;
     }).join('');
 
@@ -206,15 +221,14 @@
       return;
     }
 
-    const returnRequestButton = event.target.closest('[data-request-return]');
-    if (!returnRequestButton) return;
-    const remarks = await window.appDialogs.prompt('Optional note for the Admin/Technician receiving the equipment:', '') || '';
-    if (!await window.appDialogs.confirm('Submit a request to return this equipment? Please hand the item to an Admin or Technician to complete the return.')) return;
-    await requestAction(`/api/borrow-records/${encodeURIComponent(returnRequestButton.dataset.requestReturn)}/request-return`, {
+    const returnButton = event.target.closest('[data-return-current-borrow]');
+    if (!returnButton) return;
+    if (!await window.appDialogs.confirm('Return this equipment to the laboratory? This will close your active borrow.')) return;
+    await requestAction(`/api/borrow-records/${encodeURIComponent(returnButton.dataset.returnCurrentBorrow)}/return`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remarks })
-    }, returnRequestButton);
+      body: JSON.stringify({ condition: 'Good' })
+    }, returnButton);
   });
 
   document.getElementById('rejectBorrowRequestForm').addEventListener('submit', async (event) => {

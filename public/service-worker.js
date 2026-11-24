@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'comlab-static-';
-const CACHE_NAME = 'comlab-static-v3';
+const CACHE_NAME = 'comlab-static-v4';
 const OFFLINE_PAGE = '/offline.html';
 const STATIC_PATH = /^\/(?:css|js|images)\//;
 
@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
 
   if (!STATIC_PATH.test(url.pathname)) return;
   event.respondWith(
-    fetch(request, { cache: 'no-cache' }).then((response) => {
+    fetch(request).then((response) => {
       if (response.ok && response.type === 'basic') {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => undefined);

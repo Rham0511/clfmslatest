@@ -374,12 +374,7 @@ function renderSidebarComponent() {
             <i class="fas fa-bell" aria-hidden="true" style="color:#ff4d4f;font-size:0.95rem;line-height:1;opacity:0.95;display:none;" data-sidebar-bell></i>
             <span data-new-reports-badge style="display:none;min-width:18px;padding:2px 6px;border-radius:999px;background:#ff4d4f;color:#fff;font-size:0.75rem;font-weight:700;text-align:center;line-height:1;">0</span>
          </span>`
-      : isBorrowLink && (getSidebarConfig().role === 'admin' || getSidebarConfig().role === 'administrator' || document.body.classList.contains('admin-shell'))
-        ? `<span style="margin-left:auto;display:flex;align-items:center;gap:6px">
-              <i class="fas fa-bell" aria-hidden="true" style="color:#ff4d4f;font-size:0.95rem;line-height:1;opacity:0.95;display:none;" data-borrow-notif-icon></i>
-              <span data-borrow-notif-badge style="display:none;min-width:18px;padding:2px 6px;border-radius:999px;background:#ff4d4f;color:#fff;font-size:0.75rem;font-weight:700;text-align:center;line-height:1;">0</span>
-           </span>`
-        : '';
+      : '';
 
     return `
       <a class="nav-item sidebar-nav-link text-sm font-medium${isBorrowLink ? ' borrow-link' : ''}" href="${href}" data-open-borrow-modal="false" onclick="${clickHandler}">
@@ -525,20 +520,18 @@ function setSidebarState(isOpen) {
 
   const shouldUseMobileLayout = window.innerWidth < 1024;
   const shouldOpen = shouldUseMobileLayout ? isOpen : true;
-  const mobileHeaderBottom = shouldUseMobileLayout && document.body.classList.contains('student-portal')
-    ? Math.max(0, Math.ceil(document.querySelector('.comlab-slim-page-header')?.getBoundingClientRect().bottom || 0))
-    : 0;
-  document.documentElement.style.setProperty('--comlab-mobile-sidebar-top', `${mobileHeaderBottom}px`);
 
   sidebar.classList.toggle('mobile-open', shouldOpen);
   sidebar.classList.toggle('mobile-closed', !shouldOpen && shouldUseMobileLayout);
 
+  const isMobileSidebarOpen = shouldOpen && shouldUseMobileLayout;
   if (overlay) {
-    overlay.classList.toggle('active', shouldOpen && shouldUseMobileLayout);
-    overlay.hidden = !(shouldOpen && shouldUseMobileLayout);
+    overlay.classList.toggle('active', isMobileSidebarOpen);
+    overlay.hidden = !isMobileSidebarOpen;
   }
 
-  document.body.classList.toggle('sidebar-open', shouldOpen && shouldUseMobileLayout && document.body.classList.contains('student-portal'));
+  document.body.classList.toggle('sidebar-open', isMobileSidebarOpen);
+  document.documentElement.classList.toggle('sidebar-open', isMobileSidebarOpen);
   // update hamburger aria state if present
   try {
     const toggleBtn = document.getElementById('mobileMenuToggle');
@@ -571,6 +564,12 @@ function isInternalShellNavigation(url) {
 
 function updateAppShellHeader(frameDocument, requestedUrl) {
   const header = document.querySelector('.comlab-slim-page-header');
+  const titleSelector = 'h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title';
+  const hidePageTitle = frameDocument?.querySelector('meta[name="app-hide-page-title"]')?.content?.trim().toLowerCase() === 'true';
+  if (hidePageTitle) {
+    header?.querySelector(titleSelector)?.remove();
+    return;
+  }
   const rawPageTitle = String(frameDocument?.title || '').trim();
   const targetUrl = requestedUrl ? new URL(requestedUrl.href) : null;
   const matchingItems = targetUrl
@@ -583,13 +582,14 @@ function updateAppShellHeader(frameDocument, requestedUrl) {
     const itemUrl = new URL(item.href, targetUrl);
     return !itemUrl.hash && !itemUrl.searchParams.has('view');
   }) || matchingItems[0];
-  let pageTitle = matchingItem?.label || rawPageTitle.split(/\s*[|•]\s*/)[0].trim();
+  const pageTitleOverride = frameDocument?.querySelector('meta[name="app-page-title"]')?.content?.trim();
+  let pageTitle = pageTitleOverride || matchingItem?.label || rawPageTitle.split(/\s*[|•]\s*/)[0].trim();
   if (/^comlab student portal$/i.test(pageTitle)) {
     pageTitle = frameDocument?.querySelector('.system-dashboard-heading h1')?.textContent.trim() || pageTitle;
   }
   if (!header || !pageTitle) return;
 
-  let title = header.querySelector('h1, .page-title, .header-title, .student-page-title, .page-header-title, .comlab-page-heading-title');
+  let title = header.querySelector(titleSelector);
   if (!title) {
     title = document.createElement('h1');
     title.className = 'comlab-page-heading-title';
@@ -657,13 +657,33 @@ function syncStudentAppShellFrameTheme(frame) {
   }
 }
 
+function initializeFixedTableHeaderTheme() {
+  if (document.body?.classList.contains('reports-page')) return;
+
+  document.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
+    applyFixedTableHeaderClasses(container);
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            applyFixedTableHeaderClasses(node);
+          }
+        });
+      });
+    });
+    observer.observe(container, { childList: true, subtree: true });
+  });
+}
+
 let appShellHistoryIndex = Number(window.history.state?.appShellIndex) || 0;
+let appShellNavigationId = 0;
 
 function loadAdminContent(url, { updateHistory = true, direction = 'forward' } = {}) {
   const contentContainer = document.querySelector(
     '.main-container, .facilities-main, .audit-page-content, body > .page-shell'
   );
   if (!contentContainer) return false;
+  const navigationId = ++appShellNavigationId;
   const nestedPageHeader = contentContainer.querySelector('.comlab-slim-page-header');
   const existingShellHeader = Array.from(document.querySelectorAll('.comlab-slim-page-header'))
     .find((header) => !contentContainer.contains(header));
@@ -707,14 +727,19 @@ function loadAdminContent(url, { updateHistory = true, direction = 'forward' } =
   updateAppShellHeader(null, url);
   const frame = document.createElement('iframe');
   frame.className = 'app-content-frame';
+  if (currentRole === 'faculty') frame.classList.add('app-content-frame-faculty');
   if (direction === 'back') frame.classList.add('app-content-frame-back');
   frame.title = 'ComLab page content';
   frame.style.display = 'block';
-  frame.style.width = '100%';
+  frame.style.width = currentRole === 'faculty' ? '100vw' : '100%';
+  if (currentRole === 'faculty') {
+    frame.style.position = 'relative';
+    frame.style.left = window.innerWidth >= 1024 ? 'calc(-1 * var(--sidebar-width))' : '0';
+  }
   frame.style.height = '100vh';
   frame.style.minHeight = '100vh';
   frame.style.border = '0';
-  frame.style.visibility = 'hidden';
+  frame.style.visibility = 'visible';
   if (appShellHeaderSpacer && appShellHeaderOffset > 0) {
     frame.style.height = `calc(100vh - ${appShellHeaderOffset}px)`;
     frame.style.minHeight = `calc(100vh - ${appShellHeaderOffset}px)`;
@@ -722,9 +747,14 @@ function loadAdminContent(url, { updateHistory = true, direction = 'forward' } =
   updateAppShellFrameLayout(frame, Boolean(appShellHeaderSpacer));
   frame.src = contentUrl.href;
   frame.addEventListener('load', () => {
+    if (navigationId !== appShellNavigationId || !frame.isConnected) return;
+    frame.style.visibility = 'visible';
     try {
       const frameDocument = frame.contentDocument;
-      if (!frameDocument) return;
+      if (!frameDocument) {
+        console.warn('The page loaded in the app shell, but its document is inaccessible.');
+        return;
+      }
       frameDocument.body?.classList.add('app-content-embedded');
       frameDocument.querySelectorAll(
         '#shared-sidebar, .sidebar-overlay, .sidebar, .comlab-slim-page-header, .comlab-page-header-spacer, .audit-header-spacer, .top-header, #mobileMenuToggle'
@@ -743,7 +773,77 @@ function loadAdminContent(url, { updateHistory = true, direction = 'forward' } =
         });
       }
       const embeddedStyle = frameDocument.createElement('style');
-      embeddedStyle.textContent = '#shared-sidebar,.sidebar-overlay,.top-header,.comlab-slim-page-header,.comlab-page-header-spacer,#mobileMenuToggle,#qr-scan-float-btn,#comlab-help-float-btn,#comlab-help-panel,.hero:not(.report-hero),.page-heading:not(.facilities-heading){display:none!important}body:not(.facilities-embedded) :is(.hero:not(.report-hero),.page-heading:not(.facilities-heading)){display:none!important}.system-dashboard-heading:not(.facilities-heading),body.student-portal:not(.faculty-portal):not(.faculty-page) :is(.student-page-header,.audit-page-heading,.page-header-card,.attendance-page-header){display:none!important}html body.app-content-embedded .main-container,html body.app-content-embedded .facilities-main{box-sizing:border-box!important;width:100%!important;max-width:none!important;min-height:100vh;margin-left:0!important;transition:none!important;transform:none!important;animation:none!important}html body.app-content-embedded .main-container.computer-labs-page{width:100%!important;margin-left:0!important}.page-content{transition:none!important;transform:none!important;animation:none!important}.main-container *:not(.fa-spin),.facilities-main *:not(.fa-spin){animation:none!important;transition:none!important}html body.app-content-embedded.faculty-page>.main-container,html body.app-content-embedded.faculty-page>.audit-page-content,html body.app-content-embedded.faculty-page>.page-shell{padding-top:3rem!important}@media(max-width:1023px){html body.app-content-embedded.faculty-page>.main-container,html body.app-content-embedded.faculty-page>.audit-page-content,html body.app-content-embedded.faculty-page>.page-shell{padding-top:5rem!important}}';
+      embeddedStyle.textContent = `
+        #shared-sidebar,
+        .sidebar-overlay,
+        .top-header,
+        .comlab-slim-page-header,
+        .comlab-page-header-spacer,
+        #mobileMenuToggle,
+        #qr-scan-float-btn,
+        #comlab-help-float-btn,
+        #comlab-help-panel,
+        .hero:not(.report-hero),
+        .page-heading:not(.facilities-heading),
+        body:not(.facilities-embedded) :is(.hero:not(.report-hero), .page-heading:not(.facilities-heading)),
+        .system-dashboard-heading:not(.facilities-heading),
+        body.student-portal:not(.faculty-portal):not(.faculty-page) :is(.student-page-header, .audit-page-heading, .page-header-card, .attendance-page-header) {
+          display: none !important;
+        }
+
+        html body.app-content-embedded .main-container,
+        html body.app-content-embedded .facilities-main {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          max-width: none !important;
+          min-height: 100vh;
+          margin-left: 0 !important;
+          transition: none !important;
+          transform: none !important;
+          animation: none !important;
+        }
+
+        html body.app-content-embedded .main-container.computer-labs-page {
+          width: 100% !important;
+          margin-left: 0 !important;
+        }
+
+        html body.app-content-embedded .page-shell {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          max-width: none !important;
+          margin-left: 0 !important;
+        }
+
+        html body.app-content-embedded.faculty-page > :is(.main-container, .audit-page-content, .page-shell) {
+          box-sizing: border-box !important;
+          width: calc(100vw - var(--sidebar-width)) !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin-left: var(--sidebar-width) !important;
+          padding-top: .5rem !important;
+        }
+
+        .page-content {
+          transition: none !important;
+          transform: none !important;
+          animation: none !important;
+        }
+
+        .main-container *:not(.fa-spin),
+        .facilities-main *:not(.fa-spin) {
+          animation: none !important;
+          transition: none !important;
+        }
+
+        @media (max-width: 1023px) {
+          html body.app-content-embedded.faculty-page > :is(.main-container, .audit-page-content, .page-shell) {
+            width: 100vw !important;
+            margin-left: 0 !important;
+            padding-top: 0 !important;
+          }
+        }
+      `;
       embeddedStyle.textContent += 'html body.app-content-embedded .system-dashboard-heading:not(.facilities-heading),html body.app-content-embedded .comlab-slim-page-header:not(#comlab-header-specificity),html body.app-content-embedded .comlab-page-header-spacer{display:none!important}';
       embeddedStyle.textContent += 'html body.app-content-embedded .facilities-heading{display:none!important}';
       if (
@@ -769,7 +869,7 @@ function loadAdminContent(url, { updateHistory = true, direction = 'forward' } =
         loadAdminContent(targetUrl);
       });
     } catch (error) {
-      // Cross-origin content is intentionally left to the browser.
+      console.error('Unable to prepare the loaded page in the app shell.', error);
     }
   });
   if (appShellHeaderSpacer) {
@@ -810,6 +910,9 @@ function initializeAdminContentNavigation() {
   window.addEventListener('resize', () => {
     const frame = document.querySelector('.app-content-frame');
     if (frame) {
+      if (frame.classList.contains('app-content-frame-faculty')) {
+        frame.style.left = window.innerWidth >= 1024 ? 'calc(-1 * var(--sidebar-width))' : '0';
+      }
       updateAppShellFrameLayout(frame, Boolean(document.querySelector('.comlab-page-header-spacer')));
     }
   });
@@ -1317,27 +1420,21 @@ function ensureRoleNotificationButtons() {
     button.classList.add('comlab-notification-button');
     button.dataset.comlabNotificationButton = 'true';
     button.setAttribute('aria-label', 'Notifications');
-    if (role === 'technician') {
-      button.setAttribute('aria-haspopup', 'dialog');
-      button.setAttribute('aria-expanded', 'false');
-      button.setAttribute('aria-controls', 'comlab-technician-notification-panel');
-    }
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-controls', 'comlab-technician-notification-panel');
     button.title = destination.label;
     const badge = button.querySelector('#adminBorrowNotificationBadge, [data-comlab-notification-count]');
     if (badge) {
       badge.classList.add('comlab-notification-badge');
-      if (role === 'technician') {
-        // Inline important positioning keeps the count anchored to the bell even
-        // when page-specific header rules override the shared stylesheet.
-        button.style.setProperty('position', 'relative', 'important');
-        button.style.setProperty('overflow', 'visible', 'important');
-        badge.style.setProperty('position', 'absolute', 'important');
-        badge.style.setProperty('top', '-.15rem', 'important');
-        badge.style.setProperty('right', '-.15rem', 'important');
-        badge.style.setProperty('transform', 'none', 'important');
-        badge.style.setProperty('z-index', '2', 'important');
-        badge.style.setProperty('pointer-events', 'none', 'important');
-      }
+      button.style.setProperty('position', 'relative', 'important');
+      button.style.setProperty('overflow', 'visible', 'important');
+      badge.style.setProperty('position', 'absolute', 'important');
+      badge.style.setProperty('top', '0', 'important');
+      badge.style.setProperty('right', '0', 'important');
+      badge.style.setProperty('transform', 'translate(38%, -38%)', 'important');
+      badge.style.setProperty('z-index', '2', 'important');
+      badge.style.setProperty('pointer-events', 'none', 'important');
     }
 
     const setActionOrder = (selector, order) => {
@@ -1351,35 +1448,10 @@ function ensureRoleNotificationButtons() {
   });
 }
 
-function getTechnicianNotificationStorageKey() {
-  const user = window.__CURRENT_USER__ || {};
-  const identity = user.id ?? user.userId ?? user.email ?? user.name ?? 'technician';
-  return `comlab-tech-dismissed-notifications:${String(identity).trim().toLowerCase()}`;
-}
-
-function getDismissedTechnicianNotificationIds() {
-  try {
-    const value = JSON.parse(localStorage.getItem(getTechnicianNotificationStorageKey()) || '[]');
-    return new Set(Array.isArray(value) ? value.map(String) : []);
-  } catch (error) {
-    return new Set();
-  }
-}
-
-function dismissTechnicianNotificationIds(ids) {
-  const dismissed = getDismissedTechnicianNotificationIds();
-  ids.map(String).filter(Boolean).forEach(id => dismissed.add(id));
-  try {
-    localStorage.setItem(getTechnicianNotificationStorageKey(), JSON.stringify([...dismissed].slice(-500)));
-  } catch (error) {
-    // Notifications can still be opened if browser storage is unavailable.
-  }
-}
-
 function closeTechnicianNotificationPanel() {
   document.getElementById('comlab-technician-notification-panel')?.remove();
   document.querySelectorAll('[data-comlab-notification-button]').forEach(button => {
-    if (getCurrentComLabRole() === 'technician') button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-expanded', 'false');
   });
 }
 
@@ -1388,20 +1460,35 @@ function ensureTechnicianNotificationPanelStyles() {
   const style = document.createElement('style');
   style.id = 'comlab-technician-notification-panel-styles';
   style.textContent = `
-    #comlab-technician-notification-panel { position:fixed; z-index:100000; top:var(--comlab-notice-top,5rem); right:var(--comlab-notice-right,1rem); width:min(25rem,calc(100vw - 1.5rem)); max-height:min(72vh,38rem); overflow:auto; padding:1rem; border:1px solid rgba(74,222,128,.3); border-radius:1rem; background:#071b13; color:#e7f5ec; box-shadow:0 18px 55px rgba(0,0,0,.48); font-family:inherit; font-size:13px; font-weight:500; line-height:1.45; }
-    #comlab-technician-notification-panel .comlab-notice-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding-bottom:.75rem; border-bottom:1px solid rgba(74,222,128,.18); }
-    #comlab-technician-notification-panel .comlab-notice-heading strong { font-size:1rem; color:#f0fff4; }
-    #comlab-technician-notification-panel .comlab-notice-heading span { color:#a7d9b8; font-size:.75rem; }
-    #comlab-technician-notification-panel .comlab-notice-clear { padding:.3rem .55rem; border:1px solid rgba(74,222,128,.2); border-radius:.5rem; background:rgba(16,49,34,.75); color:#b9e7c8; font:inherit; font-size:.72rem; cursor:pointer; }
-    #comlab-technician-notification-panel .comlab-notice-clear:hover { border-color:rgba(74,222,128,.55); color:#f0fff4; }
+    #comlab-technician-notification-panel { --notice-bg:#071b13; --notice-surface:rgba(16,49,34,.72); --notice-surface-hover:rgba(21,70,45,.8); --notice-text:#e7f5ec; --notice-heading:#f0fff4; --notice-muted:#a7d9b8; --notice-border:rgba(74,222,128,.3); --notice-soft-border:rgba(74,222,128,.18); --notice-control:rgba(16,49,34,.75); --notice-menu:#082519; --notice-danger:#fda4af; box-sizing:border-box; position:fixed; z-index:100000; top:var(--comlab-notice-top,5rem); right:var(--comlab-notice-right,1rem); width:min(25rem,calc(100vw - 1.5rem)); max-height:min(72vh,38rem); overflow:auto; padding:1rem; border:1px solid var(--notice-border); border-radius:1rem; background:var(--notice-bg); color:var(--notice-text); box-shadow:0 18px 55px rgba(0,0,0,.48); font-family:inherit; font-size:13px; font-weight:500; line-height:1.45; }
+    @media (max-width:900px), (pointer:coarse) { #comlab-technician-notification-panel { left:max(12px,env(safe-area-inset-left)); right:max(12px,env(safe-area-inset-right)); width:auto; } }
+    html.theme-light #comlab-technician-notification-panel { --notice-bg:#fff; --notice-surface:#f4faf6; --notice-surface-hover:#eaf5ee; --notice-text:#24372c; --notice-heading:#15271c; --notice-muted:#64766b; --notice-border:#cbded0; --notice-soft-border:#dce9df; --notice-control:#f2f8f4; --notice-menu:#fff; --notice-danger:#be123c; box-shadow:0 18px 48px rgba(21,54,34,.2); }
+    #comlab-technician-notification-panel .comlab-notice-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--notice-soft-border); }
+    #comlab-technician-notification-panel .comlab-notice-heading strong { font-size:1rem; color:var(--notice-heading); }
+    #comlab-technician-notification-panel .comlab-notice-heading span { color:var(--notice-muted); font-size:.75rem; }
+    #comlab-technician-notification-panel .comlab-notice-clear { padding:.3rem .55rem; border:1px solid var(--notice-soft-border); border-radius:.5rem; background:var(--notice-control); color:var(--notice-muted); font:inherit; font-size:.72rem; cursor:pointer; }
+    #comlab-technician-notification-panel .comlab-notice-clear:hover { border-color:rgba(74,222,128,.55); color:var(--notice-heading); }
+    #comlab-technician-notification-panel .comlab-notice-clear:disabled { opacity:.5; cursor:wait; }
     #comlab-technician-notification-panel .comlab-notice-section { padding-top:.85rem; }
-    #comlab-technician-notification-panel .comlab-notice-section-heading { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.45rem; color:#c5e7d0; font-weight:750; }
+    #comlab-technician-notification-panel .comlab-notice-section-heading { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.45rem; color:var(--notice-text); font-weight:750; }
     #comlab-technician-notification-panel .comlab-notice-section-heading a { color:#6ee7a5; font-size:.75rem; text-decoration:none; }
-    #comlab-technician-notification-panel .comlab-notice-row { display:block; width:100%; margin-top:.4rem; padding:.65rem .75rem; border:1px solid rgba(74,222,128,.13); border-radius:.7rem; background:rgba(16,49,34,.72); color:inherit; text-align:left; text-decoration:none; }
-    #comlab-technician-notification-panel .comlab-notice-row:hover, #comlab-technician-notification-panel .comlab-notice-row:focus-visible { border-color:rgba(74,222,128,.5); background:rgba(21,70,45,.8); outline:none; }
-    #comlab-technician-notification-panel .comlab-notice-row strong { display:block; overflow:hidden; color:#effff3; text-overflow:ellipsis; white-space:nowrap; }
-    #comlab-technician-notification-panel .comlab-notice-row small { display:block; margin-top:.15rem; color:#a9c9b3; }
-    #comlab-technician-notification-panel .comlab-notice-empty { padding:.6rem .7rem; border-radius:.7rem; background:rgba(16,49,34,.45); color:#9bb5a3; }
+    #comlab-technician-notification-panel .comlab-notice-item { position:relative; display:block; margin-top:.4rem; }
+    #comlab-technician-notification-panel .comlab-notice-row { display:block; width:100%; min-width:0; padding:.65rem 2.8rem .65rem .75rem; border:1px solid var(--notice-soft-border); border-radius:.7rem; background:var(--notice-surface); color:inherit; text-align:left; text-decoration:none; }
+    #comlab-technician-notification-panel .comlab-notice-row:hover, #comlab-technician-notification-panel .comlab-notice-row:focus-visible { border-color:rgba(74,222,128,.5); background:var(--notice-surface-hover); outline:none; }
+    #comlab-technician-notification-panel .comlab-notice-row.is-read { opacity:.78; }
+    #comlab-technician-notification-panel .comlab-notice-row strong { display:block; overflow:hidden; color:var(--notice-heading); text-overflow:ellipsis; white-space:nowrap; }
+    #comlab-technician-notification-panel .comlab-notice-row small { display:block; margin-top:.15rem; color:var(--notice-muted); }
+    #comlab-technician-notification-panel .comlab-notice-row .comlab-notice-time { margin-top:.2rem; color:var(--notice-muted); font-size:.68rem; }
+    #comlab-technician-notification-panel .comlab-notice-row .comlab-notice-state { font-size:.65rem; font-weight:750; }
+    #comlab-technician-notification-panel .comlab-notice-menu-wrap { position:absolute; top:.25rem; right:.3rem; }
+    #comlab-technician-notification-panel .comlab-notice-menu-toggle { display:grid; width:2rem; height:2rem; place-items:center; border:1px solid transparent; border-radius:.55rem; background:transparent; color:var(--notice-muted); cursor:pointer; }
+    #comlab-technician-notification-panel .comlab-notice-menu-toggle:hover, #comlab-technician-notification-panel .comlab-notice-menu-toggle[aria-expanded="true"] { border-color:var(--notice-soft-border); background:var(--notice-surface); color:var(--notice-heading); }
+    #comlab-technician-notification-panel .comlab-notice-menu { position:absolute; z-index:2; top:2.1rem; right:0; display:grid; min-width:8.5rem; gap:.2rem; padding:.3rem; border:1px solid var(--notice-border); border-radius:.7rem; background:var(--notice-menu); box-shadow:0 12px 30px rgba(0,0,0,.24); }
+    #comlab-technician-notification-panel .comlab-notice-menu[hidden] { display:none; }
+    #comlab-technician-notification-panel .comlab-notice-menu button { display:flex; align-items:center; gap:.55rem; width:100%; padding:.5rem .6rem; border:0; border-radius:.45rem; background:transparent; color:var(--notice-text); font:inherit; text-align:left; cursor:pointer; }
+    #comlab-technician-notification-panel .comlab-notice-menu button:hover { background:var(--notice-surface-hover); }
+    #comlab-technician-notification-panel .comlab-notice-menu button[data-notification-action="delete"] { color:var(--notice-danger); }
+    #comlab-technician-notification-panel .comlab-notice-empty { padding:.6rem .7rem; border-radius:.7rem; background:var(--notice-surface); color:var(--notice-muted); }
     @keyframes comlab-notification-target-pulse { 0%,100% { filter:none; transform:scale(1); box-shadow:none; } 22%,58% { filter:brightness(1.2); transform:scale(1.012); box-shadow:0 0 0 3px rgba(74,222,128,.52); } }
     .comlab-notification-target-highlight { position:relative; z-index:2; transform-origin:center; animation:comlab-notification-target-pulse 1.1s ease-in-out 3; }
     .comlab-notification-target-marker { display:inline-flex; align-items:center; justify-content:center; margin-right:.45rem; color:#43e58b; font-size:1.2em; font-weight:900; animation:comlab-notification-marker-nudge .55s ease-in-out 4; }
@@ -1411,7 +1498,126 @@ function ensureTechnicianNotificationPanelStyles() {
   document.head.append(style);
 }
 
+function sortNotificationsNewestFirst(notifications) {
+  return [...notifications].sort((left, right) => {
+    const leftTime = Date.parse(left.createdAt || '');
+    const rightTime = Date.parse(right.createdAt || '');
+    const leftHasTime = Number.isFinite(leftTime);
+    const rightHasTime = Number.isFinite(rightTime);
+    if (leftHasTime && rightHasTime && leftTime !== rightTime) return rightTime - leftTime;
+    if (leftHasTime !== rightHasTime) return leftHasTime ? -1 : 1;
+    const leftId = String(left.id || '');
+    const rightId = String(right.id || '');
+    if (/^\d+$/.test(leftId) && /^\d+$/.test(rightId)) {
+      const idOrder = rightId.length - leftId.length || rightId.localeCompare(leftId);
+      if (idOrder !== 0) return idOrder;
+    }
+    return rightId.localeCompare(leftId);
+  });
+}
+
+function createNotificationPanelItem(notification) {
+  const item = document.createElement('div');
+  item.className = 'comlab-notice-item';
+  const link = document.createElement('a');
+  link.className = 'comlab-notice-row';
+  link.href = notification.targetUrl || '#';
+  link.dataset.comlabNotificationItem = 'true';
+  link.dataset.notificationId = String(notification.id || '');
+  const isRead = Boolean(notification.readAt);
+  if (isRead) link.classList.add('is-read');
+  const rowTitle = document.createElement('strong');
+  rowTitle.textContent = notification.title || 'Notification';
+  const rowMeta = document.createElement('small');
+  rowMeta.textContent = notification.message || '';
+  const createdAt = new Date(notification.createdAt);
+  const hasCreatedAt = Boolean(notification.createdAt) && Number.isFinite(createdAt.getTime());
+  const rowTime = hasCreatedAt ? document.createElement('time') : null;
+  if (rowTime) {
+    rowTime.className = 'comlab-notice-time';
+    rowTime.dateTime = createdAt.toISOString();
+    rowTime.textContent = createdAt.toLocaleString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+  const rowState = document.createElement('small');
+  rowState.className = 'comlab-notice-state';
+  rowState.textContent = isRead ? 'Read' : 'Unread';
+  link.append(rowTitle, rowMeta);
+  if (rowTime) link.append(rowTime);
+  link.append(rowState);
+
+  const menuWrap = document.createElement('div');
+  menuWrap.className = 'comlab-notice-menu-wrap';
+  const menuToggle = document.createElement('button');
+  menuToggle.type = 'button';
+  menuToggle.className = 'comlab-notice-menu-toggle';
+  menuToggle.setAttribute('aria-label', 'Notification options');
+  menuToggle.setAttribute('aria-haspopup', 'menu');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.innerHTML = '<i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>';
+  menuToggle.dataset.comlabNotificationMenuToggle = 'true';
+  const menu = document.createElement('div');
+  menu.className = 'comlab-notice-menu';
+  menu.setAttribute('role', 'menu');
+  menu.hidden = true;
+  [
+    { action: 'hide', label: 'Hide', icon: 'fa-eye-slash' },
+    { action: 'mute', label: 'Mute', icon: 'fa-bell-slash' },
+    { action: 'delete', label: 'Delete', icon: 'fa-trash' }
+  ].forEach(({ action, label, icon }) => {
+    const actionButton = document.createElement('button');
+    actionButton.type = 'button';
+    actionButton.setAttribute('role', 'menuitem');
+    actionButton.dataset.notificationAction = action;
+    actionButton.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i><span>${label}</span>`;
+    menu.append(actionButton);
+  });
+  menuWrap.append(menuToggle, menu);
+  item.append(link, menuWrap);
+  return item;
+}
+
+function updateNotificationPanelItem(item, notification) {
+  const link = item.querySelector('[data-comlab-notification-item]');
+  if (!link) return;
+  link.href = notification.targetUrl || '#';
+  const title = link.querySelector('strong');
+  const message = link.querySelector('small:not(.comlab-notice-state)');
+  if (title) title.textContent = notification.title || 'Notification';
+  if (message) message.textContent = notification.message || '';
+
+  const date = new Date(notification.createdAt);
+  const hasCreatedAt = Boolean(notification.createdAt) && Number.isFinite(date.getTime());
+  let time = link.querySelector('.comlab-notice-time');
+  if (!hasCreatedAt) {
+    time?.remove();
+    return;
+  }
+  if (!time) {
+    time = document.createElement('time');
+    time.className = 'comlab-notice-time';
+    const state = link.querySelector('.comlab-notice-state');
+    if (state) state.before(time);
+    else link.append(time);
+  }
+  time.dateTime = date.toISOString();
+  time.textContent = date.toLocaleString('en-PH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
 async function toggleTechnicianNotificationPanel(button) {
+  const role = getCurrentComLabRole();
+  if (!role) return;
   if (document.getElementById('comlab-technician-notification-panel')) {
     closeTechnicianNotificationPanel();
     return;
@@ -1421,8 +1627,8 @@ async function toggleTechnicianNotificationPanel(button) {
   const panel = document.createElement('section');
   panel.id = 'comlab-technician-notification-panel';
   panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-label', 'Technician notifications');
-  panel.innerHTML = '<div class="comlab-notice-heading"><strong>Notifications</strong><span>Loading…</span></div><div class="comlab-notice-empty">Loading pending work and borrow requests…</div>';
+  panel.setAttribute('aria-label', 'Notifications');
+  panel.innerHTML = '<div class="comlab-notice-heading"><strong>Notifications</strong><span>Loading…</span></div><div class="comlab-notice-empty">Loading your notifications…</div>';
   document.body.append(panel);
   button.setAttribute('aria-expanded', 'true');
 
@@ -1433,22 +1639,34 @@ async function toggleTechnicianNotificationPanel(button) {
     const top = Math.min(rect.bottom + 10, Math.max(12, window.innerHeight - 180));
     panel.style.setProperty('--comlab-notice-right', `${right}px`);
     panel.style.setProperty('--comlab-notice-top', `${top}px`);
+    if (window.matchMedia('(max-width: 900px), (pointer: coarse)').matches) {
+      panel.style.left = 'max(12px, env(safe-area-inset-left))';
+      panel.style.right = 'max(12px, env(safe-area-inset-right))';
+      panel.style.width = 'auto';
+    }
   };
   placePanel();
   window.addEventListener('resize', placePanel, { passive: true, once: true });
 
-  const dismissed = getDismissedTechnicianNotificationIds();
-  const [reportsResult, borrowsResult] = await Promise.allSettled([
-    fetch('/api/maintenance?status=Pending', { cache: 'no-store' }).then(response => response.ok ? response.json() : []),
-    fetch('/api/borrow-notifications?unreadOnly=true', { cache: 'no-store' }).then(response => response.ok ? response.json() : [])
-  ]);
+  let notificationData;
+  let loadError = null;
+  try {
+    const response = await fetch('/api/notifications', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Notification request failed with status ${response.status}.`);
+    notificationData = await response.json();
+  } catch (error) {
+    loadError = error;
+    console.error('Unable to load notifications.', error);
+  }
   if (!panel.isConnected) return;
-  const allReports = reportsResult.status === 'fulfilled' && Array.isArray(reportsResult.value) ? reportsResult.value : [];
-  const allBorrowNotifications = borrowsResult.status === 'fulfilled' && Array.isArray(borrowsResult.value) ? borrowsResult.value : [];
-  const reports = allReports.filter(report => !dismissed.has(`maintenance:${report.id}`));
-  const borrowNotifications = allBorrowNotifications.filter(notification => !dismissed.has(`borrow:${notification.id}`));
-  const failed = reportsResult.status === 'rejected' && borrowsResult.status === 'rejected';
-  const total = reports.length + borrowNotifications.length;
+  const notifications = sortNotificationsNewestFirst(
+    Array.isArray(notificationData?.notifications) ? notificationData.notifications : []
+  );
+  const failed = Boolean(loadError);
+  const unreadCount = Number(notificationData?.unreadCount) || 0;
+  const totalCount = Number(notificationData?.totalCount) || notifications.length;
+  panel.dataset.unreadCount = String(unreadCount);
+  panel.dataset.totalCount = String(totalCount);
   panel.replaceChildren();
 
   const header = document.createElement('div');
@@ -1457,95 +1675,53 @@ async function toggleTechnicianNotificationPanel(button) {
   const title = document.createElement('strong');
   title.textContent = 'Notifications';
   const summary = document.createElement('span');
-  summary.textContent = failed ? 'Could not load alerts' : `${total} ${total === 1 ? 'item' : 'items'} need attention`;
+  summary.textContent = failed
+    ? 'Could not load notifications'
+    : `${unreadCount} unread · ${totalCount} total`;
   headingCopy.append(title, summary);
   headingCopy.style.display = 'grid';
-  const clearAll = document.createElement('button');
-  clearAll.type = 'button';
-  clearAll.className = 'comlab-notice-clear';
-  clearAll.textContent = 'Clear all';
-  clearAll.disabled = total === 0 || failed;
-  clearAll.addEventListener('click', () => {
-    const ids = [
-      ...allReports.map(report => `maintenance:${report.id}`),
-      ...allBorrowNotifications.map(notification => `borrow:${notification.id}`)
-    ];
-    dismissTechnicianNotificationIds(ids);
-    closeTechnicianNotificationPanel();
-    refreshRoleNotificationCount();
-  });
-  header.append(headingCopy, clearAll);
+  const markAllRead = document.createElement('button');
+  markAllRead.type = 'button';
+  markAllRead.className = 'comlab-notice-clear';
+  markAllRead.textContent = 'Mark all read';
+  markAllRead.disabled = unreadCount === 0 || failed;
+  markAllRead.dataset.comlabNotificationReadAll = 'true';
+  header.append(headingCopy, markAllRead);
   panel.append(header);
-
-  const appendSection = (label, items, href, kind) => {
-    const section = document.createElement('div');
-    section.className = 'comlab-notice-section';
-    const sectionHeading = document.createElement('div');
-    sectionHeading.className = 'comlab-notice-section-heading';
-    const sectionTitle = document.createElement('span');
-    sectionTitle.textContent = `${label} (${items.length})`;
-    const viewAll = document.createElement('a');
-    viewAll.href = href;
-    viewAll.textContent = 'View all';
-    viewAll.dataset.comlabNotificationLink = 'true';
-    sectionHeading.append(sectionTitle, viewAll);
-    section.append(sectionHeading);
-
-    if (!items.length) {
-      const empty = document.createElement('div');
-      empty.className = 'comlab-notice-empty';
-      empty.textContent = `No ${kind === 'maintenance' ? 'pending reports' : 'borrow requests'} right now.`;
-      section.append(empty);
-    } else {
-      items.slice(0, 6).forEach(item => {
-        const link = document.createElement('a');
-        link.className = 'comlab-notice-row';
-        link.href = href;
-        link.dataset.comlabNotificationLink = 'true';
-        link.dataset.comlabNotificationItem = 'true';
-        link.dataset.notificationType = kind;
-        const rowTitle = document.createElement('strong');
-        const rowMeta = document.createElement('small');
-        if (kind === 'maintenance') {
-          link.dataset.notificationRecordId = String(item.id ?? '');
-          link.dataset.notificationDismissalId = `maintenance:${item.id}`;
-          const equipmentId = item.equipmentId || item.equipment_id || 'Equipment issue';
-          const equipmentName = item.equipmentName || item.equipment?.name || '';
-          rowTitle.textContent = [equipmentId, equipmentName].filter(Boolean).join(' · ');
-          rowMeta.textContent = [item.category || item.issueTitle || 'Maintenance report', item.reporterName || item.reporter?.name, item.campus || item.equipment?.campus].filter(Boolean).join(' · ');
-        } else {
-          link.dataset.notificationRecordId = String(item.relatedId ?? '');
-          link.dataset.notificationDismissalId = `borrow:${item.id}`;
-          rowTitle.textContent = item.title || (item.type === 'borrow_return_request' ? 'Equipment return requested' : 'New borrow request');
-          rowMeta.textContent = item.message || item.campus || '';
-        }
-        link.append(rowTitle, rowMeta);
-        section.append(link);
-      });
-      if (items.length > 6) {
-        const more = document.createElement('div');
-        more.className = 'comlab-notice-empty';
-        more.textContent = `And ${items.length - 6} more…`;
-        section.append(more);
-      }
-    }
-    panel.append(section);
-  };
 
   if (failed) {
     const error = document.createElement('div');
     error.className = 'comlab-notice-empty';
-    error.textContent = 'Unable to load notifications. Please try again.';
+    error.textContent = 'Unable to load notifications. Please close and reopen the panel to try again.';
     panel.append(error);
   } else {
-    appendSection('Maintenance reports', reports, '/technician-dashboard#new-reports', 'maintenance');
-    appendSection('Borrow requests', borrowNotifications, '/technician-dashboard#borrow-requests', 'borrow');
+    if (!notifications.length) {
+      const empty = document.createElement('div');
+      empty.className = 'comlab-notice-empty comlab-notice-empty-state';
+      empty.textContent = 'You are all caught up.';
+      panel.append(empty);
+    }
+    notifications.forEach(notification => panel.append(createNotificationPanelItem(notification)));
+  }
+
+  if (!failed) {
+    const clearAll = document.createElement('button');
+    clearAll.type = 'button';
+    clearAll.className = 'comlab-notice-clear';
+    clearAll.textContent = 'Clear all';
+    clearAll.disabled = totalCount === 0;
+    clearAll.dataset.comlabNotificationClearAll = 'true';
+    clearAll.style.display = 'block';
+    clearAll.style.width = '100%';
+    clearAll.style.marginTop = '.5rem';
+    panel.append(clearAll);
   }
 }
 
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-comlab-notification-button]');
-  if (button && getCurrentComLabRole() === 'technician') {
+  const role = getCurrentComLabRole();
+  if (button && role) {
     event.preventDefault();
     event.stopPropagation();
     toggleTechnicianNotificationPanel(button);
@@ -1554,34 +1730,167 @@ document.addEventListener('click', event => {
   const panel = document.getElementById('comlab-technician-notification-panel');
   if (!panel) return;
   if (panel.contains(event.target)) {
+    const menuToggle = event.target.closest('[data-comlab-notification-menu-toggle]');
+    if (menuToggle) {
+      event.preventDefault();
+      const menu = menuToggle.parentElement?.querySelector('.comlab-notice-menu');
+      if (!menu) return;
+      const willOpen = menu.hidden;
+      panel.querySelectorAll('.comlab-notice-menu').forEach(otherMenu => {
+        otherMenu.hidden = true;
+        otherMenu.parentElement?.querySelector('[data-comlab-notification-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+      });
+      menu.hidden = !willOpen;
+      menuToggle.setAttribute('aria-expanded', String(willOpen));
+      return;
+    }
+
+    const actionButton = event.target.closest('[data-notification-action]');
+    if (actionButton) {
+      event.preventDefault();
+      const item = actionButton.closest('.comlab-notice-item');
+      const notificationRow = item?.querySelector('[data-comlab-notification-item]');
+      const notificationId = notificationRow?.dataset.notificationId;
+      const action = actionButton.dataset.notificationAction;
+      if (!notificationId || !['hide', 'mute', 'delete'].includes(action)) return;
+      const wasUnread = !notificationRow.classList.contains('is-read');
+      actionButton.disabled = true;
+      const actionUrl = action === 'delete'
+        ? `/api/notifications/${encodeURIComponent(notificationId)}`
+        : `/api/notifications/${encodeURIComponent(notificationId)}/${action}`;
+      fetch(actionUrl, {
+        method: action === 'delete' ? 'DELETE' : 'PUT',
+        cache: 'no-store'
+      }).then(response => {
+        if (!response.ok) throw new Error(`Could not ${action} notification (${response.status}).`);
+        item.remove();
+        refreshRoleNotificationCount();
+        const remainingCount = Math.max(0, Number(panel.dataset.totalCount) - 1);
+        const remainingUnread = Math.max(0, Number(panel.dataset.unreadCount) - (wasUnread ? 1 : 0));
+        panel.dataset.totalCount = String(remainingCount);
+        panel.dataset.unreadCount = String(remainingUnread);
+        const summary = panel.querySelector('.comlab-notice-heading span');
+        if (summary) summary.textContent = `${remainingUnread} unread · ${remainingCount} total`;
+        const markAllRead = panel.querySelector('[data-comlab-notification-read-all]');
+        if (markAllRead) markAllRead.disabled = remainingUnread === 0;
+        if (!panel.querySelector('.comlab-notice-item')) {
+          const empty = document.createElement('div');
+          empty.className = 'comlab-notice-empty comlab-notice-empty-state';
+          empty.textContent = 'You are all caught up.';
+          panel.insertBefore(empty, panel.querySelector('[data-comlab-notification-clear-all]'));
+        }
+        const clearAll = panel.querySelector('[data-comlab-notification-clear-all]');
+        if (clearAll) clearAll.disabled = !panel.querySelector('.comlab-notice-item');
+      }).catch(error => {
+        console.error(`Unable to ${action} notification.`, error);
+        actionButton.disabled = false;
+        const message = panel.querySelector('.comlab-notice-error') || document.createElement('div');
+        message.className = 'comlab-notice-empty comlab-notice-error';
+        message.textContent = `Could not ${action} this notification. Please try again.`;
+        panel.append(message);
+      });
+      return;
+    }
+
+    if (event.target.closest('[data-comlab-notification-clear-all]')) {
+      event.preventDefault();
+      const clearButton = event.target.closest('[data-comlab-notification-clear-all]');
+      clearButton.disabled = true;
+      fetch('/api/notifications/clear', { method: 'PUT', cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error(`Could not clear notifications (${response.status}).`);
+        panel.querySelectorAll('.comlab-notice-item').forEach(item => item.remove());
+        panel.dataset.unreadCount = '0';
+        panel.dataset.totalCount = '0';
+        panel.querySelector('.comlab-notice-heading span').textContent = '0 unread · 0 total';
+        panel.querySelector('[data-comlab-notification-read-all]').disabled = true;
+        const empty = document.createElement('div');
+        empty.className = 'comlab-notice-empty comlab-notice-empty-state';
+        empty.textContent = 'You are all caught up.';
+        panel.insertBefore(empty, clearButton);
+        refreshRoleNotificationCount();
+      }).catch(error => {
+        console.error('Unable to clear notifications.', error);
+        clearButton.disabled = false;
+        const message = panel.querySelector('.comlab-notice-error') || document.createElement('div');
+        message.className = 'comlab-notice-empty comlab-notice-error';
+        message.textContent = 'Could not clear notifications. Please try again.';
+        panel.append(message);
+      });
+      return;
+    }
+
     const notificationItem = event.target.closest('[data-comlab-notification-item]');
     if (notificationItem) {
       event.preventDefault();
-      const notificationType = notificationItem.dataset.notificationType;
-      const recordId = notificationItem.dataset.notificationRecordId;
-      dismissTechnicianNotificationIds([notificationItem.dataset.notificationDismissalId]);
+      const notificationId = notificationItem.dataset.notificationId;
+      const target = new URL(notificationItem.href, window.location.origin);
+      if (target.origin !== window.location.origin || !notificationId) return;
+      fetch(`/api/notifications/${encodeURIComponent(notificationId)}/read`, {
+        method: 'PUT',
+        cache: 'no-store',
+        keepalive: true
+      }).then(response => {
+        if (!response.ok) throw new Error(`Could not mark notification as read (${response.status}).`);
+      }).catch(error => {
+        console.error('Unable to mark the opened notification as read.', error);
+      });
       closeTechnicianNotificationPanel();
-      refreshRoleNotificationCount();
-      const section = notificationType === 'maintenance' ? 'new-reports' : 'borrow-requests';
-      const targetHref = `/technician-dashboard#${section}`;
-      if (window.location.pathname.replace(/\/$/, '') !== '/technician-dashboard') {
-        window.location.assign(targetHref);
-        return;
-      }
-      window.location.hash = section;
-      window.dispatchEvent(new CustomEvent('comlab:focus-technician-notification', {
-        detail: { type: notificationType, recordId }
-      }));
+      window.location.assign(target.href);
+      return;
+    }
+    if (event.target.closest('[data-comlab-notification-read-all]')) {
+      event.preventDefault();
+      fetch('/api/notifications/read-all', { method: 'PUT', cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error(`Could not mark notifications as read (${response.status}).`);
+        panel.querySelectorAll('.comlab-notice-row:not(.is-read)').forEach(row => {
+          row.classList.add('is-read');
+          const state = row.querySelector('.comlab-notice-state');
+          if (state) state.textContent = 'Read';
+        });
+        const unreadTotal = panel.querySelector('.comlab-notice-heading span');
+        if (unreadTotal) unreadTotal.textContent = `0 unread · ${panel.dataset.totalCount} total`;
+        panel.dataset.unreadCount = '0';
+        panel.querySelector('[data-comlab-notification-read-all]').disabled = true;
+        refreshRoleNotificationCount();
+      }).catch(error => {
+        console.error('Unable to mark all notifications as read.', error);
+        const message = panel.querySelector('.comlab-notice-error') || document.createElement('div');
+        message.className = 'comlab-notice-empty comlab-notice-error';
+        message.textContent = 'Could not mark notifications as read. Please try again.';
+        panel.append(message);
+      });
       return;
     }
     if (event.target.closest('[data-comlab-notification-link]')) closeTechnicianNotificationPanel();
     return;
   }
   closeTechnicianNotificationPanel();
-});
+}, true);
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeTechnicianNotificationPanel();
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const maintenanceId = params.get('maintenanceId');
+  const borrowRecordId = params.get('borrowRecordId');
+  if (!maintenanceId && !borrowRecordId) return;
+  window.setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('comlab:focus-technician-notification', {
+      detail: maintenanceId
+        ? { type: 'maintenance', recordId: maintenanceId }
+        : { type: 'borrow', recordId: borrowRecordId }
+    }));
+    params.delete('maintenanceId');
+    params.delete('borrowRecordId');
+    const remainingQuery = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${remainingQuery ? `?${remainingQuery}` : ''}${window.location.hash}`
+    );
+  }, 900);
 });
 
 function ensureAdminProfileShortcut() {
@@ -1618,7 +1927,7 @@ function ensureFloatingScanButton() {
   if (document.querySelector('script[data-comlab-floating-scanner]')) return;
 
   const scannerScript = document.createElement('script');
-  scannerScript.src = '/js/qr-scanner-button.js?v=7';
+  scannerScript.src = '/js/qr-scanner-button.js?v=11';
   scannerScript.dataset.comlabFloatingScanner = 'true';
   document.head.append(scannerScript);
 }
@@ -1651,51 +1960,95 @@ function setRoleNotificationCount(count) {
   });
 }
 
+function syncOpenNotificationPanel(notificationData) {
+  const panel = document.getElementById('comlab-technician-notification-panel');
+  if (!panel || !Array.isArray(notificationData?.notifications)) return;
+
+  const notifications = sortNotificationsNewestFirst(notificationData.notifications);
+  const unreadValue = Number(notificationData.unreadCount);
+  const totalValue = Number(notificationData.totalCount);
+  const unreadCount = Number.isFinite(unreadValue) ? Math.max(0, unreadValue) : 0;
+  const totalCount = Number.isFinite(totalValue) ? Math.max(0, totalValue) : notifications.length;
+  const notificationsById = new Map(
+    notifications.map((notification) => [String(notification.id || ''), notification])
+  );
+  const itemsById = new Map();
+
+  panel.querySelectorAll('.comlab-notice-item').forEach((item) => {
+    const row = item.querySelector('[data-comlab-notification-item]');
+    const notificationId = String(row?.dataset.notificationId || '');
+    const notification = notificationsById.get(notificationId);
+    if (!notification) {
+      item.remove();
+      return;
+    }
+    itemsById.set(notificationId, item);
+    updateNotificationPanelItem(item, notification);
+    const isRead = Boolean(notification.readAt);
+    row.classList.toggle('is-read', isRead);
+    const state = row.querySelector('.comlab-notice-state');
+    if (state) state.textContent = isRead ? 'Read' : 'Unread';
+  });
+
+  let hasNewNotifications = false;
+  notifications.forEach((notification) => {
+    const notificationId = String(notification.id || '');
+    if (itemsById.has(notificationId)) return;
+    itemsById.set(notificationId, createNotificationPanelItem(notification));
+    hasNewNotifications = true;
+  });
+
+  const orderedItems = notifications
+    .map((notification) => itemsById.get(String(notification.id || '')))
+    .filter(Boolean);
+  const currentOrder = Array.from(panel.querySelectorAll('.comlab-notice-item'))
+    .map((item) => String(item.querySelector('[data-comlab-notification-item]')?.dataset.notificationId || ''));
+  const expectedOrder = orderedItems.map((item) =>
+    String(item.querySelector('[data-comlab-notification-item]')?.dataset.notificationId || '')
+  );
+  const orderChanged = currentOrder.some((notificationId, index) => notificationId !== expectedOrder[index])
+    || currentOrder.length !== expectedOrder.length;
+  if (orderChanged) {
+    panel.querySelector('.comlab-notice-empty-state')?.remove();
+    const fragment = document.createDocumentFragment();
+    orderedItems.forEach((item) => fragment.append(item));
+    panel.insertBefore(fragment, panel.querySelector('[data-comlab-notification-clear-all]') || null);
+  }
+
+  const hasNotifications = orderedItems.length > 0;
+  const emptyState = panel.querySelector('.comlab-notice-empty-state');
+  if (!hasNotifications && !emptyState) {
+    const empty = document.createElement('div');
+    empty.className = 'comlab-notice-empty comlab-notice-empty-state';
+    empty.textContent = 'You are all caught up.';
+    panel.insertBefore(empty, panel.querySelector('[data-comlab-notification-clear-all]') || null);
+  } else if (hasNotifications) {
+    emptyState?.remove();
+  }
+  if (hasNewNotifications || orderChanged) panel.scrollTop = 0;
+
+  panel.dataset.unreadCount = String(unreadCount);
+  panel.dataset.totalCount = String(totalCount);
+  const summary = panel.querySelector('.comlab-notice-heading span');
+  if (summary) summary.textContent = `${unreadCount} unread · ${totalCount} total`;
+  const markAllRead = panel.querySelector('[data-comlab-notification-read-all]');
+  if (markAllRead) markAllRead.disabled = unreadCount === 0;
+  const clearAll = panel.querySelector('[data-comlab-notification-clear-all]');
+  if (clearAll) clearAll.disabled = totalCount === 0;
+}
+
 async function refreshRoleNotificationCount() {
   const role = getCurrentComLabRole();
   if (!role) return;
 
   try {
-    if (role === 'technician') {
-      const [reportsResponse, borrowResponse] = await Promise.all([
-        fetch('/api/maintenance?status=Pending', { cache: 'no-store' }),
-        fetch('/api/borrow-notifications?unreadOnly=true', { cache: 'no-store' })
-      ]);
-      const reports = reportsResponse.ok ? await reportsResponse.json() : [];
-      const borrowNotifications = borrowResponse.ok ? await borrowResponse.json() : [];
-      const dismissed = getDismissedTechnicianNotificationIds();
-      const reportCount = Array.isArray(reports)
-        ? reports.filter(report => !dismissed.has(`maintenance:${report.id}`)).length
-        : 0;
-      const borrowCount = Array.isArray(borrowNotifications)
-        ? borrowNotifications.filter(notification => !dismissed.has(`borrow:${notification.id}`)).length
-        : 0;
-      setRoleNotificationCount(reportCount + borrowCount);
-      return;
-    }
-
-    const response = await fetch('/api/borrow-records', { cache: 'no-store' });
-    if (!response.ok) {
-      setRoleNotificationCount(0);
-      return;
-    }
-    const records = await response.json();
-    if (!Array.isArray(records)) {
-      setRoleNotificationCount(0);
-      return;
-    }
-
-    const count = records.filter((record) => {
-      const status = String(record?.effectiveStatus || record?.status || '').trim().toLowerCase();
-      if (role === 'admin') return status === 'pending';
-      if (role === 'faculty') {
-        return record?.canApprove === true || record?.canReturnStudentBorrow === true || (record?.isMyRequest === true && status === 'pending');
-      }
-      return record?.isMyRequest === true && status === 'pending';
-    }).length;
-    setRoleNotificationCount(count);
+    const response = await fetch('/api/notifications', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Notification count request failed with status ${response.status}.`);
+    const data = await response.json();
+    setRoleNotificationCount(data?.unreadCount);
+    syncOpenNotificationPanel(data);
   } catch (error) {
-    setRoleNotificationCount(0);
+    console.error('Unable to refresh notification count.', error);
   }
 }
 
@@ -1703,20 +2056,7 @@ function initializeMainThemeToggle() {
   const savedTheme = localStorage.getItem(COMLAB_MAIN_THEME_KEY);
   const initialTheme = savedTheme === 'light' ? 'light' : 'dark';
   applyMainTheme(initialTheme);
-
-  document.querySelectorAll(COMLAB_MAIN_THEME_CONTAINERS).forEach((container) => {
-    applyFixedTableHeaderClasses(container);
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof Element) {
-            applyFixedTableHeaderClasses(node);
-          }
-        });
-      });
-    });
-    observer.observe(container, { childList: true, subtree: true });
-  });
+  initializeFixedTableHeaderTheme();
 
   const profileBadges = Array.from(document.querySelectorAll(
     '.system-profile-badge, .student-page-user, header .user-profile'
@@ -1835,6 +2175,7 @@ window.addEventListener('DOMContentLoaded', () => {
       '.comlab-slim-page-header, .comlab-page-header-spacer, .top-header, #mobileMenuToggle'
     ).forEach((element) => element.remove());
     applyMainTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
+    if (isAppContentEmbeddedPage) initializeFixedTableHeaderTheme();
     return;
   }
   hydrateStudentPageHeader();

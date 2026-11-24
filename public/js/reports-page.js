@@ -472,8 +472,19 @@
             return;
           }
           container.innerHTML = summary.map(function(item) {
-            const needsAttention = String(item.label || '').toLowerCase() === 'unserviceable' && Number(item.value) > 0;
-            return '<div class="rounded-3xl border border-emerald-800/60 bg-[#0b1a13]/90 p-3 shadow-[0_8px_18px_rgba(6,64,43,.14)]' + (needsAttention ? ' report-summary-warning' : '') + '"><p class="report-summary-label text-xs uppercase tracking-[0.3em] text-emerald-100/70">' + item.label + '</p><p class="report-summary-value mt-1.5 text-2xl font-semibold text-white">' + item.value + '</p></div>';
+            const label = String(item.label || '').toLowerCase();
+            const value = Number(item.value) || 0;
+            const positiveTone = ['serviceable', 'returned', 'resolved', 'present', 'created'];
+            const warningTone = ['pending', 'late'];
+            const dangerTone = ['lost', 'absent'];
+            const infoTone = ['borrowed', 'in progress', 'updated'];
+            let tone = 'neutral';
+            if (label === 'total records') tone = 'total';
+            else if (positiveTone.includes(label)) tone = 'positive';
+            else if (warningTone.includes(label) || (label === 'unserviceable' && value > 0)) tone = 'warning';
+            else if (dangerTone.includes(label) && value > 0) tone = 'danger';
+            else if (infoTone.includes(label)) tone = 'info';
+            return '<div class="report-summary-' + tone + ' rounded-3xl border border-emerald-800/60 bg-[#0b1a13]/90 p-3 shadow-[0_8px_18px_rgba(6,64,43,.14)]"><p class="report-summary-label text-xs uppercase tracking-[0.3em] text-emerald-100/70">' + item.label + '</p><p class="report-summary-value mt-1.5 text-2xl font-semibold text-white">' + item.value + '</p></div>';
           }).join('');
         };
 
@@ -554,22 +565,22 @@
 
           pageRows.forEach((record) => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-emerald-500/10';
-            row.style.border = '0';
-            row.style.borderBottom = '0';
-            row.style.outline = '0';
-            row.style.boxShadow = 'none';
+            row.className = 'report-preview-row';
             definition.columns.forEach((column) => {
               const td = document.createElement('td');
-              td.className = 'px-4 py-4 align-top text-base text-emerald-50/90';
-              td.style.border = '0';
-              td.style.borderTop = '0';
-              td.style.borderRight = '0';
-              td.style.borderBottom = '0';
-              td.style.borderLeft = '0';
-              td.style.outline = '0';
-              td.style.boxShadow = 'none';
-              td.textContent = formatCell(getCellValue(record, column));
+              td.className = 'report-preview-cell';
+              const value = formatCell(getCellValue(record, column));
+              if (column === 'Equipment ID') td.classList.add('report-primary-cell');
+              if (column === 'Equipment Name' || column === 'Equipment') td.classList.add('report-name-cell');
+              if (column === 'Status' || column === 'Condition') {
+                const badge = document.createElement('span');
+                badge.className = 'report-status-chip';
+                badge.dataset.status = String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                badge.textContent = value;
+                td.appendChild(badge);
+              } else {
+                td.textContent = value;
+              }
               row.appendChild(td);
             });
             body.appendChild(row);

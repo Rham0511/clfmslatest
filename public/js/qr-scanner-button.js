@@ -1,6 +1,7 @@
 (() => {
   if (window.__COMLAB_QR_SCANNER_BUTTON_INITIALIZED__) return;
 
+  const isPublicPcStationScanner = document.body.dataset.publicPcStationScanner === 'true';
   const rawUserRole = String(window.__CURRENT_USER__?.role || window.__CURRENT_USER_ROLE__ || '')
     .trim()
     .toLowerCase()
@@ -14,7 +15,7 @@
     : document.body.matches('.technician-portal') ? 'technician'
       : document.body.matches('.faculty-portal, .faculty-page') ? 'faculty'
         : document.body.matches('.student-portal') ? 'student' : '';
-  const role = userRole || roleFromPage;
+  const role = userRole || roleFromPage || (isPublicPcStationScanner ? 'student' : '');
   if (!role || !['admin', 'superadmin', 'technician', 'faculty', 'instructor', 'student'].includes(role)) return;
   const isAdminRole = role === 'admin' || role === 'superadmin';
 
@@ -40,6 +41,7 @@
   helpButton.setAttribute('aria-controls', 'comlab-help-panel');
   helpButton.title = 'ComLab Help';
   helpButton.innerHTML = '<i class="fas fa-comment-dots" aria-hidden="true"></i>';
+  if (isPublicPcStationScanner) helpButton.hidden = true;
 
   const helpPanel = document.createElement('section');
   helpPanel.id = 'comlab-help-panel';
@@ -125,6 +127,8 @@
   document.body.append(button, helpButton, helpPanel, modal);
 
   const status = modal.querySelector('#qr-scan-status');
+  const title = modal.querySelector('#qr-scanner-title');
+  const description = modal.querySelector('.qr-scanner-description');
   const closeButton = modal.querySelector('.qr-scanner-close');
   const reader = modal.querySelector('#qr-reader');
   const adminResult = modal.querySelector('#qr-admin-equipment-result');
@@ -145,7 +149,10 @@
   let scannerLibraryPromise = null;
   let startPromise = null;
   let handlingResult = false;
+  let isPcStationScan = false;
+  let isHandlingPcStation = false;
   let previousBodyOverflow = '';
+  const addAppShellClassForPublicScan = isPublicPcStationScanner && !document.body.classList.contains('app-shell');
   let activeHelpChatId = null;
   let helpChats = [];
 
@@ -182,8 +189,13 @@
   async function closeScanner() {
     button.setAttribute('aria-expanded', 'false');
     modal.classList.remove('is-open');
+    modal.classList.remove('is-pc-station-scan');
+    modal.classList.remove('is-pc-station-viewfinder');
     document.body.style.overflow = previousBodyOverflow;
+    if (addAppShellClassForPublicScan) document.body.classList.remove('app-shell');
     await stopScanner();
+    isPcStationScan = false;
+    isHandlingPcStation = false;
     button.focus({ preventScroll: true });
   }
 
@@ -191,6 +203,46 @@
     status.textContent = message;
     status.dataset.state = isError ? 'error' : 'info';
     status.hidden = false;
+    if (isPcStationScan || isHandlingPcStation) {
+      document.dispatchEvent(new CustomEvent('comlab:pc-station-feedback', {
+        detail: { message, state: isError ? 'error' : 'info' }
+      }));
+    }
+  }
+
+  function getCameraErrorName(error) {
+    const errorMessage = typeof error === 'string'
+      ? error
+      : typeof error?.message === 'string' ? error.message : '';
+    const knownName = typeof error?.name === 'string' ? error.name : '';
+    if (knownName) return knownName;
+    return errorMessage.match(/\b(NotAllowedError|PermissionDeniedError|NotFoundError|DevicesNotFoundError|NotReadableError|TrackStartError|OverconstrainedError|ConstraintNotSatisfiedError|SecurityError|AbortError|NotSupportedError|TypeError)\b/)?.[0] || '';
+  }
+
+  function getCameraErrorMessage(error) {
+    const errorName = getCameraErrorName(error);
+    const errorMessage = typeof error === 'string'
+      ? error
+      : typeof error?.message === 'string' ? error.message : '';
+    const normalizedMessage = errorMessage.toLowerCase();
+    const messages = {
+      NotAllowedError: 'Camera permission was denied. Allow camera access for this site in your browser settings, then try again.',
+      PermissionDeniedError: 'Camera permission was denied. Allow camera access for this site in your browser settings, then try again.',
+      NotFoundError: 'No camera was found. Connect or enable a camera, then try again.',
+      DevicesNotFoundError: 'No camera was found. Connect or enable a camera, then try again.',
+      NotReadableError: 'The camera is being used by another app or tab. Close it there and try again.',
+      TrackStartError: 'The camera is being used by another app or tab. Close it there and try again.',
+      OverconstrainedError: 'The requested camera is unavailable. Switch cameras or check that a camera is connected.',
+      ConstraintNotSatisfiedError: 'The requested camera is unavailable. Switch cameras or check that a camera is connected.',
+      SecurityError: 'Camera access requires a secure HTTPS connection. Open this page over HTTPS and try again.',
+      AbortError: 'The camera could not start. Close other apps using the camera, then try again.',
+      NotSupportedError: 'This browser cannot use the selected camera. Update your browser or try another supported browser.',
+      TypeError: 'This browser could not start the camera with the requested settings. Update your browser or try another supported browser.'
+    };
+    if (normalizedMessage.includes('camera streaming not supported')) {
+      return 'Camera scanning is not supported by this browser. Try a current version of Chrome, Safari, or Firefox.';
+    }
+    return messages[errorName] || errorMessage || 'The camera could not start. Check camera permissions and close any other app using it, then try again.';
   }
 
   function escapeHtml(value) {
@@ -277,9 +329,87 @@
     status.hidden = true;
   }
 
-  function buildQrDestination(value) {
+  function getPcStationDestinationFromUrl(value) {
+    let scannedUrl;
+    try {
+      scannedUrl = new URL(value, window.location.origin);
+    } catch {
+      return null;
+    }
+
+    const stationMatch = scannedUrl.pathname.match(/^\/pc-station\/(?:uid|s)\/([^/]+)(?:\/status)?\/?$/i)
+      || scannedUrl.pathname.match(/^\/pc-station\/([^/]+)(?:\/status)?\/?$/i);
+    if (!stationMatch || ['uid', 's', 'status'].includes(stationMatch[1].toLowerCase())) return null;
+
+    let token = stationMatch[1];
+    try {
+      token = decodeURIComponent(token);
+    } catch {
+      return null;
+    }
+    return { token, isPlainCandidate: false };
+  }
+
+  function getPcStationDestination(value) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+
+    if (text.startsWith('{')) {
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        return null;
+      }
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+
+      const station = [payload.station, payload.data, payload.pcStation]
+        .find((entry) => entry && typeof entry === 'object' && !Array.isArray(entry)) || {};
+      const stationUrl = payload.url || payload.qrUrl || payload.path || payload.value || station.url;
+      if (typeof stationUrl === 'string') {
+        const fromUrl = getPcStationDestinationFromUrl(stationUrl);
+        if (fromUrl) return fromUrl;
+      }
+
+      const stationId = payload.pcSetId || payload.pc_set_id || payload.setId || payload.set_id ||
+        payload.stationId || payload.station_id || payload.pcStationId || payload.pc_station_id ||
+        payload.pcStationCode || payload.stationCode || payload.station_code ||
+        (typeof payload.pcStation === 'string' ? payload.pcStation : '') ||
+        (typeof payload.pc_station === 'string' ? payload.pc_station : '') ||
+        station.pcSetId || station.setId || station.stationId ||
+        station.pc_station_id || station.pcStationCode || station.stationCode || station.code ||
+        (typeof payload.station === 'string' ? payload.station : '');
+      const qrToken = payload.stationToken || payload.qrToken || payload.token || payload.id ||
+        payload.code || payload.value || station.token || station.id;
+      const identifier = stationId || qrToken;
+      if (['string', 'number'].includes(typeof identifier) && String(identifier).trim() &&
+          String(identifier).trim().length <= 255) {
+        return { token: String(identifier).trim(), isPlainCandidate: false };
+      }
+      return null;
+    }
+
+    if (/^(?:https?:\/\/|\/|pc-station\/)/i.test(text)) {
+      return getPcStationDestinationFromUrl(text);
+    }
+    if (text.length <= 50) return { token: text, isPlainCandidate: true };
+    return null;
+  }
+
+  function buildQrDestination(value, skipPlainStationCandidate = false) {
     const decoded = String(value || '').trim();
     if (!decoded) return null;
+
+    const pcStationDestination = getPcStationDestination(decoded);
+    if (pcStationDestination && (!pcStationDestination.isPlainCandidate || !skipPlainStationCandidate)) {
+      const isNamedStationCode = /^PC(?:[-_ ]|$)|^STATION(?:[-_ ]|$)/i.test(pcStationDestination.token);
+      return {
+        type: pcStationDestination.isPlainCandidate && !isNamedStationCode
+          ? 'pc-station-candidate'
+          : 'pc-station',
+        token: pcStationDestination.token
+      };
+    }
 
     let scannedUrl;
     try {
@@ -306,15 +436,6 @@
       return { type: 'equipment-url', value: decoded, path: `/equipment/uid/${encodeURIComponent(equipmentMatch[1])}` };
     }
 
-    const stationMatch = scannedUrl.pathname.match(/^\/pc-station\/uid\/([A-Za-z0-9_-]+)\/?$/i);
-    if (stationMatch) {
-      return {
-        type: 'pc-station',
-        token: stationMatch[1],
-        path: `/pc-station/uid/${encodeURIComponent(stationMatch[1])}`
-      };
-    }
-
     const attendancePathMatch = scannedUrl.pathname.match(/^\/attendance\/scan\/([^/]+)\/?$/i);
     const attendanceToken = attendancePathMatch?.[1] ||
       (/^\/api\/attendance\/scan\/?$/i.test(scannedUrl.pathname) ? scannedUrl.searchParams.get('token') : '');
@@ -336,23 +457,148 @@
     return null;
   }
 
-  async function handleDecodedValue(decodedText) {
+  async function showPcStationResult(availability, state, message) {
+    await stopScanner();
+    const resultMessage = message || (state === 'occupied'
+      ? 'Someone is already signed in at this station. Please choose another PC station.'
+      : 'This PC station is not active. Please choose another station.');
+    setStatus(resultMessage, state !== 'success');
+    status.hidden = true;
+    reader.hidden = true;
+    modal.classList.remove('is-pc-station-viewfinder');
+    stationResult.hidden = false;
+    const resultCard = modal.querySelector('#qr-pc-station-result-card');
+    resultCard.dataset.state = state;
+    const resultLabel = modal.querySelector('#qr-pc-station-result-label');
+    resultLabel.textContent = state === 'success'
+      ? 'SESSION UPDATED'
+      : state === 'occupied' ? 'STATION IN USE' : 'STATION UNAVAILABLE';
+    resultCard.style.removeProperty('border-color');
+    resultCard.style.removeProperty('background');
+    resultLabel.style.removeProperty('color');
+    if (state === 'success') {
+      resultCard.style.setProperty('border-color', 'rgba(74, 222, 128, .48)', 'important');
+      resultCard.style.setProperty('background', 'rgba(6, 78, 59, .34)', 'important');
+      resultLabel.style.setProperty('color', '#86efac', 'important');
+    }
+    modal.querySelector('#qr-pc-station-result-name').textContent = availability.station?.setName || 'PC station';
+    modal.querySelector('#qr-pc-station-result-message').textContent = resultMessage;
+    isHandlingPcStation = false;
+  }
+
+  async function handlePcStationDestination(destination) {
+    isHandlingPcStation = true;
+    setStatus('Checking this PC station…');
+
+    const statusResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(destination.token)}/status`, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+    const availability = await statusResponse.json().catch(() => ({}));
+    if (!statusResponse.ok || !availability.success) {
+      if (destination.type === 'pc-station-candidate' && [400, 404].includes(statusResponse.status)) return false;
+      throw new Error(availability.error || 'Unable to check this PC station. Please scan again.');
+    }
+
+    if (availability.state === 'occupied' || availability.state === 'unavailable') {
+      await showPcStationResult(availability, availability.state, availability.error);
+      return true;
+    }
+
+    if (isPublicPcStationScanner) {
+      await stopScanner();
+      if (availability.state === 'mine') {
+        window.location.assign('/dashboard');
+      } else {
+        window.location.assign(`/login?role=student&station=${encodeURIComponent(destination.token)}`);
+      }
+      return true;
+    }
+
+    const action = availability.state === 'mine' ? 'logout' : 'login';
+    setStatus(action === 'login' ? 'Station is available. Signing you in…' : 'Ending your PC station session…');
+    const actionResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(destination.token)}/action`, {
+      method: 'POST',
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action })
+    });
+    const result = await actionResponse.json().catch(() => ({}));
+    if (!actionResponse.ok || !result.success) {
+      if (destination.type === 'pc-station-candidate' && [400, 404].includes(actionResponse.status)) return false;
+      if (result.state === 'occupied') {
+        await showPcStationResult(result, 'occupied', result.error);
+        return true;
+      }
+      throw new Error(result.error || 'Unable to update your PC station session. Please try again.');
+    }
+
+    const message = result.message || (action === 'login'
+      ? `You are now signed in at ${result.station?.setName || 'this PC station'}.`
+      : `PC station session ended at ${result.station?.setName || 'this PC station'}.`);
+    const sessionPage = document.getElementById('activePCSessionContainer');
+    if (!sessionPage && role !== 'student') {
+      await showPcStationResult(result, 'success', message);
+      return true;
+    }
+
+    await closeScanner();
+    document.dispatchEvent(new CustomEvent('comlab:pc-station-session-updated', {
+      detail: { action: result.action || action, message, station: result.station }
+    }));
+
+    if (!sessionPage && role === 'student') {
+      const destinationUrl = new URL('/my-pc-station', window.location.origin);
+      destinationUrl.searchParams.set('pcStationScan', result.action || action);
+      window.location.assign(destinationUrl.pathname + destinationUrl.search);
+    }
+    return true;
+  }
+
+  async function handleDecodedValue(decodedText, skipPlainStationCandidate = false) {
     if (handlingResult) return;
     handlingResult = true;
 
     try {
-      const destination = buildQrDestination(decodedText);
+      const destination = buildQrDestination(decodedText, skipPlainStationCandidate);
       if (!destination) {
-        setStatus(isAdminRole
-          ? 'That QR code is not recognized. Scan an equipment QR code.'
-          : 'That QR code is not recognized. Scan a ComLab equipment, attendance, or PC station code.', true);
+        setStatus(isPcStationScan
+          ? 'That QR code is not a valid PC station code. Scan a PC station QR code.'
+          : isAdminRole
+            ? 'That QR code is not recognized. Scan an equipment QR code.'
+            : 'That QR code is not recognized. Scan a ComLab equipment, attendance, or PC station code.', true);
+        if (isPcStationScan) await stopScanner();
         window.setTimeout(() => { handlingResult = false; }, 1400);
+        return;
+      }
+
+      const isPcStationDestination = ['pc-station', 'pc-station-candidate'].includes(destination.type);
+      if (isPcStationScan && !isPcStationDestination) {
+        setStatus('That QR code is not a PC station code. Scan a PC station QR code.', true);
+        await stopScanner();
         return;
       }
 
       if (destination.type === 'unsupported') {
         setStatus(destination.message, true);
         window.setTimeout(() => { handlingResult = false; }, 1600);
+        return;
+      }
+
+      if (isPcStationDestination) {
+        const handled = await handlePcStationDestination(destination);
+        if (!handled) {
+          if (isPcStationScan) {
+            setStatus('That QR code is not a valid PC station. Check the code and try again.', true);
+            await stopScanner();
+            return;
+          }
+          isHandlingPcStation = false;
+          handlingResult = false;
+          await handleDecodedValue(decodedText, true);
+        }
         return;
       }
 
@@ -367,7 +613,7 @@
         setStatus('Equipment found. Loading its borrow details…');
         const equipmentId = await window.resolveEquipmentQrValue(destination.value);
         await closeScanner();
-        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-item-selected', {
           detail: { value: equipmentId }
         }));
         return;
@@ -376,51 +622,25 @@
       if (destination.type === 'equipment-value') {
         setStatus('Equipment found. Loading its borrow details…');
         await closeScanner();
-        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+        window.dispatchEvent(new CustomEvent('borrow-equipment-qr-item-selected', {
           detail: { value: destination.value }
         }));
         return;
       }
 
-      if (destination.type === 'pc-station') {
-        setStatus('Checking whether this PC station is available…');
-        const response = await fetch(`/api/pc-stations/qr/${encodeURIComponent(destination.token)}/status`, {
-          cache: 'no-store',
-          credentials: 'same-origin'
-        });
-        const availability = await response.json().catch(() => ({}));
-        if (!response.ok || !availability.success) {
-          throw new Error(availability.error || 'Unable to check this PC station. Please scan again.');
-        }
-
-        if (availability.state === 'occupied' || availability.state === 'unavailable') {
-          await stopScanner();
-          modal.querySelector('#qr-pc-station-result-card').dataset.state = availability.state;
-          modal.querySelector('#qr-pc-station-result-label').textContent = availability.state === 'occupied'
-            ? 'STATION IN USE'
-            : 'STATION UNAVAILABLE';
-          modal.querySelector('#qr-pc-station-result-name').textContent = availability.station?.setName || 'PC station';
-          modal.querySelector('#qr-pc-station-result-message').textContent = availability.state === 'occupied'
-            ? 'Someone is already signed in at this station. Please choose another PC station.'
-            : 'This PC station is not active. Please choose another station.';
-          status.hidden = true;
-          stationResult.hidden = false;
-          return;
-        }
-
-        setStatus(availability.state === 'mine'
-          ? 'You are signed in here. Opening your station sign-out…'
-          : 'Station is available. Opening sign-in…');
-      }
-
       setStatus('QR code recognized. Opening…');
       await stopScanner();
       modal.classList.remove('is-open');
+      modal.classList.remove('is-pc-station-scan');
       document.body.style.overflow = previousBodyOverflow;
       window.location.assign(destination.path);
     } catch (error) {
+      if (isHandlingPcStation) await stopScanner();
       setStatus(error.message || 'Unable to read that QR code. Please scan again.', true);
-      window.setTimeout(() => { handlingResult = false; }, 1400);
+      window.setTimeout(() => {
+        handlingResult = false;
+        isHandlingPcStation = false;
+      }, 1400);
     }
   }
 
@@ -428,20 +648,54 @@
     if (startPromise) return startPromise;
     startPromise = (async () => {
       try {
-        setStatus(isAdminRole
-          ? 'Allow camera access, then point your camera at an equipment QR code.'
-          : 'Allow camera access, then point your camera at a QR code.');
+        if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+          throw new Error('Camera access is unavailable in this browser or connection. Use a secure HTTPS page and a browser with camera support.');
+        }
+        setStatus(isPcStationScan
+          ? 'Starting the PC station camera…'
+          : isAdminRole
+            ? 'Allow camera access, then point your camera at an equipment QR code.'
+            : 'Allow camera access, then point your camera at a QR code.');
         await loadScannerLibrary();
         if (!modal.classList.contains('is-open')) return;
         scanner = scanner || new window.Html5Qrcode('qr-reader');
-        await scanner.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
-          handleDecodedValue,
-          () => {}
-        );
+        const scanBoxSize = Math.min(250, Math.max(160, Math.floor(window.innerWidth * 0.68)));
+        const scanConfig = {
+          fps: 10,
+          qrbox: { width: scanBoxSize, height: scanBoxSize },
+          aspectRatio: 1,
+          videoConstraints: { facingMode: { ideal: 'environment' } }
+        };
+        try {
+          await scanner.start(
+            { facingMode: 'environment' },
+            scanConfig,
+            handleDecodedValue,
+            () => {}
+          );
+        } catch (initialError) {
+          const errorName = getCameraErrorName(initialError);
+          if (
+            !modal.classList.contains('is-open') ||
+            ['NotAllowedError', 'PermissionDeniedError'].includes(errorName) ||
+            typeof window.Html5Qrcode.getCameras !== 'function'
+          ) throw initialError;
+
+          await stopScanner();
+          if (!modal.classList.contains('is-open')) throw initialError;
+          const cameras = await window.Html5Qrcode.getCameras();
+          if (!cameras.length) throw initialError;
+          scanConfig.videoConstraints = { deviceId: { exact: cameras[0].id } };
+          await scanner.start(cameras[0].id, scanConfig, handleDecodedValue, () => {});
+        }
+        if (!modal.classList.contains('is-open')) await stopScanner();
       } catch (error) {
-        setStatus(error.message || 'Camera access failed. Check browser permissions and try again.', true);
+        await stopScanner();
+        const message = getCameraErrorMessage(error);
+        setStatus(message, true);
+        if (modal.classList.contains('is-open')) {
+          document.dispatchEvent(new CustomEvent('comlab:qr-scanner-error', { detail: { message } }));
+        }
       } finally {
         startPromise = null;
       }
@@ -449,22 +703,37 @@
     return startPromise;
   }
 
-  function openScanner() {
+  function openScanner(options = {}) {
     handlingResult = false;
+    isHandlingPcStation = false;
+    isPcStationScan = options.flow === 'pc-station';
+    if (isPublicPcStationScanner) document.body.classList.add('app-shell');
     previousBodyOverflow = document.body.style.overflow;
     reader.hidden = false;
     adminResult.hidden = true;
     stationResult.hidden = true;
     status.hidden = false;
-    setStatus(isAdminRole
-      ? 'Allow camera access, then point your camera at an equipment QR code.'
-      : 'Allow camera access, then point your camera at a QR code.');
+    modal.classList.toggle('is-pc-station-scan', isPcStationScan);
+    modal.classList.toggle('is-pc-station-viewfinder', isPcStationScan);
+    title.innerHTML = isPcStationScan
+      ? '<i class="fas fa-qrcode" aria-hidden="true"></i> Scan PC station'
+      : '<i class="fas fa-qrcode" aria-hidden="true"></i> Scan QR code';
+    description.textContent = isPcStationScan
+      ? 'Center the PC station QR code inside the frame to sign in or out.'
+      : scannerDescription;
+    setStatus(isPcStationScan
+      ? 'Point your camera at a PC station QR code.'
+      : isAdminRole
+        ? 'Allow camera access, then point your camera at an equipment QR code.'
+        : 'Allow camera access, then point your camera at a QR code.');
     document.body.style.overflow = 'hidden';
     button.setAttribute('aria-expanded', 'true');
     modal.classList.add('is-open');
     closeButton.focus({ preventScroll: true });
     startScanner();
   }
+
+  window.openComLabQRScanner = openScanner;
 
   function setHelpOpen(isOpen) {
     helpPanel.hidden = !isOpen;
@@ -639,7 +908,10 @@
     helpMessages.scrollTop = helpMessages.scrollHeight;
   }
 
-  button.addEventListener('click', openScanner);
+  button.hidden = isPublicPcStationScanner;
+  button.addEventListener('click', () => openScanner({
+    flow: isPublicPcStationScanner ? 'pc-station' : undefined
+  }));
   helpButton.addEventListener('click', () => setHelpOpen(helpPanel.hidden));
   helpCloseButton.addEventListener('click', () => setHelpOpen(false));
   newChatButton.addEventListener('click', async () => {
@@ -715,6 +987,7 @@
     stationResult.hidden = true;
     reader.hidden = false;
     status.hidden = false;
+    modal.classList.toggle('is-pc-station-viewfinder', isPcStationScan);
     setStatus('Point your camera at another PC station QR code.');
     startScanner();
   });

@@ -24,10 +24,27 @@
     SOFTWARE.
     */
     import path from "path";
+    import { getPcStationIdentifierFromRequest } from "../utils/pcStationQr.js";
 
 export const homePage = (req, res) => {
-  if (req.session?.userId) {
+      const scannedIdentifier = getPcStationIdentifierFromRequest(req);
+  if (!req.session?.userId && scannedIdentifier) {
+        req.session.redirectTo = `/pc-station/uid/${encodeURIComponent(scannedIdentifier)}`;
+        req.session.pendingPcStationToken = scannedIdentifier;
+    return req.session.save(() =>
+          res.redirect(`/pc-station/uid/${encodeURIComponent(scannedIdentifier)}/status`)
+    );
+  }
+  const isStudentLoginScan = req.query?.scan === "student-login";
+  if (req.session?.userId && !isStudentLoginScan) {
     return res.redirect("/dashboard");
   }
-  return res.render("home", { title: "ComLab | Computer Laboratory Facilities Management System" });
+  const sessionExpiredNotice = req.query?.sessionExpired === "pc-station"
+    ? "Your 3-hour PC station session has expired. Please scan an available PC station to log in again."
+    : null;
+  return res.render("home", {
+    title: "ComLab | Computer Laboratory Facilities Management System",
+    isStudentLoginScan,
+    sessionExpiredNotice
+  });
 };

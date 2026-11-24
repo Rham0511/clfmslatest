@@ -40,7 +40,6 @@ import { ensureBorrowRequestAccountabilityTable } from "./models/borrowRequestAc
 import { SequelizeSessionStore } from "./models/sessionStore.js";
 import "./models/borrowRecordModel.js";
 import "./models/equipmentModel.js";
-import "./models/userModel.js";
 import router from "./routes/index.js";
 import maintenanceRouter from "./routes/maintenanceRoutes.js";
 import equipmentEnhancementsRouter from "./routes/equipmentEnhancementsRoutes.js";
@@ -50,6 +49,7 @@ import { ensureArchiveRecordsTable } from "./models/archiveRecords.js";
 import { ensureAttendancePcStationColumn } from "./models/attendanceModel.js";
 import { ensurePCStationAutoLogoutColumn } from "./models/pcStationSessionModel.js";
 import { ensureRoleHelpChatTables } from "./models/roleHelpChatModel.js";
+import { ensureUserNotificationTable } from "./models/userNotificationModel.js";
 import { expirePCStationSessions } from "./controllers/pcStationController.js";
 import fs from 'fs';
 import hbs from "hbs";
@@ -88,8 +88,8 @@ app.get('/service-worker.js', (req, res) => {
   res.type('application/javascript').sendFile(path.join(__dirname, 'public', 'service-worker.js'));
 });
 app.get('/favicon.ico', (req, res) => {
-  res.set('Cache-Control', 'public, max-age=86400');
-  res.type('image/svg+xml').sendFile(path.join(__dirname, 'public', 'images', 'msu-logo.svg'));
+  res.set('Cache-Control', 'no-cache');
+  res.type('image/png').sendFile(path.join(__dirname, 'public', 'images', 'comlab-app-192.png'));
 });
 app.get('/manifest.webmanifest', (req, res) => {
   res.set('Cache-Control', 'no-cache');
@@ -98,9 +98,9 @@ app.get('/manifest.webmanifest', (req, res) => {
 app.use(express.static(path.join(process.cwd(), "public"), {
   setHeaders: (res, filePath) => {
     if (/\.(?:css|js)$/i.test(filePath)) {
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
-      res.setHeader("Pragma", "no-cache");
-      res.setHeader("Expires", "0");
+      res.setHeader("Cache-Control", "public, max-age=300");
+      res.removeHeader("Pragma");
+      res.removeHeader("Expires");
     }
   }
 }));
@@ -108,9 +108,9 @@ app.use((req, res, next) => {
   const send = res.send;
   res.send = function (body) {
     if (typeof body === "string" && /<(?:!doctype html|html)\b/i.test(body)) {
-      const dialogScript = '<script src="/js/custom-dialogs.js"></script>';
-      const pwaHead = '<link rel="icon" type="image/svg+xml" href="/images/msu-logo.svg"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#062719"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ComLab"><link rel="apple-touch-icon" href="/images/comlab-app-192.png"><link rel="stylesheet" href="/css/pwa-install.css">';
-      const appThemeHead = `<script>(function(){var root=document.documentElement;try{var theme=localStorage.getItem('comlab-main-theme')==='light'?'light':'dark';root.classList.toggle('theme-light',theme==='light');root.classList.toggle('theme-dark',theme==='dark');root.classList.toggle('dark',theme==='dark');root.setAttribute('data-theme',theme);}catch(error){root.classList.remove('theme-light');root.classList.add('theme-dark','dark');root.setAttribute('data-theme','dark');}})();</script><link rel="stylesheet" href="/css/app-theme.css?v=11">`;
+      const dialogScript = '<script src="/js/custom-dialogs.js?v=4"></script>';
+      const pwaHead = '<link rel="icon" type="image/png" href="/images/comlab-app-192.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#062719"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ComLab"><link rel="apple-touch-icon" href="/images/comlab-app-192.png"><link rel="stylesheet" href="/css/pwa-install.css">';
+      const appThemeHead = `<script>(function(){var root=document.documentElement;try{var theme=localStorage.getItem('comlab-main-theme')==='light'?'light':'dark';root.classList.toggle('theme-light',theme==='light');root.classList.toggle('theme-dark',theme==='dark');root.classList.toggle('dark',theme==='dark');root.setAttribute('data-theme',theme);}catch(error){root.classList.remove('theme-light');root.classList.add('theme-dark','dark');root.setAttribute('data-theme','dark');}})();</script><link rel="stylesheet" href="/css/app-theme.css?v=15">`;
       const pwaScript = '<script src="/js/pwa-install.js" defer></script>';
       if (/\bapp-shell\b/.test(body) && /<\/head>/i.test(body) && !/href=["']\/css\/app-theme\.css(?:\?[^"']*)?["']/i.test(body)) {
         body = body.replace(/<\/head>/i, `${appThemeHead}</head>`);
@@ -173,8 +173,6 @@ app.use((req, res, next) => {
   res.locals.error_msg = req.flash("error_msg");
   next();
 });
-
-
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "xian");
 const partialsDir = path.join(__dirname, "views/partials");
@@ -238,6 +236,7 @@ export default app;
           await ensureAttendancePcStationColumn();
           await ensurePCStationAutoLogoutColumn();
           await ensureRoleHelpChatTables();
+          await ensureUserNotificationTable();
           // await sequelize.sync({ force: false, alter: false, logging: false });
           console.log("✅ Database tables are ready");
         } catch (syncError) {

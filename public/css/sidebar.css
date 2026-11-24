@@ -140,8 +140,10 @@ body.app-shell .page-content::before {
     pointer-events: auto;
 }
 
-body.student-portal.sidebar-open {
-    overflow: hidden;
+html.sidebar-open,
+html.sidebar-open body {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
 }
 
 /* Pages loaded inside the persistent admin shell keep only their content. */
@@ -436,15 +438,15 @@ html body.app-shell.facilities-embedded .facilities-main {
 #sidebar {
     position: fixed !important;
     left: 0 !important;
-    top: var(--comlab-mobile-sidebar-top, 0px) !important;
-    height: calc(100vh - var(--comlab-mobile-sidebar-top, 0px)) !important;
-    height: calc(100dvh - var(--comlab-mobile-sidebar-top, 0px)) !important;
+    top: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
     z-index: 1200 !important;
     display: block !important;
 }
 
 #sidebarOverlay {
-    inset: var(--comlab-mobile-sidebar-top, 0px) 0 0 !important;
+    inset: 0 !important;
 }
 
 .sidebar .nav-item {
@@ -596,19 +598,19 @@ body.app-shell .page-content .card-title {
 }
 
 /* Tables: dark mode */
-body.app-shell .page-content table {
+body.app-shell:not(.reports-page) .page-content table {
     background: transparent !important;
     color: #d9f5e0 !important;
 }
-body.app-shell .page-content table thead th {
+body.app-shell:not(.reports-page) .page-content table thead th {
     background: transparent !important;
     color: #9fe9b9 !important;
     border-bottom: 1px solid rgba(34,197,94,0.08) !important;
 }
-body.app-shell .page-content table tbody tr {
+body.app-shell:not(.reports-page) .page-content table tbody tr {
     border-bottom: 1px solid rgba(255,255,255,0.03) !important;
 }
-body.app-shell .page-content table tbody tr:hover {
+body.app-shell:not(.reports-page) .page-content table tbody tr:hover {
     background: rgba(34,197,94,0.02) !important;
 }
 
@@ -1335,17 +1337,17 @@ body.app-shell .page-content .btn-link:hover {
 }
 
 /* Tables: alternate row shading, compact spacing */
-body.app-shell .page-content table {
+body.app-shell:not(.reports-page) .page-content table {
     width: 100% !important;
     border-collapse: separate !important;
     border-spacing: 0 8px !important;
 }
-body.app-shell .page-content table tbody tr {
+body.app-shell:not(.reports-page) .page-content table tbody tr {
     background: rgba(3,8,12,0.5) !important;
     border-radius: 0.75rem !important;
 }
-body.app-shell .page-content table td,
-body.app-shell .page-content table th {
+body.app-shell:not(.reports-page) .page-content table td,
+body.app-shell:not(.reports-page) .page-content table th {
     padding: 0.85rem 1rem !important;
     vertical-align: middle !important;
 }
@@ -1524,7 +1526,7 @@ body.app-shell .card:hover {
 }
 
 /* Make tables appear inset with softly elevated rows */
-body.app-shell .page-content table tbody tr {
+body.app-shell:not(.reports-page) .page-content table tbody tr {
     background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)) !important;
     border-radius: 0.6rem !important;
     box-shadow: 0 6px 18px rgba(0,0,0,0.45) inset !important;
@@ -1787,18 +1789,18 @@ body.app-shell .attendance-filter-label {
     color: #b6d7c8 !important;
 }
 
-body.app-shell table {
+body.app-shell:not(.reports-page) table {
     border-collapse: separate !important;
     border-spacing: 0 !important;
     color: #e2fbe8 !important;
 }
 
-body.app-shell table thead,
-body.app-shell table thead tr {
+body.app-shell:not(.reports-page) table thead,
+body.app-shell:not(.reports-page) table thead tr {
     background: #123124 !important;
 }
 
-body.app-shell table th {
+body.app-shell:not(.reports-page) table th {
     border-bottom: 1px solid rgba(74, 222, 128, 0.18) !important;
     color: #b6d7c8 !important;
     font-size: 0.75rem !important;
@@ -1807,18 +1809,18 @@ body.app-shell table th {
     text-transform: uppercase;
 }
 
-body.app-shell table td {
+body.app-shell:not(.reports-page) table td {
     border-bottom: 1px solid rgba(74, 222, 128, 0.12) !important;
     color: #e2fbe8 !important;
 }
 
-body.app-shell table tbody tr {
+body.app-shell:not(.reports-page) table tbody tr {
     background: #0f241b !important;
     box-shadow: none !important;
     transition: background-color 160ms ease;
 }
 
-body.app-shell table tbody tr:hover {
+body.app-shell:not(.reports-page) table tbody tr:hover {
     background: #123124 !important;
 }
 
@@ -2205,13 +2207,13 @@ html body.app-shell .main-container.theme-light [class*="to-[#07111f]"] {
     --tw-gradient-to: #ffffff var(--tw-gradient-to-position) !important;
 }
 
-html body.app-shell .main-container.theme-light table,
-html body.app-shell .main-container.theme-light table tbody {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table,
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody {
     background: #ffffff !important;
     color: #26352b !important;
 }
 
-html body.app-shell .main-container.theme-light :is(
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light :is(
     .faculty-dashboard-table-wrap,
     .attendance-table-wrap,
     .table-wrapper,
@@ -2227,14 +2229,14 @@ html body.app-shell .main-container.theme-light :is(
     box-shadow: none !important;
 }
 
-html body.app-shell .main-container.theme-light table tbody tr,
-html body.app-shell .main-container.theme-light table tbody tr:nth-child(even) {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody tr,
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody tr:nth-child(even) {
     background: #ffffff !important;
     box-shadow: none !important;
     color: #26352b !important;
 }
 
-html body.app-shell .main-container.theme-light table tbody tr:nth-child(even) {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody tr:nth-child(even) {
     background: #f6faf7 !important;
 }
 
@@ -2242,17 +2244,17 @@ html body.system-layout-page .main-container.theme-light :is(.table-title, capti
     color: #166534 !important;
 }
 
-html body.app-shell .main-container.theme-light table td {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table td {
     background: transparent !important;
     border-color: #e3ebe5 !important;
     color: #34483a !important;
 }
 
-html body.app-shell .main-container.theme-light table tbody tr:hover {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody tr:hover {
     background: #edf6ef !important;
 }
 
-html body.app-shell .main-container.theme-light table tbody tr:hover td {
+html body.app-shell:not(.reports-page):not(.faculty-dashboard-page) .main-container.theme-light table tbody tr:hover td {
     background: transparent !important;
     color: #26352b !important;
 }
@@ -2312,12 +2314,12 @@ html body.app-shell .main-container.theme-light .profile-theme-toggle:focus-visi
     }
 }
 
-html body.app-shell .main-container .theme-locked-table-header.theme-locked-table-header {
+html body.app-shell:not(.reports-page) .main-container .theme-locked-table-header.theme-locked-table-header {
     background: #0a2e1d !important;
     color: #ffffff !important;
 }
 
-html body.app-shell .main-container table thead .theme-locked-table-header.theme-locked-table-header {
+html body.app-shell:not(.reports-page) .main-container table thead .theme-locked-table-header.theme-locked-table-header {
     border-bottom-color: rgba(134, 201, 165, 0.2) !important;
     padding: 0.3rem 0.75rem !important;
     line-height: 1.2 !important;
@@ -2328,7 +2330,7 @@ html body.system-layout-page .main-container.theme-dark :is(.table-title, captio
     color: #d1fae5 !important;
 }
 
-html body:is(.faculty-page, .faculty-portal) :is(
+html body:is(.faculty-page, .faculty-portal):not(.faculty-dashboard-page) :is(
    .main-container.theme-light,
    .page-shell.theme-light,
    .audit-page-content.theme-light
@@ -2345,7 +2347,7 @@ html body:is(.faculty-page, .faculty-portal) :is(
    color: #d1fae5 !important;
 }
 
-html body:is(.faculty-page, .faculty-portal) :is(
+html body:is(.faculty-page, .faculty-portal):not(.faculty-dashboard-page) :is(
    .main-container.theme-light,
    .page-shell.theme-light,
    .audit-page-content.theme-light
@@ -2371,7 +2373,7 @@ html body:is(.faculty-page, .faculty-portal) :is(
    color: #fde68a !important;
 }
 
-html body:is(.faculty-page, .faculty-portal) :is(
+html body:is(.faculty-page, .faculty-portal):not(.faculty-dashboard-page) :is(
    .main-container.theme-light,
    .page-shell.theme-light,
    .audit-page-content.theme-light
@@ -2396,7 +2398,7 @@ html body:is(.faculty-page, .faculty-portal) :is(
    color: #fecaca !important;
 }
 
-html body:is(.faculty-page, .faculty-portal) :is(
+html body:is(.faculty-page, .faculty-portal):not(.faculty-dashboard-page) :is(
    .main-container.theme-light,
    .page-shell.theme-light,
    .audit-page-content.theme-light
@@ -2437,7 +2439,7 @@ html body.app-shell .main-container.theme-light :is(
     color: #26352b !important;
 }
 
-html body.app-shell .main-container.theme-light .faculty-dashboard-table .table-item-name {
+html body.app-shell:not(.faculty-dashboard-page) .main-container.theme-light .faculty-dashboard-table .table-item-name {
     color: #26352b !important;
 }
 
@@ -2809,7 +2811,7 @@ html.theme-light body.app-shell :is(
     color: #16a34a !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     *:not(i):not(svg):not(path):not(canvas) {
     color: #111827 !important;
@@ -2849,41 +2851,41 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background: #e8f3eb !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.theme-locked-table-header, table thead, table thead tr, table thead th) {
     border-color: #cbd8ce !important;
     background: #e8f3eb !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(table, table tbody, table tbody tr) {
     background: #ffffff !important;
     color: #111827 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     table tbody tr:nth-child(even) {
     background: #f6faf7 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(table th, table td) {
     border-color: #e3ebe5 !important;
     color: #111827 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge) {
     border-color: #bfd5c5 !important;
     background: #e8f3eb !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
         [class*="amber"], [class*="yellow"], [class*="orange"], [class*="pending"], [class*="review"], [class*="late"]
@@ -2892,7 +2894,7 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background: #fff7df !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
         [class*="red"], [class*="rose"], [class*="reject"], [class*="unavailable"], [class*="absent"], [class*="overdue"]
@@ -2901,7 +2903,7 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background: #fff0f0 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.badge, [class*="badge-"], .status-badge, .status-pill, .faculty-status, .audit-status-badge, .equipment-status-badge):is(
         [class*="blue"], [class*="info"]
@@ -2910,10 +2912,10 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background: #eef6ff !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     button:not([class*="danger"]):not([class*="delete"]):not([class*="red"]):not([class*="rose"]),
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     [role="button"]:not([class*="danger"]):not([class*="delete"]):not([class*="red"]):not([class*="rose"]) {
     border-color: #bfd5c5 !important;
@@ -2942,16 +2944,16 @@ body.app-shell .student-university-title {
     }
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal) {
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page) {
     background: #ffffff !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light) {
     background: #ffffff !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.main-content, .page-content, main) {
     background: #ffffff !important;
@@ -2974,22 +2976,22 @@ html.theme-light body.app-shell
     color: #d1fae5 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal) {
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page):not(.reports-page) {
     background: #eef0ee !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page):not(.reports-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light) {
     background: #eceeec !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page):not(.reports-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(.main-content, .page-content, main) {
     background: transparent !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(
         .glass-card,
@@ -3020,7 +3022,7 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background-color: #f5f6f5 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     :is(
         .faculty-dashboard-table-wrap,
@@ -3041,19 +3043,19 @@ html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-pa
     background-color: #f8f9f8 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     table,
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     table tbody tr,
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     table tbody tr:nth-child(even) {
     background-color: #f5f6f5 !important;
 }
 
-html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal)
+html.theme-light body:is(.app-shell, .faculty-borrow-equipment-page, .faculty-page, .faculty-portal):not(.reports-page):not(.faculty-dashboard-page)
     :is(.main-container.theme-light, .page-shell.theme-light, .audit-page-content.theme-light)
     table tbody tr:nth-child(even) {
     background-color: #eef0ee !important;
@@ -3107,7 +3109,7 @@ html.theme-light body.app-shell.equipment-inventory-page .inventory-header-actio
     color: #a7f3d0 !important;
 }
 
-html.theme-light body.student-portal :is(.main-container.theme-light, .page-shell.theme-light) :is(
+html.theme-light body.student-portal:not(.faculty-dashboard-page) :is(.main-container.theme-light, .page-shell.theme-light) :is(
     .student-page-header,
     .system-dashboard-heading,
     .summary-card,
@@ -3618,7 +3620,7 @@ html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.fac
     filter: none !important;
 }
 
-html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+html.theme-light body.app-shell.system-layout-page:not(.reports-page):not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
     :is(.main-container, .main-content, .page-content, main, .page-shell, .audit-page-content) {
     background: #ffffff !important;
     background-image: none !important;
@@ -3626,7 +3628,7 @@ html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.fac
     color: #111827 !important;
 }
 
-html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+html.theme-light body.app-shell.system-layout-page:not(.reports-page):not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
     :is(
         .card,
         .glass-card,
@@ -3662,7 +3664,7 @@ html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.fac
     box-shadow: none !important;
 }
 
-html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+html.theme-light body.app-shell.system-layout-page:not(.reports-page):not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
     :is(table, table tbody, table tbody tr, table tbody tr:nth-child(even), table tbody tr:hover) {
     background: #ffffff !important;
     background-image: none !important;
@@ -3678,7 +3680,7 @@ html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.fac
     color: #111827 !important;
 }
 
-html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+html.theme-light body.app-shell.system-layout-page:not(.reports-page):not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
     :is(h1, h2, h3, h4, h5, h6, p, label, th, td, .page-title, .card-title, .table-title) {
     color: #111827 !important;
 }
@@ -3688,7 +3690,7 @@ html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.fac
     color: #111827 !important;
 }
 
-html.theme-light body.app-shell.system-layout-page:not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
+html.theme-light body.app-shell.system-layout-page:not(.reports-page):not(.student-portal):not(.faculty-portal):not(.faculty-page):not(.technician-portal)
     :is(.theme-locked-table-header, table thead th, .assignment-table thead th) {
     border-color: #e5e7eb !important;
     background: #f8fafc !important;
@@ -4020,9 +4022,9 @@ html body .comlab-notification-button .comlab-notification-badge:not(.hidden) {
     padding: 0 .24rem !important;
     border: 1px solid #07150f !important;
     border-radius: 999px !important;
-    background: #fb7185 !important;
+    background: #ef4444 !important;
     color: #fff !important;
-    box-shadow: 0 0 0 1px rgba(251, 113, 133, .22) !important;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, .28) !important;
     font-size: .56rem !important;
     font-weight: 800 !important;
     line-height: 1 !important;
@@ -5327,6 +5329,10 @@ html body.app-shell #qr-scanner-modal.is-open {
     display: flex !important;
 }
 
+html body.app-shell #qr-scanner-modal.is-pc-station-scan .qr-scanner-dialog {
+    width: min(100%, 32rem) !important;
+}
+
 html body.app-shell #qr-scanner-modal .qr-scanner-dialog {
     box-sizing: border-box !important;
     width: min(100%, 30rem) !important;
@@ -5368,6 +5374,26 @@ html body.app-shell #qr-scanner-modal .qr-reader-frame {
     position: relative !important;
     overflow: hidden !important;
     border-radius: .9rem !important;
+}
+
+html body.app-shell #qr-scanner-modal.is-pc-station-viewfinder .qr-reader-frame::after {
+    position: absolute;
+    z-index: 20;
+    top: 50%;
+    left: 50%;
+    width: min(68vw, 15.625rem);
+    aspect-ratio: 1;
+    border: 2px solid rgba(110, 231, 183, .95);
+    border-radius: 1rem;
+    box-shadow: 0 0 0 999px rgba(2, 14, 9, .08), 0 0 20px rgba(52, 211, 153, .24);
+    content: "";
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+html body.app-shell #qr-scanner-modal.is-pc-station-scan #qr-scan-status {
+    text-align: center !important;
+    font-weight: 700 !important;
 }
 
 html body.app-shell #qr-reader {
@@ -5688,57 +5714,56 @@ html.theme-light :is(.panel, .card, .dashboard-card, .table-card, .report-card) 
 }
 
 /* 3. Global Tables */
-html.theme-light table,
-html.theme-light .table,
-html.theme-light .custom-table,
-html.theme-light .report-table-shell table,
-html.theme-light .inventory-table,
-html.theme-light .audit-logs-table,
-html.theme-light .borrow-requests-table,
-html.theme-light .maintenance-table,
-html.theme-light .assignment-table {
+html.theme-light body.app-shell:not(.reports-page) table,
+html.theme-light body.app-shell:not(.reports-page) .table,
+html.theme-light body.app-shell:not(.reports-page) .custom-table,
+html.theme-light body.app-shell:not(.reports-page) .inventory-table,
+html.theme-light body.app-shell:not(.reports-page) .audit-logs-table,
+html.theme-light body.app-shell:not(.reports-page) .borrow-requests-table,
+html.theme-light body.app-shell:not(.reports-page) .maintenance-table,
+html.theme-light body.app-shell:not(.reports-page) .assignment-table {
     background: #ffffff !important;
     color: #1f2937 !important;
     border-collapse: collapse !important;
 }
 
-html.theme-light :is(.table-wrap, .table-container, .table-responsive, .report-table-shell, .overflow-x-auto) {
+html.theme-light body.app-shell:not(.reports-page) :is(.table-wrap, .table-container, .table-responsive, .overflow-x-auto) {
     background: #ffffff !important;
     border: 1px solid #dce5df !important;
 }
 
-html.theme-light table thead,
-html.theme-light table thead tr,
-html.theme-light table thead th,
-html.theme-light th,
-html.theme-light .theme-locked-table-header {
+html.theme-light body.app-shell:not(.reports-page) table thead,
+html.theme-light body.app-shell:not(.reports-page) table thead tr,
+html.theme-light body.app-shell:not(.reports-page) table thead th,
+html.theme-light body.app-shell:not(.reports-page) th,
+html.theme-light body.app-shell:not(.reports-page) .theme-locked-table-header {
     background: #f8fafc !important;
     color: #1f2937 !important;
     border-bottom: 1px solid #dce5df !important;
     font-weight: 700 !important;
 }
 
-html.theme-light table tbody,
-html.theme-light table tbody tr {
+html.theme-light body.app-shell:not(.reports-page) table tbody,
+html.theme-light body.app-shell:not(.reports-page) table tbody tr {
     background: #ffffff !important;
     color: #1f2937 !important;
     border-bottom: 1px solid #dce5df !important;
 }
 
-html.theme-light table tbody tr:nth-child(even) {
+html.theme-light body.app-shell:not(.reports-page) table tbody tr:nth-child(even) {
     background: #fafbf9 !important;
 }
 
-html.theme-light table tbody tr:hover {
+html.theme-light body.app-shell:not(.reports-page) table tbody tr:hover {
     background: #f0fdf4 !important;
 }
 
-html.theme-light table td {
+html.theme-light body.app-shell:not(.reports-page) table td {
     color: #1f2937 !important;
     border-bottom: 1px solid #dce5df !important;
 }
 
-html.theme-light table td :is(.text-xs, .text-slate-400, .text-slate-500, .text-gray-400, .text-gray-500, .sub) {
+html.theme-light body.app-shell:not(.reports-page) table td :is(.text-xs, .text-slate-400, .text-slate-500, .text-gray-400, .text-gray-500, .sub) {
     color: #64748b !important;
 }
 
@@ -5877,25 +5902,25 @@ html.theme-light :is(.dropdown-item, .pc-set-actions-menu button, .menu-item):ho
 /* 8. Global Scrollbars */
 html.theme-light,
 html.theme-light body,
-html.theme-light * {
+html.theme-light *:not(.report-table-shell) {
     scrollbar-color: #dce5df #f4f7f5 !important;
 }
 
-html.theme-light ::-webkit-scrollbar {
+html.theme-light :not(.report-table-shell)::-webkit-scrollbar {
     width: 6px !important;
     height: 6px !important;
 }
 
-html.theme-light ::-webkit-scrollbar-track {
+html.theme-light :not(.report-table-shell)::-webkit-scrollbar-track {
     background: #f4f7f5 !important;
 }
 
-html.theme-light ::-webkit-scrollbar-thumb {
+html.theme-light :not(.report-table-shell)::-webkit-scrollbar-thumb {
     border-radius: 999px !important;
     background: #dce5df !important;
 }
 
-html.theme-light ::-webkit-scrollbar-thumb:hover {
+html.theme-light :not(.report-table-shell)::-webkit-scrollbar-thumb:hover {
     background: #b6d7c8 !important;
 }
 
@@ -6129,8 +6154,9 @@ html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenance
 }
 
 html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal {
-    background: rgba(15, 23, 42, .32) !important;
-    backdrop-filter: none !important;
+    background: rgba(15, 23, 42, .3) !important;
+    backdrop-filter: blur(10px) saturate(1.12) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.12) !important;
 }
 
 html.theme-light body.app-shell.admin-dashboard-page #mainContainer #maintenanceDetailsModal .maintenance-details-card {
@@ -6187,4 +6213,194 @@ html.theme-light body.app-shell {
     html body.app-shell :is(input, select, textarea) {
         transition: none !important;
     }
+}
+
+@media (max-width: 1023px) {
+    html body.app-shell #sidebar {
+        top: 0 !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 1400 !important;
+    }
+
+    html body.app-shell #sidebarOverlay {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 1390 !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar {
+        --app-sidebar-bg: #FFFFFF;
+        --app-header-bg: #FFFFFF;
+        --app-text: #1E293B;
+        --app-text-secondary: #64748B;
+        --app-accent: #16A34A;
+        --app-border: #E2E8F0;
+        --app-hover-bg: #F0FDF4;
+        --app-nav-active-bg: #DCFCE7;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar {
+        --app-sidebar-bg: #082B20;
+        --app-header-bg: #06251B;
+        --app-text: #D1FAE5;
+        --app-text-secondary: #A7C8B5;
+        --app-accent: #4ADE80;
+        --app-border: #145A3E;
+        --app-hover-bg: #0F3B2C;
+        --app-nav-active-bg: #104B35;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar {
+        border-right: 1px solid var(--app-border) !important;
+        background: var(--app-sidebar-bg) !important;
+        color: var(--app-text) !important;
+        box-shadow: 14px 0 38px rgba(1, 10, 7, .18) !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-header,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-header {
+        border-bottom: 1px solid var(--app-border) !important;
+        background: var(--app-header-bg) !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-logo > i,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-logo > i {
+        border-color: var(--app-border) !important;
+        background: transparent !important;
+        color: var(--app-accent) !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-logo-text,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-logo-text {
+        color: var(--app-text) !important;
+        text-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-tagline,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-tagline {
+        color: var(--app-text-secondary) !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item {
+        border-color: transparent !important;
+        background: transparent !important;
+        color: var(--app-text) !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item > i,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item > i {
+        border-color: transparent !important;
+        background: transparent !important;
+        color: var(--app-accent) !important;
+        filter: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item:hover,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item:hover {
+        border-color: var(--app-border) !important;
+        background: var(--app-hover-bg) !important;
+        color: var(--app-text) !important;
+        transform: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item:hover > i,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item:hover > i {
+        background: transparent !important;
+        color: var(--app-accent) !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item.active,
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"] {
+        border-color: #BBF7D0 !important;
+        background: #DCFCE7 !important;
+        color: #15803D !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item.active,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"] {
+        border-color: #1E6B4E !important;
+        background: #104B35 !important;
+        color: #86EFAC !important;
+        box-shadow: inset 3px 0 0 #4ADE80 !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item.active::before,
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"]::before {
+        background: #16A34A !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item.active::before,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"]::before {
+        background: #4ADE80 !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item.active > i,
+    html.theme-light body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"] > i {
+        background: #BBF7D0 !important;
+        color: #15803D !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item.active > i,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"] > i {
+        background: #0B6040 !important;
+        color: #86EFAC !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-footer,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-footer {
+        border-top: 1px solid var(--app-border) !important;
+        background: var(--app-header-bg) !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-close-btn {
+        border-color: #E2E8F0 !important;
+        background: #F1F5F9 !important;
+        color: #1E293B !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-close-btn {
+        border-color: #145A3E !important;
+        background: #0B3A2A !important;
+        color: #D1FAE5 !important;
+        box-shadow: none !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-close-btn:hover,
+    html.theme-light body.app-shell #shared-sidebar #sidebar .sidebar-close-btn:focus-visible {
+        background: #DCFCE7 !important;
+        color: #15803D !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-close-btn:hover,
+    html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-close-btn:focus-visible {
+        background: #104B35 !important;
+        color: #86EFAC !important;
+    }
+
+    html.theme-light body.app-shell #shared-sidebar #sidebarOverlay {
+        background: rgba(15, 23, 42, .32) !important;
+    }
+
+    html.theme-dark body.app-shell #shared-sidebar #sidebarOverlay {
+        background: rgba(0, 0, 0, .52) !important;
+    }
+
+}
+
+html.theme-dark body.app-shell #shared-sidebar #sidebar .sidebar-logo > i,
+html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item > i,
+html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item:hover > i,
+html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item.active > i,
+html.theme-dark body.app-shell #shared-sidebar #sidebar .nav-item[aria-current="page"] > i {
+    color: #FFFFFF !important;
 }

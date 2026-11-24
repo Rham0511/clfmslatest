@@ -1391,9 +1391,151 @@
         /* === Emerald theme overrides for Edit and QR modals === */
         /* Edit modal container */
         #editModal .modal-content {
+            width: min(94vw, 720px);
+            max-height: min(90vh, 860px);
+            overflow-y: auto;
+            padding: clamp(1rem, 2.4vw, 1.75rem);
+            border-radius: 1.5rem;
             background: var(--panel-strong);
             border: 1px solid var(--border);
             box-shadow: 0 24px 70px rgba(6,64,43,.24);
+        }
+
+        #editModal .edit-modal-header {
+            position: relative;
+            margin-bottom: 1.25rem;
+            padding: .5rem 0 1rem;
+            background: var(--panel-strong);
+            border-bottom: 1px solid var(--border);
+        }
+
+        #editModal .edit-field-control {
+            box-sizing: border-box;
+            min-height: 3rem;
+            width: 100%;
+            border-radius: .9rem;
+            background: linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(2, 6, 23, 0.98));
+            border: 1px solid rgba(74,222,128,.2);
+            color: #f0fdf4;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        #editModal .edit-field-control:focus {
+            border-color: rgba(52,211,153,.75);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16,185,129,.14);
+        }
+
+        #editModal .edit-field-control:disabled {
+            cursor: not-allowed;
+            opacity: .8;
+        }
+
+        #editModal .edit-field-control option {
+            background: #08251a;
+            color: #ecfdf5;
+        }
+
+        #editModal .edit-field-control option:disabled {
+            color: #86a999;
+        }
+
+        #editModal .edit-status-hint {
+            min-height: 1.1rem;
+        }
+
+        .add-set-picker {
+            position: relative;
+        }
+
+        .add-set-selected,
+        .add-set-search-wrap {
+            min-height: 3rem;
+        }
+
+        .add-set-selected {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            border: 1px solid rgba(52,211,153,.32);
+            border-radius: .75rem;
+            background: rgba(6,35,24,.9);
+            padding: .5rem .75rem;
+        }
+
+        .add-set-selected[hidden],
+        .add-set-search-wrap[hidden],
+        .add-set-options[hidden] {
+            display: none;
+        }
+
+        .add-set-search-wrap {
+            position: relative;
+        }
+
+        .add-set-search {
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 3rem;
+            border: 1px solid rgba(52,211,153,.32);
+            border-radius: .75rem;
+            background: #06140d;
+            color: #ecfdf5;
+            padding: .7rem .85rem;
+        }
+
+        .add-set-search:focus {
+            border-color: #34d399;
+            outline: 2px solid rgba(52,211,153,.18);
+        }
+
+        .add-set-options {
+            position: absolute;
+            z-index: 80;
+            top: calc(100% + .35rem);
+            right: 0;
+            left: 0;
+            max-height: min(14rem, 34vh);
+            overflow-y: auto;
+            border: 1px solid rgba(52,211,153,.38);
+            border-radius: .85rem;
+            background: #06140d;
+            box-shadow: 0 18px 40px rgba(0,0,0,.45);
+            padding: .3rem;
+        }
+
+        .add-set-option {
+            display: block;
+            width: 100%;
+            border: 0;
+            border-radius: .55rem;
+            background: transparent;
+            color: #d1fae5;
+            padding: .65rem .75rem;
+            text-align: left;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .add-set-option:hover,
+        .add-set-option:focus {
+            background: rgba(16,185,129,.18);
+            color: #fff;
+            outline: none;
+        }
+
+        .add-set-option[aria-selected="true"] {
+            background: rgba(16,185,129,.16);
+            color: #a7f3d0;
+        }
+
+        .add-set-empty {
+            padding: .7rem .75rem;
+            color: rgba(209,250,229,.62);
+            font-size: .82rem;
         }
 
         /* Inputs inside Edit modal: dark emerald tints */
@@ -2390,6 +2532,10 @@
       display: none !important;
     }
 
+    body.app-shell.equipment-inventory-page #equipmentCategoryFilterWrap[hidden] {
+      display: none !important;
+    }
+
     body.app-shell.equipment-inventory-page .inventory-actions-group {
       flex: 0 0 auto;
       flex-wrap: wrap;
@@ -3022,11 +3168,11 @@
             <section class="card sm mb-3 p-3 top-controls-section">
                 <div class="inventory-filter-row system-filter-row">
                     <div class="inventory-filter-controls" role="group" aria-label="Inventory filters">
-                        <label class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="viewModeFilter">
-                            <i class="fas fa-eye text-emerald-400" aria-hidden="true"></i>
-                            <select id="viewModeFilter" onchange="changeViewMode()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
-                                <option value="all" selected>All Equipment</option>
-                                <option value="pc-sets">PC Sets Only</option>
+                        <label id="equipmentCategoryFilterWrap" class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="equipmentCategoryFilter">
+                            <i class="fas fa-tags text-emerald-400" aria-hidden="true"></i>
+                            <select id="equipmentCategoryFilter" onchange="changeInventoryCategory()" class="w-full min-w-0 bg-transparent text-white focus:outline-none text-sm">
+                                <option value="pc-sets">PC Sets</option>
+                                <option value="" selected>All Categories</option>
                             </select>
                         </label>
                         <label class="inventory-filter-field flex items-center gap-2 rounded-xl border border-emerald-800/40 bg-transparent px-2.5 py-1.5" for="statusFilter">
@@ -3081,6 +3227,10 @@
                     </div>
                 </div>
             </section>
+            <select id="viewModeFilter" hidden aria-hidden="true" tabindex="-1">
+                <option value="all" selected>All Equipment</option>
+                <option value="pc-sets">PC Sets Only</option>
+            </select>
 
             <!-- Table Scroll Wrapper -->
             <div class="table-scroll-wrapper">
@@ -3156,10 +3306,23 @@
                                 <input id="addSerialNumber" name="serialNumber" type="text" placeholder="e.g., CPU-SN-001" class="w-full rounded-xl border border-emerald-600/50 bg-[#020617] px-4 py-3 text-emerald-100 placeholder:text-emerald-500/70 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400" autocomplete="off">
                             </div>
                             <div>
-                                <label for="addSetId" class="mb-1.5 block text-sm font-semibold text-emerald-400">Assign to PC set <span class="text-emerald-600 font-normal">(optional)</span></label>
-                                <select id="addSetId" name="setId" onchange="syncAddEquipmentSetFields()" class="w-full rounded-xl border border-emerald-600/50 bg-[#020617] px-4 py-3 text-emerald-100 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400">
-                                    <option value="">Not assigned to a PC set</option>
-                                </select>
+                                <label for="addSetSearch" class="mb-1.5 block text-sm font-semibold text-emerald-400">Assign to PC set <span class="text-emerald-600 font-normal">(optional)</span></label>
+                                <div id="addSetPicker" class="add-set-picker">
+                                    <select id="addSetId" name="setId" hidden>
+                                        <option value="">Not assigned to a PC set</option>
+                                    </select>
+                                    <div id="addSetSelected" class="add-set-selected" hidden>
+                                        <span id="addSetSelectedLabel" class="min-w-0 truncate text-sm text-emerald-100"></span>
+                                        <span class="flex shrink-0 items-center gap-2">
+                                            <button type="button" id="changeAddSetSelection" class="text-xs font-semibold text-emerald-300 hover:text-white">Change</button>
+                                            <button type="button" id="clearAddSetSelection" aria-label="Remove PC set selection" class="rounded-md px-1 text-emerald-400 hover:bg-emerald-900/50 hover:text-white"><i class="fas fa-times" aria-hidden="true"></i></button>
+                                        </span>
+                                    </div>
+                                    <div id="addSetSearchWrap" class="add-set-search-wrap" hidden>
+                                        <input id="addSetSearch" type="search" class="add-set-search" placeholder="Search PC sets by station..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="addSetOptions">
+                                        <div id="addSetOptions" class="add-set-options" role="listbox" aria-label="Available PC sets" hidden></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
@@ -3286,8 +3449,8 @@
 
     <!-- Edit Equipment Modal -->
     <div id="editModal" class="modal">
-        <div class="modal-content mx-auto w-full max-w-2xl rounded-2xl border-2 border-emerald-800/60 bg-[#0d1712] p-6 shadow-2xl overflow-hidden">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div class="modal-content mx-auto w-full max-w-2xl rounded-2xl border-2 border-emerald-800/60 bg-[#0d1712] p-6 shadow-2xl">
+            <div class="edit-modal-header flex items-start justify-between gap-4">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-3xl bg-emerald-500/15 flex items-center justify-center text-emerald-200 shadow-xl border border-emerald-700/40">
                         <i class="fas fa-edit text-2xl"></i>
@@ -3297,39 +3460,44 @@
                         <p class="text-sm text-emerald-400/80">Update inventory details and save your changes.</p>
                     </div>
                 </div>
-                <button onclick="closeModal('editModal')" class="text-emerald-400 hover:text-emerald-200 text-2xl">
+                <button type="button" onclick="closeModal('editModal')" aria-label="Close edit equipment modal" class="shrink-0 rounded-xl px-2 text-emerald-400 hover:bg-emerald-900/40 hover:text-emerald-200 text-2xl">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <form onsubmit="handleEditEquipment(event)">
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-emerald-300 mb-2">Equipment ID</label>
-                        <input type="text" id="editEquipmentId" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 focus:border-emerald-500 focus:outline-none" readonly>
+                        <label for="editEquipmentId" class="mb-2 block text-xs font-bold uppercase tracking-[.12em] text-emerald-300/80">Equipment ID</label>
+                        <input type="text" id="editEquipmentId" class="edit-field-control px-4 py-3" readonly>
+                    </div>
+                    <div class="rounded-2xl border border-emerald-700/30 bg-emerald-950/25 p-4">
+                        <label for="editEquipmentStatus" class="mb-2 block text-sm font-semibold text-emerald-200">Equipment Status</label>
+                        <select id="editEquipmentStatus" class="edit-field-control px-4 py-3" required></select>
+                        <p id="editStatusHint" class="edit-status-hint mt-2 text-xs text-emerald-300/70" aria-live="polite">Choose the equipment's current condition.</p>
                     </div>
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label class="block text-sm font-medium text-emerald-300 mb-2">Serial Number <span class="text-emerald-700 font-normal text-xs">(unique)</span></label>
-                            <input type="text" id="editSerialNumber" placeholder="e.g., CPU-SN-001" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 placeholder:text-emerald-300/40 focus:border-emerald-500 focus:outline-none">
+                            <label for="editSerialNumber" class="mb-2 block text-sm font-semibold text-emerald-200">Serial Number <span class="text-emerald-500/80 font-normal text-xs">(unique)</span></label>
+                            <input type="text" id="editSerialNumber" placeholder="e.g., CPU-SN-001" class="edit-field-control px-4 py-3 placeholder:text-emerald-300/40">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-emerald-300 mb-2">PC Set ID <span class="text-emerald-700 font-normal text-xs">(optional)</span></label>
-                            <input type="text" id="editSetId" placeholder="e.g., PC-SET-001" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 placeholder:text-emerald-300/40 focus:border-emerald-500 focus:outline-none">
+                            <label for="editSetId" class="mb-2 block text-sm font-semibold text-emerald-200">PC Set ID <span class="text-emerald-500/80 font-normal text-xs">(optional)</span></label>
+                            <input type="text" id="editSetId" placeholder="e.g., PC-SET-001" class="edit-field-control px-4 py-3 placeholder:text-emerald-300/40">
                             <p class="mt-1 text-xs text-amber-400/70"><i class="fas fa-info-circle mr-1"></i>Use Transfer action to change set for Missing equipment.</p>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-emerald-300 mb-2">Equipment Name</label>
-                        <input type="text" id="editEquipmentName" list="equipmentTypeList" placeholder="Choose equipment type" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 placeholder:text-emerald-300/60 focus:border-emerald-500 focus:outline-none" autocomplete="off" required>
+                        <label for="editEquipmentName" class="mb-2 block text-sm font-semibold text-emerald-200">Equipment Name</label>
+                        <input type="text" id="editEquipmentName" list="equipmentTypeList" placeholder="Choose equipment type" class="edit-field-control px-4 py-3 placeholder:text-emerald-300/60" autocomplete="off" required>
                     </div>
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label class="block text-sm font-medium text-emerald-300 mb-2">Laboratory Room</label>
-                            <input id="editLaboratoryRoom" type="text" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 placeholder:text-emerald-300/60 focus:border-emerald-500 focus:outline-none" placeholder="e.g., Computer Lab 1">
+                            <label for="editLaboratoryRoom" class="mb-2 block text-sm font-semibold text-emerald-200">Laboratory Room</label>
+                            <input id="editLaboratoryRoom" type="text" class="edit-field-control px-4 py-3 placeholder:text-emerald-300/60" placeholder="e.g., Computer Lab 1">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-emerald-300 mb-2">Campus</label>
-                            <select id="editCampus" class="w-full rounded-2xl border border-emerald-800/60 bg-[#060e0a] px-4 py-3 text-emerald-100 focus:border-emerald-500 focus:outline-none" required>
+                            <label for="editCampus" class="mb-2 block text-sm font-semibold text-emerald-200">Campus</label>
+                            <select id="editCampus" class="edit-field-control px-4 py-3" required>
                                 <option value="" disabled selected hidden>Select Campus</option>
                                 <option>Calapan Campus</option>
                                 <option>Victoria Campus</option>
@@ -3337,9 +3505,8 @@
                             </select>
                         </div>
                     </div>
-                    <input type="hidden" id="editEquipmentStatusHidden" value="Serviceable">
                 </div>
-                <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-3 border-t border-emerald-800/20">
+                <div class="sticky bottom-0 -mx-1 mt-6 flex flex-col-reverse gap-3 border-t border-emerald-800/30 bg-[var(--panel-strong)] px-1 pt-4 sm:flex-row">
                     <button type="button" onclick="closeModal('editModal')" class="flex-1 rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-2.5 text-emerald-300 hover:bg-emerald-900/50 hover:text-white font-semibold">
                         Cancel
                     </button>
@@ -3513,7 +3680,7 @@
     </div>
 
     <script>window.__CURRENT_USER__ = __CURRENT_USER_JSON__;</script>
-    <script src="/js/equipment-inventory-page.js?v=20261118-stable-summary"></script>
+    <script src="/js/equipment-inventory-page.js?v=20261124-set-picker-no-campus"></script>
     <!-- ===== REPORT MISSING MODAL ===== -->
     <div id="reportMissingModal" class="modal">
         <div class="modal-content mx-auto w-full max-w-xl rounded-2xl p-6">
@@ -3797,6 +3964,6 @@
 
     <script src="/js/pc-sets-table.js?v=43"></script>
     <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-    <script src="/js/sidebar-component.js?v=106" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

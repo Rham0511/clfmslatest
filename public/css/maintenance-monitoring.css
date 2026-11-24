@@ -140,10 +140,32 @@
 }
 
 #mainContainer #maintenance-monitoring .maintenance-status-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  display: none;
+  width: 220px;
+  max-width: calc(100vw - 2rem);
+  max-height: min(22rem, calc(100vh - 12rem));
+  overflow-y: auto;
+  z-index: 2000;
   border: 1px solid #D9E6DE;
   border-radius: .65rem;
   background: #FFFFFF;
   box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-dropdown.is-open .maintenance-status-menu {
+  display: block;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-status-option {
+  display: grid;
+  grid-template-columns: 16px 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  text-align: left;
 }
 
 #mainContainer #maintenance-monitoring .maintenance-status-option {
@@ -378,6 +400,79 @@ html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #m
   }
 }
 
+/* Dedicated Maintenance Monitoring table scrollbar */
+#mainContainer #maintenance-monitoring .maintenance-table-scroll {
+  max-height: 29rem;
+  overflow: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #16A34A #EDF4EF;
+  -webkit-overflow-scrolling: touch;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: .7rem;
+  height: .7rem;
+  background: #EDF4EF;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: #EDF4EF;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid #EDF4EF;
+  border-radius: 999px;
+  background: #16A34A;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #15803D;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-corner {
+  background: #EDF4EF;
+}
+
+#mainContainer #maintenance-monitoring .maintenance-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #F8FAFC;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll {
+  scrollbar-color: #35A66F #0A2119;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-track,
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-corner {
+  background: #0A2119;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-thumb {
+  border-color: #0A2119;
+  background: #35A66F;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #54C78A;
+}
+
+html.theme-dark #mainContainer #maintenance-monitoring .maintenance-table-scroll thead th {
+  background: #0A2119;
+}
+
+@media (max-width: 900px) {
+  #mainContainer #maintenance-monitoring .maintenance-table-scroll {
+    max-height: 24rem;
+  }
+}
+
 /* Final Maintenance-only cascade fix: this page loads after all inline styles. */
 html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
   :is(.maintenance-report-tab, .maintenance-refresh-button, .maintenance-status-trigger, .maintenance-date-filter .filter-select, .maintenance-search-clear, .maintenance-details-button, #maintenancePagination button) {
@@ -484,4 +579,780 @@ html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #m
   background: #16A36A !important;
   color: #FFFFFF !important;
   box-shadow: none !important;
+}
+
+/* Keep dark mode on the same Maintenance Monitoring layout as light mode. */
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring {
+  box-sizing: border-box;
+  margin-top: .15rem;
+  padding: 1.5rem !important;
+  border: 1px solid #174B35 !important;
+  border-radius: 20px !important;
+  background: #0D2B20 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .12) !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-list-heading {
+  align-items: center;
+  gap: 1rem;
+  padding: .25rem 0 1.15rem;
+  margin-bottom: 1.15rem;
+  border-bottom: 1px solid #174B35;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-list-kicker {
+  margin: 0;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-list-actions {
+  gap: .65rem;
+  padding-top: 0;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-updated-label {
+  font-size: .75rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .table-header {
+  margin-bottom: 1rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .filter-toolbar.system-filter-row {
+  grid-template-columns: minmax(15rem, 1.2fr) minmax(25rem, 2fr) minmax(10rem, .7fr);
+  gap: .75rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-search-box {
+  min-height: 2.5rem;
+  padding: 0 .85rem;
+  border-radius: 14px;
+  background: #0A2119 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-search-box input {
+  font-size: .84rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-date-filter {
+  gap: .35rem;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-date-filter .filter-select {
+  min-height: 2.5rem;
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+/* Final dark dropdown palette: keep the popup aligned with the teal table shell. */
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-menu {
+  border-color: #174B35 !important;
+  background: #0A2119 !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, .32) !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger {
+  border-color: #174B35 !important;
+  background: #0A2119 !important;
+  color: #D8EEE1 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger:hover,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger:focus-visible,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger.has-active-filter {
+  border-color: #2A6852 !important;
+  background: #103B2B !important;
+  color: #E6F5EC !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, .10) !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option {
+  background: transparent !important;
+  color: #D8EEE1 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:hover,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:focus-visible {
+  background: #103B2B !important;
+  color: #E6F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] {
+  background: #153D30 !important;
+  color: #A7F3D0 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] .maintenance-status-option-count,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger-count {
+  background: #1B4A3A !important;
+  color: #D1FAE5 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-check,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-chevron,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger > i:first-child {
+  color: #8DE4C0 !important;
+}
+
+/* Keep the open dropdown visually plain and flat. */
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-menu {
+  border: 1px solid #174B35 !important;
+  background: #0A2119 !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option {
+  border: 0 !important;
+  background: #0A2119 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+  border-radius: 6px !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:hover,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:focus-visible,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] {
+  background: #174B35 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-count,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger-count {
+  border: 0 !important;
+  background: #174B35 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+}
+
+/* Exact Maintenance status-dropdown palette (plain, no gradients or mixed greens). */
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-menu,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option {
+  border-color: #174B35 !important;
+  background: #0D2B20 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:hover,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:focus-visible {
+  background: #123829 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] {
+  background: #174B35 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-count,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger-count {
+  background: #174B35 !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-check,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-chevron,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger > i:first-child {
+  color: #E6F5EC !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-table-scroll {
+  border: 1px solid #174B35 !important;
+  border-radius: 16px;
+  background: #0A2119;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table thead th {
+  padding: .75rem .75rem !important;
+  border: 0 !important;
+  background: #0C3525 !important;
+  color: #A7C5B4 !important;
+  font-size: .68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table tbody td {
+  padding: .95rem .75rem !important;
+  border-top: 1px solid #174B35 !important;
+  border-bottom: 1px solid #174B35 !important;
+  background: #0D2B20 !important;
+  color: #E6F5EC !important;
+  vertical-align: middle !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table tbody tr:nth-child(even) td {
+  background: #0C281D !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table tbody tr:hover td {
+  background: #123B2B !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table tbody td:first-child {
+  border-left: 1px solid #174B35 !important;
+  border-radius: 12px 0 0 12px;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table tbody td:last-child {
+  border-right: 1px solid #174B35 !important;
+  border-radius: 0 12px 12px 0;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-equipment-name {
+  color: #4ADE80 !important;
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-equipment-id {
+  border-color: #1E6B4E;
+  background: #0B3A2A;
+  color: #D1FAE5;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-issue-title {
+  border-color: #174B35;
+  background: #123B2B;
+  color: #D1FAE5 !important;
+  font-weight: 600;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-issue-description,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-reporter-email,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-equipment-location {
+  color: #A7C5B4 !important;
+  font-size: .75rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-reporter-name {
+  color: #E6F5EC !important;
+  font-weight: 600;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-reporter {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 12rem;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-table-footer {
+  margin-top: 1rem;
+  padding: 1rem .25rem 0;
+  border-top-color: #174B35;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring #maintenancePagination button {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring {
+    padding: 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring {
+    padding: .75rem !important;
+  }
+
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .filter-toolbar.system-filter-row {
+    gap: .6rem;
+  }
+
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-search-controls,
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-search-box,
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring .maintenance-date-filter {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Final status dropdown polish: uniform surfaces and clean label rendering. */
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-menu {
+  border: 1px solid #1B4A3A !important;
+  background: #0D2B20 !important;
+  background-image: none !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger {
+  border-radius: 12px !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-prefix,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-selection {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-menu {
+  padding: 6px !important;
+  border-radius: 12px !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option {
+  min-height: 40px !important;
+  margin: 2px 0 !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: #D8EEE1 !important;
+  box-shadow: none !important;
+  transition: background-color .14s ease, color .14s ease !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-label {
+  display: block !important;
+  min-width: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  line-height: 1.25;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:hover,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option:focus-visible {
+  background: #123829 !important;
+  color: #FFFFFF !important;
+  outline: none !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] {
+  background: #174B35 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-count,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #1B4A3A !important;
+  color: #E6F5EC !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .status-dot-all { background: #70D9B3 !important; }
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .status-dot-pending { background: #F2B84B !important; }
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .status-dot-in-progress { background: #62B6E8 !important; }
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .status-dot-resolved { background: #5CCB8A !important; }
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .status-dot-rejected { background: #E87979 !important; }
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-option-check,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-chevron,
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring
+  .maintenance-status-trigger > i:first-child {
+  color: #A7DCC3 !important;
+}
+
+/* Match the clean light dropdown shown in the Maintenance Monitoring reference. */
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-trigger,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-menu {
+  border: 1px solid #E2E8E4 !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #334155 !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .10) !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-trigger {
+  border-radius: 12px !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-prefix,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-selection {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-menu {
+  padding: 6px !important;
+  border-radius: 12px !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option {
+  min-height: 40px !important;
+  margin: 2px 0 !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+  transition: background-color .14s ease, color .14s ease !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option-label {
+  display: block !important;
+  min-width: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  line-height: 1.25;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option:hover,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option:focus-visible {
+  background: #F1F8F3 !important;
+  color: #166534 !important;
+  outline: none !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] {
+  background: #16A34A !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option-count,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-trigger-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] .maintenance-status-option-count {
+  background: rgba(255, 255, 255, .22) !important;
+  color: #FFFFFF !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .status-dot-all { background: #94A3B8 !important; }
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .status-dot-pending { background: #F59E0B !important; }
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .status-dot-in-progress { background: #0EA5E9 !important; }
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .status-dot-resolved { background: #16A34A !important; }
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .status-dot-rejected { background: #DC2626 !important; }
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option-check,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-chevron,
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-trigger > i:first-child {
+  color: #15803D !important;
+}
+
+html.theme-light body.app-shell.admin-dashboard-page #mainContainer.theme-light #maintenance-monitoring
+  .maintenance-status-option[aria-selected="true"] .maintenance-status-option-check {
+  color: #FFFFFF !important;
+}
+
+/* Readable Service Desk typography without changing its theme palette. */
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-list-kicker, .maintenance-updated-label) {
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-report-tab, .maintenance-search-box input, .maintenance-status-trigger, .maintenance-status-option, .maintenance-date-filter, .maintenance-date-filter .filter-select) {
+  font-size: .875rem !important;
+  font-weight: 500 !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-tab-count, .maintenance-status-trigger-count, .maintenance-status-option-count) {
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table thead th,
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody td::before {
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase;
+}
+
+html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table thead th {
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table tbody td {
+  font-size: .75rem !important;
+  font-weight: 500 !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-equipment-name, .maintenance-reporter-name) {
+  font-size: .875rem !important;
+  font-weight: 600 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-equipment-id, .maintenance-equipment-location, .maintenance-issue-title, .maintenance-issue-description, .maintenance-reporter-email, .maintenance-reported-date time, .maintenance-date-label, .maintenance-time-label) {
+  font-size: .75rem !important;
+  font-weight: 500 !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-issue-title, .maintenance-issue-description) {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  -webkit-line-clamp: unset !important;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .status-badge {
+  max-width: 100%;
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-table-footer, #maintenancePagination) {
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-table-footer {
+  padding-right: 0;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(#maintenancePaginationInfo, #maintenancePagination, #maintenancePagination button) {
+  font-size: .75rem !important;
+  font-weight: 600 !important;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+    :is(.maintenance-list-kicker, .maintenance-updated-label, table thead th, table tbody td::before, #maintenancePaginationInfo, #maintenancePagination, #maintenancePagination button) {
+    font-size: .875rem !important;
+  }
+
+  html.theme-dark body.app-shell.admin-dashboard-page #mainContainer.theme-dark #maintenance-monitoring table thead th {
+    font-size: .875rem !important;
+  }
+
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+    :is(.maintenance-report-tab, .maintenance-search-box input, .maintenance-status-trigger, .maintenance-status-option, .maintenance-date-filter, .maintenance-date-filter .filter-select) {
+    font-size: 15px !important;
+  }
+
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+    :is(.maintenance-tab-count, .maintenance-status-trigger-count, .maintenance-status-option-count, .maintenance-equipment-id, .maintenance-equipment-location, .maintenance-issue-title, .maintenance-issue-description, .maintenance-reporter-email, .maintenance-reported-date time, .maintenance-date-label, .maintenance-time-label, .status-badge) {
+    font-size: .875rem !important;
+  }
+
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+    :is(.maintenance-equipment-name, .maintenance-reporter-name) {
+    font-size: 1rem !important;
+  }
+}
+
+@media (min-width: 900px) {
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring table {
+    min-width: 60rem;
+    table-layout: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-updated-label {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-table-footer {
+    align-items: flex-start;
+  }
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-equipment-item {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem;
+  cursor: help;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-equipment-item:focus-visible {
+  border-radius: .25rem;
+  outline: 2px solid #34D399;
+  outline-offset: 3px;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring .maintenance-equipment-location-tooltip[popover] {
+  position: fixed;
+  inset: auto;
+  z-index: 9999;
+  box-sizing: border-box;
+  max-width: calc(100vw - 1rem);
+  margin: 0;
+  padding: .45rem .7rem;
+  border: 1px solid #34D399;
+  border-radius: .6rem;
+  background: #04281B;
+  color: #FFFFFF;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+  font-size: .875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(3px);
+  transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+  pointer-events: none;
+}
+
+html body.app-shell.admin-dashboard-page #mainContainer #maintenance-monitoring
+  :is(.maintenance-equipment-item:hover .maintenance-equipment-location-tooltip, .maintenance-equipment-item:focus-visible .maintenance-equipment-location-tooltip, .maintenance-equipment-location-tooltip.is-visible) {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }

@@ -59,7 +59,36 @@
       </form>
     `;
     const backdropStyle = document.createElement('style');
-    backdropStyle.textContent = 'dialog[data-qr-equipment-report]::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}';
+    backdropStyle.textContent = `
+      dialog[data-qr-equipment-report]::backdrop { background:rgba(0,0,0,.72); backdrop-filter:blur(4px); }
+      dialog[data-qr-equipment-report] label { color:#e7f5ec !important; font-size:1rem !important; }
+      dialog[data-qr-equipment-report] select,
+      dialog[data-qr-equipment-report] textarea { box-sizing:border-box; border-color:#cbded1 !important; background:#fff !important; color:#1f2937 !important; color-scheme:light; font-size:16px !important; }
+      dialog[data-qr-equipment-report] textarea::placeholder,
+      html.theme-light dialog[data-qr-equipment-report] textarea::placeholder { color:#66766d !important; opacity:1 !important; }
+      dialog[data-qr-equipment-report] select option { background:#fff; color:#1f2937; }
+      html.theme-light dialog[data-qr-equipment-report] {
+        border-color:#cbded1 !important;
+        background:#fff !important;
+        color:#1f2937 !important;
+        color-scheme:light !important;
+        box-shadow:0 24px 70px rgba(15,35,23,.22) !important;
+      }
+      html.theme-light dialog[data-qr-equipment-report] header p:first-child { color:#047857 !important; }
+      html.theme-light dialog[data-qr-equipment-report] header h2 { color:#1f2937 !important; }
+      html.theme-light dialog[data-qr-equipment-report] [data-qr-equipment-report-item] { color:#52645a !important; }
+      html.theme-light dialog[data-qr-equipment-report] label { color:#26352d !important; }
+      html.theme-light dialog[data-qr-equipment-report] [data-qr-report-close] {
+        border-color:#cbded1 !important;
+        background:#f3f8f4 !important;
+        color:#26352d !important;
+      }
+      html.theme-light dialog[data-qr-equipment-report] [data-qr-report-cancel] {
+        border-color:#cbded1 !important;
+        background:#f3f8f4 !important;
+        color:#26352d !important;
+      }
+    `;
     dialog.dataset.qrEquipmentReport = 'true';
     document.head.append(backdropStyle);
     dialog.addEventListener('click', (event) => {
@@ -81,7 +110,10 @@
     const message = dialog.querySelector('[data-qr-report-message]');
     message.textContent = text;
     message.hidden = !text;
-    message.style.color = isError ? '#fda4af' : '#86efac';
+    const isLightTheme = document.documentElement.classList.contains('theme-light');
+    message.style.color = isError
+      ? isLightTheme ? '#b91c1c' : '#fda4af'
+      : isLightTheme ? '#15803d' : '#86efac';
   }
 
   async function submitReport(event) {
@@ -143,6 +175,5 @@
     reportDialog.querySelector('form').reset();
     setMessage('', false);
     reportDialog.showModal();
-    reportDialog.querySelector('textarea[name="description"]').focus();
   });
 })();

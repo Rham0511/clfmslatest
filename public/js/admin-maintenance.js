@@ -30,8 +30,128 @@
     currentPage: 1,
     rowsPerPage: 5
   };
+  let activeEquipmentLocationTrigger = null;
+  const equipmentLocationHideTimers = new WeakMap();
 
   if (!tableBody) return; // not on this page
+
+  const getEquipmentLocationTooltip = (trigger) =>
+    trigger?.querySelector('.maintenance-equipment-location-tooltip');
+
+  const positionEquipmentLocationTooltip = (trigger, tooltip) => {
+    const triggerRect = trigger.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const edge = 8;
+    const left = Math.min(
+      Math.max(edge, triggerRect.left),
+      Math.max(edge, window.innerWidth - tooltipRect.width - edge)
+    );
+    const above = triggerRect.top - tooltipRect.height - edge;
+    const top = above >= edge
+      ? above
+      : Math.min(Math.max(edge, triggerRect.bottom + edge), Math.max(edge, window.innerHeight - tooltipRect.height - edge));
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  };
+
+  const hideEquipmentLocationTooltip = (trigger = activeEquipmentLocationTrigger, immediate = false) => {
+    if (!trigger || activeEquipmentLocationTrigger !== trigger) return;
+
+    const tooltip = getEquipmentLocationTooltip(trigger);
+    activeEquipmentLocationTrigger = null;
+    if (!tooltip) return;
+
+    const existingTimer = equipmentLocationHideTimers.get(tooltip);
+    if (existingTimer !== undefined) {
+      window.clearTimeout(existingTimer);
+      equipmentLocationHideTimers.delete(tooltip);
+    }
+
+    tooltip.classList.remove('is-visible');
+    tooltip.setAttribute('aria-hidden', 'true');
+    if (immediate) {
+      if (tooltip.matches(':popover-open')) tooltip.hidePopover();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (equipmentLocationHideTimers.get(tooltip) !== timer) return;
+      equipmentLocationHideTimers.delete(tooltip);
+      if (!tooltip.classList.contains('is-visible') && tooltip.matches(':popover-open')) {
+        tooltip.hidePopover();
+      }
+    }, 150);
+    equipmentLocationHideTimers.set(tooltip, timer);
+  };
+
+  const showEquipmentLocationTooltip = (trigger) => {
+    const tooltip = getEquipmentLocationTooltip(trigger);
+    if (!tooltip || typeof tooltip.showPopover !== 'function') return;
+
+    if (activeEquipmentLocationTrigger === trigger && tooltip.matches(':popover-open')) {
+      positionEquipmentLocationTooltip(trigger, tooltip);
+      return;
+    }
+    if (activeEquipmentLocationTrigger) hideEquipmentLocationTooltip();
+
+    const existingTimer = equipmentLocationHideTimers.get(tooltip);
+    if (existingTimer !== undefined) {
+      window.clearTimeout(existingTimer);
+      equipmentLocationHideTimers.delete(tooltip);
+    }
+
+    activeEquipmentLocationTrigger = trigger;
+    if (!tooltip.matches(':popover-open')) tooltip.showPopover();
+    tooltip.classList.remove('is-visible');
+    tooltip.setAttribute('aria-hidden', 'false');
+    positionEquipmentLocationTooltip(trigger, tooltip);
+    window.requestAnimationFrame(() => {
+      if (activeEquipmentLocationTrigger !== trigger) return;
+      tooltip.classList.add('is-visible');
+      positionEquipmentLocationTooltip(trigger, tooltip);
+    });
+  };
+
+  const findEquipmentLocationTrigger = (target) =>
+    target instanceof Element ? target.closest('.maintenance-equipment-item') : null;
+
+  tableBody.addEventListener('pointerover', (event) => {
+    if (event.pointerType === 'touch') return;
+    const trigger = findEquipmentLocationTrigger(event.target);
+    if (!trigger || (event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget))) return;
+    showEquipmentLocationTooltip(trigger);
+  });
+
+  tableBody.addEventListener('pointerout', (event) => {
+    const trigger = findEquipmentLocationTrigger(event.target);
+    if (!trigger || (event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget))) return;
+    hideEquipmentLocationTooltip(trigger);
+  });
+
+  tableBody.addEventListener('focusin', (event) => {
+    const trigger = findEquipmentLocationTrigger(event.target);
+    if (trigger) showEquipmentLocationTooltip(trigger);
+  });
+
+  tableBody.addEventListener('focusout', (event) => {
+    const trigger = findEquipmentLocationTrigger(event.target);
+    if (!trigger || (event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget))) return;
+    hideEquipmentLocationTooltip(trigger);
+  });
+
+  const maintenanceTableScroller = tableBody.closest('.maintenance-table-scroll');
+  maintenanceTableScroller?.addEventListener('scroll', () => {
+    if (!activeEquipmentLocationTrigger) return;
+    const tooltip = getEquipmentLocationTooltip(activeEquipmentLocationTrigger);
+    if (tooltip) positionEquipmentLocationTooltip(activeEquipmentLocationTrigger, tooltip);
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    if (!activeEquipmentLocationTrigger) return;
+    const tooltip = getEquipmentLocationTooltip(activeEquipmentLocationTrigger);
+    if (tooltip) positionEquipmentLocationTooltip(activeEquipmentLocationTrigger, tooltip);
+  });
 
   const setMessage = (el, text, isError = false) => {
     if (!el) return;
@@ -166,6 +286,7 @@
     return rows.filter((r) => {
       const matchesReporterRole = getReporterRole(r) === activeReporterRole;
       const matchesSearch = !searchTerm || [
+        r.id,
         r.equipmentId,
         r.equipmentName,
         r.reporterName,
@@ -314,6 +435,7 @@
   };
 
   const renderTable = (rows) => {
+    hideEquipmentLocationTooltip(activeEquipmentLocationTrigger, true);
     if (!rows.length) {
       tableBody.innerHTML = '<tr><td colspan="6" class="maintenance-empty-row">No maintenance reports match your filters. Try changing the search or filters.</td></tr>';
       renderPaginationControls(rows);
@@ -358,7 +480,7 @@
       const reportedDateTime = hasValidDate ? reportedDate.toISOString() : '';
       return `
         <tr class="maintenance-report-row" data-maintenance-details="${escapeHtml(String(r.id ?? ''))}" title="Open report details">
-          <td class="px-4 py-3" data-label="Equipment"><div class="maintenance-equipment-cell" title="${escapeHtml(equipmentTooltip)}"><span class="maintenance-equipment-name">${escapeHtml(equipmentName)}</span>${equipmentId ? `<span class="maintenance-equipment-id">${escapeHtml(equipmentId)}</span>` : ''}</div>${equipmentLocation ? `<span class="maintenance-equipment-location">${escapeHtml(equipmentLocation)}</span>` : ''}</td>
+          <td class="px-4 py-3" data-label="Equipment"><div class="maintenance-equipment-cell"><span class="maintenance-equipment-item group relative inline-flex items-center" title="${escapeHtml(equipmentLocation || equipmentTooltip)}" aria-label="${escapeHtml(equipmentTooltip)}" tabindex="${equipmentLocation ? '0' : '-1'}"><span class="maintenance-equipment-name">${escapeHtml(equipmentName)}</span>${equipmentId ? `<span class="maintenance-equipment-id">${escapeHtml(equipmentId)}</span>` : ''}${equipmentLocation ? `<span class="maintenance-equipment-location-tooltip opacity-0 invisible transition-all duration-150 group-hover:opacity-100 group-hover:visible" popover="manual" role="tooltip" aria-hidden="true">${escapeHtml(equipmentLocation)}</span>` : ''}</span></div></td>
           <td class="px-4 py-3" data-label="Issue"><span class="maintenance-issue-title" title="${escapeHtml(issueTitle)}">${escapeHtml(issueTitle)}</span>${issueDescription ? `<span class="maintenance-issue-description" title="${escapeHtml(issueDescription)}">${escapeHtml(issueDescription)}</span>` : '<span class="maintenance-issue-description">No additional details provided.</span>'}</td>
           <td class="px-4 py-3" data-label="Reported by"><div class="maintenance-reporter">${reporterAvatar}<span class="maintenance-reporter-copy"><span class="maintenance-reporter-name">${escapeHtml(reporterName)}</span>${r.reporterEmail ? `<span class="maintenance-reporter-email" title="${escapeHtml(String(r.reporterEmail))}">${escapeHtml(String(r.reporterEmail))}</span>` : ''}</span></div></td>
           <td class="px-4 py-3" data-label="Status"><span class="status-badge ${statusClass}">${escapeHtml(currentStatus)}</span></td>
@@ -479,6 +601,7 @@
     if (!statusDropdown || !statusTrigger) return;
     statusDropdown.classList.remove('is-open');
     statusTrigger.setAttribute('aria-expanded', 'false');
+    statusMenu?.setAttribute('aria-hidden', 'true');
     if (restoreFocus) statusTrigger.focus();
   };
 
@@ -486,6 +609,7 @@
     if (!statusDropdown || !statusTrigger) return;
     statusDropdown.classList.add('is-open');
     statusTrigger.setAttribute('aria-expanded', 'true');
+    statusMenu?.setAttribute('aria-hidden', 'false');
     if (focusActive) {
       getStatusOptions().find((option) => option.getAttribute('aria-selected') === 'true')?.focus();
     }
@@ -687,5 +811,41 @@
   });
 
   setCurrentUserHeader();
-  await refreshMaintenanceData();
+  const requestsLoaded = await refreshMaintenanceData();
+  const linkedMaintenanceId = new URLSearchParams(window.location.search).get('maintenanceId');
+  if (requestsLoaded && linkedMaintenanceId) {
+    const request = currentRequests.find(item => String(item.id) === linkedMaintenanceId);
+    if (request) {
+      activeReporterRole = getReporterRole(request);
+      document.querySelectorAll('[data-reporter-role]').forEach(tab => {
+        const selected = tab.dataset.reporterRole === activeReporterRole;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-selected', String(selected));
+        tab.setAttribute('tabindex', selected ? '0' : '-1');
+      });
+      activeStatusFilter = 'All';
+      activeDateFilter = 'All';
+      activeSearchText = linkedMaintenanceId;
+      if (maintenanceSearchInput) maintenanceSearchInput.value = linkedMaintenanceId;
+      if (dateFilter) dateFilter.value = 'All';
+      document.querySelectorAll(statusOptionSelector).forEach(option => {
+        const selected = option.dataset.filter === 'All';
+        option.classList.toggle('active', selected);
+        option.setAttribute('aria-selected', String(selected));
+      });
+      paginationState.currentPage = 1;
+      const filteredRequests = filterRequests(currentRequests);
+      const requestedIndex = filteredRequests.findIndex(item => String(item.id) === linkedMaintenanceId);
+      if (requestedIndex >= 0) paginationState.currentPage = Math.floor(requestedIndex / paginationState.rowsPerPage) + 1;
+      updateMaintenanceCounts();
+      renderTable(filteredRequests);
+      const row = tableBody.querySelector(`[data-maintenance-details="${CSS.escape(linkedMaintenanceId)}"]`);
+      row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row?.classList.add('comlab-notification-target-highlight');
+      if (row) openMaintenanceDetails(request, row);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('maintenanceId');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }
 })();

@@ -116,7 +116,6 @@
 
     #mainContainer.theme-light .page-card,
     #mainContainer.theme-light .summary-card,
-    #mainContainer.theme-light .table-wrap,
     #mainContainer.theme-light .modal-card,
     #mainContainer.theme-light > .top-header {
       border: 1px solid #dce5df;
@@ -125,9 +124,15 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
     }
 
+    #mainContainer.theme-light .table-wrap {
+      border-color: var(--app-border);
+      background: var(--app-table-bg);
+      color: var(--app-text);
+    }
+
     #mainContainer.theme-light .table-wrap table th,
     #mainContainer.theme-light .table-wrap table td {
-      border-bottom: 1px solid #dce5df;
+      border-bottom: 1px solid var(--app-border);
     }
 
     #mainContainer.theme-light .system-filter-row input,
@@ -136,15 +141,15 @@
     }
 
     #mainContainer.theme-light .table-wrap {
-      scrollbar-color: #9ab6a1 #f3f7f4;
+      scrollbar-color: var(--app-accent) var(--app-table-bg);
     }
 
     #mainContainer.theme-light .table-wrap::-webkit-scrollbar-track {
-      background: #f3f7f4;
+      background: var(--app-table-bg);
     }
 
     #mainContainer.theme-light .table-wrap::-webkit-scrollbar-thumb {
-      border-color: #f3f7f4;
+      border-color: var(--app-table-bg);
     }
 
     .page-panel {
@@ -908,6 +913,125 @@
       flex-direction: column;
     }
 
+    .return-equipment-modal {
+      width: min(760px, 98%) !important;
+      max-height: min(80vh, 700px) !important;
+      max-height: min(80dvh, 700px) !important;
+    }
+
+    .return-equipment-modal .modal-header {
+      align-items: center !important;
+      gap: 0.75rem !important;
+      padding: 0.7rem 1rem !important;
+    }
+
+    .return-equipment-modal .modal-header > div:last-child {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+    }
+
+    .return-equipment-modal .modal-body {
+      padding: 0.65rem 1rem 0.8rem !important;
+    }
+
+    .return-equipment-modal .return-modal-content {
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    .return-equipment-modal .glass-card {
+      padding: 0.7rem 0.8rem;
+      border-radius: 0.9rem;
+    }
+
+    .return-equipment-modal .card-title {
+      margin-bottom: 0.35rem;
+      font-size: 0.88rem;
+    }
+
+    .return-equipment-modal .card-grid {
+      gap: 0.5rem;
+      margin-top: 0 !important;
+    }
+
+    .return-equipment-modal .card-item {
+      padding: 0.42rem 0.55rem;
+    }
+
+    .return-equipment-modal .card-label {
+      margin-bottom: 0.12rem;
+      font-size: 0.74rem;
+    }
+
+    .return-equipment-modal .card-value {
+      font-size: 0.92rem;
+      line-height: 1.3;
+    }
+
+    .return-equipment-modal #returnHeaderBadge {
+      display: inline-flex;
+      min-height: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0.35rem 0.7rem;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 999px;
+      background: #e2e8f0 !important;
+      color: #1e293b !important;
+      font-size: 0.75rem;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .return-equipment-modal #returnHeaderBadge:is(.status-borrowed, .status-pending) {
+      border-color: #f59e0b !important;
+      background: #fef3c7 !important;
+      color: #92400e !important;
+    }
+
+    .return-equipment-modal #returnHeaderBadge:is(.status-returned, .status-approved) {
+      border-color: #86efac !important;
+      background: #dcfce7 !important;
+      color: #166534 !important;
+    }
+
+    .return-equipment-modal #returnHeaderBadge:is(.status-overdue, .status-rejected, .status-lost, .status-pending-replacement) {
+      border-color: #fca5a5 !important;
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+    }
+
+    .return-equipment-modal #conditionSelect {
+      height: 2.6rem;
+      min-height: 2.6rem;
+      margin-top: 0.3rem !important;
+      padding: 0.45rem 0.7rem;
+    }
+
+    .return-equipment-modal .return-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.55rem;
+    }
+
+    .return-equipment-modal .return-modal-actions button {
+      min-height: 2.6rem;
+      padding: 0.55rem 0.85rem !important;
+      font-size: 0.88rem !important;
+    }
+
+    html.theme-light body.app-shell #returnModalOverlay .card-title,
+    html.theme-light body.app-shell #returnModalOverlay .card-value {
+      color: #172b21 !important;
+    }
+
+    html.theme-light body.app-shell #returnModalOverlay .card-label {
+      color: #475569 !important;
+    }
+
     .record-details-modal {
       width: min(1080px, 100%) !important;
       max-height: min(86vh, 820px) !important;
@@ -925,6 +1049,14 @@
 
     .record-details-modal .modal-header > div:first-child > p {
       color: #6ee7b7;
+    }
+
+    html.theme-light body.app-shell #detailsModalOverlay .modal-header > div:first-child > p {
+      color: #a7f3d0 !important;
+    }
+
+    html.theme-light body.app-shell #detailsModalOverlay #detailsModalTitle {
+      color: #f8fafc !important;
     }
 
     .record-details-modal #closeDetailsModalBtn {
@@ -1011,6 +1143,31 @@
       background: rgba(255, 255, 255, 0.035);
     }
 
+    .record-details-grid .accountable-faculty-card {
+      border-color: rgba(16,185,129,.2);
+      background: rgba(16,185,129,.08);
+    }
+
+    html.theme-light body.app-shell.admin-borrow-equipment-page #detailsModalOverlay .record-details-grid > .glass-card {
+      border-color: #d7e5dc;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+    }
+
+    html.theme-light body.app-shell.admin-borrow-equipment-page #detailsModalOverlay .record-details-grid .card-title,
+    html.theme-light body.app-shell.admin-borrow-equipment-page #detailsModalOverlay .record-details-grid .card-value {
+      color: #172b21 !important;
+    }
+
+    html.theme-light body.app-shell.admin-borrow-equipment-page #detailsModalOverlay .record-details-grid .card-label {
+      color: #475569 !important;
+    }
+
+    html.theme-light body.app-shell.admin-borrow-equipment-page #detailsModalOverlay .record-details-grid .accountable-faculty-card {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+    }
+
     .record-details-grid .card-label {
       margin-bottom: 0.18rem;
       color: #b7d8c8;
@@ -1037,6 +1194,41 @@
       font-size: 0.8rem;
     }
 
+    .record-details-modal #detailStatusBadge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      min-height: 2rem;
+      padding: 0.4rem 0.72rem;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 999px;
+      background: #e2e8f0 !important;
+      color: #1e293b !important;
+      font-size: 0.75rem;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .record-details-modal #detailStatusBadge:is(.status-borrowed, .status-pending) {
+      border-color: #f59e0b !important;
+      background: #fef3c7 !important;
+      color: #92400e !important;
+    }
+
+    .record-details-modal #detailStatusBadge:is(.status-returned, .status-approved) {
+      border-color: #86efac !important;
+      background: #dcfce7 !important;
+      color: #166534 !important;
+    }
+
+    .record-details-modal #detailStatusBadge:is(.status-overdue, .status-rejected, .status-lost, .status-pending-replacement) {
+      border-color: #fca5a5 !important;
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+    }
+
     #mainContainer.theme-light .record-details-grid > .glass-card {
       border-color: #a9c4af;
       background: #f5faf6;
@@ -1055,6 +1247,11 @@
       background: #ffffff;
     }
 
+    #mainContainer.theme-light .record-details-grid .accountable-faculty-card {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+    }
+
     #mainContainer.theme-light .record-details-grid .purpose-card {
       background: #eaf5ed;
     }
@@ -1066,9 +1263,16 @@
     @media (max-width: 820px) {
       .modal-overlay { padding: 1rem; }
       .card-grid { grid-template-columns: 1fr; }
+      .return-equipment-modal .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .modal-card { width: calc(100% - 32px); }
       .modal-actions { justify-content: center; }
       .modal-actions button { width: 100%; }
+    }
+
+    @media (max-width: 520px) {
+      .return-equipment-modal .card-grid { grid-template-columns: 1fr; }
+      .return-equipment-modal .return-modal-actions { flex-direction: column-reverse; }
+      .return-equipment-modal .return-modal-actions button { width: 100%; }
     }
 
     @media (max-width: 760px) {
@@ -1107,6 +1311,10 @@
 
     body.admin-borrow-equipment-page .main-container:has(.modal-overlay.show) {
       z-index: 1400;
+    }
+
+    body.facilities-embedded .modal-overlay {
+      padding: 1rem !important;
     }
 
     body.admin-borrow-equipment-page.borrow-details-open {
@@ -1186,65 +1394,70 @@
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap {
-      border-color: #E2E8F0 !important;
-      background: #FFFFFF !important;
+      border-color: var(--app-border) !important;
+      background: var(--app-table-bg) !important;
       background-image: none !important;
       box-shadow: none !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap table,
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody,
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr,
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
-      border-color: #E2E8F0 !important;
-      background: #FFFFFF !important;
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody {
+      border-color: var(--app-border) !important;
+      background: var(--app-table-bg) !important;
       background-image: none !important;
       box-shadow: none !important;
-      color: #1E293B !important;
+      color: var(--app-text) !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr {
+      border-color: var(--app-border) !important;
+      background: var(--app-table-row-bg) !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      color: var(--app-text) !important;
+    }
+
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
+      border-color: var(--app-border) !important;
+      background: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+      color: var(--app-text) !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead,
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead tr,
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap thead th {
       border-color: #E2E8F0 !important;
-      background: #F8FAFC !important;
+      background: var(--app-table-header-bg) !important;
       background-image: none !important;
       box-shadow: none !important;
-      color: #334155 !important;
+      color: var(--app-text) !important;
     }
 
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even),
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even) td {
-      background: #F8FAFC !important;
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:nth-child(even) {
+      background: var(--app-table-row-alt-bg) !important;
     }
 
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover {
-      background: #E8F5ED !important;
-    }
-
+    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover,
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody tr:hover td {
-      background: #E8F5ED !important;
-    }
-
-    html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td {
-      border-color: #d8e6dc;
-      color: #243b2e !important;
+      background: var(--app-hover-bg) !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap tbody td .text-xs {
-      color: #526b5b !important;
+      color: var(--app-text-secondary) !important;
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn:not(.primary) {
-      border-color: #b9d8c3;
-      background: #eaf5ee;
-      color: #17603c;
+      border-color: var(--app-border);
+      background: var(--app-card-bg);
+      color: var(--app-text-secondary);
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn:not(.primary):hover {
-      border-color: #16834a;
-      background: #d9f0e1;
-      color: #104a2e;
+      border-color: var(--app-accent);
+      background: var(--app-hover-bg);
+      color: var(--app-accent);
     }
 
     html.theme-light body.admin-borrow-equipment-page .main-container.theme-light .table-wrap .action-btn.primary {
@@ -1280,7 +1493,7 @@
       color: #526b5b;
     }
   </style>
-  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=14">
+  <link rel="stylesheet" href="/css/borrow-equipment-admin.css?v=19">
   <link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">
 </head>
 <body class="app-shell system-layout-page admin-borrow-equipment-page">
@@ -1502,46 +1715,32 @@
   </div>
 
   <div class="modal-overlay" id="returnModalOverlay" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="returnModalTitle" style="width:min(880px,98%)">
-      <div class="modal-header" style="align-items:flex-start;gap:1rem;border-bottom:none;padding:1rem 1.25rem;">
+    <div class="modal-card return-equipment-modal" role="dialog" aria-modal="true" aria-labelledby="returnModalTitle">
+      <div class="modal-header" style="border-bottom:none;">
         <div style="flex:1">
           <p class="text-sm text-emerald-300">Return Equipment</p>
           <h3 class="text-2xl font-semibold text-white" id="returnModalTitle">Complete Return</h3>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+        <div>
           <div id="returnHeaderBadge" class="status-large status-borrowed">Borrowed</div>
           <button class="action-btn" id="closeReturnModalBtn" type="button"><i class="fas fa-times"></i></button>
         </div>
       </div>
-      <div class="modal-body" style="padding:1rem 1.25rem 1.25rem;">
-        <div style="display:grid;gap:1rem;">
-          <div class="glass-card">
-            <div class="card-title">Summary</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
-              <div style="flex:1">
-                <div class="card-label">Equipment</div>
-                <div id="returnEquipmentLabel" class="card-value"></div>
-              </div>
-              <div style="text-align:right">
-                <div class="card-label">Status</div>
-                <div id="returnStatusSmall" class="card-value" style="font-weight:700;color:var(--accent)">Borrowed</div>
-              </div>
-            </div>
-          </div>
-
+      <div class="modal-body">
+        <div class="return-modal-content">
           <div class="glass-card">
             <div class="card-title"><i class="fas fa-user-circle"></i> Borrower Information</div>
-            <div class="card-grid" style="margin-top:0.4rem">
+            <div class="card-grid">
               <div class="card-item"><div class="card-label">Borrower</div><div id="returnBorrowerName" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Borrow Date</div><div id="returnBorrowDate" class="card-value"></div></div>
-              <div class="card-item full"><div class="card-label">Department / Office</div><div id="returnDepartment" class="card-value"></div></div>
-              <div class="card-item full"><div class="card-label">Instructor / Subject Teacher</div><div id="returnInstructorName" class="card-value"></div></div>
+              <div class="card-item"><div class="card-label">Department / Office</div><div id="returnDepartment" class="card-value"></div></div>
+              <div class="card-item"><div class="card-label">Instructor / Subject Teacher</div><div id="returnInstructorName" class="card-value"></div></div>
             </div>
           </div>
 
           <div class="glass-card">
             <div class="card-title"><i class="fas fa-tools"></i> Equipment Information</div>
-            <div class="card-grid" style="margin-top:0.4rem">
+            <div class="card-grid">
               <div class="card-item full"><div class="card-label">Equipment</div><div id="returnEquipmentNameLine" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Quantity</div><div id="returnQuantity" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Return Date</div><div id="returnDate" class="card-value"></div></div>
@@ -1550,7 +1749,7 @@
 
           <div class="glass-card">
             <label class="card-title" for="conditionSelect"><i class="fas fa-clipboard-check"></i> Return Condition</label>
-            <select id="conditionSelect" class="form-control" style="margin-top:0.65rem">
+            <select id="conditionSelect" class="form-control">
               <option value="Good">Good</option>
               <option value="Needs Cleaning">Needs Cleaning</option>
               <option value="Minor Damage">Minor Damage</option>
@@ -1561,9 +1760,9 @@
 
           <!-- Additional Return Notes removed per request; backend still receives empty remarks if needed -->
 
-          <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding-top:0.25rem">
-            <button class="action-btn" id="cancelReturnBtn" type="button" style="padding:0.8rem 1.1rem;font-size:1rem">Cancel</button>
-            <button class="primary-btn" id="confirmReturnBtn" type="button" style="padding:0.8rem 1.1rem;font-size:1rem"><i class="fas fa-undo-alt"></i> Confirm Return</button>
+          <div class="return-modal-actions">
+            <button class="action-btn" id="cancelReturnBtn" type="button">Cancel</button>
+            <button class="primary-btn" id="confirmReturnBtn" type="button"><i class="fas fa-undo-alt"></i> Confirm Return</button>
           </div>
         </div>
       </div>
@@ -1589,9 +1788,9 @@
             <div class="card-grid">
               <div class="card-item"><div class="card-label">Borrower</div><div id="detailBorrowerName" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Type</div><div id="detailBorrowerType" class="card-value"></div></div>
-              <div class="card-item full"><div class="card-label">Department / Office</div><div id="detailDepartment" class="card-value"></div></div>
+              <div class="card-item"><div class="card-label">Department / Office</div><div id="detailDepartment" class="card-value"></div></div>
+              <div class="card-item"><div class="card-label">Instructor / Subject Teacher</div><div id="detailInstructorName" class="card-value"></div></div>
               <div class="card-item full" id="detailTakenOverFromCard" hidden><div class="card-label">Taken Over From</div><div id="detailTakenOverFrom" class="card-value"></div></div>
-              <div class="card-item full"><div class="card-label">Instructor / Subject Teacher</div><div id="detailInstructorName" class="card-value"></div></div>
             </div>
           </div>
 
@@ -1600,6 +1799,7 @@
             <div class="card-grid">
               <div class="card-item full"><div class="card-label">Equipment</div><div id="detailEquipmentLabel" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Quantity</div><div id="detailQuantity" class="card-value"></div></div>
+              <div class="card-item accountable-faculty-card"><div class="card-label"><i class="fas fa-user-shield" aria-hidden="true"></i> Accountable Faculty</div><div id="detailMrFaculty" class="card-value"></div></div>
             </div>
           </div>
 
@@ -1608,8 +1808,6 @@
             <div class="card-grid">
               <div class="card-item"><div class="card-label">Borrow Date</div><div id="detailBorrowDate" class="card-value"></div></div>
               <div class="card-item"><div class="card-label">Borrow Time</div><div id="detailBorrowTime" class="card-value"></div></div>
-              <div class="card-item"><div class="card-label">Expected Return</div><div id="detailExpectedReturn" class="card-value"></div></div>
-              <div class="card-item"><div class="card-label">Expected Return Time</div><div id="detailExpectedReturnTime" class="card-value"></div></div>
               <div class="card-item full purpose-card"><div class="card-label"><i class="fas fa-comment-dots" style="margin-right:8px"></i> Purpose</div><div id="detailPurpose" class="card-value purpose-value"></div></div>
             </div>
           </div>
@@ -1678,7 +1876,7 @@
     </div>
   </div>
 
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
   <script>
     const borrowModal = document.getElementById('borrowModalOverlay');
     const returnModal = document.getElementById('returnModalOverlay');
@@ -1974,6 +2172,7 @@
     function getStatusBadgeClass(record) {
       const normalized = String(record?.status || '').trim().toLowerCase();
       if (normalized === 'returned') return 'status-returned';
+      if (normalized === 'cancelled' || normalized === 'canceled') return 'status-cancelled';
       if (normalized === 'pending replacement') return 'status-pending-replacement';
       if (normalized === 'pending') return 'status-pending';
       if (normalized === 'approved') return 'status-approved';
@@ -2120,7 +2319,7 @@
         return;
       }
       document.getElementById('borrowRecordsTableHead').innerHTML = `<tr>
-        <th>Borrower</th><th>Equipment</th><th>Borrow Date</th><th>Taken Over From</th><th>Status</th>
+        <th>Borrower</th><th>Equipment</th><th>Borrow Date</th><th title="Previous borrower when a QR handoff is recorded">Taken Over From</th><th>Status</th>
         <th>Current Holder</th><th>Actions</th>
       </tr>`;
       const filtered = getFilteredRecords();
@@ -2160,14 +2359,16 @@
       const isPending = String(record.status || '').trim().toLowerCase() === 'pending' && statusLabel !== 'Overdue';
       const isApproved = String(record.status || '').trim().toLowerCase() === 'approved' && statusLabel !== 'Overdue';
       const isBorrowed = String(record.status || '').trim().toLowerCase() === 'borrowed';
+      const takenOverFrom = record.takenOverFrom ||
+      (isPending && record.isStudentQrHandoff ? record.currentBorrowerName : null);
       return `
           <tr>
             <td>${escapeHtml(record.borrowerName || '—')}</td>
             <td>${equipmentDisplay.name}<div class="text-xs text-slate-400">${record.equipmentReferenceStatus === 'unresolved' ? `Original Equipment ID: ${equipmentDisplay.id}` : equipmentDisplay.id}</div></td>
             <td>${formatDate(record.borrowDate)}</td>
-            <td>${escapeHtml(record.takenOverFrom || (isPending && record.isStudentQrHandoff ? record.currentBorrowerName : '') || '—')}</td>
+          <td>${escapeHtml(takenOverFrom || '—')}</td>
             <td><span class="status-badge ${statusClass}">${statusLabel}</span>${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeHtml(record.returnRequestedBy)}` : ''}</div>` : ''}</td>
-            <td>${isBorrowed ? `<div>${escapeHtml(record.borrowerName || '—')}</div>${record.currentAccountableFacultyName ? `<div class="mt-1 text-xs text-emerald-200">Accountable: ${escapeHtml(record.currentAccountableFacultyName)}</div>` : ''}` : '—'}</td>
+          <td>${isBorrowed ? `<span class="borrow-current-holder-name">${escapeHtml(record.borrowerName || '—')}</span>` : '—'}</td>
             <td>
               <button class="action-btn" type="button" data-view-id="${record.id}" aria-label="View borrow record" title="View details"><i class="fas fa-eye" aria-hidden="true"></i></button>
               ${isPending ? `<button class="action-btn primary" type="button" data-approve-id="${record.id}" aria-label="Approve borrow request" title="Approve"><i class="fas fa-check" aria-hidden="true"></i></button><button class="action-btn" type="button" data-reject-id="${record.id}" aria-label="Reject borrow request" title="Reject"><i class="fas fa-xmark" aria-hidden="true"></i></button>` : ''}
@@ -2221,30 +2422,28 @@
       state.activeRecordId = recordId;
       // Populate UI elements (textContent for divs now)
       const borrowerEl = document.getElementById('returnBorrowerName');
-      const equipmentEl = document.getElementById('returnEquipmentLabel');
       const equipmentLineEl = document.getElementById('returnEquipmentNameLine');
       const qtyEl = document.getElementById('returnQuantity');
       const borrowDateEl = document.getElementById('returnBorrowDate');
       const returnDateEl = document.getElementById('returnDate');
       const deptEl = document.getElementById('returnDepartment');
+      const instructorEl = document.getElementById('returnInstructorName');
       const headerBadge = document.getElementById('returnHeaderBadge');
-      const returnStatusSmall = document.getElementById('returnStatusSmall');
 
       if (borrowerEl) borrowerEl.textContent = record.borrowerName || '—';
       const equipmentDisplay = getEquipmentDisplay(record);
-      if (equipmentEl) equipmentEl.textContent = equipmentDisplay.text;
       if (equipmentLineEl) equipmentLineEl.textContent = equipmentDisplay.text;
       const qty = Number(record.quantity || 1);
       if (qtyEl) qtyEl.textContent = `${qty} Unit${qty === 1 ? '' : 's'}`;
       if (borrowDateEl) borrowDateEl.textContent = formatDate(record.borrowDate);
       if (returnDateEl) returnDateEl.textContent = new Date().toISOString().split('T')[0];
       if (deptEl) deptEl.textContent = record.departmentInfo || '—';
+      if (instructorEl) instructorEl.textContent = record.instructorName || record.instructor_name || '—';
 
       // Status badge
       const statusLabel = getDisplayStatus(record);
       const statusClass = getStatusBadgeClass(record);
       if (headerBadge) { headerBadge.textContent = statusLabel; headerBadge.className = `status-large ${statusClass}`; }
-      if (returnStatusSmall) { returnStatusSmall.textContent = statusLabel; }
 
       // Reset default condition
       document.getElementById('conditionSelect').value = 'Good';
@@ -2526,13 +2725,13 @@
         (record.isStudentQrHandoff && String(record.status || '').toLowerCase() === 'pending' ? record.currentBorrowerName : null);
       if (takenOverFrom) takenOverFrom.textContent = takeoverSource || '—';
       if (takenOverFromCard) takenOverFromCard.hidden = !takeoverSource;
+      document.getElementById('detailMrFaculty').textContent =
+        record.currentAccountableFacultyName || record.accountableFacultyName || '—';
       document.getElementById('detailEquipmentLabel').textContent = getEquipmentDisplay(record).text;
       const qty = Number(record.quantity || 1);
       document.getElementById('detailQuantity').textContent = `${qty} Unit${qty === 1 ? '' : 's'}`;
       document.getElementById('detailBorrowDate').textContent = formatDate(record.borrowDate);
       document.getElementById('detailBorrowTime').textContent = record.borrowStartTime || '—';
-      document.getElementById('detailExpectedReturn').textContent = formatDate(record.expectedReturnDate);
-      document.getElementById('detailExpectedReturnTime').textContent = record.expectedReturnTime || '—';
       document.getElementById('detailPurpose').textContent = record.purpose || 'No purpose provided';
       // update large status badge
       const statusBadge = document.getElementById('detailStatusBadge');
@@ -2547,6 +2746,27 @@
       detailsModal.setAttribute('aria-hidden', 'false');
       document.body.classList.add('borrow-details-open');
       document.getElementById('closeDetailsModalBtn')?.focus();
+    }
+
+    function openBorrowNotificationRecord() {
+      const requestedRecordId = new URLSearchParams(window.location.search).get('borrowRecordId');
+      if (!requestedRecordId) return;
+
+      const record = state.records.find((item) => String(item.id) === requestedRecordId);
+      if (!record) {
+        showToast('This borrow notification no longer has an available record.', true);
+        return;
+      }
+
+      clearSummarySelection();
+      setActiveTab('all');
+      state.currentPage = 1;
+      renderRecords();
+      openDetailsModal(record.id);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete('borrowRecordId');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     }
 
     // Condition selection UI removed — hidden select remains for compatibility
@@ -2694,6 +2914,7 @@
       const expected = new Date(); expected.setDate(expected.getDate() + 7);
       document.getElementById('expectedReturnDate').value = expected.toISOString().split('T')[0];
       setActiveTab(state.activeTab);
+      openBorrowNotificationRecord();
 
       window.__BORROW_REFRESH_INTERVAL__ = window.setInterval(async () => {
         await loadRecords();

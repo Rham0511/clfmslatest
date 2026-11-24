@@ -56,49 +56,49 @@
     .hero-icon { display: grid; width: 2.25rem; height: 2.25rem; flex: none; place-items: center; border: 1px solid var(--line); border-radius: .7rem; background: rgba(34, 197, 94, .12); color: var(--accent); }
     .panel { min-width: 0; padding: clamp(.85rem, 1.5vw, 1.15rem); border: 1px solid var(--line); border-radius: .9rem; background: linear-gradient(145deg, color-mix(in srgb, var(--panel) 97%, var(--accent)), var(--panel)); box-shadow: 0 10px 28px rgba(0, 0, 0, .1); }
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; margin-bottom: .75rem; }
-    .toolbar > div:first-child strong { color: var(--text); font-size: .95rem; }
+    .toolbar > div:first-child strong { color: var(--text); font-size: 1.125rem; font-weight: 700; }
     .filters { display: flex; min-width: min(100%, 28rem); flex: 1 1 38rem; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: .45rem; }
     .search-field { position: relative; display: block; min-width: min(14rem, 100%); flex: 1 1 14rem; }
     .search-field > i { position: absolute; top: 50%; left: .75rem; color: var(--accent); transform: translateY(-50%); pointer-events: none; }
     .filters .search-field input { width: 100%; min-width: 0; padding-left: 2.2rem; }
-    .filter-field { display: grid; min-width: 8.5rem; gap: .18rem; color: var(--muted); font-size: .63rem; font-weight: 800; letter-spacing: .04em; }
+    .filter-field { display: grid; min-width: 8.5rem; gap: .18rem; color: var(--muted); font-size: .75rem; font-weight: 600; letter-spacing: .06em; }
     .filter-field > span { text-transform: uppercase; }
     .filter-field select { width: 100%; min-width: 0; }
     .refresh-button { display: inline-grid; width: 2.35rem; height: 2.35rem; flex: 0 0 2.35rem; place-items: center; padding: 0; }
-    .panel input, .panel select, .panel textarea { box-sizing: border-box; border: 1px solid var(--line); border-radius: .62rem; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; padding: .58rem .7rem; }
+    .panel input, .panel select, .panel textarea { box-sizing: border-box; border: 1px solid var(--line); border-radius: .62rem; background: var(--surface); color: var(--text); font: inherit; font-size: .875rem; font-weight: 500; padding: .58rem .7rem; }
     .panel input:focus, .panel select:focus, .panel textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 1px; }
     .panel select option { background: var(--panel); color: var(--text); }
-    .count { margin-top: .2rem; color: var(--muted); font-size: .78rem; }
-    .reports { display: grid; gap: .55rem; }
-    .report { min-width: 0; padding: .78rem .85rem; border: 1px solid var(--line); border-radius: .75rem; background: color-mix(in srgb, var(--surface) 90%, var(--panel)); transition: border-color .16s, box-shadow .16s; }
+    .count { margin-top: .2rem; color: var(--muted); font-size: .75rem; font-weight: 600; }
+    .reports { display: grid; gap: .625rem; }
+    .report { min-width: 0; padding: .75rem 1rem !important; border: 1px solid var(--line); border-radius: .75rem; background: color-mix(in srgb, var(--surface) 90%, var(--panel)); transition: border-color .16s, box-shadow .16s; }
     .report:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 6px 16px rgba(0, 0, 0, .08); }
     .report-row { display: grid; grid-template-columns: minmax(170px, .78fr) minmax(220px, 1.35fr) auto; align-items: center; gap: .4rem 1rem; }
-    .name { overflow: hidden; color: var(--text); font-size: .9rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-    .sub { margin-top: .16rem; color: var(--muted); font-size: .74rem; line-height: 1.45; }
-    .preview { display: flex; min-width: 0; align-items: center; gap: .4rem .6rem; overflow: hidden; color: var(--muted); font-size: .76rem; }
-    .preview-equipment { flex: 0 1 auto; overflow: hidden; color: var(--text); font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .name { overflow: hidden; color: var(--text); font-size: 1rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .sub { margin-top: .16rem; color: var(--muted); font-size: .75rem; font-weight: 500; line-height: 1.45; }
+    .preview { display: flex; min-width: 0; align-items: center; gap: .4rem .6rem; overflow: hidden; color: var(--muted); font-size: .75rem; font-weight: 500; }
+    .preview-equipment { flex: 0 1 auto; overflow: hidden; color: var(--text); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
     .preview-issue { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .report-badges { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .3rem; }
-    .badge { display: inline-flex; align-items: center; padding: .3rem .55rem; border: 1px solid rgba(56, 189, 248, .3); border-radius: 999px; background: rgba(56, 189, 248, .09); color: #38bdf8; font-size: .65rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+    .badge { display: inline-flex; align-items: center; padding: .3rem .55rem; border: 1px solid rgba(56, 189, 248, .3); border-radius: 999px; background: rgba(56, 189, 248, .09); color: #38bdf8; font-size: .75rem; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
     .badge.approved { border-color: rgba(74, 222, 128, .3); background: rgba(74, 222, 128, .1); color: #4ade80; }
     .badge.reviewed { border-color: rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .1); color: #d97706; }
     .badge.draft { border-color: var(--line); background: var(--surface); color: var(--muted); }
     .badge.report-type { border-color: var(--line); background: var(--surface); color: var(--muted); text-transform: none; }
     html:not(.theme-light) .badge.reviewed { color: #fcd34d; }
-    .details { margin-top: .55rem; padding-top: .45rem; border-top: 1px solid var(--line); }
-    .details summary { display: flex; width: max-content; max-width: 100%; align-items: center; gap: .42rem; cursor: pointer; color: var(--accent); font-size: .76rem; font-weight: 750; list-style: none; }
+    .details { margin-top: .5rem; padding-top: .4rem; border-top: 1px solid var(--line); }
+    .details summary { display: flex; width: max-content; max-width: 100%; align-items: center; gap: .42rem; cursor: pointer; color: var(--accent); font-size: .75rem; font-weight: 600; list-style: none; }
     .details summary::-webkit-details-marker { display: none; }
     .details summary i { font-size: .65rem; transition: transform .16s; }
     .details[open] summary i { transform: rotate(90deg); }
     .details summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
-    .detail-body { padding: .65rem .1rem .1rem; }
-    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-    .detail-field { min-width: 0; padding: .62rem .7rem; border: 1px solid var(--line); border-radius: .62rem; background: color-mix(in srgb, var(--surface) 74%, var(--panel)); }
+    .detail-body { padding: .75rem; }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .625rem; }
+    .detail-field { min-width: 0; padding: .75rem; border: 1px solid var(--line); border-radius: .62rem; background: color-mix(in srgb, var(--surface) 74%, var(--panel)); }
     .detail-field.full-width { grid-column: 1 / -1; }
-    .detail-label { display: block; margin: 0 0 .22rem; color: var(--muted); font-size: .62rem; font-weight: 850; letter-spacing: .07em; line-height: 1.35; text-transform: uppercase; }
-    .detail-value { margin: 0; color: var(--text); font-size: .81rem; font-weight: 500; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .recommendation { margin: .55rem 0 0; }
-    .detail-stats { margin-top: .55rem; }
+    .detail-label { display: block; margin: 0 0 .22rem; color: var(--muted); font-size: .75rem; font-weight: 600; letter-spacing: .08em; line-height: 1.35; text-transform: uppercase; }
+    .detail-value { margin: 0; color: var(--text); font-size: .875rem; font-weight: 500; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .recommendation { margin: .5rem 0 0; }
+    .detail-stats { margin-top: .45rem; font-size: .75rem; }
     .empty[hidden] { display: none; }
     html body.app-shell.technician-accomplishments-page .comlab-slim-page-header.hero > div:first-child h1 {
       display: block !important;
@@ -112,10 +112,10 @@
       text-overflow: ellipsis !important;
       white-space: nowrap !important;
     }
-    .time-details { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .55rem; }
-    .time-details span { padding: .32rem .48rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--panel); color: var(--muted); font-size: .7rem; }
+    .time-details { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .45rem; }
+    .time-details span { padding: .3rem .45rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--panel); color: var(--muted); font-size: .75rem; font-weight: 500; }
     .time-details strong { color: var(--text); }
-    .stats { display: flex; flex-wrap: wrap; gap: .35rem; color: var(--muted); font-size: .72rem; }
+    .stats { display: flex; flex-wrap: wrap; gap: .35rem; color: var(--muted); font-size: .75rem; }
     .stats span { padding: .3rem .45rem; border: 1px solid var(--line); border-radius: .48rem; background: var(--panel); }
     .stats i { margin-right: .15rem; color: var(--accent); }
     .review-help { margin-top: .65rem; color: var(--muted); font-size: .78rem; }
@@ -138,7 +138,20 @@
     .empty { display: grid; min-height: 7rem; place-content: center; padding: 1rem; border: 1px dashed var(--line); border-radius: .7rem; color: var(--muted); font-size: .82rem; text-align: center; }
     @media (max-width: 900px) { .filters { justify-content: flex-start; } .report-row { grid-template-columns: minmax(0, 1fr) auto; } .preview { grid-column: 1 / -1; grid-row: 2; } .report-badges { grid-column: 2; grid-row: 1; } }
     @media (max-width: 768px) { .main-container { margin-left: 0; padding: .8rem; } .filters { flex-basis: 100%; } .filters input { min-width: 10rem; } .pagination { align-items: flex-start; } }
-    @media (max-width: 520px) { .report { padding: .68rem; } .page-controls { justify-content: flex-start; } .toolbar { align-items: flex-start; } .page-controls .btn { font-size: .68rem; } .report-row { grid-template-columns: minmax(0, 1fr); } .preview, .report-badges { grid-column: 1; } .preview { grid-row: 2; } .report-badges { grid-row: 3; justify-content: flex-start; } .detail-grid { grid-template-columns: minmax(0, 1fr); } .detail-field.full-width { grid-column: auto; } }
+    @media (min-width: 640px) {
+      .toolbar > div:first-child strong { font-size: 1.25rem; }
+      .count, .filter-field { font-size: .875rem; }
+      .panel input, .panel select, .panel textarea { font-size: .9375rem; }
+      .sub, .preview, .details summary, .badge, .time-details span { font-size: .875rem; }
+      .report { padding: .875rem 1.25rem !important; }
+      .name { font-size: 1.125rem; }
+      .detail-value { font-size: .9375rem; }
+      .detail-body { padding: 1rem; }
+      .detail-grid { gap: .75rem; }
+      .detail-field { padding: 1rem; }
+      .detail-stats { font-size: .875rem; }
+    }
+    @media (max-width: 520px) { .page-controls { justify-content: flex-start; } .toolbar { align-items: flex-start; } .page-controls .btn { font-size: .68rem; } .report-row { grid-template-columns: minmax(0, 1fr); } .preview, .report-badges { grid-column: 1; } .preview { grid-row: 2; } .report-badges { grid-row: 3; justify-content: flex-start; } .detail-grid { grid-template-columns: minmax(0, 1fr); } .detail-field.full-width { grid-column: auto; } }
     @media (max-width: 1023px) {
       html body.app-shell.technician-accomplishments-page .comlab-slim-page-header #mobileMenuToggle {
         position: static !important;
@@ -290,7 +303,7 @@
           const matchesStatus = selectedStatus === 'all' || reportStatus === selectedStatus;
           const reportType = String(report.reportType || 'weekly').toLowerCase();
           const matchesType = selectedType === 'all' || reportType === selectedType;
-          const text = `${report.technicianName || ''} ${report.campusId || ''} ${report.summary || ''} ${report.reportId || ''} ${reportType}`.toLowerCase();
+          const text = `${report.id || ''} ${report.technicianName || ''} ${report.campusId || ''} ${report.summary || ''} ${report.reportId || ''} ${reportType}`.toLowerCase();
           return matchesStatus && matchesType && (!query || text.includes(query));
         });
         const pageSize = Number(pageSizeSelect.value) || 10;
@@ -337,7 +350,7 @@
           }).join('');
           const timeMarkup = timeFields.filter(([key]) => hasValue(details[key])).map(([key, label]) => `<span><strong>${esc(label)}:</strong> ${esc(formatTime(details[key]))}</span>`).join('');
           const metrics = reportType === 'maintenance' ? '' : `<div class="stats detail-stats"><span><i class="fas fa-screwdriver-wrench"></i> Maintenance: <strong>${Number(report.maintenancePerformed || 0)}</strong></span><span><i class="fas fa-triangle-exclamation"></i> Issues handled: <strong>${Number(report.equipmentIssuesCount || 0)}</strong></span><span><i class="fas fa-boxes-stacked"></i> Equipment added: <strong>${Number(report.newEquipmentAdded || 0)}</strong></span><span><i class="fas fa-box-open"></i> Equipment retired: <strong>${Number(report.equipmentRetired || 0)}</strong></span><span><i class="fas fa-clipboard-check"></i> Inventory: <strong>${report.inventoryCheckCompleted ? 'Complete' : 'Not completed'}</strong></span></div>`;
-          return `<article class="report">
+          return `<article class="report" data-report-record="${esc(report.id)}">
             <div class="report-row"><div><div class="name" title="${esc(report.technicianName || 'Technician')}">${esc(report.technicianName || 'Technician')}</div><div class="sub">${esc(report.campusId || 'Campus not set')} · ${esc(date)}</div></div><div class="preview" title="${esc(hasEquipment || hasIssue ? `${equipment || ''} ${issue || ''}`.trim() : preview)}">${previewContent || '<span class="preview-issue">Work details available</span>'}</div><div class="report-badges"><span class="badge report-type">${esc(typeLabel(reportType))}</span><span class="badge ${statusClass}">${esc(status)}</span></div></div>
             <details class="details"><summary><i class="fas fa-chevron-right" aria-hidden="true"></i> View accomplishment</summary><div class="detail-body">
               <div class="stats"><span><i class="fas fa-hashtag"></i> Report: <strong>${esc(report.reportId || 'Not assigned')}</strong></span></div>
@@ -359,6 +372,22 @@
           if (!response.ok) throw new Error(payload.message || 'Unable to load reports.');
           reports = Array.isArray(payload.reports) ? payload.reports : [];
           render();
+          const linkedReportId = new URLSearchParams(window.location.search).get('reportId');
+          const linkedReport = reports.find((report) =>
+            String(report.id) === String(linkedReportId) || String(report.reportId) === String(linkedReportId)
+          );
+          if (linkedReport) {
+            search.value = String(linkedReport.id);
+            currentPage = 1;
+            render();
+            const article = list.querySelector(`[data-report-record="${CSS.escape(String(linkedReport.id))}"]`);
+            const details = article?.querySelector('details');
+            if (details) details.open = true;
+            article?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const url = new URL(window.location.href);
+            url.searchParams.delete('reportId');
+            window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+          }
         } catch (error) {
           list.innerHTML = `<div class="empty">${esc(error.message)}</div>`;
         }
@@ -374,6 +403,6 @@
       load();
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

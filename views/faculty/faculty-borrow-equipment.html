@@ -642,6 +642,33 @@
       color: #fecaca;
     }
 
+    .borrow-request-action-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: .4rem;
+      width: 100%;
+    }
+
+    .borrow-request-action-row button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .3rem;
+      width: 100%;
+      min-width: 0;
+      min-height: 2.45rem;
+      padding: .45rem .4rem;
+      font-size: .75rem;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .borrow-request-action-row [data-return-current-borrow] {
+      border-color: rgba(52, 211, 153, .6);
+      background: #046A38;
+      color: #ecfdf5;
+    }
+
     .borrow-request-empty {
       padding: 1.4rem;
       color: #91a59c;
@@ -993,6 +1020,61 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       box-shadow: 0 10px 24px rgba(6,64,43,.16);
       cursor: pointer;
+    }
+
+    .borrow-qr-selection-card {
+      padding: 1rem;
+      border: 1px solid rgba(74, 222, 128, .22);
+      border-radius: 1rem;
+      background: linear-gradient(135deg, rgba(4, 106, 56, .12), rgba(7, 21, 15, .82));
+    }
+
+    .borrow-qr-selection-heading {
+      margin: 0;
+      color: #d1fae5;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .borrow-qr-selection-heading i { margin-right: .4rem; color: #4ade80; }
+    .borrow-qr-selection-copy { margin: .35rem 0 .85rem; color: #b6d7c8; font-size: .85rem; }
+
+    .borrow-qr-scan-action {
+      width: 100%;
+      min-height: 3.2rem;
+      gap: .65rem;
+      border-radius: .85rem;
+      background: #046A38;
+    }
+
+    .borrow-scan-feedback { min-height: 1.3rem; margin: .6rem 0 0; color: #bbf7d0; font-size: .82rem; }
+    .borrow-scan-feedback[data-state="error"] { color: #fecaca; }
+
+    .borrow-scanned-equipment-list { display: grid; gap: .65rem; }
+    .borrow-scanned-equipment-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .8rem;
+      padding: .8rem;
+      border: 1px solid rgba(74, 222, 128, .2);
+      border-radius: .85rem;
+      background: rgba(6, 20, 13, .72);
+    }
+
+    .borrow-scanned-equipment-copy { display: grid; gap: .2rem; min-width: 0; color: #b6d7c8; font-size: .8rem; }
+    .borrow-scanned-equipment-copy strong { color: #f0fdf4; font-size: .95rem; }
+    .borrow-scanned-equipment-empty { margin: 0; color: #b6d7c8; font-size: .85rem; }
+    .borrow-scanned-equipment-remove {
+      flex: 0 0 2.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1px solid rgba(251, 113, 133, .35);
+      border-radius: 50%;
+      background: rgba(127, 29, 29, .22);
+      color: #fecdd3;
+      font-size: 1.25rem;
+      line-height: 1;
     }
 
     .borrow-btn:not(:disabled):hover {
@@ -1560,18 +1642,22 @@
         <div class="panel-body">
           <form id="studentBorrowForm">
           <div class="borrow-form-grid">
-            <div class="borrow-form-field full">
-              <div class="section-title"><i class="fas fa-tools"></i> Equipment Information</div>
-            </div>
+            <section class="borrow-form-field full borrow-qr-selection-card" aria-labelledby="scanEquipmentHeading">
+              <h2 id="scanEquipmentHeading" class="borrow-qr-selection-heading"><i class="fas fa-qrcode" aria-hidden="true"></i> Scan Equipment QR</h2>
+              <p class="borrow-qr-selection-copy">Scan each available equipment QR code to add it to this request.</p>
+              <button id="scanEquipmentQr" class="borrow-btn borrow-qr-scan-action" type="button">
+                <i class="fas fa-camera" aria-hidden="true"></i> Scan Equipment QR
+              </button>
+              <p id="borrowScanFeedback" class="borrow-scan-feedback" role="status" aria-live="polite"></p>
+            </section>
 
-            <div class="borrow-form-field full">
-              <label for="equipmentSearch">Search equipment</label>
-              <input id="equipmentSearch" type="search" placeholder="Search equipment name or ID" autocomplete="off">
-              <p id="selectedEquipmentCount" class="text-xs text-emerald-100/70" aria-live="polite">No equipment selected</p>
-              <div id="equipmentSelectionList" class="grid max-h-72 gap-2 overflow-y-auto rounded-xl border border-emerald-400/15 bg-[#0a1d15]/80 p-3" aria-label="Select equipment to borrow">
-                <span class="text-sm text-emerald-200/70" role="status">Loading equipment...</span>
+            <section class="borrow-form-field full" aria-labelledby="scannedEquipmentHeading">
+              <h2 id="scannedEquipmentHeading" class="borrow-qr-selection-heading">Scanned Equipment</h2>
+              <p id="scannedEquipmentCount" class="text-xs text-emerald-100/70" aria-live="polite">No equipment scanned yet.</p>
+              <div id="scannedEquipmentList" class="borrow-scanned-equipment-list" role="list" aria-label="Scanned equipment">
+                <p class="borrow-scanned-equipment-empty" role="status">Scan an equipment QR code to add it to your request.</p>
               </div>
-            </div>
+            </section>
 
             <div class="borrow-form-field full">
               <p class="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3 text-sm text-emerald-100/80">
@@ -1587,7 +1673,7 @@
 
           <div class="borrow-action-row">
             <button type="button" id="cancelBorrowEquipmentRequest" class="borrow-btn secondary">Cancel</button>
-            <button type="submit" class="borrow-btn">Submit Borrow Request</button>
+            <button type="submit" class="borrow-btn" disabled>Submit request</button>
           </div>
           <div id="borrowQrResult" class="borrow-qr-result" aria-live="polite" hidden></div>
           </form>
@@ -1637,7 +1723,8 @@
 
   <script>
     window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
-    const state = { equipment: [], selectedEquipmentIds: new Set() };
+    const state = { equipment: [], selectedEquipmentIds: new Set(), selectedQuantities: new Map() };
+    let isProcessingEquipmentQr = false;
     const currentRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
     const isFacultyBorrower = ['faculty', 'instructor'].includes(currentRole);
     const scanParams = new URLSearchParams(window.location.search);
@@ -1666,7 +1753,7 @@
       button.type = 'button';
       button.className = 'borrow-btn';
       button.dataset.returnQrBorrow = recordId;
-      button.textContent = 'Mark as returned';
+      button.textContent = 'Return';
       container.appendChild(button);
     }
 
@@ -1688,6 +1775,7 @@
     }
 
     async function markQrBorrowReturned(recordId, button) {
+      if (!await window.appDialogs.confirm('Return this equipment to the laboratory? This will close your active borrow.')) return;
       button.disabled = true;
       try {
         const response = await fetch(`/api/borrow-records/${encodeURIComponent(recordId)}/return`, {
@@ -1740,22 +1828,19 @@
 
     function isEquipmentSelectable(item) {
       const status = String(item.status || 'Serviceable').toLowerCase();
-      return !['lost', 'missing', 'unserviceable', 'borrowed', 'in use', 'maintenance', 'under maintenance', 'for repair', 'for disposal'].includes(status) &&
+      const isChair = /\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`);
+      if (isChair) {
+        return item.nonBorrowable !== true &&
+          status === 'serviceable' &&
+          Number(item.chairPoolAvailableCount || 0) > 0 &&
+          Boolean(item.accountableFacultyUserId || item.accountableFacultyName) &&
+          (!isFacultyBorrower || item.isAssignedToCurrentFaculty === true);
+      }
+      return item.nonBorrowable !== true &&
+        !['lost', 'missing', 'unserviceable', 'borrowed', 'in use', 'maintenance', 'under maintenance', 'for repair', 'for disposal'].includes(status) &&
         !item.hasActiveBorrowRecord &&
         Number(item.quantity ?? item.availableQuantity ?? 0) > 0 &&
         Boolean(item.accountableFacultyUserId || item.accountableFacultyName);
-    }
-
-    function isPortableBorrowOption(item) {
-      const excludedTypes = ['airconditioner', 'aircon', 'acunit', 'ac', 'cabinet', 'serverrack', 'whiteboard', 'fixed', 'fixture'];
-      const normalized = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const types = [item.category, item.name, item.equipmentType, item.itemType, item.type].map(normalized);
-      return item.isFixed !== true &&
-        item.isFixedAsset !== true &&
-        item.isPortable !== false &&
-        item.isBorrowable !== false &&
-        item.borrowable !== false &&
-        !types.some((type) => excludedTypes.some((excluded) => type === excluded || (excluded !== 'ac' && type.includes(excluded))));
     }
 
     function activateQrBorrowFocus() {
@@ -1770,51 +1855,130 @@
     }
 
     function updateSelectedEquipmentInfo() {
-      const search = String(document.getElementById('equipmentSearch')?.value || '').trim().toLowerCase();
-      const list = document.getElementById('equipmentSelectionList');
-      const count = document.getElementById('selectedEquipmentCount');
+      const list = document.getElementById('scannedEquipmentList');
+      const count = document.getElementById('scannedEquipmentCount');
       const submitButton = document.querySelector('#studentBorrowForm button[type="submit"]');
       if (!list || !count || !submitButton) return;
 
-      const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
-      const filtered = state.equipment.filter((item) => {
-        // Faculty borrowing is limited to the items currently issued to that
-        // faculty member through MR. Do not apply the generic portable-item
-        // filter here: MR accountability is the source of truth for this page.
-        if (isFacultyBorrower) {
-          if (item.isAssignedToCurrentFaculty !== true) return false;
-        } else if (!isPortableBorrowOption(item)) {
-          return false;
-        }
-        const searchable = [item.name, item.equipmentId, item.category, item.laboratoryRoom].filter(Boolean).join(' ').toLowerCase();
-        return !search || searchable.includes(search);
-      });
-      if (!filtered.length) {
-        list.innerHTML = '<span class="text-sm text-emerald-200/70" role="status">No equipment matches your search.</span>';
-      } else {
-        list.innerHTML = filtered.map((item) => {
-          const id = String(item.equipmentId || '');
-          const selectable = Boolean(id) && isEquipmentSelectable(item);
-          const selected = state.selectedEquipmentIds.has(id);
-          const label = selectable
-            ? 'Available'
-            : !item.accountableFacultyUserId && !item.accountableFacultyName
-              ? 'No current MR Faculty assigned'
-              : String(item.status || 'Unavailable');
-          return `<label class="borrow-equipment-option ${selectable ? '' : 'is-unavailable'}">
-            <input type="checkbox" data-equipment-choice value="${escapeBorrowText(id)}" ${selected ? 'checked' : ''} ${selectable ? '' : 'disabled'}>
-            <span class="borrow-equipment-option-details"><strong class="block text-base font-bold text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
-              <span class="mt-0.5 block text-xs font-medium text-emerald-200/80">${escapeBorrowText(id)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span></span>
-            <span class="borrow-equipment-option-status text-xs ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(label)}</span>
-          </label>`;
-        }).join('');
-      }
+      const selectedItems = [...state.selectedEquipmentIds]
+        .map((id) => state.equipment.find((item) => String(item.equipmentId || '') === id))
+        .filter(Boolean);
+      const totalUnits = selectedItems.reduce((total, item) =>
+        total + (/\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`)
+          ? Number(state.selectedQuantities.has(String(item.equipmentId))
+            ? state.selectedQuantities.get(String(item.equipmentId))
+            : 1)
+          : 1), 0);
       count.textContent = selectedItems.length
-        ? `${selectedItems.length} equipment item${selectedItems.length === 1 ? '' : 's'} selected — one unit each`
-        : 'No equipment selected';
+        ? `${selectedItems.length} item${selectedItems.length === 1 ? '' : 's'} scanned · ${totalUnits} unit${totalUnits === 1 ? '' : 's'} requested`
+        : 'No equipment scanned yet.';
+      list.innerHTML = selectedItems.length
+        ? selectedItems.map((item) => {
+            const id = String(item.equipmentId || '');
+            const isChair = /\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`);
+            const availableChairs = Number(item.chairPoolAvailableCount || 0);
+            return `<article class="borrow-scanned-equipment-item" role="listitem">
+              <div class="borrow-scanned-equipment-copy">
+                <strong>${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
+                <span>Asset code: ${escapeBorrowText(id)}</span>
+                ${item.serialNumber ? `<span>Serial: ${escapeBorrowText(item.serialNumber)}</span>` : ''}
+                <span>Room/Lab: ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
+                ${isChair ? `<label class="mt-2 block text-xs font-semibold text-emerald-100/80">Available: ${availableChairs} serviceable chairs
+                  <input class="mt-1 w-24 rounded-lg border border-emerald-700/60 bg-slate-950/60 px-2 py-1.5 text-sm text-white" type="number" min="1" max="${availableChairs}" step="1" value="${Number(state.selectedQuantities.has(id) ? state.selectedQuantities.get(id) : 1)}" required data-chair-quantity="${escapeBorrowText(id)}" aria-label="Chair quantity">
+                </label>` : ''}
+              </div>
+              <button type="button" class="borrow-scanned-equipment-remove" data-remove-scanned-equipment="${escapeBorrowText(id)}" aria-label="Remove ${escapeBorrowText(item.name || id)}">&times;</button>
+            </article>`;
+          }).join('')
+        : '<p class="borrow-scanned-equipment-empty" role="status">Scan an equipment QR code to add it to your request.</p>';
       submitButton.disabled = selectedItems.length === 0;
-      submitButton.style.opacity = submitButton.disabled ? '0.5' : '1';
-      submitButton.style.cursor = submitButton.disabled ? 'not-allowed' : 'pointer';
+    }
+
+    function setBorrowScanFeedback(message, isError = false) {
+      const feedback = document.getElementById('borrowScanFeedback');
+      if (!feedback) return;
+      feedback.textContent = message;
+      feedback.setAttribute('role', isError ? 'alert' : 'status');
+      feedback.dataset.state = isError ? 'error' : 'success';
+    }
+
+    function getUnavailableScanMessage(item) {
+      if (item.nonBorrowable === true) {
+        return 'Air conditioners/AC units, CBT equipment, and cabinets cannot be borrowed.';
+      }
+      if (/\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`) &&
+          Number(item.chairPoolAvailableCount || 0) < 1) {
+        return 'No serviceable chairs are currently available in this lab/set.';
+      }
+      if (!item.accountableFacultyUserId && !item.accountableFacultyName) {
+        return 'This equipment has no accountable faculty assignment and cannot be requested.';
+      }
+      if (isFacultyBorrower && item.isAssignedToCurrentFaculty !== true) {
+        return 'This equipment is not currently assigned to your Faculty account.';
+      }
+      if (item.hasActiveBorrowRecord) {
+        return item.activeBorrowStatus
+          ? `This equipment has an active ${String(item.activeBorrowStatus).toLowerCase()} record and is currently unavailable.`
+          : 'This equipment is already borrowed or reserved.';
+      }
+      if (Number(item.quantity ?? item.availableQuantity ?? 0) < 1) {
+        return 'No inventory is currently available for this equipment.';
+      }
+      return `This equipment is currently marked "${item.status || 'unavailable'}" and cannot be requested.`;
+    }
+
+    async function refreshBorrowEquipmentOptions() {
+      const response = await fetch('/api/student/equipment', { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Unable to load equipment inventory.');
+      if (!Array.isArray(payload)) throw new Error('The equipment service returned an unexpected response. Please refresh and try again.');
+      state.equipment = payload;
+      updateSelectedEquipmentInfo();
+      return payload;
+    }
+
+    async function addScannedEquipmentToRequest(value) {
+      if (isProcessingEquipmentQr) {
+        setBorrowScanFeedback('Please wait while the previous scan is checked.');
+        return;
+      }
+      isProcessingEquipmentQr = true;
+      const scanButton = document.getElementById('scanEquipmentQr');
+      if (scanButton) scanButton.disabled = true;
+      setBorrowScanFeedback('Checking the scanned equipment…');
+      try {
+        const equipmentId = await window.resolveEquipmentQrValue(String(value || '').trim());
+        if (!equipmentId) throw new Error('This QR code does not contain a valid equipment code.');
+        await refreshBorrowEquipmentOptions();
+        const item = state.equipment.find((equipment) =>
+          String(equipment.equipmentId || '').toLowerCase() === String(equipmentId).toLowerCase()
+        );
+        if (!item) throw new Error('This QR code does not match equipment in your campus.');
+        const id = String(item.equipmentId || '');
+        if (state.selectedEquipmentIds.has(id)) {
+          throw new Error(`${item.name || id} has already been scanned.`);
+        }
+        const isChair = /\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`);
+        if (isChair && state.equipment.some((selected) =>
+          state.selectedEquipmentIds.has(String(selected.equipmentId || '')) &&
+          selected.chairPoolKey && selected.chairPoolKey === item.chairPoolKey
+        )) {
+          throw new Error('You have already scanned a chair from this lab/set. Adjust its quantity in the scanned equipment list.');
+        }
+        if (!isEquipmentSelectable(item) || (isFacultyBorrower && item.isAssignedToCurrentFaculty !== true)) {
+          throw new Error(getUnavailableScanMessage(item));
+        }
+        state.selectedEquipmentIds.add(id);
+        if (isChair) state.selectedQuantities.set(id, 1);
+        updateSelectedEquipmentInfo();
+        setBorrowScanFeedback(`${item.name || id} (${id}) added to your request.`);
+      } catch (error) {
+        console.error('Unable to add scanned equipment to the borrow request.', error);
+        setBorrowScanFeedback(error.message || 'Unable to add this equipment. Please scan a valid available equipment QR code.', true);
+      } finally {
+        isProcessingEquipmentQr = false;
+        if (scanButton) scanButton.disabled = false;
+      }
     }
 
     function showBorrowToast(message, isError = false) {
@@ -1829,11 +1993,7 @@
 
     async function loadBorrowEquipmentOptions() {
       try {
-        const response = await fetch('/api/student/equipment', { cache: 'no-store' });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || 'Unable to load equipment inventory.');
-        state.equipment = Array.isArray(payload) ? payload : [];
-        updateSelectedEquipmentInfo();
+        await refreshBorrowEquipmentOptions();
       } catch (error) {
         console.error(error);
         if (isQrBorrowFlow) {
@@ -1843,8 +2003,7 @@
             result.innerHTML = `<p class="borrow-qr-result-copy borrow-qr-result-error" role="alert">${escapeBorrowText(error.message || 'Unable to load the scanned equipment.')}</p>`;
           }
         }
-        const list = document.getElementById('equipmentSelectionList');
-        if (list) list.innerHTML = `<span class="text-sm text-rose-300" role="alert">${escapeBorrowText(error.message || 'Unable to load equipment inventory.')}</span>`;
+        setBorrowScanFeedback(error.message || 'Unable to load equipment inventory. Please refresh and try again.', true);
       }
     }
 
@@ -1862,7 +2021,7 @@
       const borrowPurpose = document.getElementById('borrowPurpose').value.trim();
       const selectedItems = state.equipment.filter((item) => state.selectedEquipmentIds.has(String(item.equipmentId || '')));
       if (!selectedItems.length) {
-        showBorrowToast('Select at least one available equipment item.', true);
+        showBorrowToast('Scan at least one available equipment QR code.', true);
         return;
       }
       if (!borrowPurpose) {
@@ -1876,12 +2035,23 @@
       const failedRequests = [];
       for (const item of selectedItems) {
         try {
+          const isChair = /\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`);
+          const requestedQuantity = isChair
+            ? Number(state.selectedQuantities.has(String(item.equipmentId))
+              ? state.selectedQuantities.get(String(item.equipmentId))
+              : 1)
+            : 1;
+          if (isChair && (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 ||
+              requestedQuantity > Number(item.chairPoolAvailableCount || 0))) {
+            throw new Error(`Enter a quantity from 1 to ${Number(item.chairPoolAvailableCount || 0)} available serviceable chairs.`);
+          }
           const response = await fetch('/api/borrow-records', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               equipmentId: item.equipmentId,
-              purpose: borrowPurpose
+              purpose: borrowPurpose,
+              ...(isChair ? { quantity: requestedQuantity } : {})
             })
           });
           const payload = await response.json().catch(() => ({}));
@@ -1892,7 +2062,10 @@
           failedRequests.push(`${item.equipmentId}: ${error.message}`);
         }
       }
-      successfulIds.forEach((id) => state.selectedEquipmentIds.delete(String(id)));
+      successfulIds.forEach((id) => {
+        state.selectedEquipmentIds.delete(String(id));
+        state.selectedQuantities.delete(String(id));
+      });
       if (!failedRequests.length) {
         document.getElementById('studentBorrowForm').reset();
         showBorrowToast(isFacultyBorrower
@@ -1903,9 +2076,6 @@
         showBorrowToast(message, true);
       }
       updateSelectedEquipmentInfo();
-      if (submitButton) {
-        submitButton.disabled = state.selectedEquipmentIds.size === 0;
-      }
 
     }
 
@@ -1925,6 +2095,10 @@
       equipmentTab?.addEventListener('click', () => activateBorrowTab('equipment'));
       requestsTab?.addEventListener('click', () => activateBorrowTab('requests'));
       activateBorrowTab(window.location.hash === '#borrow-requests' ? 'requests' : 'equipment');
+      window.addEventListener('borrow-equipment-qr-item-selected', async (event) => {
+        activateBorrowTab('equipment');
+        await addScannedEquipmentToRequest(event.detail?.value);
+      });
       if (isQrBorrowFlow && focusedBorrowPage && focusedBorrowCard) {
         activateQrBorrowFocus();
         const result = document.getElementById('borrowQrResult');
@@ -1992,8 +2166,10 @@
         const selectable = isEquipmentSelectable(item);
         const status = selectable
           ? (isQrBorrowFlow ? 'Available to borrow' : 'Available to request')
+          : item.nonBorrowable
+            ? 'Cannot borrow — this equipment type is restricted'
           : !item.accountableFacultyUserId && !item.accountableFacultyName
-            ? 'Cannot borrow — no current MR Faculty assignment'
+            ? 'Cannot borrow — no accountable faculty assigned'
           : item.hasActiveBorrowRecord
             ? 'Currently reserved or borrowed'
           : isFacultyBorrower && !item.accountableFacultyName
@@ -2004,17 +2180,22 @@
           <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
           ${item.serialNumber ? `<span class="mt-1 block text-xs text-emerald-100/55">Serial: ${escapeBorrowText(item.serialNumber)}</span>` : ''}
           ${activeQrBorrow ? '' : `<span class="mt-2 block text-sm ${selectable ? 'text-emerald-300' : 'text-amber-200'}">${escapeBorrowText(status)}</span>`}
-          <p class="mt-2 text-xs text-emerald-100/65">MR: ${escapeBorrowText(item.accountableFacultyName || 'Unassigned')} · Last borrower: ${escapeBorrowText(lastBorrower?.name || 'None')}</p>`;
+          <p class="mt-2 text-xs text-emerald-100/65">Accountable faculty: ${escapeBorrowText(item.accountableFacultyName || 'Unassigned')} · Last borrower: ${escapeBorrowText(lastBorrower?.name || 'None')}</p>`;
         result.hidden = false;
         if (activeQrBorrow) {
           result.innerHTML = `<div class="borrow-qr-result-copy">
               <p class="text-lg font-bold text-amber-200">${activeQrBorrow.isMine ? 'Your active borrow' : 'Currently borrowed'}</p>
               <strong class="mt-2 block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
               <span class="mt-1 block text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
-              <span class="mt-2 block text-sm text-amber-200">${activeQrBorrow.isMine ? 'Borrowed on your account' : 'This item is borrowed by another user'}</span>
+              <div class="mt-2 space-y-1 text-sm text-emerald-100/80">
+                <p>Currently borrowed by <strong>${escapeBorrowText(activeQrBorrow.borrowerName)}</strong> (${escapeBorrowText(activeQrBorrow.borrowerRole)} · ID: ${escapeBorrowText(activeQrBorrow.borrowerIdentifier || 'Not recorded')}).</p>
+                <p>Borrowed time: ${escapeBorrowText(activeQrBorrow.borrowedAt || 'Not recorded')}</p>
+                <p>Accountable faculty: ${escapeBorrowText(activeQrBorrow.accountableFacultyName || item.accountableFacultyName || 'Unassigned')}</p>
+              </div>
+              <span class="mt-2 block text-sm text-amber-200">${activeQrBorrow.isMine ? 'This item is borrowed on your account.' : 'Wait for the current borrower to return it or ask them to turn it over.'}</span>
             </div>
             <div class="qr-borrow-actions">
-              ${activeQrBorrow.isMine ? `<button type="button" class="borrow-btn" data-return-qr-borrow="${escapeBorrowText(activeQrBorrow.id)}">Mark as returned</button>` : ''}
+              ${activeQrBorrow.isMine ? `<button type="button" class="borrow-btn" data-return-qr-borrow="${escapeBorrowText(activeQrBorrow.id)}">Return</button><button type="button" class="borrow-btn" data-turn-over-record="${escapeBorrowText(activeQrBorrow.id)}" data-equipment-name="${escapeBorrowText(item.name || 'Equipment')}">Turn Over</button>` : ''}
               ${renderQrReportAction(item)}
             </div>`;
           return;
@@ -2022,7 +2203,11 @@
         result.innerHTML = `<div class="borrow-qr-result-copy">
           <strong class="block text-base text-white">${escapeBorrowText(item.name || 'Unnamed equipment')}</strong>
           ${qrItemInformation}
-          ${isQrBorrowFlow ? `<div data-qr-borrow-options hidden><label class="qr-borrow-reason qr-borrow-duration">Borrow time <span class="font-normal text-emerald-100/50">(optional)</span>
+          ${isQrBorrowFlow ? `<div data-qr-borrow-options hidden>
+          ${/\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`) ? `<label class="qr-borrow-reason">Chair quantity <span class="font-normal text-emerald-100/50">Available: ${Number(item.chairPoolAvailableCount || 0)} serviceable chairs</span>
+            <input id="qrBorrowQuantity" type="number" min="1" max="${Number(item.chairPoolAvailableCount || 0)}" step="1" value="1" required>
+          </label>` : ''}
+          <label class="qr-borrow-reason qr-borrow-duration">Borrow time <span class="font-normal text-emerald-100/50">(optional)</span>
             <select id="qrBorrowDurationHours">
               <option value="">No time limit</option>
               <option value="1">1 hour</option>
@@ -2064,6 +2249,16 @@
           document.getElementById('qrBorrowReason')?.focus();
           return;
         }
+        const isChair = /\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`);
+        const requestedQuantity = isChair && isQrBorrowFlow
+          ? Number(document.getElementById('qrBorrowQuantity')?.value || 0)
+          : 1;
+        if (isChair && isQrBorrowFlow &&
+            (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 ||
+              requestedQuantity > Number(item.chairPoolAvailableCount || 0))) {
+          showBorrowToast(`Enter a quantity from 1 to ${Number(item.chairPoolAvailableCount || 0)} available serviceable chairs.`, true);
+          return;
+        }
         button.disabled = true;
         try {
           const response = await fetch(isQrBorrowFlow ? '/api/borrow-records/qr' : '/api/borrow-records', {
@@ -2074,6 +2269,9 @@
               purpose: (isQrBorrowFlow
                 ? document.getElementById('qrBorrowReason')?.value
                 : document.getElementById('borrowPurpose')?.value)?.trim() || null,
+              ...(isQrBorrowFlow && isChair
+                ? { quantity: requestedQuantity }
+                : {}),
               ...(isQrBorrowFlow && document.getElementById('qrBorrowDurationHours')?.value
                 ? { durationHours: Number(document.getElementById('qrBorrowDurationHours').value) }
                 : {})
@@ -2095,7 +2293,7 @@
                 <span class="text-sm text-emerald-100/70">${escapeBorrowText(item.equipmentId)} · ${escapeBorrowText(item.laboratoryRoom || item.campus || 'Location not specified')}</span>
               </div>
               <div class="borrow-qr-success-status">
-                <p class="text-sm text-emerald-100">Borrow recorded. MR: <strong>${escapeBorrowText(accountableFaculty)}</strong>.</p>
+                <p class="text-sm text-emerald-100">${/\bchairs?\b/i.test(`${item.category || ''} ${item.name || ''}`) ? `${requestedQuantity} chair${requestedQuantity === 1 ? '' : 's'} borrowed.` : 'Borrow recorded.'} Accountable faculty: <strong>${escapeBorrowText(accountableFaculty)}</strong>.</p>
                 ${transferDetails}
               </div>
               <div class="borrow-qr-success-instructions">
@@ -2128,13 +2326,18 @@
           button.disabled = false;
         }
       });
-      document.getElementById('equipmentSearch')?.addEventListener('input', updateSelectedEquipmentInfo);
-      document.getElementById('equipmentSelectionList')?.addEventListener('change', (event) => {
-        const checkbox = event.target.closest('[data-equipment-choice]');
-        if (!checkbox) return;
-        if (checkbox.checked) state.selectedEquipmentIds.add(checkbox.value);
-        else state.selectedEquipmentIds.delete(checkbox.value);
+      document.getElementById('scannedEquipmentList')?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-remove-scanned-equipment]');
+        if (!button) return;
+        state.selectedEquipmentIds.delete(button.dataset.removeScannedEquipment);
+        state.selectedQuantities.delete(button.dataset.removeScannedEquipment);
         updateSelectedEquipmentInfo();
+        setBorrowScanFeedback('Scanned equipment removed from your request.');
+      });
+      document.getElementById('scannedEquipmentList')?.addEventListener('input', (event) => {
+        const input = event.target.closest('[data-chair-quantity]');
+        if (!input) return;
+        state.selectedQuantities.set(input.dataset.chairQuantity, Number(input.value));
       });
       document.getElementById('cancelBorrowEquipmentRequest')?.addEventListener('click', () => {
         window.location.href = isFacultyBorrower ? '/faculty-dashboard' : '/student/dashboard';
@@ -2161,7 +2364,8 @@
 
   <script src="/js/qr-equipment-report.js?v=1" defer></script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
-  <script src="/js/borrow-equipment-qr.js?v=5" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
+  <script src="/js/borrow-turnover.js?v=1" defer></script>
+  <script src="/js/borrow-equipment-qr.js?v=6" defer></script>
 </body>
 </html>

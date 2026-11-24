@@ -117,6 +117,23 @@ function normalizeEquipmentType(value) {
   return name.toLowerCase() === "cpu" ? "System Unit" : name;
 }
 
+function isChairEquipment(item) {
+  return /\bchairs?\b/i.test(`${item?.category || ""} ${item?.name || ""}`);
+}
+
+function normalizeChairPoolValue(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getChairPoolKey(item, assignment) {
+  if (!isChairEquipment(item) || !assignment) return null;
+  const campus = normalizeChairPoolValue(item.campus).replace(/\s*campus$/, "");
+  const setId = normalizeChairPoolValue(item.setId);
+  const laboratory = normalizeChairPoolValue(item.laboratoryRoom || item.location);
+  const pool = setId ? `set:${setId}` : laboratory ? `lab:${laboratory}` : `item:${item.id}`;
+  return JSON.stringify([campus, pool, Number(assignment.facultyUserId)]);
+}
+
 function getLaboratoryNumber(value) {
   const normalized = String(value || "").toLowerCase();
   const labMatch = normalized.match(/(?:com\s*lab|laboratory|lab)\s*[-#]?\s*([12])/);
@@ -585,7 +602,7 @@ export const resolveEquipmentQrToken = async (req, res) => {
 };
 
 export const getEquipment = async (req, res) => {
-  const { search = "", status, campus, sortBy, assignment, laboratory } = req.query;
+  const { search = "", status, category, campus, sortBy, assignment, laboratory } = req.query;
   const getLaboratoryKey = (value) => {
     const match = String(value || "").match(/\bCOM\s*LAB\s*([12])\b/i);
     return match ? `COMLAB ${match[1]}` : "";
@@ -646,6 +663,7 @@ export const getEquipment = async (req, res) => {
     });
 
     const archivedEquipmentIds = new Set(await getArchivedEntityIds("equipment"));
+    const selectedCategory = String(category || "").trim().toLowerCase();
     const filtered = records
       .map((item) => item.toJSON())
       .filter((item) => !archivedEquipmentIds.has(String(item.equipmentId)))
@@ -661,12 +679,13 @@ export const getEquipment = async (req, res) => {
             item.campus
           ].some((value) => String(value || "").toLowerCase().includes(token)));
         const matchesStatus = !status || item.status === status;
+        const matchesCategory = !selectedCategory || String(item.category || "").trim().toLowerCase() === selectedCategory;
         const matchesLaboratory = !normalizedLaboratory || getLaboratoryKey(item.laboratoryRoom || item.location) === normalizedLaboratory;
         const matchesAssignment = !["assigned", "unassigned"].includes(String(assignment || "").toLowerCase()) ||
           (String(assignment).toLowerCase() === "assigned"
             ? Boolean(String(item.setId || "").trim())
             : !String(item.setId || "").trim());
-        return matchesSearch && matchesStatus && matchesAssignment && matchesLaboratory;
+        return matchesSearch && matchesStatus && matchesCategory && matchesAssignment && matchesLaboratory;
       });
 
     if (String(sortBy || "").trim().toLowerCase() === "name") {
@@ -748,7 +767,7 @@ export const getStudentEquipment = async (req, res) => {
           [Op.in]: [campusName, `${campusName} Campus`]
         }
       },
-      attributes: ["id", "equipmentId", "name", "category", "laboratoryRoom", "status", "quantity", "setId", "serialNumber"],
+      attributes: ["id", "equipmentId", "name", "category", "campus", "laboratoryRoom", "location", "status", "quantity", "setId", "serialNumber"],
       order: [["name", "ASC"], ["equipmentId", "ASC"]]
     });
 
@@ -756,9 +775,12 @@ export const getStudentEquipment = async (req, res) => {
       ? await BorrowRecord.findAll({
           where: {
             equipmentRecordId: { [Op.in]: records.map((item) => item.id) },
-            status: { [Op.in]: ["Pending", "Approved", "Borrowed"] }
+            status: { [Op.in]: [
+              "Pending", "pending", "Approved", "approved", "Borrowed", "borrowed",
+              "Active", "active", "Checked Out", "checked out"
+            ] }
           },
-          attributes: ["equipmentRecordId", "status"]
+          attributes: ["equipmentRecordId", "status", "quantity"]
         })
       : [];
     const activeBorrowByEquipment = new Set(
@@ -793,6 +815,27 @@ export const getStudentEquipment = async (req, res) => {
       if (!assignment.unassignedAt && !activeByEquipment.has(key)) {
         activeByEquipment.set(key, assignment);
       }
+    });
+    const chairPoolTotals = new Map();
+    const chairPoolReservations = new Map();
+    const chairPoolKeyByEquipment = new Map();
+    records.forEach((record) => {
+      const poolKey = getChairPoolKey(record, activeByEquipment.get(Number(record.id)));
+      if (!poolKey) return;
+      chairPoolKeyByEquipment.set(Number(record.id), poolKey);
+      if (String(record.status || "").trim().toLowerCase() !== "serviceable") return;
+      chairPoolTotals.set(
+        poolKey,
+        (chairPoolTotals.get(poolKey) || 0) + Math.max(0, Number(record.quantity || 0))
+      );
+    });
+    activeBorrowRecords.forEach((borrowRecord) => {
+      const poolKey = chairPoolKeyByEquipment.get(Number(borrowRecord.equipmentRecordId));
+      if (!poolKey) return;
+      chairPoolReservations.set(
+        poolKey,
+        (chairPoolReservations.get(poolKey) || 0) + Math.max(1, Number(borrowRecord.quantity || 1))
+      );
     });
     const borrowEvents = records.length
       ? await BorrowHistory.findAll({
@@ -834,8 +877,18 @@ export const getStudentEquipment = async (req, res) => {
     return res.json(records.map((record) => {
       const equipmentAssignments = assignmentsByEquipment.get(Number(record.id)) || [];
       const assignment = activeByEquipment.get(Number(record.id));
+      const chairPoolKey = chairPoolKeyByEquipment.get(Number(record.id)) || null;
+      const chairPoolAvailableCount = chairPoolKey
+        ? Math.max(0, (chairPoolTotals.get(chairPoolKey) || 0) - (chairPoolReservations.get(chairPoolKey) || 0))
+        : null;
+      const categoryOrName = `${String(record.category || "")} ${String(record.name || "")}`.trim().toLowerCase();
+      const nonBorrowable = categoryOrName === "ac" ||
+        /\b(?:air\s*con(?:ditioner)?|ac|cbt|cabinets?)\b/.test(categoryOrName);
       return {
         ...record.toJSON(),
+        nonBorrowable,
+        chairPoolKey,
+        chairPoolAvailableCount,
         hasActiveBorrowRecord: activeBorrowByEquipment.has(Number(record.id)),
         activeBorrowStatus: activeBorrowStatusByEquipment.get(Number(record.id)) || null,
         accountableFacultyUserId: assignment ? Number(assignment.facultyUserId) : null,

@@ -1194,7 +1194,7 @@
     </style>
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=41">
     <style>
         @media (max-width: 1200px), (pointer: coarse) {
             body.student-my-requests-page .borrow-requests-table { min-width: 0 !important; width: 100% !important; }
@@ -1214,6 +1214,8 @@
             body.student-my-requests-page .borrow-requests-table .status-cell > div { display: none !important; }
             body.student-my-requests-page .borrow-requests-table .status-cell .status-badge { white-space: nowrap !important; font-size: .72rem !important; }
             body.student-my-requests-page .borrow-requests-table .status-cell button { display: inline-flex !important; margin: 0 !important; padding: .3rem .45rem !important; font-size: .68rem !important; }
+            body.student-my-requests-page .borrow-requests-table .status-cell .borrow-request-action-row { display: grid !important; grid-template-columns: minmax(0, 1fr); flex: 1 0 100%; gap: .4rem; margin-top: .4rem !important; width: 100%; }
+            body.student-my-requests-page .borrow-requests-table .status-cell .borrow-request-action-row button { justify-content: center; width: 100%; min-height: 2.45rem !important; padding: .45rem .35rem !important; font-size: .7rem !important; }
             body.student-my-requests-page .maintenance-reports-table { min-width: 0 !important; width: 100% !important; }
             body.student-my-requests-page .maintenance-reports-table thead { display: none !important; }
             body.student-my-requests-page .maintenance-reports-table tbody { display: grid !important; gap: 0 !important; }
@@ -1613,13 +1615,14 @@
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
         const currentPageRole = String(window.__CURRENT_USER__?.role || 'student').trim().toLowerCase();
         const isFacultyPage = ['faculty', 'instructor'].includes(currentPageRole);
+        const linkedMaintenanceId = new URLSearchParams(window.location.search).get('maintenanceId');
         if (!isFacultyPage) document.getElementById('borrowRequestsPanel')?.remove();
         if (isFacultyPage) {
             document.body.classList.add('faculty-my-requests-page');
             document.title = 'My Requests | ComLab Faculty';
             document.querySelector('.student-page-subtitle')?.replaceChildren(document.createTextNode('Track your requests and approve borrowing requests for equipment assigned to you.'));
             const issueSection = document.getElementById('issueReportsPanel');
-            if (issueSection) issueSection.classList.add('hidden');
+            if (issueSection && !linkedMaintenanceId) issueSection.classList.add('hidden');
         } else {
             const pageTitle = document.querySelector('.student-page-title');
             if (pageTitle) {
@@ -1654,7 +1657,7 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=32" defer></script>
-    <script src="/js/sidebar-component.js?v=108" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
     <script>
         const requestsState = document.getElementById('requestsState');
         const maintenanceSearch = document.getElementById('maintenanceSearch');
@@ -1732,7 +1735,7 @@
             const searchValue = maintenanceSearch.value.trim().toLowerCase();
             const statusValue = maintenanceStatusFilter.value;
             const filteredRecords = requestsStateData.records.filter((item) => {
-                const searchable = `${item.equipmentName || ''} ${item.equipmentId || item.equipment_id || ''} ${item.category || ''} ${item.issueTitle || ''} ${item.description || ''}`.toLowerCase();
+                const searchable = `${item.id || ''} ${item.equipmentName || ''} ${item.equipmentId || item.equipment_id || ''} ${item.category || ''} ${item.issueTitle || ''} ${item.description || ''}`.toLowerCase();
                 const matchesSearch = !searchValue || searchable.includes(searchValue);
                 const itemStatus = (item.status || '').toString().trim();
                 const matchesStatus = statusValue === 'all' || itemStatus === statusValue;
@@ -1917,6 +1920,21 @@
                 requestsStateData.records = Array.isArray(data) ? data : [];
                 requestsStateData.currentPage = 1;
                 renderRequests();
+                if (linkedMaintenanceId) {
+                    const linkedRecord = requestsStateData.records.find((record) => String(record.id) === String(linkedMaintenanceId));
+                    if (linkedRecord) {
+                        if (isFacultyPage) document.getElementById('issueReportsPanel')?.classList.remove('hidden');
+                        maintenanceSearch.value = String(linkedMaintenanceId);
+                        maintenanceStatusFilter.value = 'all';
+                        renderRequests();
+                        openReportDetailsSheet(linkedMaintenanceId);
+                        requestsState.querySelector(`[data-report-row="${CSS.escape(String(linkedMaintenanceId))}"]`)
+                            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('maintenanceId');
+                        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+                    }
+                }
             } catch (error) {
                 console.error(error);
                 requestsState.innerHTML = '<div class="requests-empty-state is-error"><span class="requests-empty-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span><strong>Could not load reports</strong><p>Unable to load your requests right now. Please try again later.</p></div>';
@@ -2253,6 +2271,11 @@
                         <tbody>
                             ${pageRecords.map((record) => {
                                 const statusText = record.status || 'Pending';
+                                const requestStatus = String(statusText).trim().toLowerCase();
+                                const isCurrentBorrow = ['borrowed', 'active', 'checked out', 'overdue'].includes(requestStatus) ||
+                                    (requestStatus === 'approved' && !record.returnDate);
+                                const canManageCurrentBorrow = record.canReturnBorrow === true ||
+                                    (record.isMyRequest === true && isCurrentBorrow);
                                 const statusClass = getStatusClass(statusText);
                                 const isPending = String(statusText).toLowerCase() === 'pending';
                                 const takeoverSource = record.takenOverFrom ||
@@ -2265,13 +2288,13 @@
                                                     <td data-label="Return date">${escapeBorrowRequestText(record.returnDate || record.expectedReturnDate || 'When returned')} ${escapeBorrowRequestText(record.returnTime || record.expectedReturnTime || '')}</td>
                                                     <td class="status-cell" data-label="Status">
                                                         <span class="status-badge ${statusClass}">${escapeBorrowRequestText(statusText)}</span>
-                                                        ${record.accountableFacultyName ? `<div class="mt-1 text-xs text-slate-400">Accountable Faculty: ${escapeBorrowRequestText(record.accountableFacultyName)}</div>` : ''}
+                                                        <div class="mt-1 text-xs text-emerald-100/70">MR / Accountable Officer: ${escapeBorrowRequestText(record.currentAccountableFacultyName || record.accountableFacultyName || 'Unassigned')}</div>
                                                         ${String(statusText).toLowerCase() === 'pending' && record.requiresFacultyApproval ? '<div class="mt-1 text-xs font-semibold text-amber-300">Waiting for the accountable MR Faculty member to approve.</div>' : ''}
                                                         ${takeoverSource ? `<div class="mt-1 text-xs font-semibold text-sky-300">${isPending ? 'Takeover requested from' : 'You took over this item from'} ${escapeBorrowRequestText(takeoverSource)}.</div>` : ''}
                                                         ${record.takenOverBy ? `<div class="mt-1 text-xs text-slate-400">This item was transferred to ${escapeBorrowRequestText(record.takenOverBy)}.</div>` : ''}
                                                         ${record.approvedByName ? `<div class="mt-1 text-xs text-slate-400">${String(statusText).toLowerCase() === 'rejected' ? 'Rejected' : 'Approved'} by ${escapeBorrowRequestText(record.approvedByName)}</div>` : ''}
                                                         ${record.returnRequestedAt ? `<div class="mt-1 text-xs font-semibold text-amber-300">Return requested${record.returnRequestedBy ? ` by ${escapeBorrowRequestText(record.returnRequestedBy)}` : ''}</div>` : ''}
-                                                        ${record.isMyRequest && record.requesterUserId && ['student', 'faculty', 'instructor'].includes(currentPageRole) && String(record.status || '').toLowerCase() === 'borrowed' && !record.returnRequestedAt ? `<button type="button" data-request-return="${escapeBorrowRequestText(record.id)}" class="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/20"><i class="fas fa-rotate-left mr-1"></i>Mark as returned</button>` : ''}
+                                                        ${canManageCurrentBorrow ? `<div class="borrow-request-action-row mt-2 w-full"><button type="button" data-return-active-borrow="${escapeBorrowRequestText(record.id)}" class="min-h-10 w-full rounded-lg border border-emerald-400/45 bg-[#046A38] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#057a42]"><i class="fas fa-rotate-left mr-1"></i>Return</button></div>` : ''}
                                                     </td>
                                                     <td data-label="Reason">${escapeBorrowRequestText(reasonText)}</td>
                                 </tr>`;
@@ -2356,27 +2379,26 @@
             }
         };
         document.getElementById('borrowRequestsState')?.addEventListener('click', async (event) => {
-            const button = event.target.closest('[data-request-return]');
+            const button = event.target.closest('[data-return-active-borrow]');
             if (!button) return;
-            const note = await window.appDialogs.prompt('Optional note for the Admin/Technician receiving the equipment:', '') || '';
-            if (!await window.appDialogs.confirm('Submit a request to return this equipment? Please hand the item to an Admin or Technician to complete the return.')) return;
+            if (!await window.appDialogs.confirm('Return this equipment to the laboratory? This will close your active borrow.')) return;
             button.disabled = true;
             try {
-                const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.requestReturn)}/request-return`, {
+                const response = await fetch(`/api/borrow-records/${encodeURIComponent(button.dataset.returnActiveBorrow)}/return`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ remarks: note })
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 const payload = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(payload.error || 'Unable to request this return.');
+                if (!response.ok) throw new Error(payload.error || 'Unable to return this equipment.');
                 await loadBorrowRequests();
             } catch (error) {
-                window.alert(error.message || 'Unable to request this return.');
+                window.alert(error.message || 'Unable to return this equipment.');
                 button.disabled = false;
             }
         });
         if (isFacultyPage) loadBorrowRequests();
     </script>
-    <script src="/js/qr-scanner-button.js?v=9" defer></script>
+    <script src="/js/borrow-turnover.js?v=1" defer></script>
+    <script src="/js/qr-scanner-button.js?v=10" defer></script>
 </body>
 </html>

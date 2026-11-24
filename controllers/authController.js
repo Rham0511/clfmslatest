@@ -31,9 +31,15 @@ import path from "path";
 import { User } from "../models/userModel.js";
 import { isEntityArchived } from "../models/archiveRecords.js";
 import { logAuditEntry } from "./auditController.js";
-import { endUserStationSessions } from "./pcStationController.js";
+import {
+  claimStudentPCStationForLogin,
+  endUserStationSessions,
+  syncStudentPCStationSessionExpiry
+} from "./pcStationController.js";
 import crypto from 'crypto';
 import { sendMail, sendOtpMail } from '../utils/mailer.js';
+import { getPcStationIdentifierFromRequest } from "../utils/pcStationQr.js";
+import { readQrLinkToken } from "../utils/qrLinkToken.js";
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const getSafeRedirectTarget = (redirectTo) => {
@@ -47,6 +53,15 @@ const isEquipmentQrRedirect = (redirectTo) =>
   typeof redirectTo === "string" &&
   (/^\/equipment\/(?:uid|s)\/[A-Za-z0-9_-]+$/.test(redirectTo) ||
     /^\/equipment\/view\/[^/?#]+$/.test(redirectTo));
+
+const isPcStationQrRedirect = (redirectTo) =>
+  typeof redirectTo === "string" &&
+  /^\/pc-station\/(?:uid|s)\/[A-Za-z0-9_-]+\/?$/.test(redirectTo);
+
+const getPcStationTokenFromRedirect = (redirectTo) => {
+  const match = String(redirectTo || "").match(/^\/pc-station\/(?:uid|s)\/([A-Za-z0-9_-]+)\/?$/);
+  return match?.[1] || null;
+};
 
 const REMEMBER_ME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -111,6 +126,55 @@ export const normalizeCampusValue = (campus) => {
   return match || null;
 };
 
+const getGoogleOAuthConfig = () => {
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || "").trim();
+  const clientSecret = String(process.env.GOOGLE_CLIENT_SECRET || "").trim();
+  const redirectUri = String(process.env.GOOGLE_REDIRECT_URI || "").trim();
+  if (!clientId || !clientSecret || !redirectUri) return null;
+
+  try {
+    const callback = new URL(redirectUri);
+    if (
+      callback.pathname !== "/auth/google/callback" ||
+      callback.search ||
+      callback.hash ||
+      (process.env.NODE_ENV === "production" && callback.protocol !== "https:")
+    ) return null;
+  } catch {
+    return null;
+  }
+
+  return { clientId, clientSecret, redirectUri };
+};
+
+const isGoogleOAuthConfigured = () => Boolean(getGoogleOAuthConfig());
+const saveSession = (req) => new Promise((resolve, reject) => {
+  req.session.save((error) => error ? reject(error) : resolve());
+});
+
+const getGoogleStudentRegistration = (body) => {
+  const registration = {
+    name: String(body?.name || "").trim(),
+    student_number: String(body?.student_number || "").trim(),
+    program: String(body?.program || "").trim().toUpperCase(),
+    year: normalizeStudentYear(body?.year),
+    section: normalizeStudentSection(body?.section),
+    campus: null,
+    rememberMe: ["on", "true", "1"].includes(String(body?.rememberMe || "").trim().toLowerCase())
+  };
+
+  if (!registration.name || !registration.student_number) {
+    return { error: "Please provide your full name and Student ID." };
+  }
+  if (!ALLOWED_STUDENT_PROGRAMS.has(registration.program)) {
+    return { error: "Please select BSIT or BSCPE as your program." };
+  }
+  if (!registration.year || !registration.section) {
+    return { error: "Please select a valid year level and section from F1 to F3." };
+  }
+  return { registration };
+};
+
 const ALLOWED_COLLEGES = new Set(["IABE", "CBM", "CCS", "CAS", "CTE", "CCJE", "CAAF", "IF", "GS"]);
 
 const redirectAfterLogin = (req, res, fallback = "/student/dashboard") => {
@@ -119,17 +183,120 @@ const redirectAfterLogin = (req, res, fallback = "/student/dashboard") => {
   return res.redirect(redirectTo || fallback);
 };
 
+const claimStudentStationForAuthentication = async (req, user) => {
+  if (normalizeUserRole(user.role) !== "student") return { success: true, claimed: false };
+  try {
+    const scannedValue = String(
+      req.session?.pendingPcStationToken ||
+      getPcStationIdentifierFromRequest(req) ||
+      getPcStationTokenFromRedirect(req.session?.redirectTo) ||
+      ""
+    ).trim();
+    if (scannedValue) {
+      const result = await claimStudentPCStationForLogin(user, scannedValue);
+      return { ...result, claimed: result.success, newlyStarted: result.newlyStarted };
+    }
+    return {
+      success: true,
+      claimed: false,
+      sessionExpiresAt: await syncStudentPCStationSessionExpiry(req, user.id)
+    };
+  } catch (error) {
+    console.error("[LOGIN] Failed to validate the student's PC station:", error);
+    return {
+      success: false,
+      status: 503,
+      error: "Unable to verify an active PC station. Please try again."
+    };
+  }
+};
+
+const releaseNewStudentStationClaim = async (userId, claim) => {
+  if (!claim?.newlyStarted || !claim.setId) return;
+  try {
+    await endUserStationSessions(
+      userId,
+      "The login could not be completed after claiming the PC station.",
+      claim.setId
+    );
+  } catch (error) {
+    console.error("[LOGIN] Failed to release PC station after login failure:", error);
+  }
+};
+
+const rejectStudentStationAuthentication = (req, res, user, stationClaim) => {
+  const isOccupied = /currently (?:in use|occupied)/i.test(String(stationClaim?.error || ""));
+  if (normalizeUserRole(user?.role) !== "student") {
+    req.flash("error_msg", stationClaim.error);
+    return res.redirect("/login");
+  }
+  const stationToken = String(
+    req.session?.pendingPcStationToken ||
+    getPcStationIdentifierFromRequest(req) ||
+    getPcStationTokenFromRedirect(req.session?.redirectTo) ||
+    ""
+  ).trim();
+  const destination = isOccupied && stationToken
+    ? `/pc-station/uid/${encodeURIComponent(stationToken)}/status`
+    : "/login?notice=pc-station-unavailable";
+
+  return req.session.destroy((error) => {
+    res.clearCookie("connect.sid");
+    if (error) {
+      console.error("[LOGIN] Failed to clear session after PC station authentication was rejected:", error);
+      return res.status(500).send("Unable to clear the login session. Please try again.");
+    }
+    return res.redirect(destination);
+  });
+};
+
 // ─── Page renders ────────────────────────────────────────────────────────────
 
-export const loginPage = (req, res) => res.render("login", {
-  title: "Login",
-  isEquipmentLogin: isEquipmentQrRedirect(req.session?.redirectTo)
-});
+export const loginPage = (req, res) => {
+  const scannedIdentifier = getPcStationIdentifierFromRequest(req);
+  const requestedStation = String(
+    scannedIdentifier || req.session?.pendingPcStationToken || ""
+  ).trim();
+  if (
+    requestedStation &&
+    req.session?.pendingPcStationAvailableToken !== requestedStation
+  ) {
+    req.session.redirectTo = `/pc-station/uid/${encodeURIComponent(requestedStation)}`;
+    req.session.pendingPcStationToken = requestedStation;
+    return req.session.save(() =>
+      res.redirect(`/pc-station/uid/${encodeURIComponent(requestedStation)}/status`)
+    );
+  }
+  if (!req.session?.redirectTo && scannedIdentifier) {
+    const isOpaqueToken = Boolean(readQrLinkToken(scannedIdentifier, "pc-station"));
+    req.session.redirectTo = isOpaqueToken
+      ? `/pc-station/uid/${encodeURIComponent(scannedIdentifier)}`
+      : `/pc-station/${encodeURIComponent(scannedIdentifier)}`;
+    req.session.pendingPcStationToken = scannedIdentifier;
+  }
+  const pendingPcStationToken = String(
+    req.session?.pendingPcStationToken || scannedIdentifier || ""
+  ).trim();
+  if (pendingPcStationToken) req.session.pendingPcStationToken = pendingPcStationToken;
+  return res.render("login", {
+    title: "Login",
+    isEquipmentLogin: isEquipmentQrRedirect(req.session?.redirectTo),
+    isPcStationLogin: isPcStationQrRedirect(req.session?.redirectTo),
+    pendingPcStationToken,
+    pcStationNotice: req.query?.notice === "pc-station-occupied"
+      ? "PC station currently in use. Please choose another PC station."
+      : req.query?.notice === "pc-station-unavailable"
+        ? "We couldn't verify this PC station. You can sign in without one or scan a valid station QR code."
+        : null,
+    googleAuthAvailable: isGoogleOAuthConfigured()
+  });
+};
 export const registerPage     = (req, res) => {
   const isEquipmentRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
   return res.render("register", {
     title: "Register",
-    isEquipmentRegistration
+    isEquipmentRegistration,
+    googleAuthAvailable: isGoogleOAuthConfigured()
   });
 };
 export const forgotPasswordPage = (req, res) => res.render("forgotpassword", { title: "Forgot Password" });
@@ -209,42 +376,69 @@ export const loginUser = async (req, res) => {
     return res.redirect('/login');
   }
 
-  const redirectTo = getSafeRedirectTarget(req.session.redirectTo);
+  const stationClaim = await claimStudentStationForAuthentication(req, user);
+  if (!stationClaim.success) {
+    return rejectStudentStationAuthentication(req, res, user, stationClaim);
+  }
+  const redirectTo = stationClaim.claimed ? null : getSafeRedirectTarget(req.session.redirectTo);
+  const pendingPcStationToken = stationClaim.claimed
+    ? ""
+    : String(
+        req.session.pendingPcStationToken ||
+        getPcStationIdentifierFromRequest(req) ||
+        ""
+      ).trim();
   const rememberMe = ["on", "true", "1"].includes(String(req.body?.rememberMe || "").trim().toLowerCase());
   try {
     await regenerateSession(req);
   } catch (error) {
     console.error("[LOGIN] Failed to rotate session after authentication:", error);
+    await releaseNewStudentStationClaim(user.id, stationClaim);
     req.flash("error_msg", "Login failed. Please try again.");
     return res.redirect("/login");
   }
   if (redirectTo) req.session.redirectTo = redirectTo;
+  if (pendingPcStationToken) req.session.pendingPcStationToken = pendingPcStationToken;
 
   console.log("[LOGIN] Setting session variables");
   req.session.userId   = user.id;
   req.session.userRole = normalizedRole;
   req.session.userCampus = user.campus || null;
+  if (stationClaim.sessionExpiresAt) {
+    req.session.pcStationSessionExpiresAt = stationClaim.sessionExpiresAt;
+  }
   setRememberMeCookie(req, rememberMe);
   console.log("[LOGIN] Session userId:", req.session.userId);
   const storedRole = ["superadmin", "centraladmin", "systemadmin"].includes(
     String(user.role || "").trim().toLowerCase().replace(/[\s_-]+/g, "")
   ) ? user.role : normalizedRole;
-  await user.update({ last_login_at: new Date(), role: storedRole });
-  await logAuditEntry(req, {
-    action: "Login",
-    module: "Authentication",
-    description: `User ${user.email} logged in successfully.`
-  });
+  try {
+    await user.update({ last_login_at: new Date(), role: storedRole });
+    await logAuditEntry(req, {
+      action: "Login",
+      module: "Authentication",
+      description: `User ${user.email} logged in successfully.`
+    });
+  } catch (error) {
+    console.error("[LOGIN] Failed to finalize account login:", error);
+    await releaseNewStudentStationClaim(user.id, stationClaim);
+    req.flash("error_msg", "Login failed. Please try again.");
+    return res.redirect("/login");
+  }
 
   console.log("[LOGIN] About to save session");
   // Explicitly save session before redirect to ensure userRole persists
-  return req.session.save((err) => {
+  return req.session.save(async (err) => {
     if (err) {
       console.error("[LOGIN] Session save error:", err);
+      await releaseNewStudentStationClaim(user.id, stationClaim);
       req.flash("error_msg", "Login failed. Please try again.");
       return res.redirect("/login");
     }
     console.log("[LOGIN] Session saved successfully, redirecting to dashboard");
+    if (stationClaim.claimed) {
+      return redirectAfterLogin(req, res, "/dashboard");
+    }
     if (normalizedRole === "technician") return redirectAfterLogin(req, res, "/technician-dashboard");
     if (normalizedRole === "student")    return redirectAfterLogin(req, res, "/student/dashboard");
     if (normalizedRole === "faculty")    return redirectAfterLogin(req, res, "/faculty-dashboard");
@@ -252,10 +446,310 @@ export const loginUser = async (req, res) => {
   });
 };
 
+const beginGoogleOAuth = async (req, res, intent, registration = null) => {
+  const config = getGoogleOAuthConfig();
+  if (!config) {
+    req.flash("error_msg", "Google sign-in is not configured yet. Please use manual email or contact the system administrator.");
+    return res.redirect(intent === "register" ? "/register" : "/login");
+  }
+
+  const state = crypto.randomBytes(32).toString("base64url");
+  req.session.googleOAuth = {
+    state,
+    intent,
+    registration,
+    createdAt: Date.now()
+  };
+
+  try {
+    await saveSession(req);
+  } catch (error) {
+    console.error("[Google OAuth] Failed to save OAuth state:", error);
+    req.flash("error_msg", "Unable to start Google sign-in. Please try again.");
+    return res.redirect(intent === "register" ? "/register" : "/login");
+  }
+
+  const authorizationUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  authorizationUrl.search = new URLSearchParams({
+    client_id: config.clientId,
+    redirect_uri: config.redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    prompt: "select_account"
+  }).toString();
+  return res.redirect(authorizationUrl.toString());
+};
+
+export const startGoogleLogin = (req, res) => beginGoogleOAuth(req, res, "login");
+
+export const startGoogleRegistration = (req, res) => {
+  const { registration, error } = getGoogleStudentRegistration(req.body);
+  if (error) {
+    req.flash("error_msg", error);
+    return res.redirect("/register");
+  }
+  return beginGoogleOAuth(req, res, "register", registration);
+};
+
+const completeGoogleAuthentication = async (req, res, user, rememberMe, action) => {
+  const normalizedRole = normalizeUserRole(user.role);
+  const stationClaim = await claimStudentStationForAuthentication(req, user);
+  if (!stationClaim.success) {
+    return rejectStudentStationAuthentication(req, res, user, stationClaim);
+  }
+  const redirectTo = stationClaim.claimed ? null : getSafeRedirectTarget(req.session.redirectTo);
+  const pendingPcStationToken = stationClaim.claimed
+    ? ""
+    : String(req.session.pendingPcStationToken || "").trim();
+
+  try {
+    await user.update({
+      email_verified: true,
+      verification_token: null,
+      verification_expires_at: null,
+      otp_code: null,
+      otp_expires_at: null,
+      otp_purpose: null,
+      last_login_at: new Date()
+    });
+  } catch (error) {
+    console.error("[Google OAuth] Failed to update the authenticated account:", error);
+    await releaseNewStudentStationClaim(user.id, stationClaim);
+    req.flash("error_msg", "Google sign-in could not be completed. Please try again.");
+    return res.redirect("/login");
+  }
+  try {
+    await regenerateSession(req);
+  } catch (error) {
+    console.error("[Google OAuth] Failed to rotate session after authentication:", error);
+    await releaseNewStudentStationClaim(user.id, stationClaim);
+    req.flash("error_msg", "Google sign-in could not be completed. Please try again.");
+    return res.redirect("/login");
+  }
+  if (redirectTo) req.session.redirectTo = redirectTo;
+  if (pendingPcStationToken) req.session.pendingPcStationToken = pendingPcStationToken;
+  req.session.userId = user.id;
+  req.session.userRole = normalizedRole;
+  req.session.userCampus = user.campus || null;
+  if (stationClaim.sessionExpiresAt) {
+    req.session.pcStationSessionExpiresAt = stationClaim.sessionExpiresAt;
+  }
+  setRememberMeCookie(req, rememberMe);
+  try {
+    await logAuditEntry(req, {
+      action,
+      module: "Authentication",
+      resourceId: user.id,
+      description: `User ${user.email} authenticated with Google.`
+    });
+  } catch (error) {
+    console.error("[Google OAuth] Failed to record the authenticated login:", error);
+    await releaseNewStudentStationClaim(user.id, stationClaim);
+    req.flash("error_msg", "Google sign-in could not be completed. Please try again.");
+    return res.redirect("/login");
+  }
+
+  return req.session.save(async (error) => {
+    if (error) {
+      console.error("[Google OAuth] Failed to save authenticated session:", error);
+      await releaseNewStudentStationClaim(user.id, stationClaim);
+      req.flash("error_msg", "Google sign-in could not be completed. Please try again.");
+      return res.redirect("/login");
+    }
+    if (stationClaim.claimed) return redirectAfterLogin(req, res, "/dashboard");
+    if (normalizedRole === "technician") return redirectAfterLogin(req, res, "/technician-dashboard");
+    if (normalizedRole === "student") return redirectAfterLogin(req, res, "/student/dashboard");
+    if (normalizedRole === "faculty") return redirectAfterLogin(req, res, "/faculty-dashboard");
+    return redirectAfterLogin(req, res, "/admin-dashboard");
+  });
+};
+
+const registerGoogleStudent = async (req, res, registration, identity) => {
+  const normalizedEmail = String(identity.email).trim().toLowerCase();
+  const existingUser = await User.findOne({ where: { email: normalizedEmail } });
+  if (existingUser?.email_verified) {
+    req.flash("error_msg", "This Google account already has a ComLab account. Please sign in instead.");
+    return res.redirect("/login");
+  }
+  if (existingUser && normalizeUserRole(existingUser.role) !== "student") {
+    req.flash("error_msg", "This Google account cannot be used for student registration. Please contact an administrator.");
+    return res.redirect("/register");
+  }
+
+  const existingStudent = await User.findOne({
+    where: {
+      student_number: registration.student_number,
+      ...(existingUser ? { id: { [Op.ne]: existingUser.id } } : {})
+    }
+  });
+  if (existingStudent) {
+    req.flash("error_msg", "That Student ID is already registered.");
+    return res.redirect("/register");
+  }
+
+  const studentData = {
+    name: registration.name || String(identity.name || "").trim() || identity.email,
+    email: normalizedEmail,
+    role: "student",
+    student_number: registration.student_number,
+    college: null,
+    program: registration.program,
+    year: registration.year,
+    section: registration.section,
+    campus: registration.campus,
+    email_verified: true,
+    verification_token: null,
+    verification_expires_at: null,
+    otp_code: null,
+    otp_expires_at: null,
+    otp_purpose: null
+  };
+
+  let user;
+  if (existingUser) {
+    await existingUser.update(studentData);
+    user = existingUser;
+  } else {
+    const unusablePassword = await bcryptjs.hash(crypto.randomBytes(32).toString("hex"), 12);
+    user = await User.create({
+      ...studentData,
+      password: unusablePassword,
+      last_login_at: null
+    });
+  }
+
+  await logAuditEntry(req, {
+    action: "User Created",
+    module: "User Management",
+    resourceId: user.id,
+    description: `New student account created for ${user.email} using verified Google sign-in.`,
+    details: {
+      email: user.email,
+      role: "student",
+      campus: registration.campus,
+      program: registration.program
+    }
+  });
+  return completeGoogleAuthentication(
+    req,
+    res,
+    user,
+    registration.rememberMe,
+    existingUser ? "Google Account Verified" : "Google Registration"
+  );
+};
+
+export const googleOAuthCallback = async (req, res) => {
+  const flow = req.session.googleOAuth;
+  delete req.session.googleOAuth;
+  const redirectTo = flow?.intent === "register" ? "/register" : "/login";
+  const suppliedState = Buffer.from(String(req.query?.state || ""));
+  const expectedState = Buffer.from(String(flow?.state || ""));
+  const isStateValid = expectedState.length > 0 &&
+    suppliedState.length === expectedState.length &&
+    crypto.timingSafeEqual(suppliedState, expectedState);
+
+  try {
+    await saveSession(req);
+  } catch (error) {
+    console.error("[Google OAuth] Failed to consume OAuth state:", error);
+    req.flash("error_msg", "Google sign-in could not be verified. Please try again.");
+    return res.redirect(redirectTo);
+  }
+
+  if (
+    !flow ||
+    !isStateValid ||
+    !Number.isFinite(flow.createdAt) ||
+    Date.now() - flow.createdAt > 10 * 60 * 1000
+  ) {
+    req.flash("error_msg", "Google sign-in expired or could not be verified. Please try again.");
+    return res.redirect(redirectTo);
+  }
+  if (req.query?.error) {
+    req.flash("error_msg", "Google sign-in was cancelled. You can try again or use manual email.");
+    return res.redirect(redirectTo);
+  }
+
+  const config = getGoogleOAuthConfig();
+  if (!config) {
+    req.flash("error_msg", "Google sign-in is not configured yet. Please use manual email or contact the system administrator.");
+    return res.redirect(redirectTo);
+  }
+
+  try {
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code: String(req.query?.code || ""),
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        redirect_uri: config.redirectUri,
+        grant_type: "authorization_code"
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!tokenResponse.ok) {
+      console.error("[Google OAuth] Token exchange failed with status:", tokenResponse.status);
+      throw new Error("Google token exchange failed");
+    }
+    const tokens = await tokenResponse.json();
+    if (!tokens.access_token) throw new Error("Google token response did not include an access token");
+
+    const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!profileResponse.ok) {
+      console.error("[Google OAuth] User profile lookup failed with status:", profileResponse.status);
+      throw new Error("Google user profile lookup failed");
+    }
+    const identity = await profileResponse.json();
+    if (
+      typeof identity.sub !== "string" ||
+      typeof identity.email !== "string" ||
+      identity.email_verified !== true ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identity.email)
+    ) {
+      req.flash("error_msg", "Google did not provide a verified email address. Please try another account.");
+      return res.redirect(redirectTo);
+    }
+
+    if (flow.intent === "register" && flow.registration) {
+      return await registerGoogleStudent(req, res, flow.registration, identity);
+    }
+    if (flow.intent !== "login") {
+      req.flash("error_msg", "This Google sign-in request is invalid. Please try again.");
+      return res.redirect("/login");
+    }
+
+    const user = await User.findOne({ where: { email: identity.email.trim().toLowerCase() } });
+    if (!user || !normalizeUserRole(user.role)) {
+      req.flash("error_msg", "No ComLab account was found for this Google email. Please register as a student first.");
+      return res.redirect("/login");
+    }
+    const normalizedRole = normalizeUserRole(user.role);
+    if (
+      normalizedRole === "faculty" &&
+      await isEntityArchived("faculty-account", user.id)
+    ) {
+      req.flash("error_msg", "This Faculty account is archived. Please contact an administrator.");
+      return res.redirect("/login");
+    }
+    return await completeGoogleAuthentication(req, res, user, false, "Google Login");
+  } catch (error) {
+    console.error("[Google OAuth] Authentication failed:", error);
+    req.flash("error_msg", "Google sign-in could not be completed. Please try again or use manual email.");
+    return res.redirect(redirectTo);
+  }
+};
+
 // ─── Registration with OTP ───────────────────────────────────────────────────
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role, student_number, program, year, section, campus } = req.body;
+  const { name, email, password, confirmPassword, role, student_number, program, year, section } = req.body;
   const equipmentQrRegistration = isEquipmentQrRedirect(req.session?.redirectTo);
   const requestedRole = String(role || "").trim();
   if (requestedRole && normalizeUserRole(requestedRole) !== "student") {
@@ -268,14 +762,8 @@ export const registerUser = async (req, res) => {
   const normalizedYear = normalizeStudentYear(year);
   const normalizedSection = normalizeStudentSection(section);
 
-  if (!String(name || "").trim() || !String(email || "").trim() || !password || !confirmPassword || !campus) {
+  if (!String(name || "").trim() || !String(email || "").trim() || !password || !confirmPassword) {
     req.flash("error_msg", "Please complete all required registration fields.");
-    return res.redirect("/register");
-  }
-
-  const normalizedCampus = normalizeCampusValue(campus);
-  if (!normalizedCampus) {
-    req.flash("error_msg", "Invalid campus. Please select Bongabong, Victoria, or Calapan.");
     return res.redirect("/register");
   }
 
@@ -336,7 +824,7 @@ export const registerUser = async (req, res) => {
       program: storedProgram,
       year: normalizedYear,
       section: normalizedSection,
-      campus: normalizedCampus,
+      campus: null,
       otp_code: otp,
       otp_expires_at: otpExpiresAt,
       otp_purpose: 'registration'
@@ -353,7 +841,7 @@ export const registerUser = async (req, res) => {
       program: storedProgram,
       year: normalizedYear,
       section: normalizedSection,
-      campus: normalizedCampus,
+      campus: null,
       last_login_at: null,
       email_verified: false,
       otp_code: otp,
@@ -367,7 +855,7 @@ export const registerUser = async (req, res) => {
     module: "User Management",
     resourceId: user.id,
     description: `New user account created for ${user.email} (${normalizedRole}) — OTP verification required.`,
-    details: { email: user.email, role: normalizedRole, campus: normalizedCampus, college: null, program: storedProgram }
+    details: { email: user.email, role: normalizedRole, campus: null, college: null, program: storedProgram }
   });
 
   console.log(`[auth] OTP generated for registration: ${normalizedEmail}`);
@@ -463,6 +951,52 @@ export const verifyOtp = async (req, res) => {
       resourceId: user.id,
       description: `User ${user.email} verified their email via OTP.`
     });
+    const pendingPcStationToken = String(req.session.pendingPcStationToken || "").trim();
+    if (pendingPcStationToken && normalizeUserRole(user.role) === "student") {
+      const stationClaim = await claimStudentStationForAuthentication(req, user);
+      if (!stationClaim.success) {
+        return rejectStudentStationAuthentication(req, res, user, stationClaim);
+      }
+      const rememberMe = req.session.rememberAfterRegistration === true;
+      try {
+        await regenerateSession(req);
+      } catch (error) {
+        console.error("[auth] Failed to create a session after PC station registration:", error);
+        await releaseNewStudentStationClaim(user.id, stationClaim);
+        req.flash('error_msg', 'Your email is verified. Please log in to continue to the scanned PC station.');
+        return res.redirect('/login');
+      }
+      req.session.userId = user.id;
+      req.session.userRole = "student";
+      req.session.userCampus = user.campus || null;
+      if (stationClaim.sessionExpiresAt) {
+        req.session.pcStationSessionExpiresAt = stationClaim.sessionExpiresAt;
+      }
+      setRememberMeCookie(req, rememberMe);
+      try {
+        await user.update({ last_login_at: new Date() });
+        await logAuditEntry(req, {
+          action: "Login",
+          module: "Authentication",
+          resourceId: user.id,
+          description: `User ${user.email} logged in after PC station QR registration and email verification.`
+        });
+      } catch (error) {
+        console.error("[auth] Failed to finalize login after PC station registration:", error);
+        await releaseNewStudentStationClaim(user.id, stationClaim);
+        req.flash('error_msg', 'Your email is verified. Please log in to continue to the scanned PC station.');
+        return res.redirect('/login');
+      }
+      return req.session.save(async (error) => {
+        if (error) {
+          console.error("[auth] Failed to save session after PC station registration:", error);
+          await releaseNewStudentStationClaim(user.id, stationClaim);
+          req.flash('error_msg', 'Your email is verified. Please log in to continue to the scanned PC station.');
+          return res.redirect('/login');
+        }
+        return redirectAfterLogin(req, res, "/dashboard");
+      });
+    }
     const equipmentRedirect = isEquipmentQrRedirect(req.session.redirectTo) &&
       ["student", "faculty"].includes(normalizeUserRole(user.role));
     if (equipmentRedirect) {
@@ -699,7 +1233,7 @@ export const updateProfile = async (req, res) => {
     return res.status(401).json({ success: false, error: "Please log in to update your profile." });
   }
 
-  const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role", "student_number", "college", "program", "year", "section"] });
+  const user = await User.findByPk(req.session.userId, { attributes: ["id", "name", "role", "student_number", "college", "program", "year", "section", "campus"] });
   if (!user) {
     return res.status(404).json({ success: false, error: "User account was not found." });
   }
@@ -764,6 +1298,18 @@ export const updateProfile = async (req, res) => {
     payload.college = college;
   }
 
+  if (Object.prototype.hasOwnProperty.call(req.body, "campus")) {
+    if (normalizeUserRole(user.role) !== "student") {
+      return res.status(403).json({ success: false, error: "Only Student accounts can update a campus." });
+    }
+    const rawCampus = String(req.body.campus || "").trim();
+    const campus = rawCampus ? normalizeCampusValue(rawCampus) : null;
+    if (rawCampus && !campus) {
+      return res.status(400).json({ success: false, error: "Please select Bongabong, Victoria, or Calapan campus." });
+    }
+    payload.campus = campus;
+  }
+
   if (Object.prototype.hasOwnProperty.call(req.body, "student_number")) {
     const officialStudentId = String(req.body.student_number || "").trim();
     if (!officialStudentId && String(user.student_number || "").trim()) {
@@ -792,6 +1338,7 @@ export const updateProfile = async (req, res) => {
     program: "Course",
     year: "Year",
     section: "Section",
+    campus: "Campus",
     college: "College / Institute"
   };
   const changedPayload = Object.fromEntries(Object.entries(payload).filter(([field, value]) => {
@@ -819,6 +1366,9 @@ export const updateProfile = async (req, res) => {
       description: `Profile updated for user ${user.id}. Changed fields: ${changedLabels.join(", ")}.`
     });
   }
+  if (Object.prototype.hasOwnProperty.call(payload, "campus")) {
+    req.session.userCampus = payload.campus;
+  }
 
   if (req.accepts("html")) {
     req.flash("success_msg", "Profile updated successfully.");
@@ -833,7 +1383,8 @@ export const updateProfile = async (req, res) => {
       college: payload.college ?? user.college ?? null,
       program: payload.program ?? user.program ?? "",
       year: payload.year ?? user.year ?? "",
-      section: payload.section ?? user.section ?? ""
+      section: payload.section ?? user.section ?? "",
+      campus: Object.prototype.hasOwnProperty.call(payload, "campus") ? payload.campus : user.campus ?? null
     }
   });
 };

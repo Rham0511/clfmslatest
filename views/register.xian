@@ -554,21 +554,21 @@
         gap: 1.5rem;
       }
 
-      .register-step[data-register-step="3"] {
+      .register-step[data-register-step="2"] {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .register-step[data-register-step="3"] > .register-step-indicator,
-      .register-step[data-register-step="3"] > .register-step-controls,
-      .register-step[data-register-step="3"] > .register-student-fields {
+      .register-step[data-register-step="2"] > .register-step-indicator,
+      .register-step[data-register-step="2"] > .register-step-controls,
+      .register-step[data-register-step="2"] > .register-student-fields {
         grid-column: 1 / -1;
       }
 
-      .register-step[data-register-step="3"] > .register-student-fields {
+      .register-step[data-register-step="2"] > .register-student-fields {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .register-step[data-register-step="3"] > .register-student-fields > .register-form-row {
+      .register-step[data-register-step="2"] > .register-student-fields > .register-form-row {
         display: grid;
         grid-column: 1 / -1;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1235,6 +1235,404 @@
       }
     }
   </style>
+  <style>
+    .register-page {
+      background: #111614 !important;
+      color: #F3F6F4 !important;
+      filter: none !important;
+    }
+
+    .register-header {
+      display: none !important;
+    }
+
+    .register-bg {
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: auto !important;
+      align-items: center;
+      padding: 2rem 1rem !important;
+      background: #111614 !important;
+      filter: none !important;
+    }
+
+    .register-bg::before {
+      display: none;
+    }
+
+    .register-layout {
+      display: block;
+      width: min(560px, 100%);
+      margin: 0 auto;
+    }
+
+    .register-intro {
+      display: none !important;
+    }
+
+    .register-card-wrap {
+      width: 100%;
+    }
+
+    .register-card.custom-scrollbar {
+      width: 100%;
+      max-height: none !important;
+      overflow: visible !important;
+      padding: clamp(1.15rem, 4vw, 1.75rem) !important;
+      transform: none !important;
+      border: 1px solid #343C37 !important;
+      border-radius: 1.25rem !important;
+      background: #1C2420 !important;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, .22) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    .register-card-content {
+      max-height: none !important;
+      overflow: visible !important;
+      padding-right: 0 !important;
+    }
+
+    .register-card-content > .register-logo {
+      display: none !important;
+    }
+
+    .register-card-content > .register-heading {
+      margin: 0 0 1.25rem !important;
+      text-align: left !important;
+    }
+
+    .register-card-content > .register-heading h1 {
+      color: #F3F6F4 !important;
+      font-size: 1.65rem !important;
+      line-height: 1.25 !important;
+    }
+
+    .register-card-content > .register-heading p:not(.register-qr-notice) {
+      margin-top: .35rem !important;
+      color: #A5AEA8 !important;
+      font-size: .9rem !important;
+      line-height: 1.5 !important;
+    }
+
+    .register-form-grid {
+      display: block !important;
+      padding-bottom: 0 !important;
+    }
+
+    .register-stepper {
+      margin: 0 0 1.2rem !important;
+    }
+
+    .register-stepper-item {
+      color: #8E9991;
+    }
+
+    .register-stepper-item.is-active {
+      color: #DDE7E0;
+    }
+
+    .register-stepper-item.is-active .register-stepper-dot,
+    .register-stepper-item.is-complete .register-stepper-dot {
+      border-color: #58BE67;
+      background: #58BE67;
+      color: #102014;
+      box-shadow: none;
+    }
+
+    .register-stepper-item::before {
+      background: #39433D;
+    }
+
+    .register-step {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: .9rem !important;
+    }
+
+    .register-step[hidden] {
+      display: none !important;
+    }
+
+    .register-step > *,
+    .register-step > .register-form-row,
+    .register-step > .register-student-fields,
+    .register-step > .register-student-fields > .register-form-row {
+      grid-column: 1 / -1;
+    }
+
+    .register-step .register-form-row,
+    .register-step .register-student-fields {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: .85rem !important;
+    }
+
+    .register-step[data-register-step="1"] > .register-form-row > label {
+      grid-column: 1 / -1;
+    }
+
+    .register-step label {
+      color: #C5CDC8 !important;
+      font-size: .84rem !important;
+      font-weight: 600 !important;
+    }
+
+    .register-card .register-form-grid input,
+    .register-card .register-form-grid select {
+      width: 100%;
+      min-height: 3rem !important;
+      margin-top: .4rem !important;
+      padding: .65rem .9rem !important;
+      border: 1px solid #414A44 !important;
+      border-radius: .7rem !important;
+      background: #151A17 !important;
+      color: #F3F6F4 !important;
+      font-size: .92rem !important;
+    }
+
+    .register-field-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .register-card .register-form-grid label > input,
+    .register-card .register-form-grid label > select {
+      margin-top: 0 !important;
+    }
+
+    .register-card .register-password-control {
+      margin-top: 0 !important;
+    }
+
+    .register-card .register-form-grid input::placeholder {
+      color: #87918A !important;
+    }
+
+    .register-card .register-form-grid input:focus,
+    .register-card .register-form-grid select:focus {
+      border-color: #58BE67 !important;
+      background: #151A17 !important;
+      box-shadow: 0 0 0 3px rgba(88, 190, 103, .16) !important;
+    }
+
+    .register-card .register-form-grid select:invalid {
+      color: #87918A !important;
+    }
+
+    .register-step .register-password-control {
+      margin-top: .4rem !important;
+    }
+
+    .register-password-control input {
+      margin-top: 0 !important;
+    }
+
+    .register-password-toggle {
+      color: #A5AEA8 !important;
+    }
+
+    .register-auth-method-block {
+      display: grid;
+      gap: .55rem;
+      margin: .25rem 0;
+    }
+
+    .register-auth-method-title {
+      margin: 0;
+      color: #C5CDC8;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    .register-auth-method {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .55rem;
+    }
+
+    .register-auth-method button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      min-height: 2.8rem;
+      padding: .55rem .65rem;
+      border: 1px solid #414A44;
+      border-radius: .65rem;
+      background: #151A17;
+      color: #A5AEA8;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .register-auth-method button[aria-pressed="true"] {
+      border-color: #58BE67;
+      background: rgba(88, 190, 103, .12);
+      color: #69CC76;
+    }
+
+    .register-auth-method button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+
+    .register-auth-note,
+    .register-google-note {
+      margin: 0;
+      color: #A5AEA8;
+      font-size: .75rem;
+      line-height: 1.45;
+    }
+
+    .register-step-controls {
+      display: flex;
+      gap: .75rem;
+      margin-top: .25rem;
+    }
+
+    .register-step-controls button {
+      min-height: 3rem;
+      border: 1px solid #414A44;
+      border-radius: .7rem;
+      background: transparent;
+      color: #C5CDC8;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .register-step-controls .register-next,
+    .register-step-controls .register-create {
+      border-color: transparent;
+      background: #58BE67;
+      color: #102014;
+    }
+
+    .register-step-controls .register-next:hover,
+    .register-step-controls .register-create:hover {
+      background: #69CC76;
+    }
+
+    .register-step-controls .register-create[data-auth-method="google"] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      background: #FFFFFF;
+      color: #202124;
+    }
+
+    .register-step-controls .register-create[data-auth-method="google"]:hover {
+      background: #F3F5F4;
+    }
+
+    .register-google-mark {
+      width: 1.25rem;
+      height: 1.25rem;
+      display: block;
+      flex: 0 0 1.25rem;
+      object-fit: contain;
+    }
+
+    .register-google-mark[hidden] {
+      display: none !important;
+    }
+
+    .register-email-mark {
+      width: 1.25rem;
+      height: 1.25rem;
+      display: block;
+      flex: 0 0 1.25rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+
+    .register-card-content .register-footer {
+      display: grid !important;
+      gap: .5rem;
+      margin-top: 1rem !important;
+      padding: .9rem .25rem .2rem !important;
+      border-top: 1px solid #343C37 !important;
+      color: #A5AEA8 !important;
+      font-size: .8rem !important;
+      text-align: center;
+    }
+
+    .register-footer-account a,
+    .register-footer-home a {
+      color: #58BE67 !important;
+    }
+
+    .register-footer-home {
+      display: block !important;
+      align-self: center;
+      justify-self: center;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .register-bg {
+        padding: 1rem .85rem 1.5rem !important;
+      }
+
+      .register-step .register-form-row,
+      .register-step .register-student-fields {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      .register-card-content .register-footer {
+        display: grid !important;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .register-bg {
+        align-items: center;
+        padding: 2rem !important;
+        background: url('/images/MinSU_Bongabong_enhanced.jpg') center / cover no-repeat !important;
+      }
+
+      .register-bg::before {
+        display: block !important;
+        background: linear-gradient(135deg, rgba(3, 16, 12, .58) 0%, rgba(2, 10, 22, .72) 100%);
+      }
+
+      .register-layout {
+        display: grid;
+        width: min(1200px, 100%);
+        grid-template-columns: minmax(0, 1fr) minmax(480px, 540px);
+        align-items: center;
+        gap: clamp(2rem, 5vw, 5rem);
+        margin: 0 auto;
+      }
+
+      .register-intro {
+        display: flex !important;
+        align-items: flex-start;
+        gap: 1.25rem;
+        text-align: left;
+      }
+
+      .register-card-wrap {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+  </style>
 
   <header class="register-header fixed left-0 top-0 z-50 w-full border-b backdrop-blur-md">
     <div class="flex items-center justify-between gap-4">
@@ -1295,10 +1693,6 @@
               </div>
               <div class="register-stepper-item" data-register-marker="2">
                 <span class="register-stepper-dot">2</span>
-                <span class="register-stepper-label">Campus</span>
-              </div>
-              <div class="register-stepper-item" data-register-marker="3">
-                <span class="register-stepper-dot">3</span>
                 <span class="register-stepper-label">Student</span>
               </div>
             </div>
@@ -1306,22 +1700,45 @@
             <div class="register-step" data-register-step="1">
               <div class="register-form-row grid gap-4 sm:grid-cols-2">
                 <label class="block text-sm font-semibold text-slate-200">
-                  Full Name
-                  <input autocomplete="off" type="text" name="name" placeholder="Full Name" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                  <span class="register-field-label">Full Name</span>
+                  <input autocomplete="name" type="text" name="name" placeholder="e.g. Juan Dela Cruz" maxlength="120" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
                 </label>
-                <input type="hidden" name="role" value="student">
               </div>
 
+              <div class="register-auth-method-block">
+                <p class="register-auth-method-title">Sign-up method</p>
+                <div class="register-auth-method" role="group" aria-label="Choose a sign-up method">
+                  <button type="button" data-register-auth-method="google" aria-pressed="false" {{#unless googleAuthAvailable}}disabled aria-disabled="true" title="Google OAuth is not configured"{{/unless}}>
+                    <img class="register-google-mark" src="/images/google-g.svg" alt="" aria-hidden="true" /> Google Account
+                  </button>
+                  <button type="button" data-register-auth-method="manual" aria-pressed="false">
+                    <svg class="register-email-mark" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="m4.5 7 7.5 6 7.5-6"></path>
+                    </svg>
+                    Manual Email
+                  </button>
+                </div>
+                <p id="registerAuthHint" class="register-auth-note" aria-live="polite">
+                  {{#if googleAuthAvailable}}
+                    Use a verified Google account. Google will confirm your email.
+                  {{else}}
+                    Google sign-up needs server OAuth configuration. Manual email registration is available.
+                  {{/if}}
+                </p>
+              </div>
+
+              <div id="registerManualFields">
               <label class="register-full-field block text-sm font-semibold text-slate-200">
-                Email address
-                <input autocomplete="off" type="email" name="email" placeholder="Enter your email" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                <span class="register-field-label">Email address</span>
+                <input autocomplete="off" type="email" name="email" placeholder="name@example.com" class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
               </label>
 
               <div class="register-form-row grid gap-4 sm:grid-cols-2">
                 <label class="register-half-field block text-sm font-semibold text-slate-200">
-                  Password
+                  <span class="register-field-label">Password</span>
                   <div class="register-password-control">
-                    <input id="registerPassword" autocomplete="new-password" type="password" name="password" placeholder="Create a password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                    <input id="registerPassword" autocomplete="new-password" type="password" name="password" placeholder="At least 8 characters" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
                     <button class="register-password-toggle" type="button" data-password-toggle="registerPassword" aria-label="Show password" aria-pressed="false">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
@@ -1332,9 +1749,9 @@
                   </div>
                 </label>
                 <label class="register-half-field block text-sm font-semibold text-slate-200">
-                  Confirm Password
+                  <span class="register-field-label">Confirm Password</span>
                   <div class="register-password-control">
-                    <input id="registerConfirmPassword" autocomplete="new-password" type="password" name="confirmPassword" placeholder="Repeat password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
+                    <input id="registerConfirmPassword" autocomplete="new-password" type="password" name="confirmPassword" placeholder="Re-enter your password" class="w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" required />
                     <button class="register-password-toggle" type="button" data-password-toggle="registerConfirmPassword" aria-label="Show password" aria-pressed="false">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path>
@@ -1345,6 +1762,7 @@
                   </div>
                 </label>
               </div>
+              </div>
 
               <div class="register-step-controls">
                 <button class="register-next" type="button" data-register-next>Continue</button>
@@ -1352,37 +1770,18 @@
             </div>
 
             <div class="register-step" data-register-step="2" hidden>
-              <div class="register-full-field">
-                <label class="block text-sm font-semibold text-slate-200">
-                  Campus
-                  <select name="campus" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                    <option value="" selected disabled>Select Campus</option>
-                    <option value="Bongabong">Bongabong</option>
-                    <option value="Victoria">Victoria</option>
-                    <option value="Calapan">Calapan</option>
-                  </select>
-                </label>
-                <p class="register-step-hint">Choose the Mindoro State University campus where you are enrolled. This determines the laboratories, equipment, and schedules available to your account.</p>
-              </div>
-
-              <div class="register-step-controls">
-                <button class="register-prev" type="button" data-register-prev>Back</button>
-                <button class="register-next" type="button" data-register-next>Continue</button>
-              </div>
-            </div>
-
-            <div class="register-step" data-register-step="3" hidden>
               <div id="studentRegistrationFields" class="register-student-fields space-y-4">
                 <h2 class="text-sm font-bold uppercase tracking-wide text-emerald-200">Student information</h2>
+                <p class="register-step-hint">You can choose or update your campus later from your profile.</p>
                 <div class="register-form-row grid gap-4 sm:grid-cols-2">
                   <label class="block text-sm font-semibold text-slate-200">
-                    Student ID
+                    <span class="register-field-label">Student ID</span>
                     <input id="studentIdInput" autocomplete="off" type="text" name="student_number" placeholder="e.g. 2023-0001" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white placeholder-emerald-200/50 transition-all focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300" />
                   </label>
                   <label class="block text-sm font-semibold text-slate-200">
-                    Program
+                    <span class="register-field-label">Program</span>
                     <select name="program" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                      <option value="" selected disabled>Select Program</option>
+                      <option value="" selected disabled>Choose your program</option>
                       <option value="BSIT">BSIT — Bachelor of Science in Information Technology</option>
                       <option value="BSCPE">BSCPE — Bachelor of Science in Computer Engineering</option>
                     </select>
@@ -1391,9 +1790,9 @@
 
                 <div class="register-form-row grid gap-4 sm:grid-cols-2">
                   <label class="block text-sm font-semibold text-slate-200">
-                    Year
+                    <span class="register-field-label">Year</span>
                     <select name="year" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                      <option value="" selected disabled>Select Year</option>
+                      <option value="" selected disabled>Choose your year level</option>
                       <option value="1st Year">1st Year</option>
                       <option value="2nd Year">2nd Year</option>
                       <option value="3rd Year">3rd Year</option>
@@ -1401,9 +1800,9 @@
                     </select>
                   </label>
                   <label class="block text-sm font-semibold text-slate-200">
-                    Section
+                    <span class="register-field-label">Section</span>
                     <select name="section" required class="mt-2 w-full rounded-xl border border-emerald-400/40 bg-[#022814]/60 px-4 py-2.5 text-white focus:border-emerald-300 focus:bg-[#022814]/80 focus:outline-none focus:ring-1 focus:ring-emerald-300">
-                      <option value="" selected disabled>Select Section</option>
+                      <option value="" selected disabled>Choose your section</option>
                       <option value="F1">F1</option>
                       <option value="F2">F2</option>
                       <option value="F3">F3</option>
@@ -1421,7 +1820,10 @@
 
               <div class="register-step-controls">
                 <button class="register-prev" type="button" data-register-prev>Back</button>
-                <button id="registerButton" class="register-create" type="submit" aria-label="Create account">Create Account</button>
+                <button id="registerButton" class="register-create" type="submit" data-auth-method="manual" aria-label="Create account">
+                  <img id="registerGoogleMark" class="register-google-mark" src="/images/google-g.svg" alt="" aria-hidden="true" hidden />
+                  <span id="registerButtonLabel">Create Account</span>
+                </button>
               </div>
             </div>
           </form>
@@ -1429,7 +1831,7 @@
           <div id="registerLoading" class="hidden mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-950/70 p-4 text-sm text-emerald-50 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-sm" role="status" aria-live="polite">
             <div class="flex items-center gap-3">
               <span class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-emerald-100/25 border-t-emerald-300" aria-hidden="true"></span>
-              <span><strong class="block">Sending verification code…</strong><span class="mt-0.5 block text-xs text-emerald-100/75">Setting up your account and sending a 6-digit code to your email.</span></span>
+              <span><strong id="registerLoadingTitle" class="block">Sending verification code…</strong><span id="registerLoadingMessage" class="mt-0.5 block text-xs text-emerald-100/75">Setting up your account and sending a 6-digit code to your email.</span></span>
             </div>
           </div>
 
@@ -1439,7 +1841,7 @@
             {{else}}
               <p class="register-footer-account">Already have an account? <a href="/login">Log in</a></p>
             {{/if}}
-            <p class="register-footer-home"><a href="/">&larr; Back to landing</a></p>
+            <p class="register-footer-home"><a href="/">&larr; Back to ComLab</a></p>
           </div>
         </div>
       </div>
@@ -1449,9 +1851,18 @@
   <script>
     const form = document.querySelector('form[action="/register"]');
     const button = document.getElementById('registerButton');
+    const buttonLabel = document.getElementById('registerButtonLabel');
+    const googleMark = document.getElementById('registerGoogleMark');
     const loading = document.getElementById('registerLoading');
+    const loadingTitle = document.getElementById('registerLoadingTitle');
+    const loadingMessage = document.getElementById('registerLoadingMessage');
+    const manualFields = document.getElementById('registerManualFields');
+    const authHint = document.getElementById('registerAuthHint');
+    const authMethodButtons = Array.from(document.querySelectorAll('[data-register-auth-method]'));
     const steps = Array.from(document.querySelectorAll('[data-register-step]'));
     const markers = Array.from(document.querySelectorAll('[data-register-marker]'));
+    const googleAuthAvailable = {{#if googleAuthAvailable}}true{{else}}false{{/if}};
+    let registrationMethod = 'manual';
     let currentStep = 1;
     document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
       toggle.addEventListener('click', () => {
@@ -1470,6 +1881,42 @@
       return steps.find((step) => Number(step.dataset.registerStep) === stepNumber);
     }
 
+    function syncRegistrationMethod(respectCurrentStep = true) {
+      const isManual = registrationMethod === 'manual';
+      if (manualFields) manualFields.hidden = !isManual;
+      manualFields?.querySelectorAll('input').forEach((field) => {
+        const fieldStep = Number(field.closest('[data-register-step]')?.dataset.registerStep);
+        field.required = isManual;
+        field.disabled = !isManual || (respectCurrentStep && fieldStep !== currentStep);
+      });
+
+      authMethodButtons.forEach((methodButton) => {
+        methodButton.setAttribute('aria-pressed', String(methodButton.dataset.registerAuthMethod === registrationMethod));
+      });
+      if (button) {
+        button.dataset.authMethod = registrationMethod;
+        button.disabled = registrationMethod === 'google' && !googleAuthAvailable;
+      }
+      if (buttonLabel) {
+        buttonLabel.textContent = registrationMethod === 'google' ? 'Continue with Google' : 'Create Account';
+      }
+      if (googleMark) googleMark.hidden = registrationMethod !== 'google';
+      if (authHint) {
+        authHint.textContent = registrationMethod === 'google'
+          ? 'Use a verified Google account. Google will confirm your email.'
+          : 'We will send a 6-digit verification code to your email.';
+      }
+    }
+
+    authMethodButtons.forEach((methodButton) => {
+      methodButton.addEventListener('click', () => {
+        const method = methodButton.dataset.registerAuthMethod;
+        if (method === 'google' && !googleAuthAvailable) return;
+        registrationMethod = method === 'google' ? 'google' : 'manual';
+        syncRegistrationMethod();
+      });
+    });
+
     function setStep(stepNumber) {
       currentStep = stepNumber;
       steps.forEach((step) => {
@@ -1479,6 +1926,7 @@
           field.disabled = !isActive;
         });
       });
+      syncRegistrationMethod();
 
       markers.forEach((marker) => {
         const markerStep = Number(marker.dataset.registerMarker);
@@ -1540,6 +1988,7 @@
             field.disabled = false;
           });
         });
+        syncRegistrationMethod(false);
 
         const invalidStep = steps.find((step) => !validateStep(Number(step.dataset.registerStep), false));
         if (invalidStep) {
@@ -1550,18 +1999,26 @@
           return;
         }
 
+        if (form) form.action = registrationMethod === 'google' ? '/auth/google/register' : '/register';
         if (button) {
           button.disabled = true;
           button.setAttribute('aria-busy', 'true');
-          button.textContent = 'Sending code…';
+          if (buttonLabel) {
+            buttonLabel.textContent = registrationMethod === 'google' ? 'Redirecting to Google…' : 'Sending code…';
+          }
           button.classList.add('opacity-70', 'cursor-not-allowed');
         }
         if (loading) {
           loading.classList.remove('hidden');
         }
+        if (loadingTitle && registrationMethod === 'google') loadingTitle.textContent = 'Connecting to Google…';
+        if (loadingMessage && registrationMethod === 'google') {
+          loadingMessage.textContent = 'Your student details will be saved after Google verifies your email.';
+        }
       });
     }
 
+    syncRegistrationMethod();
     setStep(1);
 
     {{#if error_msg}}
@@ -1569,7 +2026,7 @@
       if (button) {
         button.disabled = false;
         button.removeAttribute('aria-busy');
-        button.textContent = 'Create Account';
+        if (buttonLabel) buttonLabel.textContent = 'Create Account';
         button.classList.remove('opacity-70', 'cursor-not-allowed');
       }
     {{/if}}

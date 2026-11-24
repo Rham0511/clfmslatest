@@ -6,6 +6,8 @@ export const ensurePCStationSessionsTable = async () => {
       setId VARCHAR(50) NOT NULL,
       activeUserId INT NULL,
       startedAt DATETIME NULL,
+      endedAt DATETIME NULL,
+      sessionStatus VARCHAR(20) NULL,
       updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (setId),
       INDEX idx_pc_station_sessions_active_user (activeUserId)
@@ -19,5 +21,16 @@ export const ensurePCStationAutoLogoutColumn = async () => {
   if (!columns.length) {
     await sequelize.query("ALTER TABLE pc_station_sessions ADD COLUMN autoLogoutAt DATETIME NULL");
   }
+  const [endedAtColumns] = await sequelize.query("SHOW COLUMNS FROM pc_station_sessions LIKE 'endedAt'");
+  if (!endedAtColumns.length) {
+    await sequelize.query("ALTER TABLE pc_station_sessions ADD COLUMN endedAt DATETIME NULL");
+  }
+  const [statusColumns] = await sequelize.query("SHOW COLUMNS FROM pc_station_sessions LIKE 'sessionStatus'");
+  if (!statusColumns.length) {
+    await sequelize.query("ALTER TABLE pc_station_sessions ADD COLUMN sessionStatus VARCHAR(20) NULL");
+  }
+  await sequelize.query(
+    "UPDATE pc_station_sessions SET sessionStatus = 'active' WHERE activeUserId IS NOT NULL AND sessionStatus IS NULL"
+  );
   return true;
 };

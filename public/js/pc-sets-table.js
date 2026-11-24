@@ -395,7 +395,7 @@ function renderPCSetsTable(sets, unassigned = {}) {
                         <div class="flex items-center justify-between mb-2">
                             <div>
                                 <h4 class="text-sm font-bold text-emerald-400 uppercase tracking-wide">
-                                    <i class="fas fa-desktop mr-2"></i>${set.setName} — Equipment List
+                                    <i class="fas fa-desktop mr-2"></i>${set.setName} — Components List
                                 </h4>
                             </div>
                             <button onclick="addComponentsModal('${set.setId}')"
@@ -405,7 +405,7 @@ function renderPCSetsTable(sets, unassigned = {}) {
                         </div>
                         <div id="components-list-${set.setId}" class="space-y-1">
                             <div class="text-center text-emerald-200 py-2">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading equipment list...
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading components list...
                             </div>
                         </div>
                     </div>
@@ -556,7 +556,7 @@ async function loadPCSetComponents(setId) {
         console.error('Error loading components:', error);
         container.innerHTML = `
             <div class="text-center text-red-400 py-4">
-                <i class="fas fa-exclamation-circle mr-2"></i>Failed to load equipment list
+                <i class="fas fa-exclamation-circle mr-2"></i>Failed to load components list
             </div>
         `;
     }

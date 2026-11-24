@@ -6,7 +6,7 @@
     <title>My PC Station | ComLab Student Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/sidebar.css?v=94">
+    <link rel="stylesheet" href="/css/sidebar.css?v=95">
     <style>
         :root {
             --accent: #22C55E;
@@ -205,6 +205,11 @@
             line-height: 1.4;
         }
 
+        .pc-session-time-limit {
+            color: #a7f3d0 !important;
+            font-weight: 700;
+        }
+
         .pc-session-empty {
             justify-content: flex-start;
             color: #a7c2b2;
@@ -238,6 +243,14 @@
             margin-top: .45rem;
             color: #fca5a5;
             font-size: .76rem;
+        }
+
+        .pc-session-feedback[data-state="success"] {
+            color: #86efac;
+        }
+
+        .pc-session-feedback[data-state="info"] {
+            color: #a7f3d0;
         }
 
         .pc-logs-link {
@@ -613,7 +626,7 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=41">
     <style>
         /* Compact mobile history with full details in a bottom sheet. */
         .usage-history-mobile-date,
@@ -964,6 +977,8 @@
 
     <script>
         window.__CURRENT_USER__ = __CURRENT_USER_JSON__;
+        let sessionCountdownInterval = null;
+        let sessionExpiryCheckStarted = false;
 
         async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
             const controller = new AbortController();
@@ -985,14 +1000,18 @@
                     headers: { Accept: 'application/json' }
                 });
                 const payload = await response.json().catch(() => ({}));
+                if (response.status === 401 && payload.expired) {
+                    redirectAfterSessionExpiry(payload);
+                    return;
+                }
                 if (!response.ok) throw new Error(payload.error || 'Unable to load your active PC station.');
 
                 const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
                 if (!sessions.length) {
                     container.innerHTML = `
                         <div class="pc-session-empty">
-                            <button type="button" class="pc-session-scan-action" id="pcStationScanButton"><i class="fas fa-qrcode" aria-hidden="true"></i><span>Scan QR to log in</span></button>
-                            <span>Scan a station QR code to start a session. Scan the same code again to end it.</span>
+                            <i class="fas fa-desktop" aria-hidden="true"></i>
+                            <span>No active PC station session.</span>
                         </div>`;
                     return;
                 }
@@ -1000,19 +1019,22 @@
                 container.innerHTML = `<div class="pc-session-list">${sessions.map(session => `
                     <article class="pc-session-item">
                         <div class="pc-session-item-copy">
-                            <strong>${escapeHistoryText(session.setName || session.setId || 'PC Station')}</strong>
-                            <span>${escapeHistoryText([session.setId, session.location].filter(Boolean).join(' · '))}</span>
+                            <strong>${escapeHistoryText(session.setName || session.stationName || session.setId || 'PC Station')}</strong>
+                            <span>${escapeHistoryText([session.setId ? `Code: ${session.setId}` : '', session.location].filter(Boolean).join(' · '))}</span>
                             <span>Signed in ${escapeHistoryText(formatHistoryDateTime(session.startedAt))}</span>
+                            <span class="pc-session-time-limit" data-session-expires="${escapeHistoryText(session.expiresAt || '')}">Session limit: 3h max · <span data-session-countdown>calculating…</span> remaining</span>
                         </div>
                         <button class="pc-session-logout" type="button" data-pc-station-logout="${escapeHistoryText(session.setId)}">
-                            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>Log out
+                            <i class="fas fa-right-from-bracket" aria-hidden="true"></i>End Session
                         </button>
                     </article>`).join('')}</div>`;
 
                 container.querySelectorAll('[data-pc-station-logout]').forEach(button => {
                     button.addEventListener('click', () => logoutMyPCStationSession(button));
                 });
+                startSessionCountdown();
             } catch (error) {
+                if (sessionExpiryCheckStarted) return;
                 console.error('Error loading active PC station:', error);
                 container.innerHTML = `
                     <div class="pc-session-empty">
@@ -1020,6 +1042,78 @@
                         <span>${escapeHistoryText(error.message || 'Unable to load your active PC station.')}</span>
                     </div>`;
             }
+        }
+
+        function startSessionCountdown() {
+            window.clearInterval(sessionCountdownInterval);
+            const updateCountdowns = () => {
+                const countdowns = document.querySelectorAll('[data-session-expires]');
+                if (!countdowns.length) {
+                    window.clearInterval(sessionCountdownInterval);
+                    return;
+                }
+                countdowns.forEach(element => {
+                    const expiresAt = Date.parse(element.dataset.sessionExpires || '');
+                    const remainingSeconds = Number.isFinite(expiresAt)
+                        ? Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
+                        : null;
+                    const countdown = element.querySelector('[data-session-countdown]');
+                    if (!countdown) return;
+                    if (remainingSeconds === null) {
+                        countdown.textContent = 'time unavailable';
+                        return;
+                    }
+                    const hours = Math.floor(remainingSeconds / 3600);
+                    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                    const seconds = remainingSeconds % 60;
+                    countdown.textContent = [hours, minutes, seconds]
+                        .map(value => String(value).padStart(2, '0'))
+                        .join(':');
+                    if (remainingSeconds === 0) verifyExpiredStudentSession();
+                });
+            };
+            updateCountdowns();
+            sessionCountdownInterval = window.setInterval(updateCountdowns, 1000);
+        }
+
+        function redirectAfterSessionExpiry(payload) {
+            sessionExpiryCheckStarted = true;
+            try {
+                localStorage.removeItem('pending_pc_station');
+                sessionStorage.removeItem('pending_pc_station');
+            } catch (error) {
+                console.warn('Unable to clear pending PC station browser state after session expiry.', error);
+            }
+            window.location.replace(payload.redirectUrl || '/?sessionExpired=pc-station');
+        }
+
+        function verifyExpiredStudentSession() {
+            if (sessionExpiryCheckStarted) return;
+            sessionExpiryCheckStarted = true;
+            const check = async () => {
+                try {
+                    const response = await fetchWithTimeout('/api/pc-stations/my-sessions', {
+                        cache: 'no-store',
+                        headers: { Accept: 'application/json' }
+                    });
+                    const payload = await response.json().catch(() => ({}));
+                    if (response.status === 401) {
+                        if (payload.expired) redirectAfterSessionExpiry(payload);
+                        else window.location.replace('/login');
+                        return;
+                    }
+                    if (!response.ok) throw new Error(payload.error || 'Unable to verify the expired PC station session.');
+                    if (!Array.isArray(payload.sessions) || !payload.sessions.length) {
+                        sessionExpiryCheckStarted = false;
+                        return;
+                    }
+                    window.setTimeout(check, 1000);
+                } catch (error) {
+                    console.error('Unable to verify the expired PC station session:', error);
+                    window.setTimeout(check, 2000);
+                }
+            };
+            check();
         }
 
         async function logoutMyPCStationSession(button) {
@@ -1043,12 +1137,12 @@
                 const payload = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(payload.error || 'Unable to log out from this PC station.');
 
-                feedback.textContent = payload.message || 'You have been signed out from this PC station.';
+                feedback.textContent = payload.message || 'PC station session ended.';
                 await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
             } catch (error) {
                 feedback.textContent = error.message || 'Unable to log out from this PC station.';
                 button.disabled = false;
-                button.innerHTML = '<i class="fas fa-right-from-bracket" aria-hidden="true"></i>Log out';
+                button.innerHTML = '<i class="fas fa-right-from-bracket" aria-hidden="true"></i>End Session';
             }
         }
 
@@ -1200,8 +1294,71 @@
             window.setTimeout(() => { backdrop.hidden = true; sheet.hidden = true; }, 180);
         }
 
+        async function consumePendingPcStation() {
+            const pendingToken = localStorage.getItem('pending_pc_station');
+            const queryParams = new URLSearchParams(window.location.search);
+            const pendingTokenFromQuery = queryParams.get('station') ||
+                queryParams.get('pcStation') ||
+                queryParams.get('pcStationToken') ||
+                queryParams.get('stationToken') ||
+                queryParams.get('pc') ||
+                queryParams.get('pcId') ||
+                queryParams.get('pc_id') ||
+                queryParams.get('code') ||
+                queryParams.get('pending_station') ||
+                queryParams.get('pendingStation');
+            const stationToken = pendingToken || pendingTokenFromQuery;
+            if (!stationToken) return false;
+            const clearPendingStation = () => {
+                localStorage.removeItem('pending_pc_station');
+                const url = new URL(window.location.href);
+                ['station', 'pcStation', 'pcStationToken', 'stationToken', 'pc', 'pcId', 'pc_id', 'code', 'pending_station', 'pendingStation']
+                    .forEach((key) => url.searchParams.delete(key));
+                window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+            };
+
+            try {
+                const statusResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(stationToken)}/status`, {
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' }
+                });
+                const statusPayload = await statusResponse.json().catch(() => ({}));
+                if (!statusResponse.ok || !statusPayload.success || ['occupied', 'unavailable'].includes(statusPayload.state)) return false;
+                if (statusPayload.state === 'mine') {
+                    clearPendingStation();
+                    return true;
+                }
+
+                const actionResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(stationToken)}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify({ action: statusPayload.state === 'mine' ? 'logout' : 'login' })
+                });
+                const actionPayload = await actionResponse.json().catch(() => ({}));
+                if (!actionResponse.ok || !actionPayload.success || actionPayload.action !== 'login') return false;
+
+                clearPendingStation();
+                return true;
+            } catch (error) {
+                console.error('Unable to consume pending PC station:', error);
+                return false;
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
+            await consumePendingPcStation();
+            document.addEventListener('comlab:qr-scanner-error', (event) => {
+                setPCSessionFeedback(event.detail?.message || 'Unable to start the camera. Check your browser permissions and try again.');
+            });
+            document.addEventListener('comlab:pc-station-feedback', (event) => {
+                setPCSessionFeedback(event.detail?.message || '', event.detail?.state || 'info');
+            });
+            document.addEventListener('comlab:pc-station-session-updated', async (event) => {
+                setPCSessionFeedback(event.detail?.message || 'Your PC station session was updated.', 'success');
+                await Promise.allSettled([loadMyPCStationSessions(), loadUsageHistory()]);
+            });
+
             const loadingFallback = window.setTimeout(() => {
                 const history = document.getElementById('historyContainer');
                 if (history?.querySelector('.fa-spinner')) {
@@ -1217,9 +1374,6 @@
             window.clearTimeout(loadingFallback);
 
             const historyContainer = document.getElementById('historyContainer');
-            document.getElementById('pcStationScanButton')?.addEventListener('click', () => {
-                document.getElementById('qr-scan-float-btn')?.click();
-            });
             historyContainer?.addEventListener('click', (event) => {
                 const row = event.target.closest('[data-history-index]');
                 if (row) openPcHistoryDetail(Number(row.dataset.historyIndex));
@@ -1248,8 +1402,16 @@
             window.addEventListener('focus', refreshPCStationData);
             document.addEventListener('visibilitychange', refreshPCStationData);
         });
+
+        function setPCSessionFeedback(message, state = 'error') {
+            const feedback = document.getElementById('pcSessionFeedback');
+            if (!feedback) return;
+            feedback.textContent = message;
+            feedback.dataset.state = state;
+        }
     </script>
+    <script src="/js/qr-scanner-button.js?v=10" defer></script>
     <script src="/js/student-sidebar-config.js?v=31" defer></script>
-    <script src="/js/sidebar-component.js?v=108" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

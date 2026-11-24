@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Faculty Management | ComLab</title>
+  <title>Faculty at Your Campus | ComLab</title>
+  <meta name="app-hide-page-title" content="true">
   <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -102,10 +103,9 @@
       }
     }
 
-    .grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(360px, 1.2fr); align-items: start; gap: 1.2rem; }
+    .grid { display: block; }
     .panel { position: relative; padding: 1.35rem; overflow: hidden; }
     .panel::before { position: absolute; top: 0; right: 1.25rem; left: 1.25rem; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 38%, transparent), transparent); content: ''; pointer-events: none; }
-    .faculty-create-panel { align-self: start; }
     .faculty-list-panel { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
     .panel-title { display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1.15rem; }
     .panel-icon { display: grid; width: 2.55rem; height: 2.55rem; flex: none; place-items: center; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--accent) 11%, var(--surface)); color: var(--accent); box-shadow: inset 0 1px 0 #fff2; }
@@ -140,19 +140,44 @@
     .credential-value code { overflow-wrap: anywhere; color: var(--accent); font-size: .95rem; font-weight: 800; }
     .copy-password { flex: none; padding: .5rem .65rem; border: 1px solid var(--line); color: var(--text); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-size: .8rem; }
     .copy-password:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+    .add-faculty-trigger { display: inline-flex; width: auto; flex: 0 0 auto; align-self: flex-start; align-items: center; gap: .5rem; margin: 0; padding: .625rem 1rem; border: 1px solid #046a38; border-radius: .5rem; color: #fff; background: #046a38; font-weight: 600; }
+    .add-faculty-trigger i { color: #fff; }
+    .add-faculty-trigger:hover:not(:disabled) { border-color: #047857; color: #fff; background: #047857; }
+    .add-faculty-trigger:disabled { opacity: .6; cursor: wait; }
+    .add-faculty-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .faculty-create-feedback { margin: 0 0 .6rem; }
+    .add-faculty-dialog { position: fixed; inset: 0; box-sizing: border-box; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 1rem; border: 0; color: var(--text); background: transparent; overflow-y: auto; }
+    .add-faculty-dialog[open] { display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    .add-faculty-dialog::backdrop { background: rgba(2, 12, 8, .68); backdrop-filter: blur(4px); }
+    .add-faculty-dialog .faculty-create-panel { box-sizing: border-box; width: min(100%, 34rem); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); padding: 1.05rem 1.2rem; overflow-y: auto; }
+    .add-faculty-dialog .panel-title { align-items: center; margin-bottom: .35rem; }
+    .add-faculty-dialog .panel-title > div { flex: 1 1 auto; }
+    .add-faculty-dialog label { margin: .62rem 0 .28rem; }
+    .add-faculty-dialog input, .add-faculty-dialog select { padding: .62rem .75rem; }
+    .add-faculty-dialog .password-help { margin-top: .35rem; font-size: .72rem; }
+    .add-faculty-dialog .primary { margin-top: .75rem; padding: .7rem .9rem; }
+    .add-faculty-dialog .notice { margin-top: .55rem; }
 
-    .list-tools { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin: 0 0 .8rem; }
+    .list-tools { display: flex; align-items: center; justify-content: flex-start; gap: .8rem; margin: 0 0 .8rem; }
     .count { display: inline-flex; min-height: 2rem; align-items: center; gap: .42rem; padding: .4rem .68rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: color-mix(in srgb, var(--surface) 78%, transparent); font-size: .78rem; font-weight: 700; white-space: nowrap; }
     .count::before { width: .42rem; height: .42rem; flex: 0 0 .42rem; border-radius: 50%; background: var(--accent); content: ''; box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 55%, transparent); }
     .faculty-search { position: relative; display: block; width: min(100%, 17rem); margin: 0; }
     .faculty-search > i { position: absolute; top: 50%; left: .85rem; color: var(--muted); font-size: .82rem; transform: translateY(-50%); pointer-events: none; }
     .faculty-search input { padding: .66rem .75rem .66rem 2.25rem !important; border-radius: 12px; font-size: .84rem; }
-    .faculty-list { display: grid; min-height: 0; max-height: min(58vh, 35rem); align-content: start; gap: .58rem; overflow-x: hidden; overflow-y: auto; padding: .1rem .42rem .2rem .05rem; overscroll-behavior: contain; scrollbar-color: color-mix(in srgb, var(--accent) 50%, transparent) transparent; scrollbar-width: thin; }
+    .faculty-list { display: grid; min-height: 0; align-content: start; gap: .58rem; padding: .1rem .42rem .2rem .05rem; }
+    .faculty-list-footer { display: flex; align-items: center; gap: 1rem; margin-top: .65rem; padding: .7rem .1rem 0; border-top: 1px solid rgba(110, 231, 183, .14); }
+    .faculty-pagination-info { margin: 0; color: var(--muted); font-size: .75rem; font-weight: 650; }
+    .faculty-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .35rem; margin-left: auto; }
+    .faculty-pagination button { display: inline-flex; width: auto; min-width: 2rem; height: 2rem; align-items: center; justify-content: center; padding: 0 .65rem; border: 1px solid rgba(110, 231, 183, .2); border-radius: .6rem; background: rgba(5, 33, 22, .76); color: #b7d9c5; font-size: .74rem; font-weight: 700; line-height: 1; transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease; }
+    .faculty-pagination button:hover:not(:disabled) { transform: translateY(-1px); border-color: rgba(110, 231, 183, .48); background: rgba(15, 91, 56, .72); color: #f0fdf4; }
+    .faculty-pagination button[aria-current="page"] { border-color: #27a768; background: #046a38; color: #fff; box-shadow: 0 3px 10px rgba(22, 131, 74, .22); }
+    .faculty-pagination button:disabled { opacity: .42; cursor: not-allowed; }
+    .faculty-pagination-ellipsis { padding: 0 .2rem; color: var(--muted); font-size: .8rem; }
+    .faculty-actions-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-top: .85rem; padding-bottom: 4rem; }
+    .faculty-create-result { min-width: 0; flex: 1 1 auto; }
+    .faculty-actions-footer .add-faculty-trigger { align-self: flex-end; }
+    .faculty-actions-footer .credential-card { max-width: 32rem; margin-top: .6rem; }
     .faculty-list:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent); outline-offset: 3px; border-radius: 12px; }
-    .faculty-list::-webkit-scrollbar { width: 7px; }
-    .faculty-list::-webkit-scrollbar-track { border-radius: 999px; background: color-mix(in srgb, var(--surface) 65%, transparent); }
-    .faculty-list::-webkit-scrollbar-thumb { border: 2px solid var(--panel); border-radius: 999px; background: color-mix(in srgb, var(--accent) 48%, transparent); }
-    .faculty-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     .faculty-card { display: flex; min-width: 0; align-items: center; gap: .8rem; padding: .82rem; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 95%, var(--accent)), var(--surface)); transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
     .faculty-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 8%, transparent); }
     .faculty-card-actions { display: flex; flex: none; }
@@ -191,14 +216,19 @@
     @media (max-width: 900px) {
       .main-container { margin-left: 0; padding: 1rem; }
       .grid { grid-template-columns: 1fr; }
-      .faculty-list { max-height: 52vh; }
     }
     @media (max-width: 560px) {
       .hero { align-items: flex-start; flex-direction: column; padding: 1.15rem; }
       .panel { padding: 1.05rem; }
+      .add-faculty-dialog { padding: .65rem; }
+      .add-faculty-dialog .faculty-create-panel { max-height: calc(100vh - 1.3rem); max-height: calc(100dvh - 1.3rem); padding: .85rem; }
       .list-tools { align-items: stretch; flex-direction: column; }
       .faculty-search { width: 100%; }
-      .faculty-list { max-height: 48vh; }
+      .faculty-list-footer { align-items: flex-start; flex-direction: column; gap: .6rem; }
+      .faculty-pagination { width: 100%; justify-content: flex-end; margin-left: 0; }
+      .faculty-actions-footer { align-items: stretch; flex-direction: column; }
+      .faculty-actions-footer .credential-card { max-width: none; }
+      .faculty-actions-footer .add-faculty-trigger { align-self: flex-end; }
       .faculty-card { gap: .6rem; padding: .7rem; }
       .faculty-info .faculty-meta { flex-direction: column; gap: .15rem; }
       .college-pill { padding: .3rem .42rem; font-size: .65rem; }
@@ -225,33 +255,49 @@
         </div>
       </header>
       <div class="grid">
-        <section class="panel faculty-create-panel" aria-labelledby="addFacultyTitle">
-          <div class="panel-title"><span class="panel-icon"><i class="fa-solid fa-user-plus"></i></span><div><h2 id="addFacultyTitle">Add Faculty</h2></div></div>
-          <form id="facultyForm" class="faculty-form" autocomplete="on">
-            <label for="facultyName">Full name</label><input id="facultyName" name="name" autocomplete="name" maxlength="120" required placeholder="e.g. Maria Santos">
-            <label for="facultyEmail">Email address</label><input id="facultyEmail" name="email" type="email" autocomplete="email" maxlength="190" required placeholder="name@school.edu">
-            <label for="facultyCollege">College / institute</label>
-            <select id="facultyCollege" name="college" required><option value="">Select college / institute</option><option>IABE</option><option>CBM</option><option>CCS</option><option>CAS</option><option>CTE</option><option>CCJE</option><option>CAAF</option><option>IF</option><option>GS</option></select>
-            <label for="facultyPassword">Temporary password</label>
-            <div class="password-wrap"><input id="facultyPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="At least 8 characters"><button id="togglePassword" class="password-toggle" type="button" aria-label="Show password" aria-pressed="false"><i class="fa-regular fa-eye"></i></button></div>
-            <p class="password-help"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Use at least 8 characters. The password is shown only after the account is created.</span></p>
-            <button id="createFaculty" class="primary" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create Faculty Account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
-            <p class="notice" id="formNotice" role="status" aria-live="polite"></p>
-            <div id="createdCredential" class="credential-card" hidden>
-              <strong class="credential-heading"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Temporary password</strong>
-              <p>Share this with the account holder through a secure channel.</p>
-              <div class="credential-value"><code id="temporaryPasswordValue"></code><button type="button" class="copy-password" id="copyTemporaryPassword"><i class="fa-regular fa-copy"></i> Copy</button></div>
-            </div>
-          </form>
-        </section>
         <section class="panel faculty-list-panel" aria-labelledby="facultyListTitle">
           <div class="panel-title"><span class="panel-icon"><i class="fa-solid fa-users"></i></span><div><h2 id="facultyListTitle">Faculty at Your Campus</h2></div></div>
-          <div class="list-tools"><span class="count" id="facultyCount" aria-live="polite">Loading accounts…</span><label class="faculty-search"><span class="sr-only">Search faculty by name, email, or college</span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="facultySearch" type="search" aria-label="Search faculty by name, email, or college" placeholder="Search name or email"></label></div>
+          <div class="list-tools"><label class="faculty-search"><span class="sr-only">Search faculty by name, email, or college</span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="facultySearch" type="search" aria-label="Search faculty by name, email, or college" placeholder="Search name or email"></label></div>
           <div id="facultyList" class="faculty-list" role="region" aria-label="Faculty account list" tabindex="0"><div class="empty">Loading faculty accounts…</div></div>
+          <div class="faculty-list-footer">
+            <p class="faculty-pagination-info" id="facultyCount" aria-live="polite">Showing 0–0 of 0 faculty members</p>
+            <nav id="facultyPagination" class="faculty-pagination" aria-label="Faculty pages"></nav>
+          </div>
+          <div class="faculty-actions-footer">
+            <div class="faculty-create-result">
+              <p class="notice faculty-create-feedback" id="facultyCreateFeedback" role="status" aria-live="polite"></p>
+              <div id="createdCredential" class="credential-card" hidden>
+                <strong class="credential-heading"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Temporary password</strong>
+                <p>Share this with the account holder through a secure channel.</p>
+                <div class="credential-value"><code id="temporaryPasswordValue"></code><button type="button" class="copy-password" id="copyTemporaryPassword"><i class="fa-regular fa-copy"></i> Copy</button></div>
+              </div>
+            </div>
+            <button type="button" id="openAddFaculty" class="add-faculty-trigger"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Add Faculty</button>
+          </div>
         </section>
       </div>
     </div>
   </main>
+  <dialog id="addFacultyDialog" class="add-faculty-dialog" aria-labelledby="addFacultyTitle">
+    <section class="panel faculty-create-panel">
+      <div class="panel-title">
+        <span class="panel-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+        <div><h2 id="addFacultyTitle">Add Faculty</h2></div>
+        <button class="dialog-close" type="button" id="closeAddFaculty" aria-label="Close Add Faculty form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <form id="facultyForm" class="faculty-form" autocomplete="on">
+        <label for="facultyName">Full name</label><input id="facultyName" name="name" autocomplete="name" maxlength="120" required placeholder="e.g. Maria Santos">
+        <label for="facultyEmail">Email address</label><input id="facultyEmail" name="email" type="email" autocomplete="email" maxlength="190" required placeholder="name@school.edu">
+        <label for="facultyCollege">College / institute</label>
+        <select id="facultyCollege" name="college" required><option value="">Select college / institute</option><option>IABE</option><option>CBM</option><option>CCS</option><option>CAS</option><option>CTE</option><option>CCJE</option><option>CAAF</option><option>IF</option><option>GS</option></select>
+        <label for="facultyPassword">Temporary password</label>
+        <div class="password-wrap"><input id="facultyPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="At least 8 characters"><button id="togglePassword" class="password-toggle" type="button" aria-label="Show password" aria-pressed="false"><i class="fa-regular fa-eye"></i></button></div>
+        <p class="password-help"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Use at least 8 characters. The password is shown only after the account is created.</span></p>
+        <button id="createFaculty" class="primary" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create Faculty Account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+        <p class="notice" id="formNotice" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </dialog>
   <dialog id="editFacultyDialog" class="edit-dialog" aria-labelledby="editFacultyTitle">
     <form id="editFacultyForm" class="faculty-form">
       <div class="edit-dialog-header">
@@ -281,19 +327,48 @@
     (() => {
       const user = window.__CURRENT_USER__ || {};
       const form = document.getElementById('facultyForm');
+      const addFacultyDialog = document.getElementById('addFacultyDialog');
+      const addFacultyTrigger = document.getElementById('openAddFaculty');
       const list = document.getElementById('facultyList');
       const notice = document.getElementById('formNotice');
+      const creationFeedback = document.getElementById('facultyCreateFeedback');
       const search = document.getElementById('facultySearch');
       const editDialog = document.getElementById('editFacultyDialog');
       const editForm = document.getElementById('editFacultyForm');
       const editNotice = document.getElementById('editFacultyNotice');
       const archiveDialog = document.getElementById('archiveFacultyDialog');
       const archiveNotice = document.getElementById('archiveFacultyNotice');
+      const facultyPageSize = 5;
       let faculty = [];
+      let currentFacultyPage = 1;
       let pendingArchiveFacultyId = null;
       document.getElementById('campusName').textContent = String(user.campus || 'No campus assigned').replace(/\s*Campus\s*$/i, '');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
       const setNotice = (message, type = '') => { notice.textContent = message; notice.className = `notice ${type}`; };
+      const setCreationFeedback = (message, type = '') => { creationFeedback.textContent = message; creationFeedback.className = `notice faculty-create-feedback ${type}`; };
+      const resetPasswordVisibility = () => {
+        const passwordInput = document.getElementById('facultyPassword');
+        const toggle = document.getElementById('togglePassword');
+        passwordInput.type = 'password';
+        toggle.setAttribute('aria-label', 'Show password');
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.innerHTML = '<i class="fa-regular fa-eye"></i>';
+      };
+      addFacultyTrigger.addEventListener('click', () => {
+        setNotice('');
+        addFacultyDialog.showModal();
+        form.elements.name.focus();
+      });
+      document.getElementById('closeAddFaculty').addEventListener('click', () => addFacultyDialog.close());
+      addFacultyDialog.addEventListener('click', (event) => {
+        if (event.target === addFacultyDialog) addFacultyDialog.close();
+      });
+      addFacultyDialog.addEventListener('close', () => {
+        form.reset();
+        resetPasswordVisibility();
+        setNotice('');
+        addFacultyTrigger.focus();
+      });
       const readApiResponse = async (response) => {
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('json')) {
@@ -305,13 +380,65 @@
       const renderFaculty = () => {
         const query = search.value.trim().toLowerCase();
         const filtered = faculty.filter((person) => `${person.name} ${person.email} ${person.college}`.toLowerCase().includes(query));
-        const count = filtered.length === faculty.length || !query
-          ? `${faculty.length} faculty member${faculty.length === 1 ? '' : 's'}`
-          : `${filtered.length} of ${faculty.length} faculty members`;
-        document.getElementById('facultyCount').textContent = count;
+        const totalPages = Math.ceil(filtered.length / facultyPageSize);
+        currentFacultyPage = totalPages ? Math.min(Math.max(currentFacultyPage, 1), totalPages) : 1;
+        const startIndex = filtered.length ? (currentFacultyPage - 1) * facultyPageSize : 0;
+        const endIndex = filtered.length ? Math.min(startIndex + facultyPageSize, filtered.length) : 0;
+        document.getElementById('facultyCount').textContent = filtered.length
+          ? `Showing ${startIndex + 1}–${endIndex} of ${filtered.length} faculty members`
+          : 'Showing 0–0 of 0 faculty members';
         list.replaceChildren();
-        if (!filtered.length) { const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = query ? 'No faculty matched your search.' : 'No Faculty accounts are registered at this campus yet.'; list.append(empty); return; }
-        filtered.forEach((person) => {
+        const pagination = document.getElementById('facultyPagination');
+        pagination.replaceChildren();
+        if (!filtered.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = query ? 'No faculty matched your search.' : 'No Faculty accounts are registered at this campus yet.';
+          list.append(empty);
+          return;
+        }
+        const addPageButton = (label, page, disabled, isCurrent = false) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = label;
+          button.disabled = disabled;
+          button.setAttribute('aria-label', /^\d+$/.test(label) ? `Page ${label}` : `${label} page`);
+          if (isCurrent) button.setAttribute('aria-current', 'page');
+          button.addEventListener('click', () => {
+            currentFacultyPage = page;
+            renderFaculty();
+            pagination.querySelector('[aria-current="page"]')?.focus();
+          });
+          pagination.append(button);
+        };
+        addPageButton('Prev', currentFacultyPage - 1, currentFacultyPage === 1);
+        let visiblePages;
+        if (totalPages <= 5) {
+          visiblePages = Array.from({ length: totalPages }, (_, index) => index + 1);
+        } else {
+          let firstVisiblePage = Math.max(2, currentFacultyPage - 1);
+          let lastVisiblePage = Math.min(totalPages - 1, currentFacultyPage + 1);
+          if (currentFacultyPage <= 2) lastVisiblePage = Math.min(totalPages - 1, 3);
+          if (currentFacultyPage >= totalPages - 1) firstVisiblePage = Math.max(2, totalPages - 2);
+          visiblePages = [1];
+          if (firstVisiblePage > 2) visiblePages.push('…');
+          for (let page = firstVisiblePage; page <= lastVisiblePage; page += 1) visiblePages.push(page);
+          if (lastVisiblePage < totalPages - 1) visiblePages.push('…');
+          visiblePages.push(totalPages);
+        }
+        visiblePages.forEach((page) => {
+          if (page === '…') {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'faculty-pagination-ellipsis';
+            ellipsis.setAttribute('aria-hidden', 'true');
+            ellipsis.textContent = page;
+            pagination.append(ellipsis);
+            return;
+          }
+          addPageButton(String(page), page, false, page === currentFacultyPage);
+        });
+        addPageButton('Next', currentFacultyPage + 1, currentFacultyPage === totalPages);
+        filtered.slice(startIndex, endIndex).forEach((person) => {
           const card = document.createElement('article'); card.className = 'faculty-card';
           const initials = String(person.name || '').trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'FA';
           card.innerHTML = `<span class="avatar" aria-hidden="true">${escapeHtml(initials)}</span><div class="faculty-info"><strong>${escapeHtml(person.name)}</strong><div class="faculty-meta"><span><i class="fa-regular fa-envelope" aria-hidden="true"></i>${escapeHtml(person.email)}</span><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${escapeHtml(person.campus)}</span></div></div><span class="college-pill"><i class="fa-solid fa-building-columns" aria-hidden="true"></i>${escapeHtml(person.college || 'Faculty')}</span><div class="faculty-card-actions"><button type="button" class="edit-faculty" data-faculty-id="${escapeHtml(person.id)}" aria-label="Edit ${escapeHtml(person.name)}"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit</button><button type="button" class="archive-faculty" data-faculty-id="${escapeHtml(person.id)}" aria-label="Archive ${escapeHtml(person.name)}"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Archive</button></div>`;
@@ -413,7 +540,7 @@
           saveButton.disabled = false;
         }
       });
-      search.addEventListener('input', renderFaculty);
+      search.addEventListener('input', () => { currentFacultyPage = 1; renderFaculty(); });
       document.getElementById('togglePassword').addEventListener('click', (event) => {
         const input = document.getElementById('facultyPassword');
         const visible = input.type === 'password'; input.type = visible ? 'text' : 'password';
@@ -423,28 +550,48 @@
       });
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const button = document.getElementById('createFaculty'); button.disabled = true; setNotice('Creating Faculty account…');
+        const button = document.getElementById('createFaculty');
+        if (button.disabled) return;
+        button.disabled = true;
+        addFacultyTrigger.disabled = true;
+        setNotice('Creating Faculty account…');
+        const formData = Object.fromEntries(new FormData(form));
         try {
-          const response = await fetch('/api/faculty', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+          const response = await fetch('/api/faculty', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(formData) });
           const payload = await readApiResponse(response);
           if (!response.ok) throw new Error(payload.error || 'Unable to create Faculty account.');
-          const password = form.elements.password.value;
+          const password = String(formData.password || '');
           document.getElementById('temporaryPasswordValue').textContent = password;
           document.getElementById('createdCredential').hidden = false;
           form.reset();
-          setNotice(`${payload.faculty.name} was added. Share the temporary password securely.`, 'success');
-          await loadFaculty();
-        } catch (error) { setNotice(error.message, 'error'); }
-        finally { button.disabled = false; }
+          resetPasswordVisibility();
+          if (addFacultyDialog.open) addFacultyDialog.close();
+          setCreationFeedback(`${payload.faculty.name} was added. Share the temporary password securely.`, 'success');
+          try {
+            await loadFaculty();
+          } catch (error) {
+            list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+            document.getElementById('facultyCount').textContent = 'Unable to refresh accounts';
+            setCreationFeedback(`${payload.faculty.name} was added, but the faculty list could not be refreshed: ${error.message}`, 'error');
+          }
+        } catch (error) {
+          if (addFacultyDialog.open) setNotice(error.message, 'error');
+          else setCreationFeedback(error.message, 'error');
+        }
+        finally {
+          button.disabled = false;
+          addFacultyTrigger.disabled = false;
+          if (!addFacultyDialog.open) addFacultyTrigger.focus();
+        }
       });
       document.getElementById('copyTemporaryPassword').addEventListener('click', async () => {
         const password = document.getElementById('temporaryPasswordValue').textContent;
-        try { await navigator.clipboard.writeText(password); setNotice('Temporary password copied. Share it securely.', 'success'); }
-        catch { setNotice('Copy is unavailable. Select the password and share it securely.', 'error'); }
+        try { await navigator.clipboard.writeText(password); setCreationFeedback('Temporary password copied. Share it securely.', 'success'); }
+        catch { setCreationFeedback('Copy is unavailable. Select the password and share it securely.', 'error'); }
       });
       loadFaculty().catch((error) => { list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; document.getElementById('facultyCount').textContent = 'Unable to load accounts'; });
     })();
   </script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

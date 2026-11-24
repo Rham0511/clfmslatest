@@ -44,6 +44,10 @@
       <div class="comlab-footer-copy">
         &copy; 2026 <strong>Mindoro State University</strong> — College of Computer Studies. All rights reserved.
       </div>
+      <nav class="comlab-footer-legal" aria-label="Legal">
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms-of-service.html">Terms of Service</a>
+      </nav>
       <div class="comlab-footer-badge">
         <span class="comlab-footer-dot"></span>
         <span>ComLab Facilities Management System</span>
@@ -222,6 +226,23 @@
     .comlab-footer-copy strong {
       color: #cbd5e1;
       font-weight: 600;
+    }
+
+    .comlab-footer-legal {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+    }
+
+    .comlab-footer-legal a {
+      color: #a7f3d0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .comlab-footer-legal a:hover,
+    .comlab-footer-legal a:focus-visible {
+      color: #d1fae5;
     }
 
     .comlab-footer-badge {

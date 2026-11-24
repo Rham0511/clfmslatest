@@ -10,8 +10,9 @@
   <style>
     body {
       min-height: 100vh;
-      color: #f8fafc;
-      background:
+      color: var(--app-text, #f8fafc);
+      background-color: var(--app-bg, #061a13);
+      background-image:
         radial-gradient(circle at 5% 0%, rgba(34, 197, 94, .12), transparent 28rem),
         linear-gradient(180deg, #062417 0%, #03180f 100%);
     }
@@ -28,9 +29,10 @@
     }
 
     .faculty-surface {
-      border: 1px solid rgba(74, 222, 128, .16);
+      border: 1px solid var(--app-border, rgba(74, 222, 128, .16));
       border-radius: 1.25rem;
-      background: rgba(4, 35, 22, .96);
+      background: var(--app-card-bg, rgba(4, 35, 22, .96));
+      color: var(--app-text, #e6f5ec);
       box-shadow: 0 18px 48px rgba(0, 0, 0, .18);
     }
 
@@ -114,10 +116,10 @@
       display: inline-flex;
       align-items: center;
       gap: .35rem;
-      border: 1px solid rgba(74, 222, 128, .25);
+      border: 1px solid var(--app-border, #174b35);
       border-radius: 999px;
-      background: rgba(4, 106, 56, .2);
-      color: #d1fae5;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--app-text, #e6f5ec);
       padding: .35rem .7rem;
       font-size: .75rem;
       font-weight: 800;
@@ -126,9 +128,12 @@
     }
 
     .schedule-status.is-live {
-      border-color: rgba(74, 222, 128, .28);
-      background: rgba(34, 197, 94, .14);
-      color: #86efac;
+      border-color: var(--app-accent, #16a36a);
+      color: var(--app-accent, #16a36a);
+    }
+
+    .schedule-status.is-completed {
+      color: var(--app-text-secondary, #a7c5b4);
     }
 
     .schedule-card-copy .schedule-section {
@@ -350,15 +355,25 @@
     }
 
     .schedule-calendar-day-heading {
+      display: grid;
+      gap: .12rem;
       border-bottom: 1px solid rgba(74, 222, 128, .16);
       border-left: 1px solid rgba(74, 222, 128, .1);
       padding: .45rem .15rem;
-      color: #ecfdf5;
+      color: var(--app-text, #ecfdf5);
       text-align: center;
       font-size: .7rem;
       font-weight: 850;
       letter-spacing: .06em;
       text-transform: uppercase;
+    }
+
+    .schedule-calendar-day-heading > span:last-child {
+      color: var(--app-text-secondary, #a7c5b4);
+      font-size: .67rem;
+      font-weight: 650;
+      letter-spacing: 0;
+      text-transform: none;
     }
 
     .schedule-calendar-day-heading:first-child {
@@ -406,10 +421,12 @@
       align-items: stretch;
       justify-content: center;
       gap: .15rem;
-      border: 1px solid rgba(255, 255, 255, .42);
+      border: 1px solid var(--app-border, #174b35);
+      border-left: .25rem solid var(--schedule-event-accent, var(--app-accent, #16a36a));
       border-radius: .55rem;
       padding: .2rem .25rem;
-      color: #052e16;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--app-text, #e6f5ec);
       text-align: left;
       box-shadow: 0 4px 12px rgba(0, 0, 0, .24);
       cursor: pointer;
@@ -477,20 +494,20 @@
     }
 
     .schedule-calendar-entry.is-compact > span {
-      font-size: .58rem;
+      font-size: .65rem;
       line-height: 1.05;
     }
 
     .schedule-calendar-entry.is-compact .schedule-calendar-time-label {
-      font-size: .54rem !important;
+      font-size: .6rem !important;
     }
 
     .schedule-calendar-entry.is-compact .schedule-calendar-time-label [data-calendar-status] {
-      font-size: .45rem;
+      font-size: .49rem;
     }
 
     .schedule-calendar-entry.is-compact > strong {
-      font-size: .7rem;
+      font-size: .76rem;
       line-height: 1.05;
     }
 
@@ -502,15 +519,15 @@
     }
 
     .schedule-calendar-entry.is-live {
-      border-color: rgba(74, 222, 128, .85);
-      box-shadow: 0 0 0 1px rgba(74, 222, 128, .2), 0 4px 12px rgba(0, 0, 0, .24);
+      border-color: var(--app-accent, #16a36a);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--app-accent, #16a36a) 30%, transparent), 0 4px 12px rgba(0, 0, 0, .18);
     }
 
     .schedule-calendar-empty {
       grid-column: 2 / -1;
       align-self: center;
       padding: 1rem;
-      color: #86aa96;
+      color: var(--app-text-secondary, #a7c5b4);
       font-size: .8rem;
     }
 
@@ -1425,6 +1442,16 @@
       color: #065f46;
     }
 
+    .main-container.theme-light main.faculty-content .schedule-status.is-live {
+      border-color: #16a36a;
+      color: #047857;
+    }
+
+    .main-container.theme-light main.faculty-content .schedule-status.is-completed {
+      border-color: #cbd5e1;
+      color: #64748b;
+    }
+
     .main-container.theme-light main.faculty-content .schedule-card .text-slate-300,
     .main-container.theme-light main.faculty-content .schedule-card .text-slate-400,
     .main-container.theme-light main.faculty-content #scheduleList > .faculty-surface {
@@ -1468,14 +1495,14 @@
     }
 
     .main-container.theme-light .schedule-calendar-day-column {
-      border-color: #cbd5e1;
+      border-color: var(--schedule-grid-line);
       background-image: repeating-linear-gradient(
         to bottom,
         transparent 0,
-        transparent 2.4rem,
-        rgba(16, 185, 129, .18) 2.4rem,
-        rgba(16, 185, 129, .18) 2.5rem
-      );
+        transparent calc(var(--schedule-row-height, 40px) - 1px),
+        var(--schedule-grid-soft-line) calc(var(--schedule-row-height, 40px) - 1px),
+        var(--schedule-grid-soft-line) var(--schedule-row-height, 40px)
+      ) !important;
     }
 
     .main-container.theme-light .schedule-calendar-weekend-day {
@@ -1695,40 +1722,30 @@
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
   <style>
     body.schedule-page {
-      background: linear-gradient(180deg, #062417 0%, #03180f 100%) !important;
-      color: #f0fdf4;
+      --schedule-panel-bg: var(--app-card-bg, #0d2b20);
+      --schedule-calendar-bg: var(--app-content-bg, #091f17);
+      --schedule-control-bg: var(--app-input-bg, #0a2119);
+      --schedule-grid-line: color-mix(in srgb, var(--app-accent, #16a36a) 22%, var(--app-border, #174b35));
+      --schedule-grid-soft-line: color-mix(in srgb, var(--app-accent, #16a36a) 12%, transparent);
+      --schedule-muted: var(--app-text-secondary, #a7c5b4);
+      color: var(--app-text, #e6f5ec);
+      background: var(--app-bg, #061a13);
     }
 
     body.schedule-page .main-container.theme-light main.faculty-content {
-      background: #03180f !important;
-      color: #f0fdf4 !important;
-      color-scheme: dark;
-    }
-
-    body.schedule-page .main-container.theme-light main.faculty-content .system-dashboard-heading,
-    body.schedule-page .main-container.theme-light main.faculty-content .schedule-search,
-    body.schedule-page .main-container.theme-light .schedule-calendar-header,
-    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-day {
-      border-color: rgba(74, 222, 128, .22) !important;
-      background: #062417 !important;
-      color: #f0fdf4 !important;
-    }
-
-    body.schedule-page .main-container.theme-light .schedule-calendar-day-heading,
-    body.schedule-page .main-container.theme-light .schedule-calendar-time,
-    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-entry,
-    body.schedule-page .main-container.theme-light .schedule-calendar-weekend-entry strong {
-      color: #bbf7d0 !important;
+      background: var(--app-content-bg, #fff) !important;
+      color: var(--app-text, #1e293b) !important;
+      color-scheme: inherit;
     }
 
     body.schedule-page main.faculty-content .faculty-surface {
-      border-color: rgba(74, 222, 128, .18) !important;
-      background: #062417 !important;
-      color: #f0fdf4 !important;
+      border-color: var(--app-border, #174b35) !important;
+      background: var(--schedule-panel-bg) !important;
+      color: var(--app-text, #e6f5ec) !important;
     }
 
     body.schedule-page main.faculty-content .schedule-card {
-      background: linear-gradient(145deg, #0c3924, #062417) !important;
+      background: var(--schedule-panel-bg) !important;
     }
 
     body.schedule-page .faculty-modal .schedule-modal-panel {
@@ -1736,34 +1753,12 @@
       color: #f0fdf4 !important;
     }
 
-    body.schedule-page main.faculty-content [class*="text-slate-"],
-    body.schedule-page .faculty-modal [class*="text-slate-"] {
-      color: #bbf7d0 !important;
-    }
-
-    body.schedule-page main.faculty-content [class*="bg-slate-"],
-    body.schedule-page .faculty-modal [class*="bg-slate-"] {
-      background-color: #062417 !important;
-    }
-
-    #scheduleCalendarModal .schedule-calendar-panel {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-height: none;
-      min-height: 0;
-      overflow: visible;
-      padding: 0;
-    }
-
-    #scheduleCalendarModal .schedule-calendar-scroll {
-      height: min(68vh, 48rem);
-      min-height: 28rem;
-      overflow: auto;
+    body.schedule-page.system-layout-page .system-dashboard-heading h1 {
+      color: var(--app-text, #e6f5ec);
     }
 
     #scheduleCalendarModal .schedule-calendar-grid {
-      min-width: 900px;
+      min-width: 0;
     }
 
     #scheduleCalendarModal .schedule-calendar-header,
@@ -1983,8 +1978,8 @@
 
     body.schedule-page.faculty-page-heading-page.system-layout-page .main-container > main.faculty-content {
       box-sizing: border-box;
-      gap: 1.1rem !important;
-      padding: 0 clamp(1rem, 2vw, 1.75rem) 1.5rem !important;
+      gap: .85rem !important;
+      padding: 0 clamp(.75rem, 1.6vw, 1.5rem) 1.25rem !important;
     }
 
     body.schedule-page.faculty-page-heading-page.system-layout-page .system-dashboard-heading {
@@ -1997,7 +1992,7 @@
 
     body.schedule-page .system-dashboard-heading .schedule-page-heading-copy h1 {
       margin: 0;
-      color: #f0fdf4;
+      color: var(--app-text, #e6f5ec);
       font-size: clamp(1.15rem, 2vw, 1.55rem);
       font-weight: 850;
       letter-spacing: -.025em;
@@ -2006,7 +2001,7 @@
 
     body.schedule-page .schedule-page-heading-copy p {
       margin: .25rem 0 0;
-      color: #91c6a4;
+      color: var(--schedule-muted);
       font-size: .8rem;
       font-weight: 550;
       line-height: 1.4;
@@ -2015,10 +2010,208 @@
     body.schedule-page #scheduleCalendarModal {
       padding: 1.1rem !important;
       border-radius: 1.25rem;
-      background:
-        radial-gradient(600px 200px at 0% 0%, rgba(16, 185, 129, .08), transparent 78%),
-        linear-gradient(145deg, #072a1b, #041d13) !important;
+      border-color: var(--app-border, #174b35) !important;
+      background: var(--schedule-panel-bg) !important;
+      color: var(--app-text, #e6f5ec);
       box-shadow: 0 20px 52px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-panel {
+      display: grid;
+      grid-template-rows: auto auto minmax(22rem, 1fr);
+      min-width: 0;
+      gap: .85rem;
+      overflow: visible;
+      padding: 0;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-map {
+      min-width: 0;
+    }
+
+    #scheduleCalendarModal .schedule-map-heading h2 {
+      color: var(--app-text, #e6f5ec);
+    }
+
+    #scheduleCalendarModal .schedule-map-heading-icon {
+      border-color: var(--app-border, #174b35);
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--app-accent-hover, #1bc47d);
+    }
+
+    #scheduleCalendarModal .schedule-map-heading p {
+      color: var(--schedule-muted);
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar {
+      border-color: var(--app-border, #174b35);
+      background: var(--app-table-header-bg, #071a13);
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar label {
+      color: var(--app-text-secondary, #a7c5b4);
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar .schedule-search {
+      border: 1px solid var(--app-border, #174b35);
+      background: var(--schedule-control-bg);
+      color: var(--app-text, #e6f5ec);
+    }
+
+    #scheduleCalendarModal .schedule-map-toolbar .schedule-search:focus-visible {
+      border-color: var(--app-accent, #16a36a);
+      outline: 3px solid color-mix(in srgb, var(--app-accent, #16a36a) 25%, transparent);
+      outline-offset: 1px;
+    }
+
+    #scheduleCalendarModal .schedule-map-count {
+      color: var(--app-text-secondary, #a7c5b4);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-scroll {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      height: min(64vh, 45rem);
+      min-height: 22rem;
+      overflow: auto;
+      overscroll-behavior: contain;
+      border-color: var(--app-border, #174b35);
+      border-radius: .85rem;
+      background: var(--schedule-calendar-bg);
+      scrollbar-width: thin;
+      scrollbar-color: var(--app-accent, #16a36a) var(--schedule-calendar-bg);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-grid {
+      width: 100%;
+      min-width: 900px;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--app-table-header-bg, #071a13);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-day-heading:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 8;
+      background: var(--app-table-header-bg, #071a13);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-day-heading {
+      border-color: var(--schedule-grid-line);
+      color: var(--app-text, #e6f5ec);
+      font-size: .76rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-time {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: var(--schedule-panel-bg);
+      border-color: var(--schedule-grid-soft-line);
+      color: var(--app-text-secondary, #a7c5b4);
+      font-size: .68rem;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-day-column {
+      border-color: var(--schedule-grid-line);
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--schedule-row-height, 40px) - 1px),
+        var(--schedule-grid-soft-line) calc(var(--schedule-row-height, 40px) - 1px),
+        var(--schedule-grid-soft-line) var(--schedule-row-height, 40px)
+      ) !important;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry {
+      border: 1px solid color-mix(in srgb, var(--app-accent, #16a36a) 42%, var(--app-border, #174b35));
+      border-radius: .7rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .16);
+      transition: filter .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry:hover,
+    #scheduleCalendarModal .schedule-calendar-entry:focus-visible {
+      filter: brightness(1.04);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .2);
+      transform: translateY(-1px);
+    }
+
+    #scheduleCalendarModal .schedule-calendar-entry > strong {
+      font-size: .86rem;
+      line-height: 1.2;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-time-label {
+      align-items: flex-start;
+      font-size: .68rem !important;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-time-label [data-calendar-status] {
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: .05rem .3rem;
+      font-size: .54rem;
+      font-weight: 850;
+      line-height: 1.25;
+    }
+
+    #scheduleCalendarModal [data-calendar-status].is-upcoming {
+      color: #256d3e;
+    }
+
+    #scheduleCalendarModal [data-calendar-status].is-live {
+      color: #087f4b;
+    }
+
+    #scheduleCalendarModal [data-calendar-status].is-completed {
+      color: #64748b;
+    }
+
+    .main-container.theme-light #scheduleCalendarModal .schedule-calendar-header {
+      background: var(--app-table-header-bg, #f1f5f2);
+    }
+
+    .main-container.theme-light #scheduleCalendarModal .schedule-calendar-time {
+      background: var(--schedule-panel-bg);
+    }
+
+    .main-container.theme-light #scheduleCalendarModal .schedule-calendar-entry {
+      color: #123b27;
+    }
+
+    .main-container.theme-light #scheduleCalendarModal .schedule-calendar-entry.is-live {
+      border-color: #16a36a;
+    }
+
+    .main-container.theme-dark #scheduleCalendarModal .schedule-calendar-entry.is-live {
+      border-color: #4ade80;
+    }
+
+    .main-container.theme-dark #scheduleCalendarModal [data-calendar-status].is-upcoming {
+      color: #bbf7d0;
+    }
+
+    .main-container.theme-dark #scheduleCalendarModal [data-calendar-status].is-live {
+      color: #86efac;
+    }
+
+    .main-container.theme-dark #scheduleCalendarModal [data-calendar-status].is-completed {
+      color: #cbd5e1;
+    }
+
+    #scheduleCalendarModal .schedule-calendar-empty {
+      grid-column: 2 / -1;
+      border: 1px dashed var(--schedule-grid-line);
+      border-radius: .75rem;
+      background: var(--schedule-panel-bg);
+      color: var(--app-text-secondary, #a7c5b4);
     }
 
     #scheduleCalendarModal .schedule-calendar-panel {
@@ -2045,6 +2238,7 @@
 
     #scheduleCalendarModal .schedule-map-heading p {
       margin-top: .25rem;
+      color: var(--app-text-secondary, #a7c5b4);
       font-size: .82rem;
     }
 
@@ -2052,7 +2246,7 @@
       gap: 1rem;
       padding: .9rem;
       border-radius: 1rem;
-      background: rgba(2, 24, 15, .55);
+      background: var(--app-table-header-bg, #071a13);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .02);
     }
 
@@ -2079,18 +2273,19 @@
       box-sizing: border-box;
       margin: 0;
       padding: .5rem .8rem;
-      border: 1px solid rgba(74, 222, 128, .18);
+      border: 1px solid var(--app-border, #174b35);
       border-radius: 999px;
-      background: rgba(16, 185, 129, .09);
-      color: #a7f3d0;
+      background: var(--app-nav-active-bg, #0d3525);
+      color: var(--app-text-secondary, #a7c5b4);
       font-size: .78rem;
+      white-space: normal;
     }
 
     #scheduleCalendarModal .schedule-calendar-scroll {
       height: min(68vh, 45rem);
       min-height: 25rem;
       border-radius: 1rem;
-      background: rgba(2, 20, 13, .38);
+      background: var(--schedule-calendar-bg);
       box-shadow: inset 0 1px 5px rgba(0, 0, 0, .18);
     }
 
@@ -2148,6 +2343,7 @@
         padding: .7rem;
       }
     }
+
   </style>
 </head>
 <body class="app-shell student-portal faculty-page faculty-page-heading-page system-layout-page schedule-page">
@@ -2561,21 +2757,6 @@
       return hours * 60 + minutes;
     }
 
-    function getReadableScheduleTextColor(backgroundColor) {
-      const color = String(backgroundColor || '').replace('#', '');
-      if (!/^[\da-f]{6}$/i.test(color)) return '#ffffff';
-      const channels = [0, 2, 4].map((offset) => Number.parseInt(color.slice(offset, offset + 2), 16) / 255);
-      const linear = channels.map((channel) => channel <= 0.04045
-        ? channel / 12.92
-        : ((channel + 0.055) / 1.055) ** 2.4);
-      const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
-      const contrast = (foreground) => {
-        const ratio = foreground === '#ffffff' ? 1 : 0.007;
-        return (Math.max(luminance, ratio) + 0.05) / (Math.min(luminance, ratio) + 0.05);
-      };
-      return contrast('#03180f') >= contrast('#ffffff') ? '#03180f' : '#ffffff';
-    }
-
     function getScheduleWeekdayIndex(value) {
       const normalized = String(value || '').trim().toLowerCase();
       return scheduleWeekdays.findIndex((day) =>
@@ -2588,7 +2769,7 @@
       const start = parseScheduleMinutes(schedule.startTime);
       const end = parseScheduleMinutes(schedule.endTime);
       if (weekday < 0 || start === null || end === null || start === end) {
-        return { live: false, progress: 0 };
+        return { live: false, completed: false, progress: 0 };
       }
 
       const today = (now.getDay() + 6) % 7;
@@ -2598,13 +2779,22 @@
         ? (today === weekday && currentMinutes >= start) ||
           (today === (weekday + 1) % 7 && currentMinutes < end)
         : today === weekday && currentMinutes >= start && currentMinutes < end;
-      if (!isLive) return { live: false, progress: 0 };
+      if (!isLive) {
+        const completed = overnight
+          ? today === (weekday + 1) % 7 && currentMinutes >= end
+          : today === weekday && currentMinutes >= end;
+        return { live: false, completed, progress: 0 };
+      }
 
       const elapsed = overnight && today !== weekday
         ? currentMinutes + 1440 - start
         : currentMinutes - start;
       const duration = overnight ? end + 1440 - start : end - start;
-      return { live: true, progress: Math.max(0, Math.min(100, elapsed / duration * 100)) };
+      return { live: true, completed: false, progress: Math.max(0, Math.min(100, elapsed / duration * 100)) };
+    }
+
+    function getScheduleStatusLabel(state) {
+      return state.live ? 'ONGOING' : state.completed ? 'COMPLETED' : 'UPCOMING';
     }
 
     function updateScheduleLiveStates() {
@@ -2620,8 +2810,9 @@
         if (!badge || !footerLabel || !progress || !progressFill) return;
         card.classList.toggle('is-live', state.live);
         badge.classList.toggle('is-live', state.live);
-        badge.textContent = state.live ? 'LIVE' : 'UPCOMING';
-        footerLabel.textContent = state.live ? 'Class in progress' : 'Click to view details';
+        badge.classList.toggle('is-completed', state.completed);
+        badge.textContent = getScheduleStatusLabel(state);
+        footerLabel.textContent = state.live ? 'Class in progress' : state.completed ? 'Class completed' : 'Click to view details';
         progress.hidden = !state.live;
         progress.setAttribute('aria-valuenow', String(Math.round(state.progress)));
         progressFill.style.width = `${state.progress}%`;
@@ -2631,8 +2822,14 @@
         if (!schedule) return;
         const state = getScheduleLiveState(schedule, now);
         entry.classList.toggle('is-live', state.live);
+        entry.classList.toggle('is-completed', state.completed);
         const status = entry.querySelector('[data-calendar-status]');
-        if (status) status.textContent = state.live ? 'LIVE' : 'UPCOMING';
+        if (status) {
+          status.classList.toggle('is-live', state.live);
+          status.classList.toggle('is-completed', state.completed);
+          status.classList.toggle('is-upcoming', !state.live && !state.completed);
+          status.textContent = getScheduleStatusLabel(state);
+        }
       });
     }
 
@@ -2650,7 +2847,7 @@
         ['Year level', schedule.yearLevel || 'Not set — ask the administrator to edit this schedule'],
         ['Section', schedule.section || 'Not set — ask the administrator to edit this schedule'],
         ['Laboratory', schedule.laboratoryRoom],
-        ['Status', getScheduleLiveState(schedule).live ? 'LIVE' : 'UPCOMING']
+        ['Status', getScheduleStatusLabel(getScheduleLiveState(schedule))]
       ].forEach(([label, value]) => addScheduleModalDetail(content, label, value));
       openScheduleModal(modal);
     }
@@ -3127,10 +3324,15 @@
       timeHeader.className = 'schedule-calendar-day-heading';
       timeHeader.textContent = 'TIME';
       header.append(timeHeader);
-      calendarDays.forEach((day) => {
+      calendarDays.forEach((day, dayIndex) => {
         const heading = document.createElement('div');
         heading.className = 'schedule-calendar-day-heading';
-        heading.textContent = day.slice(0, 3).toUpperCase();
+        const weekday = document.createElement('span');
+        weekday.textContent = day;
+        const weekDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7) + dayIndex);
+        const dateLabel = document.createElement('span');
+        dateLabel.textContent = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(weekDate);
+        heading.append(weekday, dateLabel);
         heading.title = day;
         header.append(heading);
       });
@@ -3182,19 +3384,17 @@
         const event = document.createElement(schedule.isHardcoded ? 'div' : 'button');
         if (schedule.isHardcoded) event.setAttribute('role', 'group');
         else event.type = 'button';
-        event.className = `schedule-calendar-entry${getScheduleLiveState(schedule, now).live ? ' is-live' : ''}${schedule.isHardcoded ? ' is-hardcoded' : ''}`;
+        const state = getScheduleLiveState(schedule, now);
+        event.className = `schedule-calendar-entry${state.live ? ' is-live' : ''}${state.completed ? ' is-completed' : ''}${schedule.isHardcoded ? ' is-hardcoded' : ''}`;
         event.dataset.calendarScheduleId = String(schedule.id);
         event.dataset.scheduleStart = String(visibleStart);
         event.dataset.scheduleEnd = String(visibleEnd);
         const color = /^#[\da-f]{6}$/i.test(String(schedule.scheduleColor || ''))
           ? schedule.scheduleColor
           : '#16a34a';
-        const textColor = getReadableScheduleTextColor(color);
-        event.style.backgroundColor = color;
-        event.style.color = textColor;
-        event.style.borderColor = textColor === '#ffffff' ? 'rgba(255,255,255,.55)' : 'rgba(7,20,14,.42)';
+        event.style.setProperty('--schedule-event-accent', color);
         const eventHeight = ((visibleEnd - visibleStart) / slotMinutes) * rowHeight;
-        if (eventHeight < rowHeight * 5) event.classList.add('is-compact');
+        if (eventHeight < rowHeight * 3) event.classList.add('is-compact');
         if (schedule.isHardcoded) {
           const firstGridRow = Math.floor((visibleStart - calendarStart) / slotMinutes) + 1;
           const lastGridRow = Math.ceil((visibleEnd - calendarStart) / slotMinutes) + 1;
@@ -3217,7 +3417,10 @@
         time.textContent = `${formatSlotTime(start)}–${formatSlotTime(end)}`;
         const status = document.createElement('span');
         status.dataset.calendarStatus = '';
-        status.textContent = getScheduleLiveState(schedule, now).live ? 'LIVE' : 'UPCOMING';
+        status.classList.toggle('is-live', state.live);
+        status.classList.toggle('is-completed', state.completed);
+        status.classList.toggle('is-upcoming', !state.live && !state.completed);
+        status.textContent = getScheduleStatusLabel(state);
         time.append(status);
         const subject = document.createElement('strong');
         subject.textContent = schedule.subject || 'Laboratory session';
@@ -3455,8 +3658,8 @@
         const state = getScheduleLiveState(schedule);
         card.classList.toggle('is-live', state.live);
         const status = document.createElement('span');
-        status.className = `schedule-status${state.live ? ' is-live' : ''}`;
-        status.textContent = state.live ? 'LIVE' : 'UPCOMING';
+        status.className = `schedule-status${state.live ? ' is-live' : ''}${state.completed ? ' is-completed' : ''}`;
+        status.textContent = getScheduleStatusLabel(state);
         titleRow.append(subject, status);
         copy.append(titleRow);
         const classSection = getScheduleSectionLabel(schedule);
@@ -3528,7 +3731,7 @@
         const statusHint = document.createElement('span');
         statusHint.className = 'schedule-card-footer-hint flex items-center gap-1.5 font-medium text-emerald-300';
         statusHint.dataset.scheduleFooterLabel = '';
-        statusHint.textContent = state.live ? 'Class in progress' : 'Click to view details';
+        statusHint.textContent = state.live ? 'Class in progress' : state.completed ? 'Class completed' : 'Click to view details';
         footer.append(statusHint);
         const actions = document.createElement('div');
         actions.className = 'flex flex-wrap items-center justify-end gap-2';
@@ -4090,6 +4293,6 @@
     })();
   </script>
   <script src="/js/student-sidebar-config.js?v=30" defer></script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

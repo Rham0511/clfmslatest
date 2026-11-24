@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/sidebar.css?v=11">
   <style>
     * {
       box-sizing: border-box;
@@ -258,6 +259,18 @@
       display: flex;
       max-width: 600px;
       flex-direction: column;
+    }
+
+    .session-expired-notice {
+      margin: 0 0 1.25rem;
+      padding: .9rem 1rem;
+      border: 1px solid rgba(252, 211, 77, .48);
+      border-radius: .9rem;
+      background: rgba(120, 53, 15, .55);
+      color: #fef3c7;
+      font-size: .92rem;
+      font-weight: 700;
+      line-height: 1.5;
       gap: 0.85rem;
     }
 
@@ -425,7 +438,7 @@
     }
   </style>
 </head>
-<body>
+<body data-public-pc-station-scanner="true">
   <section class="landing-hero">
     <div class="landing-hero-content">
       <header class="landing-header">
@@ -464,6 +477,9 @@
       <main class="landing-main">
         <div class="landing-hero-grid">
           <div class="landing-copy">
+            {{#if sessionExpiredNotice}}
+              <div class="session-expired-notice" data-pc-session-expired role="alert">{{ sessionExpiredNotice }}</div>
+            {{/if}}
             <h1 class="landing-headline">
               Computer Laboratory
               <span class="landing-headline-highlight">Facilities Management System</span>
@@ -485,7 +501,20 @@
     </div>
   </section>
 
+  <script src="/js/qr-scanner-button.js?v=12" defer></script>
   <script>
+    if (document.querySelector('[data-pc-session-expired]')) {
+      const pendingStationStorageKeys = ['pending_pc_station', 'pending_pc_station_token', 'pendingPcStationToken'];
+      try {
+        for (const storage of [window.localStorage, window.sessionStorage]) {
+          pendingStationStorageKeys.forEach((key) => storage.removeItem(key));
+        }
+      } catch (error) {
+        console.warn('Unable to clear pending PC station browser state after session expiry.', error);
+      }
+      window.history.replaceState(null, '', '/');
+    }
+
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const mobileMenu = document.getElementById('mobileMenu');
 

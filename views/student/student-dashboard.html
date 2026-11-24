@@ -1199,7 +1199,17 @@
     }
 </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=41">
+    <style>
+        @media (max-width: 1023px), (pointer: coarse) {
+            #comlab-technician-notification-panel {
+                box-sizing: border-box !important;
+                left: max(12px, env(safe-area-inset-left)) !important;
+                right: max(12px, env(safe-area-inset-right)) !important;
+                width: auto !important;
+            }
+        }
+    </style>
 </head>
 <body class="app-shell student-portal system-layout-page student-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -1334,6 +1344,16 @@
         async function fetchJson(url) {
             const response = await fetch(url, { cache: 'no-store' });
             const payload = await response.json().catch(() => ({}));
+            if (response.status === 401 && payload.expired) {
+                try {
+                    localStorage.removeItem('pending_pc_station');
+                    sessionStorage.removeItem('pending_pc_station');
+                } catch (error) {
+                    console.warn('Unable to clear pending PC station browser state after session expiry.', error);
+                }
+                window.location.replace(payload.redirectUrl || '/?sessionExpired=pc-station');
+                throw new Error(payload.error || 'Your PC station session has expired.');
+            }
             if (!response.ok) {
                 throw new Error(payload.error || `Request failed (${response.status}).`);
             }
@@ -1542,11 +1562,19 @@
 
             if (activeStations.length) {
                 const activeStation = activeStations[0];
+                const stationCode = activeStation.setId
+                    ? String(activeStation.setId).replace(/^PC-SET-/i, '')
+                    : '';
+                const stationName = activeStation.setName ||
+                    activeStation.stationName ||
+                    (stationCode ? `PC Station ${stationCode}` : 'PC Station');
+                const stationLocation = activeStation.location ||
+                    (stationCode ? `PC Station ${stationCode}` : 'Currently signed in');
                 setMetric(
                     '[data-current-pc-value]',
                     '[data-current-pc-description]',
-                    activeStation.setName || activeStation.setId,
-                    activeStation.location || 'Currently signed in'
+                    stationName,
+                    stationLocation
                 );
             } else if (activeStationsResult.status === 'rejected') {
                 console.error('Unable to load active PC station sessions.', activeStationsResult.reason);
@@ -1880,6 +1908,69 @@
         window.openBorrowEquipmentModal = openBorrowEquipmentModal;
         window.closeBorrowEquipmentModal = closeBorrowEquipmentModal;
 
+        async function consumePendingPcStation() {
+            const pendingToken = localStorage.getItem('pending_pc_station');
+            const queryParams = new URLSearchParams(window.location.search);
+            const pendingTokenFromQuery = queryParams.get('station') ||
+                queryParams.get('pcStation') ||
+                queryParams.get('pcStationToken') ||
+                queryParams.get('stationToken') ||
+                queryParams.get('pc') ||
+                queryParams.get('pcId') ||
+                queryParams.get('pc_id') ||
+                queryParams.get('code') ||
+                queryParams.get('pending_station') ||
+                queryParams.get('pendingStation');
+            const stationToken = pendingToken || pendingTokenFromQuery;
+            if (!stationToken) return false;
+
+            try {
+                const statusResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(stationToken)}/status`, {
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' }
+                });
+                const statusPayload = await statusResponse.json().catch(() => ({}));
+                if (!statusResponse.ok || !statusPayload.success) return false;
+
+                if (['occupied', 'unavailable'].includes(statusPayload.state)) return false;
+                if (statusPayload.state === 'mine') {
+                    localStorage.removeItem('pending_pc_station');
+                    const url = new URL(window.location.href);
+                    ['station', 'pcStation', 'pcStationToken', 'stationToken', 'pc', 'pcId', 'pc_id', 'code', 'pending_station', 'pendingStation']
+                        .forEach((key) => url.searchParams.delete(key));
+                    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+                    return true;
+                }
+
+                const actionResponse = await fetch(`/api/pc-stations/qr/${encodeURIComponent(stationToken)}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify({ action: statusPayload.state === 'mine' ? 'logout' : 'login' })
+                });
+                const actionPayload = await actionResponse.json().catch(() => ({}));
+                if (!actionResponse.ok || !actionPayload.success) return false;
+                if (actionPayload.action !== 'login') return false;
+
+                localStorage.removeItem('pending_pc_station');
+                const url = new URL(window.location.href);
+                url.searchParams.delete('station');
+                url.searchParams.delete('pcStation');
+                url.searchParams.delete('pcStationToken');
+                url.searchParams.delete('stationToken');
+                url.searchParams.delete('pc');
+                url.searchParams.delete('pcId');
+                url.searchParams.delete('pc_id');
+                url.searchParams.delete('code');
+                url.searchParams.delete('pending_station');
+                url.searchParams.delete('pendingStation');
+                window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+                return true;
+            } catch (error) {
+                console.error('Unable to consume pending PC station:', error);
+                return false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             hydratePage();
 
@@ -1928,6 +2019,8 @@
 
             triggerBorrowModalFromHash();
             window.addEventListener('hashchange', triggerBorrowModalFromHash);
+
+            await consumePendingPcStation();
 
             document.addEventListener('click', (event) => {
                 const trigger = event.target.closest('.nav-item[href*="borrow-equipment"], .nav-item[data-open-borrow-modal="true"]');
@@ -1987,6 +2080,6 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=31" defer></script>
-    <script src="/js/sidebar-component.js?v=108" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

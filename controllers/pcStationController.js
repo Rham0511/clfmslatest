@@ -15,6 +15,23 @@ const getSupportedRole = (role) => {
   return null;
 };
 
+const PC_STATION_SESSION_LIMIT_HOURS = 3;
+const PC_STATION_SESSION_LIMIT_EXPIRED_SQL =
+  "startedAt IS NOT NULL AND startedAt <= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 3 HOUR)";
+const PC_STATION_SESSION_SCHEDULED_END_SQL =
+  "DATE_FORMAT(LEAST(UTC_TIMESTAMP(), COALESCE(autoLogoutAt, UTC_TIMESTAMP())), '%Y-%m-%d %H:%i:%s')";
+const PC_STATION_SESSION_LIMIT_END_SQL =
+  "DATE_FORMAT(LEAST(UTC_TIMESTAMP(), COALESCE(DATE_ADD(startedAt, INTERVAL 3 HOUR), UTC_TIMESTAMP())), '%Y-%m-%d %H:%i:%s')";
+const PC_STATION_SESSION_EXPIRED_MESSAGE =
+  "Your 3-hour PC station session has expired. Please scan an available PC station to log in again.";
+const PC_STATION_SESSION_EXPIRED_REDIRECT = "/?sessionExpired=pc-station";
+
+const getEffectivePCStationSessionEnd = (session, isStudent) => {
+  const endTimes = [session?.scheduledEndedAt];
+  if (isStudent) endTimes.push(session?.limitEndedAt);
+  return endTimes.filter(Boolean).sort()[0] || toUtcSqlDateTime(new Date());
+};
+
 const escapeHtml = (value) => String(value || "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -37,6 +54,73 @@ const getSessionUser = async (req) => {
   return User.findByPk(req.session.userId, {
     attributes: ["id", "name", "role", "campus", "student_number", "program", "year", "section"]
   });
+};
+
+export const syncStudentPCStationSessionExpiry = async (req, userId) => {
+  if (!req.session || !userId) return null;
+  const [session] = await sequelize.query(
+    `SELECT DATE_FORMAT(MIN(DATE_ADD(startedAt, INTERVAL ${PC_STATION_SESSION_LIMIT_HOURS} HOUR)), '%Y-%m-%dT%H:%i:%sZ') AS expiresAt
+     FROM pc_station_sessions
+     WHERE activeUserId = ? AND startedAt IS NOT NULL`,
+    { replacements: [userId], type: QueryTypes.SELECT }
+  );
+  if (session?.expiresAt) req.session.pcStationSessionExpiresAt = session.expiresAt;
+  else delete req.session.pcStationSessionExpiresAt;
+  return session?.expiresAt || null;
+};
+
+export const enforceStudentPCStationSessionLimit = async (req, res, next) => {
+  const userId = Number(req.session?.userId || 0);
+  if (!userId) return next();
+
+  let expirationDetected = false;
+  try {
+    const user = await getSessionUser(req);
+    if (getSupportedRole(user?.role) !== "student") return next();
+
+    const sessions = await sequelize.query(
+      `SELECT setId, startedAt,
+              (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS sessionLimitExpired
+       FROM pc_station_sessions
+       WHERE activeUserId = ? AND startedAt IS NOT NULL`,
+      { replacements: [user.id], type: QueryTypes.SELECT }
+    );
+    const sessionExpiry = Date.parse(String(req.session.pcStationSessionExpiresAt || ""));
+    const authSessionExpired = Number.isFinite(sessionExpiry) && Date.now() >= sessionExpiry;
+    const activeSessionExpired = sessions.some((session) => Number(session.sessionLimitExpired || 0) === 1);
+    if (!authSessionExpired && !activeSessionExpired) {
+      if (sessions.length) await syncStudentPCStationSessionExpiry(req, user.id);
+      else delete req.session.pcStationSessionExpiresAt;
+      return next();
+    }
+
+    expirationDetected = true;
+    await expirePCStationSessions({ userId: user.id });
+    await new Promise((resolve, reject) => {
+      req.session.destroy((error) => error ? reject(error) : resolve());
+    });
+    res.clearCookie("connect.sid");
+    if (req.path.startsWith("/api/")) {
+      return res.status(401).json({
+        success: false,
+        expired: true,
+        error: PC_STATION_SESSION_EXPIRED_MESSAGE,
+        redirectUrl: PC_STATION_SESSION_EXPIRED_REDIRECT
+      });
+    }
+    return res.redirect(303, PC_STATION_SESSION_EXPIRED_REDIRECT);
+  } catch (error) {
+    console.error("[PCStation] Failed to enforce the student session limit:", error);
+    if (expirationDetected) res.clearCookie("connect.sid");
+    return res.status(503).send("Unable to verify your PC station session. Please try again.");
+  }
+};
+
+export const enforceExpiredStudentPCStationSession = (req, res, next) => {
+  if (getSupportedRole(req.session?.userRole) !== "student") return next();
+  const expiresAt = Date.parse(String(req.session?.pcStationSessionExpiresAt || ""));
+  if (!Number.isFinite(expiresAt) || Date.now() < expiresAt) return next();
+  return enforceStudentPCStationSessionLimit(req, res, next);
 };
 
 const writeStationAudit = async (transaction, user, station, action, description) => {
@@ -161,6 +245,9 @@ const getValidSetId = (value) => {
   return setId.length > 0 && setId.length <= 50 ? setId : null;
 };
 
+const getStationSetIdFromQrValue = (value) =>
+  getValidSetId(readQrLinkToken(value, "pc-station")) || getValidSetId(value);
+
 const getDisplaySetId = (station) => {
   const localNumber = String(station?.setName || "").match(/(?:PC\s*Station|Station)\s*[-#:]?\s*(\d+)\s*$/i)?.[1];
   return localNumber
@@ -173,6 +260,163 @@ const toUtcSqlDateTime = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString().slice(0, 19).replace("T", " ");
+};
+
+export const hasActiveStudentPCStationSession = async (userId) => {
+  const sessions = await sequelize.query(
+    `SELECT setId
+     FROM pc_station_sessions
+     WHERE activeUserId = ?
+       AND (autoLogoutAt IS NULL OR autoLogoutAt > UTC_TIMESTAMP())
+       AND NOT (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL})
+     LIMIT 1`,
+    { replacements: [userId], type: QueryTypes.SELECT }
+  );
+  return sessions.length > 0;
+};
+
+export const claimStudentPCStationForLogin = async (user, scannedValue) => {
+  const setId = getStationSetIdFromQrValue(scannedValue);
+  if (!setId) return { success: false, status: 400, error: "Scan a valid PC station QR code before logging in." };
+  if ((await getArchivedEntityIds("pc-set")).includes(setId)) {
+    return { success: false, status: 404, error: "PC station not found. Please scan an available PC." };
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    const [station] = await sequelize.query(
+      `SELECT setId, setName, location, status, campusId, laboratoryId, computerLabId
+       FROM equipment_sets
+       WHERE BINARY setId = BINARY ?
+       FOR UPDATE`,
+      { replacements: [setId], type: QueryTypes.SELECT, transaction }
+    );
+    if (!station) return { success: false, status: 404, error: "PC station not found. Please scan an available PC." };
+    if (String(station.status || "").trim().toLowerCase() !== "active") {
+      return { success: false, status: 409, error: "This PC station is not available. Please scan an available PC." };
+    }
+
+    await sequelize.query(
+      `INSERT IGNORE INTO pc_station_sessions (setId, activeUserId, startedAt)
+       VALUES (?, NULL, NULL)`,
+      { replacements: [station.setId], type: QueryTypes.INSERT, transaction }
+    );
+    const [session] = await sequelize.query(
+      `SELECT activeUserId, startedAt, autoLogoutAt,
+              (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS scheduledExpired,
+              (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS durationExpired,
+              ${PC_STATION_SESSION_SCHEDULED_END_SQL} AS scheduledEndedAt,
+              ${PC_STATION_SESSION_LIMIT_END_SQL} AS limitEndedAt
+       FROM pc_station_sessions
+       WHERE BINARY setId = BINARY ?
+       FOR UPDATE`,
+      { replacements: [station.setId], type: QueryTypes.SELECT, transaction }
+    );
+
+    let activeUserId = session?.activeUserId == null ? null : Number(session.activeUserId);
+    if (activeUserId !== null) {
+      const expiredUserId = activeUserId;
+      const expiredUser = await User.findByPk(expiredUserId, {
+        attributes: ["id", "name", "role", "campus"],
+        transaction
+      });
+      const isStudent = getSupportedRole(expiredUser?.role) === "student";
+      const scheduledExpired = Number(session.scheduledExpired || 0) === 1;
+      const durationExpired = isStudent && Number(session.durationExpired || 0) === 1;
+      const effectiveEndedAt = getEffectivePCStationSessionEnd(session, isStudent);
+      if (scheduledExpired || durationExpired) {
+        await sequelize.query(
+          `UPDATE pc_station_sessions
+           SET endedAt = ?, sessionStatus = 'expired',
+               activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+           WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
+          { replacements: [effectiveEndedAt, station.setId, expiredUserId], type: QueryTypes.UPDATE, transaction }
+        );
+      }
+      if ((scheduledExpired || durationExpired) && isStudent) {
+        await finishStudentPCStationUsage({
+          userId: expiredUserId,
+          station,
+          startedAt: session.startedAt,
+          scheduledEndAt: effectiveEndedAt,
+          transaction
+        });
+      }
+      if (scheduledExpired || durationExpired) {
+        await writeStationAudit(
+          transaction,
+          expiredUser || { id: expiredUserId },
+          station,
+          "Logout",
+          stationAuditDescription(
+            "Automatically logged out",
+            station,
+            durationExpired
+              ? "The 3-hour PC station session limit was reached."
+              : "The scheduled PC station session had expired."
+          )
+        );
+        activeUserId = null;
+      }
+    }
+
+    if (activeUserId !== null && activeUserId !== Number(user.id)) {
+      return {
+        success: false,
+        status: 409,
+        error: "PC station currently in use. Please choose another PC station."
+      };
+    }
+
+    const newlyStarted = activeUserId === null;
+    if (newlyStarted) {
+      await sequelize.query(
+        `UPDATE pc_station_sessions
+         SET activeUserId = ?, startedAt = UTC_TIMESTAMP(), endedAt = NULL,
+             sessionStatus = 'active', autoLogoutAt = NULL
+         WHERE BINARY setId = BINARY ? AND activeUserId IS NULL`,
+        { replacements: [user.id, station.setId], type: QueryTypes.UPDATE, transaction }
+      );
+    }
+
+    const attendanceResult = await recordPCStationAttendance({ student: user, station, transaction });
+    const [activeSession] = await sequelize.query(
+      `SELECT startedAt,
+              DATE_FORMAT(DATE_ADD(startedAt, INTERVAL ${PC_STATION_SESSION_LIMIT_HOURS} HOUR), '%Y-%m-%dT%H:%i:%sZ') AS expiresAt
+       FROM pc_station_sessions
+       WHERE BINARY setId = BINARY ? AND activeUserId = ?
+       FOR UPDATE`,
+      { replacements: [station.setId, user.id], type: QueryTypes.SELECT, transaction }
+    );
+    if (!activeSession) {
+      return { success: false, status: 409, error: "Unable to start this PC station session. Please scan again." };
+    }
+
+    await startStudentPCStationUsage({
+      user,
+      station: { ...station, startedAt: activeSession.startedAt },
+      attendanceId: attendanceResult?.attendanceId || null,
+      transaction
+    });
+    if (attendanceResult?.autoLogoutAt) {
+      await sequelize.query(
+        `UPDATE pc_station_sessions
+         SET autoLogoutAt = ?
+         WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
+        { replacements: [toUtcSqlDateTime(attendanceResult.autoLogoutAt), station.setId, user.id], type: QueryTypes.UPDATE, transaction }
+      );
+    }
+    if (newlyStarted) {
+      await writeStationAudit(
+        transaction,
+        user,
+        station,
+        "Login",
+        stationAuditDescription("Logged in", station, "The student scanned the station QR code before logging in.")
+      );
+    }
+
+    return { success: true, setId: station.setId, newlyStarted, sessionExpiresAt: activeSession.expiresAt };
+  });
 };
 
 export const getPCStationQr = async (req, res) => {
@@ -224,20 +468,18 @@ export const getPCStationQr = async (req, res) => {
 };
 
 export const getPCStationScanAvailability = async (req, res) => {
-  const setId = getValidSetId(readQrLinkToken(req.params.token, "pc-station"));
+  const setId = getStationSetIdFromQrValue(req.params.token);
   if (!setId) return res.status(400).json({ success: false, error: "Invalid PC station QR code." });
-  if (!req.session?.userId) {
-    return res.status(401).json({ success: false, error: "Please sign in before scanning a PC station." });
-  }
 
   try {
+    await expirePCStationSessions({ setId });
     if ((await getArchivedEntityIds("pc-set")).includes(setId)) {
       return res.status(404).json({ success: false, error: "PC station not found." });
     }
 
-    const user = await getSessionUser(req);
+    const user = req.session?.userId ? await getSessionUser(req) : null;
     const role = getSupportedRole(user?.role);
-    if (!user || !role) {
+    if (req.session?.userId && (!user || !role)) {
       return res.status(403).json({ success: false, error: "Your account cannot use PC station sign-in." });
     }
 
@@ -257,8 +499,8 @@ export const getPCStationScanAvailability = async (req, res) => {
     );
     const activeUserId = session?.activeUserId == null ? null : Number(session.activeUserId);
     const sessionExpired = Number(session?.sessionExpired || 0) === 1;
-    const isMine = activeUserId === Number(user.id) && !sessionExpired;
-    const isOccupied = activeUserId !== null && activeUserId !== Number(user.id) && !sessionExpired;
+    const isMine = Boolean(user) && activeUserId === Number(user.id) && !sessionExpired;
+    const isOccupied = activeUserId !== null && !isMine && !sessionExpired;
     const isActive = String(station.status || "").toLowerCase() === "active";
 
     res.set({ "Cache-Control": "no-store, private" });
@@ -294,9 +536,10 @@ export const redirectLegacyPCStationQr = async (req, res) => {
 
     const token = createQrLinkToken("pc-station", stations[0].setId);
     const isStatusPath = req.path.endsWith("/status");
-    const suffix = isStatusPath
-      ? `/status${req.query.result === "logout" ? "?result=logout" : "?result=login"}`
+    const statusResult = ["login", "logout"].includes(req.query.result)
+      ? `?result=${req.query.result}`
       : "";
+    const suffix = isStatusPath ? `/status${statusResult}` : "";
     return res.redirect(302, `${getOpaqueStationPath(token)}${suffix}`);
   } catch (error) {
     console.error("[PCStation] Failed to update legacy station QR link:", error);
@@ -305,12 +548,20 @@ export const redirectLegacyPCStationQr = async (req, res) => {
 };
 
 export const scanPCStationQr = async (req, res) => {
-  const token = req.params.token;
-  const setId = getValidSetId(readQrLinkToken(token, "pc-station"));
+  const scannedValue = req.params.token;
+  const setId = getStationSetIdFromQrValue(scannedValue);
   if (!setId) return res.status(400).send("Invalid PC station ID.");
+  try {
+    await expirePCStationSessions({ setId });
+  } catch (error) {
+    console.error("[PCStation] Unable to expire an outdated session before QR scan:", error);
+    return res.status(500).send("Unable to check this PC station. Please try again.");
+  }
+  const token = readQrLinkToken(scannedValue, "pc-station")
+    ? scannedValue
+    : createQrLinkToken("pc-station", setId);
   if (!req.session?.userId) {
-    req.session.redirectTo = getOpaqueStationPath(token);
-    return res.redirect("/login");
+    return res.redirect(303, getStationResultPath(token));
   }
 
   const user = await getSessionUser(req);
@@ -318,13 +569,19 @@ export const scanPCStationQr = async (req, res) => {
     try {
       const activeSessions = await sequelize.query(
         `SELECT activeUserId,
-                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired,
+                (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS durationExpired
          FROM pc_station_sessions
          WHERE BINARY setId = BINARY ?
          LIMIT 1`,
         { replacements: [setId], type: QueryTypes.SELECT }
       );
-      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1;
+      const owner = activeSessions[0]?.activeUserId == null
+        ? null
+        : await User.findByPk(activeSessions[0].activeUserId, { attributes: ["id", "role"] });
+      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1
+        || (getSupportedRole(owner?.role) === "student"
+          && Number(activeSessions[0]?.durationExpired || 0) === 1);
       const activeUserId = sessionExpired || activeSessions[0]?.activeUserId == null
         ? null
         : Number(activeSessions[0].activeUserId);
@@ -346,26 +603,40 @@ export const scanPCStationQr = async (req, res) => {
 
 export const submitPCStationAction = async (req, res) => {
   const token = req.params.token;
-  const setId = getValidSetId(readQrLinkToken(token, "pc-station"));
-  if (!setId) return res.status(400).send("Invalid PC station ID.");
+  const isApiRequest = req.path.startsWith("/api/pc-stations/qr/");
+  if (isApiRequest) res.set({ "Cache-Control": "no-store, private" });
+  const respondWithError = (status, error) => isApiRequest
+    ? res.status(status).json({ success: false, error })
+    : res.status(status).send(escapeHtml(error));
+  const setId = isApiRequest
+    ? getStationSetIdFromQrValue(token)
+    : getStationSetIdFromQrValue(token);
+  if (!setId) return respondWithError(400, "Invalid PC station ID.");
   const requestedAction = String(req.body?.action || "").trim().toLowerCase();
   if (!["login", "logout"].includes(requestedAction)) {
-    return res.status(400).send("Choose Login or Logout to continue.");
+    return respondWithError(400, "Choose Login or Logout to continue.");
   }
 
   if (!req.session?.userId) {
+    if (isApiRequest) {
+      req.session.pendingPcStationToken = token;
+      return res.status(401).json({ success: false, error: "Please sign in before scanning a PC station." });
+    }
     req.session.redirectTo = getOpaqueStationPath(token);
-    return res.redirect("/login");
+    req.session.pendingPcStationToken = token;
+    return req.session.save(() =>
+      res.redirect(`/login?station=${encodeURIComponent(token)}`)
+    );
   }
 
   try {
     if ((await getArchivedEntityIds("pc-set")).includes(setId)) {
-      return res.status(404).send("PC station not found.");
+      return respondWithError(404, "PC station not found.");
     }
     const user = await getSessionUser(req);
     const role = getSupportedRole(user?.role);
     if (!user || !role) {
-      return res.status(403).send("Only signed-in administrators, students, and faculty can use a PC station QR code.");
+      return respondWithError(403, "Only signed-in administrators, students, and faculty can use a PC station QR code.");
     }
 
     const result = await sequelize.transaction(async (transaction) => {
@@ -384,7 +655,10 @@ export const submitPCStationAction = async (req, res) => {
       const activeSessions = await sequelize.query(
         `SELECT activeUserId, startedAt,
                 DATE_FORMAT(autoLogoutAt, '%Y-%m-%d %H:%i:%s') AS autoLogoutAt,
-                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS scheduledExpired,
+                (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS durationExpired,
+                ${PC_STATION_SESSION_SCHEDULED_END_SQL} AS scheduledEndedAt,
+                ${PC_STATION_SESSION_LIMIT_END_SQL} AS limitEndedAt
          FROM pc_station_sessions
          WHERE BINARY setId = BINARY ?
          FOR UPDATE`,
@@ -394,35 +668,54 @@ export const submitPCStationAction = async (req, res) => {
         ? null
         : Number(activeSessions[0].activeUserId);
 
-      if (activeUserId !== null && Number(activeSessions[0]?.sessionExpired || 0) === 1) {
+      if (activeUserId !== null) {
         const expiredUserId = activeUserId;
         const expiredUser = await User.findByPk(expiredUserId, {
           attributes: ["id", "name", "role", "campus"],
           transaction
         });
-        await sequelize.query(
-          `UPDATE pc_station_sessions
-           SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
-           WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
-          { replacements: [station.setId, expiredUserId], type: QueryTypes.UPDATE, transaction }
-        );
-        if (getSupportedRole(expiredUser?.role) === "student") {
+        const isStudent = getSupportedRole(expiredUser?.role) === "student";
+        const scheduledExpired = Number(activeSessions[0]?.scheduledExpired || 0) === 1;
+        const durationExpired = isStudent && Number(activeSessions[0]?.durationExpired || 0) === 1;
+        const effectiveEndedAt = getEffectivePCStationSessionEnd(activeSessions[0], isStudent);
+        if (scheduledExpired || durationExpired) {
+          await sequelize.query(
+            `UPDATE pc_station_sessions
+             SET endedAt = ?, sessionStatus = 'expired',
+                 activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+             WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
+            {
+              replacements: [effectiveEndedAt, station.setId, expiredUserId],
+              type: QueryTypes.UPDATE,
+              transaction
+            }
+          );
+        }
+        if ((scheduledExpired || durationExpired) && isStudent) {
           await finishStudentPCStationUsage({
             userId: expiredUserId,
             station,
             startedAt: activeSessions[0]?.startedAt,
-            scheduledEndAt: activeSessions[0]?.autoLogoutAt,
+            scheduledEndAt: effectiveEndedAt,
             transaction
           });
         }
-        await writeStationAudit(
-          transaction,
-          expiredUser || { id: expiredUserId },
-          station,
-          "Logout",
-          stationAuditDescription("Automatically logged out", station, "The scheduled PC station session had expired.")
-        );
-        activeUserId = null;
+        if (scheduledExpired || durationExpired) {
+          await writeStationAudit(
+            transaction,
+            expiredUser || { id: expiredUserId },
+            station,
+            "Logout",
+            stationAuditDescription(
+              "Automatically logged out",
+              station,
+              durationExpired
+                ? "The 3-hour PC station session limit was reached."
+                : "The scheduled PC station session had expired."
+            )
+          );
+          activeUserId = null;
+        }
       }
 
       if (requestedAction === "logout") {
@@ -431,7 +724,8 @@ export const submitPCStationAction = async (req, res) => {
         }
         await sequelize.query(
           `UPDATE pc_station_sessions
-           SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+           SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL,
+               endedAt = UTC_TIMESTAMP(), sessionStatus = 'completed'
            WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
           { replacements: [station.setId, user.id], type: QueryTypes.UPDATE, transaction }
         );
@@ -462,7 +756,7 @@ export const submitPCStationAction = async (req, res) => {
         return {
           station,
           stationOccupied: true,
-          error: `${station.setName} is currently in use. Please choose another PC station.`,
+          error: "PC station currently in use. Please choose another PC station.",
           status: 409
         };
       }
@@ -492,7 +786,8 @@ export const submitPCStationAction = async (req, res) => {
         : null;
       await sequelize.query(
         `UPDATE pc_station_sessions
-         SET activeUserId = ?, startedAt = UTC_TIMESTAMP(), autoLogoutAt = ?
+         SET activeUserId = ?, startedAt = UTC_TIMESTAMP(), endedAt = NULL,
+             sessionStatus = 'active', autoLogoutAt = ?
          WHERE BINARY setId = BINARY ?`,
         { replacements: [user.id, toUtcSqlDateTime(attendanceResult?.autoLogoutAt), station.setId], type: QueryTypes.UPDATE, transaction }
       );
@@ -518,8 +813,49 @@ export const submitPCStationAction = async (req, res) => {
       return { station, action: "login", role, attendanceResult };
     });
 
-    if (result.error && result.stationOccupied) return res.redirect(303, getStationResultPath(token));
-    if (result.error) return res.status(result.status).send(escapeHtml(result.error));
+    if (result.error && result.stationOccupied) {
+      if (isApiRequest) {
+        return res.status(result.status).json({
+          success: false,
+          state: "occupied",
+          error: result.error,
+          station: {
+            setId: result.station.setId,
+            setName: result.station.setName || result.station.setId,
+            location: result.station.location
+          }
+        });
+      }
+      return res.redirect(303, getStationResultPath(token));
+    }
+    if (result.error) {
+      return respondWithError(result.status, result.error);
+    }
+    if (result.action === "logout" && role === "student") {
+      try {
+        await new Promise((resolve, reject) => {
+          req.session.destroy((error) => error ? reject(error) : resolve());
+        });
+      } catch (error) {
+        console.error("[PCStation] Failed to clear the student login after station logout:", error);
+        return respondWithError(500, "The PC station session ended, but sign-out could not be completed. Please try again.");
+      }
+      res.clearCookie("connect.sid");
+      if (isApiRequest) {
+        return res.json({
+          success: true,
+          action: "logout",
+          station: {
+            setId: result.station.setId,
+            setName: result.station.setName || result.station.setId,
+            location: result.station.location
+          },
+          message: `You have been signed out from ${result.station.setName || result.station.setId}.`
+        });
+      }
+      return res.redirect(303, "/");
+    }
+    let attendanceNotice = null;
     if (result.attendanceResult && role === "student") {
       const attendance = result.attendanceResult;
       const subject = attendance.schedule?.subject || "the scheduled class";
@@ -537,11 +873,32 @@ export const submitPCStationAction = async (req, res) => {
       } else {
         notice = "No matching class schedule is active now, so class attendance was not recorded.";
       }
-      req.session.pcStationAttendanceNotice = { setId: result.station.setId, message: notice };
+      if (isApiRequest) attendanceNotice = notice;
+      else req.session.pcStationAttendanceNotice = { setId: result.station.setId, message: notice };
+    }
+    if (isApiRequest) {
+      return res.json({
+        success: true,
+        action: result.action,
+        station: {
+          setId: result.station.setId,
+          setName: result.station.setName || result.station.setId,
+          location: result.station.location
+        },
+        message: result.action === "logout"
+          ? `You have been signed out from ${result.station.setName || result.station.setId}.`
+          : `You are now signed in at ${result.station.setName || result.station.setId}.${attendanceNotice ? ` ${attendanceNotice}` : ""}`
+      });
+    }
+    if (req.body?.postLoginStationRedirect === "1" && result.role === "student" && result.action === "login") {
+      return res.redirect(303, "/dashboard");
     }
     return res.redirect(303, `${getStationResultPath(token)}?result=${result.action}`);
   } catch (error) {
     console.error("[PCStation] Failed to record station scan:", error);
+    if (isApiRequest) {
+      return res.status(500).json({ success: false, error: "Unable to record this PC station session. Please try again." });
+    }
     return res.status(500).send("Unable to record this PC station session. Please try again.");
   }
 };
@@ -552,12 +909,13 @@ export const showPCStationScanResult = async (req, res) => {
   if (!setId) return res.status(400).send("Invalid PC station ID.");
 
   try {
+    await expirePCStationSessions({ setId });
     if ((await getArchivedEntityIds("pc-set")).includes(setId)) {
       return res.status(404).send("PC station not found.");
     }
     const user = await getSessionUser(req);
     const role = getSupportedRole(user?.role);
-    if (!user || !role) return res.redirect("/login");
+    if (req.session?.userId && (!user || !role)) return res.redirect("/login");
 
     const stations = await sequelize.query(
       "SELECT setId, setName, location, status FROM equipment_sets WHERE BINARY setId = BINARY ? LIMIT 1",
@@ -566,31 +924,66 @@ export const showPCStationScanResult = async (req, res) => {
     const station = stations[0];
     if (!station) return res.status(404).send("PC station not found.");
 
-    const result = ["login", "logout"].includes(req.query.result) ? req.query.result : null;
+    let result = user && role && ["login", "logout"].includes(req.query.result) ? req.query.result : null;
+    let pendingAction = "login";
+    let stationOccupied = false;
+    const stationUnavailable = String(station.status || "").toLowerCase() !== "active";
+    const activeSessions = await sequelize.query(
+      `SELECT activeUserId,
+              (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired,
+              (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS durationExpired
+       FROM pc_station_sessions
+       WHERE BINARY setId = BINARY ?
+       LIMIT 1`,
+      { replacements: [station.setId], type: QueryTypes.SELECT }
+    );
+    const activeUserId = activeSessions[0]?.activeUserId == null
+      ? null
+      : Number(activeSessions[0].activeUserId);
+      const owner = activeSessions[0]?.activeUserId == null
+        ? null
+        : await User.findByPk(activeSessions[0].activeUserId, { attributes: ["id", "role"] });
+      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1
+        || (getSupportedRole(owner?.role) === "student"
+          && Number(activeSessions[0]?.durationExpired || 0) === 1);
+    const hasActiveSession = activeUserId !== null && !sessionExpired;
+    if (user && hasActiveSession && activeUserId === Number(user.id)) pendingAction = "logout";
+    else if (hasActiveSession) stationOccupied = true;
+    if (result === "login" && (!hasActiveSession || activeUserId !== Number(user?.id))) result = null;
+    if (result === "logout" && hasActiveSession && activeUserId === Number(user?.id)) result = null;
+    if (stationOccupied) result = null;
     const isComplete = result !== null;
     let attendanceNotice = null;
     if (isComplete && req.session?.pcStationAttendanceNotice?.setId === station.setId) {
       attendanceNotice = req.session.pcStationAttendanceNotice.message;
       delete req.session.pcStationAttendanceNotice;
     }
-    let pendingAction = "login";
-    let stationOccupied = false;
-    const stationUnavailable = String(station.status || "").toLowerCase() !== "active";
-    if (!isComplete) {
-      const activeSessions = await sequelize.query(
-        `SELECT activeUserId,
-                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS sessionExpired
-         FROM pc_station_sessions
-         WHERE BINARY setId = BINARY ?
-         LIMIT 1`,
-        { replacements: [station.setId], type: QueryTypes.SELECT }
-      );
-      const activeUserId = activeSessions[0]?.activeUserId == null
-        ? null
-        : Number(activeSessions[0].activeUserId);
-      const sessionExpired = Number(activeSessions[0]?.sessionExpired || 0) === 1;
-      if (activeUserId === Number(user.id) && !sessionExpired) pendingAction = "logout";
-      else if (activeUserId !== null && !sessionExpired) stationOccupied = true;
+    if (!user) {
+      if (stationOccupied || stationUnavailable) {
+        if (req.session) {
+          await new Promise((resolve, reject) => {
+            req.session.destroy((error) => error ? reject(error) : resolve());
+          });
+        }
+        res.clearCookie("connect.sid");
+      } else {
+        req.session.redirectTo = getOpaqueStationPath(token);
+        req.session.pendingPcStationToken = token;
+        req.session.pendingPcStationAvailableToken = token;
+        return req.session.save(() =>
+          res.redirect(`/login?role=student&station=${encodeURIComponent(token)}`)
+        );
+      }
+    }
+    if (
+      stationOccupied &&
+      role === "student" &&
+      !(await hasActiveStudentPCStationSession(user.id))
+    ) {
+      await new Promise((resolve, reject) => {
+        req.session.destroy((error) => error ? reject(error) : resolve());
+      });
+      res.clearCookie("connect.sid");
     }
     const isLogin = (result || pendingAction) === "login";
     const auditUrl = role === "admin"
@@ -610,7 +1003,7 @@ export const showPCStationScanResult = async (req, res) => {
       : pendingAction === "logout"
         ? `You are currently signed in at ${station.setName}. Confirm below when you are ready to log out.`
         : stationOccupied
-          ? `${station.setName} is currently occupied by another signed-in user. This station is locked until they sign out. Please choose another PC station.`
+            ? "PC station currently in use. Please choose another PC station."
           : stationUnavailable
             ? `${station.setName} is not currently available for sign-in. Please choose another PC station.`
             : `Confirm below to sign in at ${station.setName}.`;
@@ -633,7 +1026,7 @@ export const showPCStationScanResult = async (req, res) => {
         <span>Go to dashboard</span>
       </a>`
       : stationOccupied || (stationUnavailable && pendingAction !== "logout")
-        ? `<a class="action action-secondary" href="${escapeHtml(dashboardUrl)}">Return to dashboard</a>`
+        ? `<a class="action action-secondary" href="/?scan=student-login" data-clear-pending-pc-station>Scan Another PC</a>`
       : `<form method="post" action="${escapeHtml(`${getOpaqueStationPath(token)}/action`)}">
         <input type="hidden" name="action" value="${escapeHtml(pendingAction)}">
         <button class="action action-primary" type="submit">${pendingAction === "login" ? "Login to this PC" : "Logout from this PC"}</button>
@@ -771,6 +1164,17 @@ export const showPCStationScanResult = async (req, res) => {
       ${actionsHtml}
     </nav>
   </main>
+  <script>
+    document.querySelectorAll("[data-clear-pending-pc-station]").forEach((link) => {
+      link.addEventListener("click", () => {
+        const keys = ["pending_pc_station", "pending_station", "pendingStation", "station", "pcStation", "pcStationToken", "stationToken", "pc", "pcId", "pc_id", "code"];
+        keys.forEach((key) => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+      });
+    });
+  </script>
 </body>
 </html>`);
   } catch (error) {
@@ -790,20 +1194,36 @@ export const getMyPCStationSessions = async (req, res) => {
       return res.status(403).json({ success: false, error: "This session list is available to students only." });
     }
 
+    await expirePCStationSessions({ userId: user.id });
     const sessions = await sequelize.query(
-      `SELECT ps.setId, COALESCE(es.setName, ps.setId) AS setName,
-              es.location, ps.startedAt, ps.autoLogoutAt,
+      `SELECT ps.setId, NULLIF(TRIM(es.setName), '') AS setName,
+              es.location,
+              COALESCE(
+                NULLIF(TRIM(es.location), ''),
+                NULLIF(CONCAT_WS(' · ', NULLIF(TRIM(lab.name), ''), NULLIF(TRIM(lab.roomNumber), '')), '')
+              ) AS displayLocation,
+              ps.startedAt, ps.autoLogoutAt,
+              DATE_FORMAT(DATE_ADD(ps.startedAt, INTERVAL ${PC_STATION_SESSION_LIMIT_HOURS} HOUR), '%Y-%m-%dT%H:%i:%sZ') AS expiresAt,
               es.campusId, es.laboratoryId, es.computerLabId
        FROM pc_station_sessions ps
        LEFT JOIN equipment_sets es ON BINARY es.setId = BINARY ps.setId
+       LEFT JOIN computer_labs lab ON lab.id = COALESCE(es.computerLabId, es.laboratoryId)
        WHERE ps.activeUserId = ?
          AND (ps.autoLogoutAt IS NULL OR ps.autoLogoutAt > UTC_TIMESTAMP())
+         AND ps.startedAt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${PC_STATION_SESSION_LIMIT_HOURS} HOUR)
        ORDER BY ps.startedAt DESC, ps.setId ASC`,
       { replacements: [user.id], type: QueryTypes.SELECT }
     );
 
     res.set({ "Cache-Control": "no-store, private" });
-    return res.json({ success: true, sessions });
+    const formattedSessions = sessions.map((session) => ({
+      ...session,
+      stationName: session.setName || `PC Station ${String(session.setId || "").replace(/^PC-SET-/i, "")}`,
+      location: session.displayLocation || session.location || null,
+      status: "active"
+    }));
+
+    return res.json({ success: true, sessions: formattedSessions });
   } catch (error) {
     console.error("[PCStation] Failed to load current student station sessions:", error);
     return res.status(500).json({ success: false, error: "Unable to load your active PC station." });
@@ -831,6 +1251,15 @@ export const logoutMyPCStationSession = async (req, res) => {
     );
     if (!endedCount) {
       return res.status(409).json({ success: false, error: "You are no longer signed in at this PC station." });
+    }
+
+    if (!(await hasActiveStudentPCStationSession(user.id))) {
+      await new Promise((resolve, reject) => {
+        req.session.destroy((error) => error ? reject(error) : resolve());
+      });
+      res.clearCookie("connect.sid");
+    } else {
+      await syncStudentPCStationSessionExpiry(req, user.id);
     }
 
     return res.json({ success: true, message: "You have been signed out from this PC station." });
@@ -875,7 +1304,8 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
 
       const [, metadata] = await sequelize.query(
         `UPDATE pc_station_sessions
-         SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+         SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL,
+             endedAt = UTC_TIMESTAMP(), sessionStatus = 'completed'
          WHERE BINARY setId = BINARY ? AND activeUserId = ?`,
         { replacements: [session.setId, userId], type: QueryTypes.UPDATE, transaction }
       );
@@ -910,68 +1340,102 @@ export const endUserStationSessions = async (userId, reason = "The user logged o
   });
 };
 
-export const expirePCStationSessions = async () => sequelize.transaction(async (transaction) => {
-  const dueSessions = await sequelize.query(
-    `SELECT setId, activeUserId, startedAt,
-            DATE_FORMAT(autoLogoutAt, '%Y-%m-%d %H:%i:%s') AS autoLogoutAt
-     FROM pc_station_sessions
-     WHERE activeUserId IS NOT NULL AND autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()
-     ORDER BY setId`,
-    { type: QueryTypes.SELECT, transaction }
-  );
-  let endedCount = 0;
-
-  for (const due of dueSessions) {
-    const stations = await sequelize.query(
-      "SELECT setId, setName, location, campusId, laboratoryId, computerLabId FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
-      { replacements: [due.setId], type: QueryTypes.SELECT, transaction }
-    );
-    const sessionRows = await sequelize.query(
+export const expirePCStationSessions = async ({ userId = null, setId = null } = {}) =>
+  sequelize.transaction(async (transaction) => {
+    const dueSessions = await sequelize.query(
       `SELECT setId, activeUserId
        FROM pc_station_sessions
-       WHERE BINARY setId = BINARY ? AND activeUserId = ? AND autoLogoutAt <= UTC_TIMESTAMP()
-       FOR UPDATE`,
-      { replacements: [due.setId, due.activeUserId], type: QueryTypes.SELECT, transaction }
+       WHERE activeUserId IS NOT NULL
+         AND ((autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP())
+              OR (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}))
+         ${userId ? "AND activeUserId = ?" : ""}
+         ${setId ? "AND BINARY setId = BINARY ?" : ""}
+       ORDER BY setId`,
+      {
+        replacements: [
+          ...(userId ? [userId] : []),
+          ...(setId ? [setId] : [])
+        ],
+        type: QueryTypes.SELECT,
+        transaction
+      }
     );
-    if (!sessionRows.length) continue;
+    let endedCount = 0;
 
-    const user = await User.findByPk(due.activeUserId, {
-      attributes: ["id", "name", "role", "campus"],
-      transaction
-    });
-    const [, metadata] = await sequelize.query(
-      `UPDATE pc_station_sessions
-       SET activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
-       WHERE BINARY setId = BINARY ? AND activeUserId = ? AND autoLogoutAt <= UTC_TIMESTAMP()`,
-      { replacements: [due.setId, due.activeUserId], type: QueryTypes.UPDATE, transaction }
-    );
-    const affectedRows = typeof metadata === "number"
-      ? metadata
-      : Number(metadata?.affectedRows || 0);
-    if (affectedRows !== 1) continue;
+    for (const due of dueSessions) {
+      const stations = await sequelize.query(
+        "SELECT setId, setName, location, campusId, laboratoryId, computerLabId FROM equipment_sets WHERE BINARY setId = BINARY ? FOR UPDATE",
+        { replacements: [due.setId], type: QueryTypes.SELECT, transaction }
+      );
+      const [session] = await sequelize.query(
+        `SELECT setId, activeUserId, startedAt, autoLogoutAt,
+                (autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP()) AS scheduledExpired,
+                (${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}) AS durationExpired,
+                ${PC_STATION_SESSION_SCHEDULED_END_SQL} AS scheduledEndedAt,
+                ${PC_STATION_SESSION_LIMIT_END_SQL} AS limitEndedAt
+         FROM pc_station_sessions
+         WHERE BINARY setId = BINARY ? AND activeUserId = ?
+         FOR UPDATE`,
+        { replacements: [due.setId, due.activeUserId], type: QueryTypes.SELECT, transaction }
+      );
+      if (!session) continue;
 
-    const station = {
-      setId: due.setId,
-      setName: stations[0]?.setName || due.setId
-    };
-    await writeStationAudit(
-      transaction,
-      user || { id: due.activeUserId },
-      station,
-      "Logout",
-      stationAuditDescription("Automatically logged out", station, "The scheduled class ended.")
-    );
-    if (getSupportedRole(user?.role) === "student") {
-      await finishStudentPCStationUsage({
-        userId: due.activeUserId,
-        station: { ...station, ...stations[0] },
-        startedAt: due.startedAt,
-        scheduledEndAt: due.autoLogoutAt,
+      const user = await User.findByPk(due.activeUserId, {
+        attributes: ["id", "name", "role", "campus"],
         transaction
       });
-    }
-    endedCount += 1;
-  }
+      const isStudent = getSupportedRole(user?.role) === "student";
+      const scheduledExpired = Number(session.scheduledExpired || 0) === 1;
+      const durationExpired = isStudent && Number(session.durationExpired || 0) === 1;
+      if (!scheduledExpired && !durationExpired) continue;
+      const effectiveEndedAt = getEffectivePCStationSessionEnd(session, isStudent);
 
-  return endedCount;
-});
+      const [, metadata] = await sequelize.query(
+        `UPDATE pc_station_sessions
+         SET endedAt = ?, sessionStatus = 'expired',
+             activeUserId = NULL, startedAt = NULL, autoLogoutAt = NULL
+         WHERE BINARY setId = BINARY ? AND activeUserId = ?
+           AND ((autoLogoutAt IS NOT NULL AND autoLogoutAt <= UTC_TIMESTAMP())
+                OR (? = 1 AND ${PC_STATION_SESSION_LIMIT_EXPIRED_SQL}))`,
+        {
+          replacements: [effectiveEndedAt, due.setId, due.activeUserId, isStudent ? 1 : 0],
+          type: QueryTypes.UPDATE,
+          transaction
+        }
+      );
+      const affectedRows = typeof metadata === "number"
+        ? metadata
+        : Number(metadata?.affectedRows || 0);
+      if (affectedRows !== 1) continue;
+
+      const station = {
+        setId: due.setId,
+        setName: stations[0]?.setName || due.setId
+      };
+      await writeStationAudit(
+        transaction,
+        user || { id: due.activeUserId },
+        station,
+        "Logout",
+        stationAuditDescription(
+          "Automatically logged out",
+          station,
+          durationExpired
+            ? "The 3-hour PC station session limit was reached."
+            : "The scheduled class ended."
+        )
+      );
+      if (isStudent) {
+        await finishStudentPCStationUsage({
+          userId: due.activeUserId,
+          station: { ...station, ...stations[0] },
+          startedAt: session.startedAt,
+          scheduledEndAt: effectiveEndedAt,
+          transaction
+        });
+      }
+      endedCount += 1;
+    }
+
+    return endedCount;
+  });

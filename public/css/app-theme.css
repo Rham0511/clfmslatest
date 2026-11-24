@@ -6,7 +6,7 @@
   --app-content-bg: #091F17;
   --app-card-bg: #0D2B20;
   --app-table-bg: #0A2119;
-  --app-table-header-bg: #103B2B;
+  --app-table-header-bg: #071A13;
   --app-table-row-bg: #0A2119;
   --app-table-row-alt-bg: #0C281D;
   --app-input-bg: #0A2119;
@@ -28,9 +28,9 @@ html.theme-light {
   --app-content-bg: #FFFFFF;
   --app-card-bg: #FFFFFF;
   --app-table-bg: #FFFFFF;
-  --app-table-header-bg: #FFFFFF;
+  --app-table-header-bg: #F1F5F2;
   --app-table-row-bg: #FFFFFF;
-  --app-table-row-alt-bg: #FFFFFF;
+  --app-table-row-alt-bg: #F8FAFC;
   --app-input-bg: #FFFFFF;
   --app-border: #E5E7EB;
   --app-accent: #16A34A;
@@ -50,7 +50,7 @@ html.theme-dark {
   --app-content-bg: #091F17;
   --app-card-bg: #0D2B20;
   --app-table-bg: #0A2119;
-  --app-table-header-bg: #103B2B;
+  --app-table-header-bg: #071A13;
   --app-table-row-bg: #0A2119;
   --app-table-row-alt-bg: #0C281D;
   --app-input-bg: #0A2119;
@@ -336,7 +336,7 @@ html body.app-shell :is(.tab-switcher .action-btn.primary, .pagination-btn.activ
 }
 
 html body.app-shell :is(
-  .table-wrap,
+  [class*="table-wrap"],
   .table-scroll-wrapper,
   .assignment-table-scroll,
   .attendance-table-wrap,
@@ -346,31 +346,31 @@ html body.app-shell :is(
   background: var(--app-table-bg) !important;
 }
 
-html body.app-shell table {
+html body.app-shell:not(.reports-page) table {
   background: var(--app-table-bg) !important;
   color: var(--app-text) !important;
 }
 
-html body.app-shell table :is(thead, thead tr, th) {
+html body.app-shell:not(.reports-page) table :is(thead, thead tr, th) {
   border-color: var(--app-border) !important;
   background: var(--app-table-header-bg) !important;
   color: var(--app-text) !important;
 }
 
-html body.app-shell table tbody,
-html body.app-shell table tbody tr {
+html body.app-shell:not(.reports-page) table tbody,
+html body.app-shell:not(.reports-page) table tbody tr {
   background: var(--app-table-row-bg) !important;
 }
 
-html body.app-shell table tbody tr:nth-child(even) {
+html body.app-shell:not(.reports-page) table tbody tr:nth-child(even) {
   background: var(--app-table-row-alt-bg) !important;
 }
 
-html body.app-shell table tbody tr:hover {
+html body.app-shell:not(.reports-page) table tbody tr:hover {
   background: var(--app-hover-bg) !important;
 }
 
-html body.app-shell table tbody td {
+html body.app-shell:not(.reports-page) table tbody td {
   border-color: var(--app-border) !important;
   color: var(--app-text) !important;
 }
@@ -454,7 +454,7 @@ html.theme-dark body.app-shell :is(
   color: var(--app-text) !important;
 }
 
-html.theme-dark body.app-shell :is(
+html.theme-dark body.app-shell:not(.faculty-dashboard-page) :is(
   .main-container.theme-dark,
   .facilities-main.theme-dark,
   .page-content.theme-dark,
@@ -465,7 +465,6 @@ html.theme-dark body.app-shell :is(
   [class*="panel"],
   [class*="surface"],
   [class*="shell"],
-  [class*="table-wrap"],
   [class*="table-card"],
   [class*="table-container"],
   [class*="table-content"],
@@ -506,7 +505,17 @@ html.theme-dark body.app-shell :is(
   .page-content.theme-dark,
   .page-shell.theme-dark,
   .audit-page-content.theme-dark
-) :is(table, tbody, tbody tr, td, tfoot, tfoot tr, tfoot td) {
+) :is(table, tbody, tfoot) {
+  background-color: var(--app-table-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) :is(tbody tr, tfoot tr) {
   background-color: var(--app-table-row-bg) !important;
 }
 
@@ -537,6 +546,26 @@ html.theme-dark body.app-shell :is(
   .page-shell.theme-dark,
   .audit-page-content.theme-dark
 ) tbody tr:hover {
+  background-color: var(--app-hover-bg) !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) tbody td {
+  background-color: transparent !important;
+}
+
+html.theme-dark body.app-shell :is(
+  .main-container.theme-dark,
+  .facilities-main.theme-dark,
+  .page-content.theme-dark,
+  .page-shell.theme-dark,
+  .audit-page-content.theme-dark
+) tbody tr:hover td {
   background-color: var(--app-hover-bg) !important;
 }
 
@@ -626,30 +655,11 @@ html.theme-dark body.app-shell .main-container.theme-dark :is(
 html.theme-dark body.app-shell .main-container.theme-dark :is(
   .report-filter-grid,
   .report-actions-menu,
-  .report-preview-table,
-  .report-preview-table thead,
-  .report-preview-table thead tr,
-  .report-preview-table thead th,
-  #reportPreviewTable tbody tr,
-  #reportPreviewTable tbody tr:nth-child(even),
-  #reportPreviewTable tbody td,
   #summaryCards > div.report-summary-warning
 ) {
   border-color: var(--app-border) !important;
   background: var(--app-card-bg) !important;
   color: var(--app-text) !important;
-}
-
-html.theme-dark body.app-shell .main-container.theme-dark :is(
-  #reportPreviewTable thead,
-  #reportPreviewTable thead tr,
-  #reportPreviewTable thead th
-) {
-  background: var(--app-table-header-bg) !important;
-}
-
-html.theme-dark body.app-shell .main-container.theme-dark #reportPreviewTable tbody tr:nth-child(even) {
-  background: var(--app-table-row-alt-bg) !important;
 }
 
 html.theme-dark body.app-shell .main-container.theme-dark :is(
@@ -783,78 +793,85 @@ html.theme-light body.app-shell .modal {
   }
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody {
-  border-color: #E2E8F0 !important;
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody {
+  border-color: var(--app-border) !important;
+  background: var(--app-table-bg) !important;
+  background-color: var(--app-table-bg) !important;
   background-image: none !important;
   box-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
-  color: #1E293B !important;
-  scrollbar-color: #CBD5E1 #FFFFFF !important;
+  color: var(--app-text) !important;
+  scrollbar-color: var(--app-accent) var(--app-table-bg) !important;
   scrollbar-width: thin !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead tr,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead th {
-  border-color: #E2E8F0 !important;
-  background: #F8FAFC !important;
-  background-color: #F8FAFC !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead tr,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table thead th {
+  border-color: var(--app-border) !important;
+  background: var(--app-table-header-bg) !important;
+  background-color: var(--app-table-header-bg) !important;
   background-image: none !important;
   box-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
-  color: #334155 !important;
+  color: var(--app-text) !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td {
-  border-color: #E2E8F0 !important;
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td {
+  border-color: var(--app-border) !important;
   background-image: none !important;
   box-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
-  color: #1E293B !important;
+  color: var(--app-text) !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:nth-child(even),
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:nth-child(even) td {
-  background: #F8FAFC !important;
-  background-color: #F8FAFC !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr {
+  background: var(--app-table-row-bg) !important;
+  background-color: var(--app-table-row-bg) !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover td {
-  background: #E8F5ED !important;
-  background-color: #E8F5ED !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::before,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::after {
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:nth-child(even) {
+  background: var(--app-table-row-alt-bg) !important;
+  background-color: var(--app-table-row-alt-bg) !important;
+}
+
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody tr:hover td {
+  background: var(--app-hover-bg) !important;
+  background-color: var(--app-hover-bg) !important;
+}
+
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::before,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td::after {
   background: transparent !important;
   background-image: none !important;
   box-shadow: none !important;
   filter: none !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar,
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-track {
-  background: #FFFFFF !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar,
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-track {
+  background: var(--app-table-bg) !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-thumb {
-  border: 2px solid #FFFFFF !important;
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-thumb {
+  border: 2px solid var(--app-table-bg) !important;
   border-radius: 999px !important;
-  background: #CBD5E1 !important;
+  background: var(--app-accent) !important;
 }
 
-html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td :is(
+html.theme-light body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel table tbody td :is(
   .text-white,
   .text-gray-50,
   .text-gray-100,
@@ -869,7 +886,81 @@ html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTab
   .text-green-100,
   .text-green-200
 ) {
-  color: #1E293B !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel {
+  scrollbar-color: var(--app-accent) var(--app-table-bg);
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-track {
+  background: var(--app-table-bg) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel::-webkit-scrollbar-thumb {
+  border: 2px solid var(--app-table-bg) !important;
+  border-radius: 999px !important;
+  background: var(--app-accent) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:nth-child(2) .text-xs,
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:nth-child(6) .text-xs {
+  color: var(--app-text-secondary) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn:not(.primary) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text-secondary) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn:not(.primary):hover {
+  border-color: var(--app-accent) !important;
+  background: var(--app-hover-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel tbody td:last-child .action-btn:not(.primary) :is(i, svg) {
+  color: inherit !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer :is(
+  .tab-switcher .action-btn:not(.primary),
+  .pagination-row .pagination-btn:not(.active)
+) {
+  border-color: var(--app-border) !important;
+  background: var(--app-card-bg) !important;
+  color: var(--app-text-secondary) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer :is(
+  .tab-switcher .action-btn:not(.primary),
+  .pagination-row .pagination-btn:not(.active)
+):hover:not(:disabled) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-hover-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer :is(
+  .tab-switcher .action-btn.primary,
+  .pagination-row .pagination-btn.active
+) {
+  border-color: var(--app-accent) !important;
+  background: var(--app-accent) !important;
+  color: #FFFFFF !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .action-btn.primary {
+  border-color: var(--app-accent) !important;
+  background: var(--app-accent) !important;
+  color: #FFFFFF !important;
+}
+
+html body.app-shell.admin-borrow-equipment-page #mainContainer #borrowRecordsTablePanel .action-btn.primary:hover:not(:disabled) {
+  border-color: var(--app-accent-hover) !important;
+  background: var(--app-accent-hover) !important;
 }
 
 html body.app-shell #sidebar .sidebar-header {
@@ -1064,7 +1155,7 @@ html.theme-light body.app-shell :is(
   color: #1E293B !important;
 }
 
-html.theme-light body.app-shell :is(
+html.theme-light body.app-shell:not(.reports-page) :is(
   .table-wrap,
   .table-scroll-wrapper,
   .assignment-table-scroll,
@@ -1077,18 +1168,43 @@ html.theme-light body.app-shell :is(
   background-color: #FFFFFF !important;
 }
 
-html.theme-light body.app-shell table,
-html.theme-light body.app-shell table :is(thead, tbody, tfoot, tr, th, td) {
-  border-color: #E5E7EB !important;
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
-  color: #1E293B !important;
+html.theme-light body.app-shell:not(.reports-page) table,
+html.theme-light body.app-shell:not(.reports-page) table :is(thead, tbody, tfoot, tr, th, td) {
+  border-color: var(--app-border) !important;
+  background-image: none !important;
+  color: var(--app-text) !important;
 }
 
-html.theme-light body.app-shell table tbody tr:hover,
-html.theme-light body.app-shell table tbody tr:hover td {
-  background: #DCFCE7 !important;
-  background-color: #DCFCE7 !important;
+html.theme-light body.app-shell:not(.reports-page) table {
+  background: var(--app-table-bg) !important;
+  background-color: var(--app-table-bg) !important;
+}
+
+html.theme-light body.app-shell:not(.reports-page) table :is(thead, thead tr, thead th) {
+  background: var(--app-table-header-bg) !important;
+  background-color: var(--app-table-header-bg) !important;
+}
+
+html.theme-light body.app-shell:not(.reports-page) table tbody,
+html.theme-light body.app-shell:not(.reports-page) table tbody tr {
+  background: var(--app-table-row-bg) !important;
+  background-color: var(--app-table-row-bg) !important;
+}
+
+html.theme-light body.app-shell:not(.reports-page) table tbody tr:nth-child(even) {
+  background: var(--app-table-row-alt-bg) !important;
+  background-color: var(--app-table-row-alt-bg) !important;
+}
+
+html.theme-light body.app-shell:not(.reports-page) table tbody td {
+  background: transparent !important;
+  color: var(--app-text) !important;
+}
+
+html.theme-light body.app-shell:not(.reports-page) table tbody tr:hover,
+html.theme-light body.app-shell:not(.reports-page) table tbody tr:hover td {
+  background: var(--app-hover-bg) !important;
+  background-color: var(--app-hover-bg) !important;
 }
 
 html.theme-light body.app-shell :is(

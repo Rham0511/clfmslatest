@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/css/sidebar.css?v=91">
   <link rel="stylesheet" href="/css/system-layout.css?v=8">
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
   <style>
     body.app-shell.archived-records-page {
       --archive-page: #07130d;
@@ -63,7 +63,6 @@
     .archive-search-wrap i { position: absolute; top: 50%; left: .7rem; color: var(--archive-accent); transform: translateY(-50%); pointer-events: none; }
     .archive-search-wrap input { box-sizing: border-box; width: 100%; min-height: 2.35rem; padding: .5rem .7rem .5rem 2rem; border: 1px solid var(--archive-line); border-radius: .62rem; background: var(--archive-surface); color: var(--archive-text); font: inherit; font-size: .77rem; }
     .archive-search-wrap input:focus { outline: 2px solid color-mix(in srgb, var(--archive-accent) 45%, transparent); outline-offset: 1px; }
-    .archive-select-all { display: inline-flex; align-items: center; gap: .4rem; color: var(--archive-muted); font-size: .76rem; font-weight: 650; white-space: nowrap; }
     .archive-result-count { color: var(--archive-muted); font-size: .72rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .archive-actions { display: inline-flex; align-items: center; gap: .4rem; }
     .archive-action-button { display: inline-flex; min-height: 2.35rem; align-items: center; justify-content: center; gap: .4rem; padding: .5rem .68rem; border: 1px solid var(--archive-line); border-radius: .58rem; background: var(--archive-surface); color: var(--archive-text); font-size: .73rem; font-weight: 750; cursor: pointer; }
@@ -211,7 +210,6 @@
         padding-top: .25rem;
       }
       .archive-toolbar-copy, .archive-search-wrap { flex: 1 1 100%; }
-      .archive-select-all { flex: 1 1 auto; }
       .archive-actions { flex: 1 1 100%; }
       .archive-actions .archive-action-button { flex: 1 1 0; }
       .archive-result-count { order: 3; width: 100%; }
@@ -243,15 +241,10 @@
         <section class="archived-records-panel w-full min-w-0" aria-label="Archived records">
           <div class="archive-toolbar">
             <div class="archive-toolbar-copy"><strong>Archived items</strong><span id="archiveResultCount" aria-live="polite">Loading records…</span></div>
-            <label class="archive-select-all">
-              <input id="selectAllArchived" class="archive-select h-4 w-4" type="checkbox" aria-label="Select all archived records">
-              Select all
-            </label>
             <div class="archive-search-wrap"><i class="fas fa-search" aria-hidden="true"></i><input id="archiveSearch" type="search" placeholder="Search records…" aria-label="Search archived records"></div>
             <div class="archive-actions">
               <button id="refreshArchived" class="archive-action-button" type="button"><i class="fas fa-rotate" aria-hidden="true"></i> Refresh</button>
               <button id="restoreSelected" class="archive-action-button primary" type="button" disabled><i class="fas fa-rotate-left" aria-hidden="true"></i> Restore selected (<span id="selectedArchiveCount">0</span>)</button>
-              <button id="deleteSelected" class="archive-action-button" type="button" disabled><i class="fas fa-trash-can" aria-hidden="true"></i> Delete selected</button>
             </div>
           </div>
           <div class="archive-table-wrap"><table class="archived-records-table w-full min-w-[760px]">
@@ -272,11 +265,9 @@
     const archiveRows = document.getElementById('archiveRows');
     const archiveError = document.getElementById('archiveError');
     const selectAllControls = [
-      document.getElementById('selectAllArchived'),
       document.getElementById('selectAllArchivedHeader')
     ];
     const restoreSelectedButton = document.getElementById('restoreSelected');
-    const deleteSelectedButton = document.getElementById('deleteSelected');
     const selectedArchiveCount = document.getElementById('selectedArchiveCount');
     const archiveSearch = document.getElementById('archiveSearch');
     archiveSearch.value = new URLSearchParams(window.location.search).get('search') || '';
@@ -323,7 +314,6 @@
       const visibleSelectedCount = visibleCheckboxes.filter((checkbox) => checkbox.checked).length;
       selectedArchiveCount.textContent = String(selectedCount);
       restoreSelectedButton.disabled = selectedCount === 0;
-      deleteSelectedButton.disabled = selectedCount === 0;
       selectAllControls.forEach((checkbox) => {
         checkbox.checked = visibleCheckboxes.length > 0 && visibleSelectedCount === visibleCheckboxes.length;
         checkbox.indeterminate = visibleSelectedCount > 0 && visibleSelectedCount < visibleCheckboxes.length;
@@ -638,40 +628,6 @@
       } finally {
         updateArchiveSelection();
       }
-    });
-
-    deleteSelectedButton.addEventListener('click', async () => {
-      const selectedCheckboxes = [...archiveRows.querySelectorAll('[data-select-archive]:checked')];
-      if (!selectedCheckboxes.length) return;
-      const confirmed = window.appDialogs?.confirm
-        ? await window.appDialogs.confirm(`Permanently delete ${selectedCheckboxes.length} selected record${selectedCheckboxes.length === 1 ? '' : 's'}? This cannot be undone.`)
-        : window.confirm(`Permanently delete ${selectedCheckboxes.length} selected record${selectedCheckboxes.length === 1 ? '' : 's'}? This cannot be undone.`);
-      if (!confirmed) return;
-
-      deleteSelectedButton.disabled = true;
-      archiveError.classList.add('hidden');
-      const failures = [];
-      let deletedCount = 0;
-      for (const checkbox of selectedCheckboxes) {
-        try {
-          await requestArchiveDelete(checkbox.dataset.selectArchive);
-          deletedCount += 1;
-        } catch (error) {
-          failures.push(`${checkbox.dataset.recordId}: ${error.message || 'Unable to permanently delete record.'}`);
-        }
-      }
-      await loadArchivedRecords();
-      await refreshArchiveRevision();
-      if (deletedCount) {
-        const deletedLab = selectedCheckboxes.some((checkbox) => checkbox.dataset.recordType === 'computer-lab');
-        window.comlabRecordsSync?.publish(deletedLab ? 'lab-deleted' : 'archive-deleted');
-        showArchiveToast(`${deletedCount} record${deletedCount === 1 ? '' : 's'} permanently deleted`);
-      }
-      if (failures.length) {
-        archiveError.textContent = failures.join(' ');
-        archiveError.classList.remove('hidden');
-      }
-      updateArchiveSelection();
     });
 
     loadArchivedRecords().then(refreshArchiveRevision);

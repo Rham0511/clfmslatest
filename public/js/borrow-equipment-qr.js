@@ -151,7 +151,8 @@ window.resolveEquipmentQrValue = async (value) => {
           cameraAttempt += 1;
           await stopScanner();
           modal.style.display = 'none';
-          window.dispatchEvent(new CustomEvent('borrow-equipment-qr-scanned', {
+          scanButton.disabled = false;
+          window.dispatchEvent(new CustomEvent('borrow-equipment-qr-item-selected', {
             detail: { value: String(value || '').trim() }
           }));
         },

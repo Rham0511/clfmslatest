@@ -649,7 +649,7 @@
     </style>
   <link rel="stylesheet" href="/css/table-readability.css?v=1">
 <link rel="stylesheet" href="/css/system-layout.css?v=8">
-    <link rel="stylesheet" href="/css/student-ui-polish.css?v=40">
+    <link rel="stylesheet" href="/css/student-ui-polish.css?v=41">
 </head>
 <body class="app-shell student-portal system-layout-page student-profile-page">
     <div id="shared-sidebar"></div>
@@ -753,9 +753,14 @@
 
                             <div class="detail-item">
                                 <div class="detail-icon"><i class="fas fa-university"></i></div>
-                                <div>
-                                    <p class="detail-label">Campus</p>
-                                    <p class="detail-value" data-profile-campus>—</p>
+                                <div class="profile-field">
+                                    <label class="detail-label" for="studentCampusInput">Campus</label>
+                                    <select id="studentCampusInput" name="campus" class="profile-edit-control">
+                                        <option value="">Choose your campus</option>
+                                        <option value="Bongabong">Bongabong</option>
+                                        <option value="Victoria">Victoria</option>
+                                        <option value="Calapan">Calapan</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -841,7 +846,6 @@
             const email = user.email || '—';
             const course = user.course || user.program || '—';
             const yearSection = user.yearSection || [user.year, user.section].filter(Boolean).join(' • ') || '—';
-            const campus = user.campus || '—';
             const courseInline = course !== '—' ? course : '—';
             const initials = user.initials || getInitials(displayName, email);
             const roleLabel = formatRole(user.role || 'student');
@@ -866,7 +870,12 @@
             if (yearInput) yearInput.value = user.year || '';
             const sectionInput = document.getElementById('profileSectionInput');
             if (sectionInput) sectionInput.value = user.section || '';
-            document.querySelectorAll('[data-profile-campus]').forEach((element) => { element.textContent = campus; });
+            const campusInput = document.getElementById('studentCampusInput');
+            if (campusInput) {
+                const currentCampus = String(user.campus || '').trim().replace(/\s*campus\s*$/i, '').toLowerCase();
+                const selectedCampus = Array.from(campusInput.options).find((option) => option.value.toLowerCase() === currentCampus);
+                campusInput.value = selectedCampus?.value || '';
+            }
             const collegeInput = document.getElementById('collegeInput');
             if (collegeInput) collegeInput.value = user.college || '';
 
@@ -893,13 +902,15 @@
             const user = window.__CURRENT_USER__ || {};
             const fieldValue = (name) => form.elements.namedItem(name)?.value;
             const normalizeValue = (value) => String(value ?? '').trim().replace(/\s+/g, ' ');
+            const normalizeCampus = (value) => normalizeValue(value).replace(/\s*campus\s*$/i, '').toLowerCase();
             const fields = {
                 name: normalizeValue(fieldValue('name')),
                 student_number: normalizeValue(fieldValue('student_number')),
                 program: normalizeValue(fieldValue('program')).toUpperCase(),
                 year: normalizeValue(fieldValue('year')),
                 section: normalizeValue(fieldValue('section')).toUpperCase(),
-                college: normalizeValue(fieldValue('college')).toUpperCase()
+                college: normalizeValue(fieldValue('college')).toUpperCase(),
+                campus: normalizeCampus(fieldValue('campus'))
             };
             const current = {
                 name: normalizeValue(user.name || user.fullName || ''),
@@ -907,7 +918,8 @@
                 program: normalizeValue(user.program || user.course || '').toUpperCase(),
                 year: normalizeValue(user.year),
                 section: normalizeValue(user.section).toUpperCase(),
-                college: normalizeValue(user.college).toUpperCase()
+                college: normalizeValue(user.college).toUpperCase(),
+                campus: normalizeCampus(user.campus)
             };
             const changedFields = Object.fromEntries(Object.entries(fields).filter(([key, value]) => value !== current[key]));
             if (!Object.keys(changedFields).length) {
@@ -1017,7 +1029,7 @@
         });
     </script>
     <script src="/js/student-sidebar-config.js?v=31" defer></script>
-    <script src="/js/sidebar-component.js?v=108" defer></script>
-    <script src="/js/qr-scanner-button.js?v=9" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
+    <script src="/js/qr-scanner-button.js?v=10" defer></script>
 </body>
 </html>

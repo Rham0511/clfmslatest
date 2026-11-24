@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="/js/custom-dialogs.js?v=1"></script>
+    <script src="/js/custom-dialogs.js?v=4"></script>
     <title>ComLab Technician Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2119,7 +2119,7 @@
         }
     </style>
       <link rel="stylesheet" href="/css/table-readability.css?v=1">
-      <link rel="stylesheet" href="/css/technician-dashboard.css?v=48">
+      <link rel="stylesheet" href="/css/technician-dashboard.css?v=54">
     </head>
 <body class="app-shell technician-portal system-layout-page technician-dashboard-page">
     <div id="shared-sidebar"></div>
@@ -2145,75 +2145,73 @@
             </header>
             <section id="dashboard" class="nav-anchor tech-card p-4 md:p-6 lg:p-7 page-section active">
                 <div class="space-y-4">
-                    <div class="dashboard-welcome"><span>Dashboard</span><p>Welcome back, <strong data-tech-welcome-name>Technician</strong> — here’s what needs your attention today.</p></div>
-                    <div class="dashboard-metric-section-heading">
-                        <div><span>REPAIR WORKFLOW</span><h2>Maintenance reports</h2></div>
-                        <p>Click a summary card to open matching reports.</p>
-                    </div>
-                    <div class="summary-row dashboard-kpi-grid">
-                        <a href="#new-reports" class="summary-card dashboard-kpi-card dashboard-attention-card" aria-label="View pending reports" data-technician-report-filter="pending">
-                            <div class="icon-wrap dashboard-kpi-icon"><i class="fas fa-file-circle-plus" aria-hidden="true"></i></div>
-                            <p class="dashboard-kpi-label">Pending Reports</p>
-                            <h4 class="dashboard-kpi-value"><span data-new-reports>0</span></h4>
+                    <div class="dashboard-module-grid" role="group" aria-label="Technician dashboard modules">
+                        <a href="#new-reports" class="dashboard-module-card dashboard-module-card--maintenance" data-dashboard-maintenance-card data-technician-report-filter="all" aria-label="Open Maintenance and Issue Reports">
+                            <span class="dashboard-module-heading">
+                                <span class="dashboard-module-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></span>
+                                <span class="dashboard-module-title">Maintenance Reports</span>
+                            </span>
+                            <span class="dashboard-module-primary">
+                                <span class="dashboard-module-primary-label">Pending Reports</span>
+                                <strong><span data-new-reports>—</span></strong>
+                            </span>
+                            <dl class="dashboard-module-metrics">
+                                <div><dt>In Progress Repairs</dt><dd><span data-in-progress-count>—</span></dd></div>
+                                <div><dt>Resolved Today</dt><dd><span data-resolved-today-count>—</span></dd></div>
+                                <div><dt>Total Resolved</dt><dd><span data-total-resolved-count>—</span></dd></div>
+                            </dl>
                         </a>
-                        <a href="#new-reports" class="summary-card dashboard-kpi-card" aria-label="View in-progress repairs" data-technician-report-filter="in-progress">
-                            <div class="icon-wrap dashboard-kpi-icon"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></div>
-                            <p class="dashboard-kpi-label">In Progress Repairs</p>
-                            <h4 class="dashboard-kpi-value"><span data-in-progress-count>0</span></h4>
-                        </a>
-                        <a href="#new-reports" class="summary-card dashboard-kpi-card" aria-label="View reports resolved today" data-technician-report-filter="resolved-today">
-                            <div class="icon-wrap dashboard-kpi-icon"><i class="fas fa-circle-check" aria-hidden="true"></i></div>
-                            <p class="dashboard-kpi-label">Resolved Today</p>
-                            <h4 class="dashboard-kpi-value"><span data-resolved-today-count>0</span></h4>
-                        </a>
-                        <a href="#new-reports" class="summary-card dashboard-kpi-card" aria-label="View all resolved reports" data-technician-report-filter="resolved">
-                            <div class="icon-wrap dashboard-kpi-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
-                            <p class="dashboard-kpi-label">Total Resolved</p>
-                            <h4 class="dashboard-kpi-value"><span data-total-resolved-count>0</span></h4>
-                        </a>
-                    </div>
 
-                    <div class="dashboard-metric-section-heading borrow-metric-heading">
-                        <div><span>ASSET TRACKING</span><h2>Equipment borrowing</h2></div>
-                        <p>Click a summary card to review borrow records.</p>
-                    </div>
-                    <div class="grid dashboard-kpi-grid borrow-summary-grid gap-3 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label="Borrow request summary">
-                        <button type="button" data-borrow-summary-filter="total" aria-label="View all borrow records" class="dashboard-kpi-card rounded-2xl border border-emerald-500/15 bg-[linear-gradient(180deg,rgba(7,17,31,.96),rgba(2,6,23,.96))] p-4 text-left shadow-[0_12px_30px_rgba(6,64,43,0.15)] transition hover:border-emerald-300/40 hover:bg-emerald-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">
-                            <span class="flex items-start justify-between gap-3">
-                                <span>
-                                    <span class="dashboard-kpi-label block text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">Total Borrow Records</span>
-                                    <span id="borrowSummaryTotal" class="dashboard-kpi-value mt-3 block text-3xl font-extrabold text-white">0</span>
-                                </span>
-                                <span class="dashboard-kpi-icon flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200"><i class="fas fa-file-alt" aria-hidden="true"></i></span>
+                        <a href="#borrow-requests" class="dashboard-module-card dashboard-module-card--borrow" data-dashboard-borrow-card data-borrow-summary-filter="total" aria-label="Open Borrow Requests and Borrow Records">
+                            <span class="dashboard-module-heading">
+                                <span class="dashboard-module-icon"><i class="fas fa-hand-holding" aria-hidden="true"></i></span>
+                                <span class="dashboard-module-title">Borrow Equipment</span>
                             </span>
-                        </button>
-                        <button type="button" data-borrow-summary-filter="borrowed" aria-label="View currently borrowed equipment" class="dashboard-kpi-card rounded-2xl border border-emerald-500/15 bg-[linear-gradient(180deg,rgba(7,17,31,.96),rgba(2,6,23,.96))] p-4 text-left shadow-[0_12px_30px_rgba(6,64,43,0.15)] transition hover:border-emerald-300/40 hover:bg-emerald-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">
-                            <span class="flex items-start justify-between gap-3">
-                                <span>
-                                    <span class="dashboard-kpi-label block text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">Currently Borrowed</span>
-                                    <span id="borrowSummaryBorrowed" class="dashboard-kpi-value mt-3 block text-3xl font-extrabold text-white">0</span>
-                                </span>
-                                <span class="dashboard-kpi-icon flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200"><i class="fas fa-boxes-stacked" aria-hidden="true"></i></span>
+                            <span class="dashboard-module-primary">
+                                <span class="dashboard-module-primary-label">Total Borrow Records</span>
+                                <strong id="borrowSummaryTotal">—</strong>
                             </span>
-                        </button>
-                        <button type="button" data-borrow-summary-filter="pending" aria-label="View pending borrow requests" class="dashboard-kpi-card dashboard-borrow-attention-card rounded-2xl border border-emerald-500/15 bg-[linear-gradient(180deg,rgba(7,17,31,.96),rgba(2,6,23,.96))] p-4 text-left shadow-[0_12px_30px_rgba(6,64,43,0.15)] transition hover:border-emerald-300/40 hover:bg-emerald-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">
-                            <span class="flex items-start justify-between gap-3">
-                                <span>
-                                    <span class="dashboard-kpi-label block text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">Pending Requests</span>
-                                    <span id="borrowSummaryPending" class="dashboard-kpi-value mt-3 block text-3xl font-extrabold text-white">0</span>
-                                </span>
-                                <span class="dashboard-kpi-icon flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                            <dl class="dashboard-module-metrics">
+                                <div><dt>Currently Borrowed</dt><dd><span id="borrowSummaryBorrowed">—</span></dd></div>
+                                <div><dt>Pending Requests</dt><dd><span id="borrowSummaryPending">—</span></dd></div>
+                                <div><dt>Approved / For Release</dt><dd><span id="borrowSummaryApproved">—</span></dd></div>
+                                <div><dt>Overdue</dt><dd><span id="borrowSummaryOverdue">—</span></dd></div>
+                            </dl>
+                        </a>
+
+                        <a href="#equipment-availability" class="dashboard-module-card dashboard-module-card--equipment" aria-label="Open Equipment Availability">
+                            <span class="dashboard-module-heading">
+                                <span class="dashboard-module-icon"><i class="fas fa-boxes-stacked" aria-hidden="true"></i></span>
+                                <span class="dashboard-module-title">Total Equipment</span>
                             </span>
-                        </button>
-                        <button type="button" data-borrow-summary-filter="overdue" aria-label="View overdue borrow records" class="dashboard-kpi-card dashboard-borrow-overdue-card rounded-2xl border border-emerald-500/15 bg-[linear-gradient(180deg,rgba(7,17,31,.96),rgba(2,6,23,.96))] p-4 text-left shadow-[0_12px_30px_rgba(6,64,43,0.15)] transition hover:border-emerald-300/40 hover:bg-emerald-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300">
-                            <span class="flex items-start justify-between gap-3">
-                                <span>
-                                    <span class="dashboard-kpi-label block text-sm font-bold uppercase tracking-[0.2em] text-emerald-200">Overdue</span>
-                                    <span id="borrowSummaryOverdue" class="dashboard-kpi-value mt-3 block text-3xl font-extrabold text-white">0</span>
-                                </span>
-                                <span class="dashboard-kpi-icon flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-200"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
+                            <span class="dashboard-module-primary">
+                                <span class="dashboard-module-primary-label">Total Equipment</span>
+                                <strong id="dashboardEquipmentTotal">—</strong>
                             </span>
-                        </button>
+                            <dl class="dashboard-module-metrics">
+                                <div><dt>Available to Borrow</dt><dd><span id="dashboardEquipmentAvailable">—</span></dd></div>
+                                <div><dt>Borrowed Equipment</dt><dd><span id="dashboardEquipmentBorrowed">—</span></dd></div>
+                                <div><dt>Maintenance / Repair</dt><dd><span id="dashboardEquipmentMaintenance">—</span></dd></div>
+                                <div title="Serviceable equipment without an active faculty accountability assignment. It may still be physically serviceable, but current rules block borrowing."><dt>No Current Accountability</dt><dd><span id="dashboardEquipmentUnassigned">—</span></dd></div>
+                            </dl>
+                        </a>
+
+                        <a href="#accomplishments" class="dashboard-module-card dashboard-module-card--reports" aria-label="Open your submitted reports">
+                            <span class="dashboard-module-heading">
+                                <span class="dashboard-module-icon"><i class="fas fa-file-signature" aria-hidden="true"></i></span>
+                                <span class="dashboard-module-title">My Reports</span>
+                            </span>
+                            <span class="dashboard-module-primary">
+                                <span class="dashboard-module-primary-label">Total Submitted Reports</span>
+                                <strong id="dashboardOwnReportsTotal">—</strong>
+                            </span>
+                            <dl class="dashboard-module-metrics">
+                                <div><dt>Pending / Submitted</dt><dd><span id="dashboardOwnReportsPending">—</span></dd></div>
+                                <div><dt>Reviewed / In Progress</dt><dd><span id="dashboardOwnReportsInProgress">—</span></dd></div>
+                                <div><dt>Completed / Approved</dt><dd><span id="dashboardOwnReportsCompleted">—</span></dd></div>
+                                <div><dt>Rejected Reports</dt><dd><span id="dashboardOwnReportsRejected">—</span></dd></div>
+                            </dl>
+                        </a>
                     </div>
 
                     <section class="tech-card-soft p-4 md:p-4 lg:p-5 reporter-summary">
@@ -2434,11 +2432,14 @@
                         <select id="requestSortFilter" aria-label="Sort maintenance requests"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
                         <input id="requestSearchInput" type="search" placeholder="Search equipment, issue, or reporter" aria-label="Search maintenance requests">
                     </div>
-                    <div class="maintenance-report-tabs" role="tablist" aria-label="Filter requests by reporter">
-                        <button type="button" class="maintenance-report-tab is-active" data-reporter-tab="all" role="tab" aria-selected="true">All assigned <span data-request-tab-count="all">0</span></button>
-                        <button type="button" class="maintenance-report-tab" data-reporter-tab="active" role="tab" aria-selected="false">Active <span data-request-tab-count="active">0</span></button>
-                        <button type="button" class="maintenance-report-tab" data-reporter-tab="student" role="tab" aria-selected="false">Student reports <span data-request-tab-count="student">0</span></button>
-                        <button type="button" class="maintenance-report-tab" data-reporter-tab="faculty" role="tab" aria-selected="false">Faculty reports <span data-request-tab-count="faculty">0</span></button>
+                    <div class="maintenance-report-filter">
+                        <select id="technicianReporterFilter" class="maintenance-report-filter-select" aria-label="Filter requests by reporter">
+                            <option value="all" data-request-tab-count="all">All assigned (0)</option>
+                            <option value="active" data-request-tab-count="active">Active (0)</option>
+                            <option value="student" data-request-tab-count="student">Student reports (0)</option>
+                            <option value="faculty" data-request-tab-count="faculty">Faculty reports (0)</option>
+                            <option value="other" data-request-tab-count="other">Other reports (0)</option>
+                        </select>
                     </div>
                     <div class="technician-report-table-wrap">
                         <table class="technician-report-table">
@@ -2753,7 +2754,6 @@
             const mappings = [
                 ['[data-tech-name-panel]', displayName || '—'],
                 ['[data-tech-header-name]', displayName || 'Technician'],
-                ['[data-tech-welcome-name]', (displayName || 'Technician').split(/\s+/)[0]],
                 ['[data-tech-header-role]', role],
                 ['[data-tech-header-initials]', initials],
                 ['[data-tech-role]', role],
@@ -2862,6 +2862,12 @@
             rowsPerPage: 10
         };
 
+        function setTechnicianReporterFilter(value) {
+            currentReporterTab = value;
+            const reporterFilter = document.getElementById('technicianReporterFilter');
+            if (reporterFilter) reporterFilter.value = value;
+        }
+
         function setTechnicianMaintenancePage(page) {
             technicianMaintenancePaginationState.currentPage = Math.max(1, page);
             renderPendingReports(window.__TECHNICIAN_REQUESTS__ || []);
@@ -2869,14 +2875,9 @@
 
         function openTechnicianReportFilter(statusFilter) {
             currentReportStatusFilter = statusFilter;
-            currentReporterTab = 'all';
+            setTechnicianReporterFilter('all');
             const statusSelect = document.getElementById('technicianReportStatusFilter');
             if (statusSelect) statusSelect.value = statusFilter;
-            document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
-                const selected = tab.getAttribute('data-reporter-tab') === 'all';
-                tab.classList.toggle('is-active', selected);
-                tab.setAttribute('aria-selected', String(selected));
-            });
             document.querySelectorAll('[data-maintenance-summary-filter]').forEach((card) => {
                 const selected = card.getAttribute('data-maintenance-summary-filter') === statusFilter;
                 card.classList.toggle('is-selected', selected);
@@ -2959,7 +2960,6 @@
                 document.querySelectorAll(sel).forEach(el => el.textContent = value == null ? '0' : String(value));
             };
 
-            setText('[data-new-reports]', data.newReports);
             setText('[data-assigned-tasks-count]', data.assignedTasks);
             setText('[data-pending-repairs-count]', data.pendingRepairs);
             setText('[data-completed-today-count]', data.completedToday);
@@ -3008,9 +3008,10 @@
             });
             const query = params.toString();
             const response = await fetch('/api/maintenance' + (query ? `?${query}` : ''), { cache: 'no-store' });
-            if (!response.ok) return [];
-            const data = await response.json();
-            return Array.isArray(data) ? data : [];
+            const data = await response.json().catch(() => null);
+            if (!response.ok) throw new Error(data?.error || `Unable to load maintenance reports (${response.status}).`);
+            if (!Array.isArray(data)) throw new Error('Maintenance reports response was invalid.');
+            return data;
         }
 
         let technicianEquipmentActivityEvents = [];
@@ -3272,7 +3273,7 @@
                     .filter((event) => event.actionType === 'equipment_issue_reported' && event.maintenanceRequestId)
                     .map((event) => String(event.maintenanceRequestId)));
                 const recoveredReportEvents = (Array.isArray(maintenanceRequests) ? maintenanceRequests : [])
-                    .filter((report) => report?.id && !loggedMaintenanceIds.has(String(report.id)) && !isRequestedDummyMaintenanceReport(report))
+                    .filter((report) => report?.id && !loggedMaintenanceIds.has(String(report.id)))
                     .map((report) => {
                         const equipment = report.equipment || {};
                         const equipmentRecordId = Number(equipment.id);
@@ -3372,7 +3373,7 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
-        const technicianAvailabilityState = { rows: [], expandedCategories: new Set() };
+        const technicianAvailabilityState = { rows: [], expandedCategories: new Set(), summaryAuthoritative: false };
 
         function technicianAvailabilityClass(value) {
             return String(value || '').toLowerCase().replace(/[^a-z]+/g, '-');
@@ -3382,11 +3383,11 @@
             const normalized = String(value || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
             if (['BORROWED', 'IN_USE', 'INUSE', 'CHECKED_OUT'].includes(normalized)) return 'BORROWED';
             if (['UNAVAILABLE', 'UNDER_MAINTENANCE', 'DEFECTIVE', 'OUT_OF_SERVICE'].includes(normalized)) return 'UNAVAILABLE';
-            return 'AVAILABLE';
+            return normalized === 'AVAILABLE' ? 'AVAILABLE' : 'UNKNOWN';
         }
 
         function technicianAvailabilityIsServiceable(row) {
-            return String(row?.status || 'Serviceable').trim().toLowerCase() === 'serviceable';
+            return String(row?.status || '').trim().toLowerCase() === 'serviceable';
         }
 
         function setTechnicianAvailabilityCategoryExpanded(toggle, expanded) {
@@ -3413,10 +3414,22 @@
             const availableCount = allRows.filter((row) => technicianAvailabilityIsServiceable(row) && technicianAvailabilityNormalizedState(row.availability) === 'AVAILABLE').length;
             const inUseCount = allRows.filter((row) => technicianAvailabilityIsServiceable(row) && technicianAvailabilityNormalizedState(row.availability) === 'BORROWED').length;
             const defectiveCount = allRows.filter((row) => !technicianAvailabilityIsServiceable(row)).length;
+            const underMaintenanceCount = allRows.filter((row) => ['under maintenance', 'for repair'].includes(String(row.status || '').trim().toLowerCase())).length;
+            const noCurrentAccountabilityCount = allRows.filter((row) =>
+                technicianAvailabilityIsServiceable(row) &&
+                row.hasCurrentAccountability === false &&
+                technicianAvailabilityNormalizedState(row.availability) === 'UNAVAILABLE'
+            ).length;
             document.getElementById('technicianAvailabilityTotal').textContent = String(allRows.length);
             document.getElementById('technicianAvailabilityAvailable').textContent = String(availableCount);
             document.getElementById('technicianAvailabilityInUse').textContent = String(inUseCount);
             document.getElementById('technicianAvailabilityDefective').textContent = String(defectiveCount);
+            const equipmentSummary = (value) => technicianAvailabilityState.summaryAuthoritative ? String(value) : '—';
+            document.getElementById('dashboardEquipmentTotal').textContent = equipmentSummary(allRows.length);
+            document.getElementById('dashboardEquipmentAvailable').textContent = equipmentSummary(availableCount);
+            document.getElementById('dashboardEquipmentBorrowed').textContent = equipmentSummary(inUseCount);
+            document.getElementById('dashboardEquipmentMaintenance').textContent = equipmentSummary(underMaintenanceCount);
+            document.getElementById('dashboardEquipmentUnassigned').textContent = equipmentSummary(noCurrentAccountabilityCount);
             const heading = document.getElementById('technicianAvailabilityHeading');
             const subtitle = document.getElementById('technicianAvailabilitySubtitle');
             if (heading) heading.textContent = laboratory ? laboratory : 'Inventory Overview';
@@ -3477,12 +3490,14 @@
         async function loadTechnicianEquipmentAvailability() {
             const body = document.getElementById('technicianEquipmentAvailabilityBody');
             if (!body) return;
+            technicianAvailabilityState.summaryAuthoritative = false;
             body.innerHTML = '<div class="tech-availability-empty">Loading equipment availability...</div>';
             try {
                 const response = await fetch('/api/equipment-availability', { cache: 'no-store' });
                 const payload = await response.json().catch(() => ({}));
                 if (response.ok && Array.isArray(payload)) {
                     technicianAvailabilityState.rows = payload;
+                    technicianAvailabilityState.summaryAuthoritative = true;
                 } else {
                     const optionsResponse = await fetch('/api/equipment-enhancements/reports/equipment-options', { cache: 'no-store' });
                     const optionsPayload = await optionsResponse.json().catch(() => ({}));
@@ -3506,7 +3521,7 @@
                         };
                     });
                 }
-                if (!technicianAvailabilityState.rows.some((row) => row.databaseId)) {
+                if (!technicianAvailabilityState.summaryAuthoritative && !technicianAvailabilityState.rows.some((row) => row.databaseId)) {
                     const inventoryResponse = await fetch('/api/equipment', { cache: 'no-store' });
                     const inventoryPayload = await inventoryResponse.json().catch(() => []);
                     if (inventoryResponse.ok && Array.isArray(inventoryPayload)) {
@@ -3530,11 +3545,11 @@
                 }
                 populateTechnicianAvailabilityLaboratories();
                 renderTechnicianEquipmentAvailability();
-                if (!technicianAvailabilityState.rows.length) {
-                    throw new Error('No equipment is assigned to your campus.');
-                }
             } catch (error) {
                 console.error('Unable to load technician equipment availability.', error);
+                ['dashboardEquipmentTotal', 'dashboardEquipmentAvailable', 'dashboardEquipmentBorrowed', 'dashboardEquipmentMaintenance', 'dashboardEquipmentUnassigned'].forEach((id) => {
+                    document.getElementById(id).textContent = '—';
+                });
                 body.innerHTML = `<div class="tech-availability-empty text-amber-200">${escapeBorrowText(error.message || 'Unable to load equipment availability.')}</div>`;
             }
         }
@@ -3806,7 +3821,7 @@
         }
 
         function isResolvedTodayMaintenanceReport(report) {
-            const resolvedDate = report.dateResolved || report.updatedAt || report.dateReported;
+            const resolvedDate = report.dateResolved || report.resolvedDate;
             return isResolvedMaintenanceReport(report) &&
                 Boolean(resolvedDate) &&
                 new Date(resolvedDate).toDateString() === new Date().toDateString();
@@ -3929,7 +3944,7 @@
 
         function openDashboardRecentReport(reportId) {
             currentReportStatusFilter = 'all';
-            currentReporterTab = 'all';
+            setTechnicianReporterFilter('all');
             const statusFilter = document.getElementById('technicianReportStatusFilter');
             const searchInput = document.getElementById('requestSearchInput');
             const laboratoryFilter = document.getElementById('requestLaboratoryFilter');
@@ -3940,11 +3955,6 @@
             if (laboratoryFilter) laboratoryFilter.value = 'all';
             if (priorityFilter) priorityFilter.value = 'all';
             if (sortFilter) sortFilter.value = 'newest';
-            document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
-                const selected = tab.getAttribute('data-reporter-tab') === 'all';
-                tab.classList.toggle('is-active', selected);
-                tab.setAttribute('aria-selected', String(selected));
-            });
             document.querySelectorAll('[data-maintenance-summary-filter]').forEach((card) => {
                 const selected = card.getAttribute('data-maintenance-summary-filter') === 'all';
                 card.classList.toggle('is-selected', selected);
@@ -3961,21 +3971,31 @@
 
             const allReports = Array.isArray(reports) ? reports : [];
             const getReporterRole = (report) => String(report.reporterRole || report.reporter?.role || '').trim().toLowerCase();
+            const isStudentReport = (report) => getReporterRole(report) === 'student';
+            const isFacultyReport = (report) => ['faculty', 'instructor'].includes(getReporterRole(report));
             const reportIsActive = (report) => {
                 const status = getNormalizedStatus(report.status);
                 return status === 'pending' || status === 'new' || status.includes('progress');
             };
-            const studentCount = allReports.filter((report) => getReporterRole(report) === 'student').length;
-            const facultyCount = allReports.filter((report) => ['faculty', 'instructor'].includes(getReporterRole(report))).length;
+            const studentCount = allReports.filter(isStudentReport).length;
+            const facultyCount = allReports.filter(isFacultyReport).length;
             const counts = {
                 all: allReports.length,
                 active: allReports.filter(reportIsActive).length,
                 student: studentCount,
-                faculty: facultyCount
+                faculty: facultyCount,
+                other: allReports.filter((report) => !isStudentReport(report) && !isFacultyReport(report)).length
+            };
+            const countLabels = {
+                all: 'All assigned',
+                active: 'Active',
+                student: 'Student reports',
+                faculty: 'Faculty reports',
+                other: 'Other reports'
             };
             Object.entries(counts).forEach(([key, value]) => {
                 document.querySelectorAll(`[data-request-tab-count="${key}"]`).forEach((element) => {
-                    element.textContent = String(value);
+                    element.textContent = `${countLabels[key]} (${value})`;
                 });
             });
 
@@ -3991,8 +4011,9 @@
                 if (currentReportStatusFilter === 'resolved-today' && !isResolvedTodayMaintenanceReport(report)) return false;
                 if (currentReportStatusFilter === 'resolved' && !isResolvedMaintenanceReport(report)) return false;
                 if (currentReporterTab === 'active' && !reportIsActive(report)) return false;
-                if (currentReporterTab === 'student' && getReporterRole(report) !== 'student') return false;
-                if (currentReporterTab === 'faculty' && !['faculty', 'instructor'].includes(getReporterRole(report))) return false;
+                if (currentReporterTab === 'student' && !isStudentReport(report)) return false;
+                if (currentReporterTab === 'faculty' && !isFacultyReport(report)) return false;
+                if (currentReporterTab === 'other' && (isStudentReport(report) || isFacultyReport(report))) return false;
                 if (laboratoryFilter !== 'all' && getTechnicianMaintenanceLaboratory(report)?.key !== laboratoryFilter) return false;
 
                 const priority = String(report.priority || '').trim().toLowerCase();
@@ -4019,9 +4040,9 @@
 
             const visibleCounts = {
                 all: filteredReports.length,
-                pending: filteredReports.filter((report) => ['pending', 'new'].includes(getNormalizedStatus(report.status))).length,
-                progress: filteredReports.filter((report) => getNormalizedStatus(report.status).includes('progress')).length,
-                resolved: filteredReports.filter(isResolvedMaintenanceReport).length
+                pending: allReports.filter((report) => ['pending', 'new'].includes(getNormalizedStatus(report.status))).length,
+                progress: allReports.filter((report) => getNormalizedStatus(report.status).includes('progress')).length,
+                resolved: allReports.filter(isResolvedMaintenanceReport).length
             };
             document.querySelectorAll('[data-maintenance-total-count]').forEach((element) => { element.textContent = String(visibleCounts.all); });
             document.querySelectorAll('[data-maintenance-pending-count]').forEach((element) => { element.textContent = String(visibleCounts.pending); });
@@ -4038,7 +4059,7 @@
             const pageSummary = document.querySelector('[data-maintenance-page-summary]');
 
             if (!filteredReports.length) {
-                const emptyLabels = { all: 'requests', active: 'active requests', student: 'student reports', faculty: 'faculty reports' };
+                const emptyLabels = { all: 'requests', active: 'active requests', student: 'student reports', faculty: 'faculty reports', other: 'other reports' };
                 const label = emptyLabels[currentReporterTab] || 'requests';
                 list.innerHTML = `<tr><td colspan="7" class="maintenance-report-empty">No ${label} match these filters.</td></tr>`;
                 if (pageSummary) pageSummary.textContent = 'Showing 0 requests';
@@ -4263,32 +4284,23 @@
             });
         }
 
-        const requestedDummyMaintenanceReports = new Set([
-            'MON-072|elaiza masilungan|equipment damage|hindi mabuhay',
-            'CPU-091|elaiza masilungan|equipment damage|bdjskks',
-            'MOU-050|glenda p. binay|connectivity|hindi ma click',
-            'KEY-081|elaiza masilungan|equipment missing|2ds'
-        ]);
-
-        function isRequestedDummyMaintenanceReport(report) {
-            const equipmentId = String(report.equipmentId || report.equipment_id || '').trim().toUpperCase();
-            const reporterName = String(report.reporterName || report.reporter?.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
-            const category = String(report.category || '').trim().toLowerCase();
-            const description = String(report.description || '').trim().toLowerCase();
-
-            return requestedDummyMaintenanceReports.has(`${equipmentId}|${reporterName}|${category}|${description}`);
-        }
-
         async function loadTechnicianDashboard() {
-            const user = window.__CURRENT_USER__ || {};
             const allRequestsPromise = fetchMaintenanceRequests();
-            const [allRequests] = await Promise.all([
-                allRequestsPromise,
-                loadTechnicianEquipmentActivity(allRequestsPromise)
-            ]);
-            const visibleAllRequests = Array.isArray(allRequests)
-                ? allRequests.filter((request) => !isRequestedDummyMaintenanceReport(request))
-                : [];
+            let allRequests;
+            try {
+                [allRequests] = await Promise.all([
+                    allRequestsPromise,
+                    loadTechnicianEquipmentActivity(allRequestsPromise)
+                ]);
+            } catch (error) {
+                console.error('Unable to load technician dashboard maintenance counts.', error);
+                ['[data-new-reports]', '[data-in-progress-count]', '[data-resolved-today-count]', '[data-total-resolved-count]'].forEach((selector) => {
+                    document.querySelectorAll(selector).forEach((element) => { element.textContent = '—'; });
+                });
+                document.querySelector('[data-dashboard-maintenance-card]')?.classList.remove('has-items');
+                return;
+            }
+            const visibleAllRequests = Array.isArray(allRequests) ? allRequests : [];
 
             technicianMaintenancePaginationState.currentPage = 1;
             window.__TECHNICIAN_REQUESTS__ = visibleAllRequests;
@@ -4307,7 +4319,7 @@
             document.querySelectorAll('[data-maintenance-progress-count]').forEach(el => { el.textContent = String(inProgressCount); });
             document.querySelectorAll('[data-maintenance-resolved-count]').forEach(el => { el.textContent = String(totalResolvedCount); });
             document.querySelectorAll('[data-new-reports]').forEach(el => { el.textContent = String(pendingCount); });
-            document.querySelector('[data-technician-report-filter="pending"]')?.classList.toggle('has-items', pendingCount > 0);
+            document.querySelector('[data-dashboard-maintenance-card]')?.classList.toggle('has-items', pendingCount > 0);
             document.querySelectorAll('[data-new-reports-badge]').forEach(el => { el.textContent = String(pendingCount); });
             // Update sidebar bell + badge if present
             const sidebarBell = document.querySelector('[data-sidebar-bell]');
@@ -4361,13 +4373,9 @@
             const notifList = document.querySelector('[data-notification-list]');
             const newReportsList = document.querySelector('[data-new-reports-list]');
             const notifCount = document.getElementById('notif-count');
-            const newReportsCountEls = document.querySelectorAll('[data-new-reports]');
             const newReportsBadgeEls = document.querySelectorAll('[data-new-reports-badge]');
             const count = reports.length;
 
-            if (newReportsCountEls.length) {
-                newReportsCountEls.forEach(el => el.textContent = String(count));
-            }
             if (newReportsBadgeEls.length) {
                 newReportsBadgeEls.forEach(el => el.textContent = String(count));
             }
@@ -4476,19 +4484,22 @@
         function getBorrowStatusText(record) {
             const statusValue = String(record?.status || '').trim();
             const lower = statusValue.toLowerCase();
+            const effectiveStatus = String(record?.effectiveStatus || '').trim().toLowerCase();
+            const status = effectiveStatus || lower;
+            const activeStatuses = ['pending', 'approved', 'borrowed'];
 
-            if (lower === 'pending') return 'Pending';
-            if (lower === 'approved') return 'Approved';
-            if (lower === 'rejected') return 'Rejected';
-            if (lower === 'returned') return 'Returned';
-            if (lower === 'borrowed') return 'Borrowed';
-            if (lower === 'lost') return 'Lost';
-            if (lower === 'overdue') return 'Overdue';
-            if (lower === 'pending replacement') return 'Pending Replacement';
-
-            const expected = record?.expectedReturnDate ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T00:00:00`) : null;
-            if (expected && expected < new Date() && !['returned', 'rejected'].includes(lower)) {
-                return 'Overdue';
+            if (status === 'overdue') return 'Overdue';
+            if (status === 'pending replacement') return 'Pending Replacement';
+            if (['rejected', 'returned', 'lost', 'cancelled'].includes(status)) {
+                const label = statusValue || status;
+                return label.charAt(0).toUpperCase() + label.slice(1);
+            }
+            if (activeStatuses.includes(status)) {
+                const expected = !effectiveStatus && record?.expectedReturnDate
+                    ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T${String(record.expectedReturnTime || '23:59').slice(0, 5)}:00`)
+                    : null;
+                if (expected && !Number.isNaN(expected.getTime()) && expected < new Date()) return 'Overdue';
+                return status.charAt(0).toUpperCase() + status.slice(1);
             }
             return statusValue || 'Borrowed';
         }
@@ -4538,25 +4549,24 @@
 
         function renderBorrowSummary() {
             const total = borrowRequestState.records.length;
-            const pending = borrowRequestState.records.filter((record) => String(record.status || '').trim().toLowerCase() === 'pending').length;
-            const borrowed = borrowRequestState.records.filter((record) => ['approved', 'borrowed'].includes(String(record.status || '').trim().toLowerCase())).length;
-            const overdue = borrowRequestState.records.filter((record) => {
-                const status = String(record.status || '').trim().toLowerCase();
-                if (!['approved', 'borrowed'].includes(status)) return false;
-                const expectedDate = record.expectedReturnDate ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T00:00:00`) : null;
-                return expectedDate && expectedDate < new Date();
-            }).length;
+            const pending = borrowRequestState.records.filter((record) => getBorrowStatusText(record) === 'Pending').length;
+            const approved = borrowRequestState.records.filter((record) => getBorrowStatusText(record) === 'Approved').length;
+            const borrowed = borrowRequestState.records.filter((record) => String(record.status || '').trim().toLowerCase() === 'borrowed').length;
+            const overdue = borrowRequestState.records.filter((record) => getBorrowStatusText(record) === 'Overdue').length;
 
             const totalEl = document.getElementById('borrowSummaryTotal');
             const borrowedEl = document.getElementById('borrowSummaryBorrowed');
             const pendingEl = document.getElementById('borrowSummaryPending');
+            const approvedEl = document.getElementById('borrowSummaryApproved');
             const overdueEl = document.getElementById('borrowSummaryOverdue');
             if (totalEl) totalEl.textContent = String(total);
             if (borrowedEl) borrowedEl.textContent = String(borrowed);
             if (pendingEl) pendingEl.textContent = String(pending);
+            if (approvedEl) approvedEl.textContent = String(approved);
             if (overdueEl) overdueEl.textContent = String(overdue);
-            pendingEl?.closest('[data-borrow-summary-filter]')?.classList.toggle('has-items', pending > 0);
-            overdueEl?.closest('[data-borrow-summary-filter]')?.classList.toggle('has-items', overdue > 0);
+            const borrowModuleCard = document.querySelector('[data-dashboard-borrow-card]');
+            borrowModuleCard?.classList.toggle('has-pending-items', pending > 0);
+            borrowModuleCard?.classList.toggle('has-overdue-items', overdue > 0);
 
             const count = document.getElementById('borrow-request-count');
             if (count) count.textContent = `${pending} pending`;
@@ -4738,7 +4748,12 @@
             } catch (error) {
                 console.error('Unable to load technician borrow requests.', error);
                 const count = document.getElementById('borrow-request-count');
-                if (count) count.textContent = '0 pending';
+                if (count) count.textContent = '— pending';
+                ['borrowSummaryTotal', 'borrowSummaryBorrowed', 'borrowSummaryPending', 'borrowSummaryApproved', 'borrowSummaryOverdue'].forEach((id) => {
+                    document.getElementById(id).textContent = '—';
+                });
+                const borrowModuleCard = document.querySelector('[data-dashboard-borrow-card]');
+                borrowModuleCard?.classList.remove('has-pending-items', 'has-overdue-items');
                 if (tableBody) {
                     tableBody.innerHTML = `<tr><td colspan="6" class="px-3 py-5 text-center text-sm text-red-300">${escapeBorrowText(error.message || 'Unable to load borrow requests.')}</td></tr>`;
                 }
@@ -4987,7 +5002,7 @@
             if (!recordId) return;
             if (type === 'maintenance') {
                 currentReportStatusFilter = 'all';
-                currentReporterTab = 'all';
+                setTechnicianReporterFilter('all');
                 const controls = {
                     technicianReportStatusFilter: 'all',
                     requestSearchInput: String(recordId),
@@ -4998,11 +5013,6 @@
                 Object.entries(controls).forEach(([id, value]) => {
                     const control = document.getElementById(id);
                     if (control) control.value = value;
-                });
-                document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
-                    const selected = tab.getAttribute('data-reporter-tab') === 'all';
-                    tab.classList.toggle('is-active', selected);
-                    tab.setAttribute('aria-selected', String(selected));
                 });
                 document.querySelectorAll('[data-maintenance-summary-filter]').forEach((card) => {
                     const selected = card.getAttribute('data-maintenance-summary-filter') === 'all';
@@ -5093,29 +5103,18 @@
             window.addEventListener('scroll', hideRecentEquipmentTooltip, true);
             window.addEventListener('resize', hideRecentEquipmentTooltip);
 
-            document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('[data-reporter-tab]').forEach((item) => {
-                        item.classList.toggle('is-active', item === this);
-                        item.setAttribute('aria-selected', String(item === this));
-                    });
-                    currentReporterTab = this.getAttribute('data-reporter-tab') || 'all';
-                    technicianMaintenancePaginationState.currentPage = 1;
-                    renderPendingReports(window.__TECHNICIAN_REQUESTS__ || []);
-                });
+            document.getElementById('technicianReporterFilter')?.addEventListener('change', function() {
+                setTechnicianReporterFilter(this.value || 'all');
+                technicianMaintenancePaginationState.currentPage = 1;
+                renderPendingReports(window.__TECHNICIAN_REQUESTS__ || []);
             });
 
             document.querySelectorAll('[data-maintenance-summary-filter]').forEach((card) => {
                 card.addEventListener('click', function() {
                     currentReportStatusFilter = this.getAttribute('data-maintenance-summary-filter') || 'all';
-                    currentReporterTab = 'all';
+                    setTechnicianReporterFilter('all');
                     const statusSelect = document.getElementById('technicianReportStatusFilter');
                     if (statusSelect) statusSelect.value = currentReportStatusFilter;
-                    document.querySelectorAll('[data-reporter-tab]').forEach((tab) => {
-                        const selected = tab.getAttribute('data-reporter-tab') === 'all';
-                        tab.classList.toggle('is-active', selected);
-                        tab.setAttribute('aria-selected', String(selected));
-                    });
                     document.querySelectorAll('[data-maintenance-summary-filter]').forEach((item) => {
                         const selected = item === this;
                         item.classList.toggle('is-selected', selected);
@@ -5655,6 +5654,23 @@
           }
         };
         const renderReportList = () => {
+          const ownReportSummary = reports.reduce((summary, report) => {
+            const status = String(report.status || 'draft').toLowerCase().replace(/[_-]+/g, ' ').trim();
+            const isUnsubmittedDraft = status === 'draft' && !report.submittedAt;
+            if (!isUnsubmittedDraft) summary.total += 1;
+            if (['pending', 'submitted'].includes(status)) summary.pending += 1;
+            // Reviewed reports remain in the approval workflow; approved reports are complete.
+            if (['in progress', 'reviewed'].includes(status)) summary.inProgress += 1;
+            if (['approved', 'completed', 'resolved'].includes(status)) summary.completed += 1;
+            if (status === 'rejected') summary.rejected += 1;
+            return summary;
+          }, { total: 0, pending: 0, inProgress: 0, completed: 0, rejected: 0 });
+          document.getElementById('dashboardOwnReportsTotal').textContent = String(ownReportSummary.total);
+          document.getElementById('dashboardOwnReportsPending').textContent = String(ownReportSummary.pending);
+          document.getElementById('dashboardOwnReportsInProgress').textContent = String(ownReportSummary.inProgress);
+          document.getElementById('dashboardOwnReportsCompleted').textContent = String(ownReportSummary.completed);
+          document.getElementById('dashboardOwnReportsRejected').textContent = String(ownReportSummary.rejected);
+
           const query = String(reportSearch.value || '').trim().toLowerCase();
           const statusFilter = String(reportStatus.value || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
           const filtered = reports.filter((report) => {
@@ -6013,6 +6029,6 @@
         window.addEventListener('hashchange', () => { if (window.location.hash === '#accomplishments') loadInitialReports(); });
       })();
     </script>
-    <script src="/js/sidebar-component.js?v=106" defer></script>
+    <script src="/js/sidebar-component.js?v=127" defer></script>
 </body>
 </html>

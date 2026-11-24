@@ -135,6 +135,124 @@ function getUnavailableReason(status) {
   return `Equipment status '${status}' does not allow borrowing.`;
 }
 
+function isNonBorrowableEquipment(equipment) {
+  const values = [equipment?.category, equipment?.name, equipment?.equipmentName]
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+  return values.some((value) =>
+    value === "ac" ||
+    value === "aircon" ||
+    value === "air con" ||
+    value === "air conditioner" ||
+    /\bair\s*con(?:ditioner)?\b/.test(value) ||
+    /\bcbt\b/.test(value) ||
+    /\bcabinets?\b/.test(value)
+  );
+}
+
+function isChairEquipment(equipment) {
+  return /\bchairs?\b/i.test(`${equipment?.category || ""} ${equipment?.name || ""}`);
+}
+
+function normalizeChairPoolValue(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function isInChairPool(selected, candidate) {
+  if (normalizeCampus(selected.campus) !== normalizeCampus(candidate.campus) ||
+      !isChairEquipment(candidate)) return false;
+  const selectedSetId = normalizeChairPoolValue(selected.setId);
+  if (selectedSetId) return normalizeChairPoolValue(candidate.setId) === selectedSetId;
+  if (normalizeChairPoolValue(candidate.setId)) return false;
+  const selectedLaboratory = normalizeChairPoolValue(selected.laboratoryRoom || selected.location);
+  const candidateLaboratory = normalizeChairPoolValue(candidate.laboratoryRoom || candidate.location);
+  return selectedLaboratory
+    ? candidateLaboratory === selectedLaboratory
+    : Number(candidate.id) === Number(selected.id);
+}
+
+async function getChairPoolAvailability(equipment, {
+  transaction,
+  lock = false,
+  excludeBorrowRecordId = null
+} = {}) {
+  const selectedSetId = String(equipment.setId || "").trim();
+  const selectedLaboratory = String(equipment.laboratoryRoom || equipment.location || "").trim();
+  const where = {
+    campus: { [Op.in]: getCampusVariants(equipment.campus) }
+  };
+  if (selectedSetId) {
+    where.setId = selectedSetId;
+  } else if (selectedLaboratory) {
+    where[Op.or] = [
+      { laboratoryRoom: selectedLaboratory },
+      { location: selectedLaboratory }
+    ];
+  } else {
+    where.id = equipment.id;
+  }
+  const equipmentOptions = { where, order: [["id", "ASC"]], transaction };
+  if (transaction && lock) equipmentOptions.lock = transaction.LOCK.UPDATE;
+  const poolRecords = (await Equipment.findAll(equipmentOptions))
+    .filter((candidate) => isInChairPool(equipment, candidate));
+  const selectedEquipment = poolRecords.find((candidate) => Number(candidate.id) === Number(equipment.id)) || null;
+  if (!selectedEquipment) return { selectedEquipment: null, assignment: null, availableCount: 0 };
+
+  const equipmentRecordIds = poolRecords.map((record) => record.id);
+  const assignmentOptions = {
+    where: { equipmentRecordId: { [Op.in]: equipmentRecordIds }, unassignedAt: null },
+    order: [["assignedAt", "DESC"], ["id", "DESC"]],
+    transaction
+  };
+  if (transaction && lock) assignmentOptions.lock = transaction.LOCK.UPDATE;
+  const assignments = await EquipmentAssignment.findAll(assignmentOptions);
+  const assignmentByEquipment = new Map();
+  assignments.forEach((assignment) => {
+    const equipmentRecordId = Number(assignment.equipmentRecordId);
+    if (!assignmentByEquipment.has(equipmentRecordId)) {
+      assignmentByEquipment.set(equipmentRecordId, assignment);
+    }
+  });
+  const selectedAssignment = assignmentByEquipment.get(Number(selectedEquipment.id)) || null;
+  if (!selectedAssignment) {
+    return { selectedEquipment, assignment: null, availableCount: 0 };
+  }
+
+  const accountableFacultyUserId = Number(selectedAssignment.facultyUserId);
+  const eligibleRecords = poolRecords.filter((record) =>
+    String(record.status || "").trim().toLowerCase() === "serviceable" &&
+    Number(assignmentByEquipment.get(Number(record.id))?.facultyUserId) === accountableFacultyUserId
+  );
+  const eligibleIds = eligibleRecords.map((record) => record.id);
+  const borrowOptions = {
+    where: {
+      equipmentRecordId: { [Op.in]: eligibleIds },
+      status: { [Op.in]: [
+        "Pending", "pending", "Approved", "approved", "Borrowed", "borrowed",
+        "Active", "active", "Checked Out", "checked out"
+      ] }
+    },
+    transaction
+  };
+  if (transaction && lock) borrowOptions.lock = transaction.LOCK.UPDATE;
+  const reservations = eligibleIds.length ? await BorrowRecord.findAll(borrowOptions) : [];
+  const reservedQuantity = reservations.reduce((total, record) => {
+    if (excludeBorrowRecordId && String(record.id) === String(excludeBorrowRecordId)) return total;
+    return total + Math.max(1, Number(record.quantity || 1));
+  }, 0);
+  const totalQuantity = eligibleRecords.reduce(
+    (total, record) => total + Math.max(0, Number(record.quantity || 0)),
+    0
+  );
+  return {
+    selectedEquipment,
+    assignment: selectedAssignment,
+    totalQuantity,
+    reservedQuantity,
+    availableCount: Math.max(0, totalQuantity - reservedQuantity)
+  };
+}
+
 function canViewBorrowNotifications(role) {
   const normalizedRole = String(role || "").trim().toLowerCase();
   return isAdminRole(normalizedRole) ||
@@ -147,6 +265,12 @@ function isFacultyRole(role) {
 
 function isActiveBorrowStatus(status) {
   return ["pending", "approved", "borrowed", "overdue"].includes(String(status || "").trim().toLowerCase());
+}
+
+function isCurrentBorrowRecord(record) {
+  const status = String(record?.status || "").trim().toLowerCase();
+  return ["borrowed", "active", "checked out", "overdue"].includes(status) ||
+    (status === "approved" && !record?.returnDate);
 }
 
 async function getBorrowDecisionAccess(scope, record, identity, transaction) {
@@ -232,6 +356,61 @@ function resolveBorrowerType(record, requesterRole) {
   const hasAcademicYear = /(?:\b[1-6](?:st|nd|rd|th)?\s*year\b|\byear\s*[1-6]\b)/i.test(profileDetails);
   const hasSection = /(?:\bsection\s*)?\b[a-z]\s*-?\s*\d{1,2}\b/i.test(profileDetails);
   return hasAcademicYear && hasSection ? "Student" : "Borrower";
+}
+
+async function getActiveBorrowDetails(equipment, currentUserId, campus) {
+  const records = await BorrowRecord.findAll({
+    where: {
+      equipmentRecordId: equipment.id,
+      campus: { [Op.in]: getCampusVariants(campus) },
+      status: { [Op.in]: ["Borrowed", "borrowed", "Active", "active", "Checked Out", "checked out", "Approved", "approved", "Overdue", "overdue"] }
+    },
+    order: [["borrowDate", "DESC"], ["borrowStartTime", "DESC"], ["created_at", "DESC"]]
+  });
+  const record = records.find(isCurrentBorrowRecord);
+  if (!record) return null;
+
+  const identity = await BorrowRequestAccountability.findByPk(record.id);
+  const borrower = identity?.requesterUserId
+    ? await User.findByPk(identity.requesterUserId, {
+        attributes: ["id", "name", "role", "student_number", "college"]
+      })
+    : null;
+  const assignment = await EquipmentAssignment.findOne({
+    where: { equipmentRecordId: equipment.id, unassignedAt: null },
+    order: [["assignedAt", "DESC"], ["id", "DESC"]]
+  });
+  const accountableFacultyUserId = assignment?.facultyUserId || identity?.accountableFacultyUserId || null;
+  const accountableFaculty = accountableFacultyUserId
+    ? await User.findByPk(accountableFacultyUserId, { attributes: ["id", "name"] })
+    : null;
+  const expectedReturn = record.expectedReturnDate
+    ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T${String(record.expectedReturnTime || "23:59").slice(0, 5)}:00+08:00`)
+    : null;
+  const borrowerRole = String(borrower?.role || record.borrowerType || "Borrower").trim();
+
+  return {
+    id: record.id,
+    borrowerUserId: borrower?.id || identity?.requesterUserId || null,
+    borrowerName: borrower?.name || record.borrowerName || "Unknown borrower",
+    borrowerRole: isFacultyRole(borrowerRole)
+      ? "Instructor"
+      : borrowerRole.toLowerCase() === "student"
+        ? "Student"
+        : borrowerRole,
+    borrowerIdentifier: borrower?.student_number || (borrower?.id ? `User ID ${borrower.id}` : null),
+    borrowerCollege: borrower?.college || record.departmentInfo || null,
+    borrowedAt: [
+      record.borrowDate ? String(record.borrowDate).slice(0, 10) : null,
+      record.borrowStartTime ? String(record.borrowStartTime).slice(0, 5) : null
+    ].filter(Boolean).join(" ") || null,
+    expectedReturnDate: record.expectedReturnDate || null,
+    expectedReturnTime: record.expectedReturnTime || null,
+    isDue: Boolean(expectedReturn && expectedReturn <= new Date()),
+    isMine: Number(identity?.requesterUserId) === Number(currentUserId),
+    accountableFacultyUserId,
+    accountableFacultyName: accountableFaculty?.name || null
+  };
 }
 
 export const listBorrowNotifications = async (req, res) => {
@@ -389,7 +568,7 @@ export const listBorrowAudit = async (req, res) => {
     const recordsById = new Map(records.map((record) => [String(record.id), record]));
     const currentHolders = new Map();
     for (const record of records) {
-      if (String(record.status || "").toLowerCase() !== "borrowed") continue;
+      if (!isCurrentBorrowRecord(record)) continue;
       const key = equipmentKeyFor(record);
       const holders = currentHolders.get(key) || [];
       holders.push({
@@ -557,13 +736,11 @@ export const listBorrowRecords = async (req, res) => {
       !archivedBorrowRecordIds.has(String(record.id)) &&
       !archivedBorrowRequestIds.has(String(record.id))
     );
-    const activeBorrowRecordIds = visibleRecords
-      .filter((record) => String(record.status || "").toLowerCase() === "borrowed")
-      .map((record) => record.id);
-    const activeBorrowEvents = activeBorrowRecordIds.length
+    const borrowRecordIds = visibleRecords.map((record) => record.id);
+    const borrowedEvents = borrowRecordIds.length
       ? await BorrowHistory.findAll({
           where: {
-            recordId: { [Op.in]: activeBorrowRecordIds },
+            recordId: { [Op.in]: borrowRecordIds },
             eventType: "borrowed"
           },
           attributes: ["recordId", "remarks"]
@@ -571,7 +748,7 @@ export const listBorrowRecords = async (req, res) => {
       : [];
     const currentBorrowerByEquipment = new Map();
     visibleRecords.forEach((record) => {
-      if (String(record.status || "").toLowerCase() !== "borrowed") return;
+      if (!isCurrentBorrowRecord(record)) return;
       const key = record.equipmentRecordId
         ? `equipment:${record.equipmentRecordId}`
         : `legacy:${record.equipmentId}:${normalizeCampus(record.campus)}`;
@@ -580,7 +757,7 @@ export const listBorrowRecords = async (req, res) => {
       }
     });
     const takenOverFromByRecord = new Map();
-    activeBorrowEvents.forEach((event) => {
+    borrowedEvents.forEach((event) => {
       const match = String(event.remarks || "").match(/^Borrowed directly via QR handoff from (.+?) \([^)]+\)\./);
       if (match) takenOverFromByRecord.set(String(event.recordId), match[1]);
     });
@@ -633,7 +810,7 @@ export const listBorrowRecords = async (req, res) => {
     const involvedUsers = involvedUserIds.length
       ? await User.findAll({
           where: { id: { [Op.in]: involvedUserIds } },
-        attributes: ["id", "name", "college", "role", "program", "year", "section"]
+          attributes: ["id", "name", "college", "role", "program", "year", "section", "student_number"]
         })
       : [];
     const userById = new Map(involvedUsers.map((person) => [Number(person.id), person]));
@@ -662,15 +839,19 @@ export const listBorrowRecords = async (req, res) => {
     const response = visibleRecords
       .map((record) => {
         const identity = identityByRecord.get(String(record.id));
-        const returnRequest = String(record.status || "").toLowerCase() === "borrowed"
+        const returnRequest = isCurrentBorrowRecord(record)
           ? returnRequestByRecord.get(String(record.id))
           : null;
         const isRequester = Number(identity?.requesterUserId) === Number(scope.userId) ||
           (String(scope.role || "").toLowerCase() === "student" && !identity && visibleRecords.includes(record));
-        const isBorrowed = String(record.status || "").toLowerCase() === "borrowed";
+        const isBorrowed = isCurrentBorrowRecord(record);
         const takenOverByMatch = String(record.remarks || "").match(/^Transferred to (.+?) via QR handoff/);
         const currentAssignment = currentAssignmentByEquipment.get(Number(record.equipmentRecordId));
         const requester = userById.get(Number(identity?.requesterUserId));
+        const requesterRole = String(requester?.role || record.borrowerType || "").toLowerCase();
+        const isCurrentBorrower = isBorrowed &&
+          isRequester &&
+          ["student", "faculty", "instructor"].includes(requesterRole);
         const equipmentKey = record.equipmentRecordId
           ? `equipment:${record.equipmentRecordId}`
           : `legacy:${record.equipmentId}:${normalizeCampus(record.campus)}`;
@@ -697,6 +878,7 @@ export const listBorrowRecords = async (req, res) => {
           borrowerProgram: requester?.program || null,
           borrowerYear: requester?.year || null,
           borrowerSection: requester?.section || null,
+          borrowerIdentifier: requester?.student_number || (requester?.id ? `User ID ${requester.id}` : null),
           requesterRole: requester?.role || record.borrowerType || null,
           currentBorrowerName: currentBorrowerByEquipment.get(equipmentKey) || null,
           departmentInfo: buildBorrowerDepartmentInfo(
@@ -723,6 +905,8 @@ export const listBorrowRecords = async (req, res) => {
           isMyRequest: isRequester,
           isLastBorrower: isLastFacultyBorrower,
           canReturnStudentBorrow,
+          canReturnBorrow: isCurrentBorrower,
+          canTurnOver: isCurrentBorrower,
           canRequestReturn: isRequester && isBorrowed && !returnRequest &&
             (!isFacultyRole(scope.role) || isLastFacultyBorrower),
           canApprove
@@ -826,6 +1010,10 @@ const createBorrowRecordHandler = async (req, res, { studentQrHandoff = false } 
     if ((await getArchivedEntityIds("equipment")).includes(String(equipment.equipmentId))) {
       return res.status(404).json({ error: "Equipment not found in your campus." });
     }
+    if (isNonBorrowableEquipment(equipment)) {
+      return res.status(400).json({ error: "Air conditioners/AC units, CBT equipment, and cabinets cannot be borrowed." });
+    }
+    const chairRequest = isChairEquipment(equipment) && !studentQrHandoff;
     equipmentId = equipment.equipmentId;
     equipmentName = equipment.name;
 
@@ -836,7 +1024,7 @@ const createBorrowRecordHandler = async (req, res, { studentQrHandoff = false } 
         order: [["assignedAt", "DESC"]]
       });
       if (!accountability) {
-        return res.status(409).json({ error: "This equipment has no current MR Faculty assignment and cannot be borrowed." });
+        return res.status(409).json({ error: "This equipment has no accountable faculty assignment and cannot be borrowed." });
       }
     }
 
@@ -905,38 +1093,59 @@ const createBorrowRecordHandler = async (req, res, { studentQrHandoff = false } 
       return res.status(400).json({ error: "Equipment is not associated with a campus." });
     }
 
-    const requestedQty = selfServiceRequest
-      ? 1
-      : quantity === undefined || quantity === null || quantity === "" ? 1 : Number(quantity);
+    const requestedQty = chairRequest
+      ? quantity === undefined || quantity === null || quantity === "" ? 1 : Number(quantity)
+      : selfServiceRequest
+        ? 1
+        : quantity === undefined || quantity === null || quantity === "" ? 1 : Number(quantity);
     const totalInventory = Number(equipment.quantity ?? equipment.availableQuantity ?? 0);
-    if (!Number.isInteger(requestedQty) || requestedQty < 1 || requestedQty > totalInventory) {
+    if (!Number.isInteger(requestedQty) || requestedQty < 1 || (!chairRequest && requestedQty > totalInventory)) {
       return res.status(400).json({ error: "Requested quantity exceeds available inventory." });
+    }
+    if (chairRequest) {
+      const chairPool = await getChairPoolAvailability(equipment);
+      if (requestedQty > chairPool.availableCount) {
+        return res.status(409).json({
+          error: `Only ${chairPool.availableCount} serviceable chair${chairPool.availableCount === 1 ? "" : "s"} are currently available in this lab/set.`
+        });
+      }
     }
 
     const recordId = `borrow-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
     const result = await BorrowRecord.sequelize.transaction(async (transaction) => {
-      const lockedEquipment = await Equipment.findByPk(equipment.id, {
-        transaction,
-        lock: transaction.LOCK.UPDATE
-      });
+      const chairPool = chairRequest
+        ? await getChairPoolAvailability(equipment, { transaction, lock: true })
+        : null;
+      const lockedEquipment = chairRequest
+        ? chairPool.selectedEquipment
+        : await Equipment.findByPk(equipment.id, {
+            transaction,
+            lock: transaction.LOCK.UPDATE
+          });
       const lockedQrHandoffableStatus = studentQrHandoff && /^(borrowed|in use)$/i.test(String(lockedEquipment?.status || "").trim());
-      if (!lockedEquipment || (isUnavailableForBorrowing(lockedEquipment.status) && !lockedQrHandoffableStatus)) {
+      if (!lockedEquipment || isNonBorrowableEquipment(lockedEquipment) ||
+          (isUnavailableForBorrowing(lockedEquipment.status) && !lockedQrHandoffableStatus) ||
+          (chairRequest && String(lockedEquipment.status || "").trim().toLowerCase() !== "serviceable")) {
         return { unavailable: true };
       }
       const lockedInventory = Number(lockedEquipment.quantity ?? lockedEquipment.availableQuantity ?? 0);
-      if (requestedQty > lockedInventory) return { tooMany: true };
+      if (chairRequest ? requestedQty > chairPool.availableCount : requestedQty > lockedInventory) {
+        return { tooMany: true, availableCount: chairRequest ? chairPool.availableCount : lockedInventory };
+      }
 
       if (facultyRequest || studentRequest) {
-        accountability = await EquipmentAssignment.findOne({
-          where: { equipmentRecordId: lockedEquipment.id, unassignedAt: null },
-          order: [["assignedAt", "DESC"]],
-          transaction,
-          lock: transaction.LOCK.UPDATE
-        });
+        accountability = chairRequest
+          ? chairPool.assignment
+          : await EquipmentAssignment.findOne({
+              where: { equipmentRecordId: lockedEquipment.id, unassignedAt: null },
+              order: [["assignedAt", "DESC"]],
+              transaction,
+              lock: transaction.LOCK.UPDATE
+            });
         if (!accountability) return { unassigned: true };
       }
 
-      const activeBorrowRecords = await BorrowRecord.findAll({
+      const activeBorrowRecords = chairRequest ? [] : await BorrowRecord.findAll({
         where: {
           equipmentId,
           campus: { [Op.in]: getCampusVariants(equipmentCampus) },
@@ -966,7 +1175,7 @@ const createBorrowRecordHandler = async (req, res, { studentQrHandoff = false } 
           return { alreadyBorrowed: true };
         }
       }
-      if (reservedQty + requestedQty > lockedInventory) return { conflict: true };
+      if (!chairRequest && reservedQty + requestedQty > lockedInventory) return { conflict: true };
 
       const created = await BorrowRecord.create({
         id: recordId,
@@ -1009,7 +1218,11 @@ const createBorrowRecordHandler = async (req, res, { studentQrHandoff = false } 
       return res.status(409).json({ error: "You already have this equipment borrowed. Use My Requests to mark it as returned." });
     }
     if (result.tooMany) {
-      return res.status(409).json({ error: "Requested quantity exceeds the current inventory." });
+      return res.status(409).json({
+        error: chairRequest
+          ? `Only ${result.availableCount} serviceable chair${result.availableCount === 1 ? "" : "s"} are currently available in this lab/set.`
+          : "Requested quantity exceeds the current inventory."
+      });
     }
     if (result.conflict) {
       return res.status(409).json({ error: "This equipment already has a conflicting pending request or borrowing for the selected time." });
@@ -1127,20 +1340,40 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
     if ((await getArchivedEntityIds("equipment")).includes(String(equipment.equipmentId))) {
       return res.status(404).json({ error: "Equipment not found in your campus." });
     }
+    if (isNonBorrowableEquipment(equipment)) {
+      return res.status(409).json({ error: "Air conditioners/AC units, CBT equipment, and cabinets cannot be borrowed." });
+    }
+    const chairRequest = isChairEquipment(equipment);
+    const requestedQuantity = chairRequest
+      ? req.body?.quantity === undefined || req.body?.quantity === null || req.body?.quantity === ""
+        ? 1
+        : Number(req.body.quantity)
+      : 1;
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
+      return res.status(400).json({ error: "Chair quantity must be a whole number greater than zero." });
+    }
     const currentAssignment = await EquipmentAssignment.findOne({
       where: { equipmentRecordId: equipment.id, unassignedAt: null },
       order: [["assignedAt", "DESC"], ["id", "DESC"]]
     });
     if (!currentAssignment) {
-      return res.status(409).json({ error: "This equipment has no current MR Faculty assignment and cannot be borrowed." });
+      return res.status(409).json({ error: "This equipment has no accountable faculty assignment and cannot be borrowed." });
     }
     if (isUnavailableForBorrowing(equipment.status)) {
       return res.status(409).json({ error: getUnavailableReason(equipment.status) });
     }
     const equipmentCampus = String(equipment.campus || "").trim();
     if (!equipmentCampus) return res.status(400).json({ error: "Equipment is not associated with a campus." });
-    if (Number(equipment.quantity ?? equipment.availableQuantity ?? 0) < 1) {
+    if (!chairRequest && Number(equipment.quantity ?? equipment.availableQuantity ?? 0) < 1) {
       return res.status(409).json({ error: "No inventory is currently available for this equipment." });
+    }
+    if (chairRequest) {
+      const chairPool = await getChairPoolAvailability(equipment);
+      if (requestedQuantity > chairPool.availableCount) {
+        return res.status(409).json({
+          error: `Only ${chairPool.availableCount} serviceable chair${chairPool.availableCount === 1 ? "" : "s"} are currently available in this lab/set.`
+        });
+      }
     }
 
     if (equipment.setId) {
@@ -1166,19 +1399,32 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
       : Math.ceil(Number(requestedDurationHours) * 60);
     const recordId = `borrow-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
     const result = await BorrowRecord.sequelize.transaction(async (transaction) => {
-      const lockedEquipment = await Equipment.findByPk(equipment.id, {
-        transaction,
-        lock: transaction.LOCK.UPDATE
-      });
-      if (!lockedEquipment || isUnavailableForBorrowing(lockedEquipment.status)) return { unavailable: true };
+      const chairPool = chairRequest
+        ? await getChairPoolAvailability(equipment, { transaction, lock: true })
+        : null;
+      const lockedEquipment = chairRequest
+        ? chairPool.selectedEquipment
+        : await Equipment.findByPk(equipment.id, {
+            transaction,
+            lock: transaction.LOCK.UPDATE
+          });
+      if (!lockedEquipment || isNonBorrowableEquipment(lockedEquipment) ||
+          isUnavailableForBorrowing(lockedEquipment.status) ||
+          (chairRequest && String(lockedEquipment.status || "").trim().toLowerCase() !== "serviceable")) {
+        return { unavailable: true };
+      }
       if (String(lockedEquipment.equipmentId) !== equipmentId ||
           normalizeCampus(lockedEquipment.campus) !== normalizeCampus(scope.campus)) {
         return { notFound: true };
       }
-      if (Number(lockedEquipment.quantity ?? lockedEquipment.availableQuantity ?? 0) < 1) return { unavailable: true };
+      if (chairRequest
+        ? requestedQuantity > chairPool.availableCount
+        : Number(lockedEquipment.quantity ?? lockedEquipment.availableQuantity ?? 0) < 1) {
+        return { unavailable: true, availableCount: chairRequest ? chairPool.availableCount : 0 };
+      }
 
       const now = parseDateTime(borrowDate, borrowStartTime);
-      const activeRecords = await BorrowRecord.findAll({
+      const activeRecords = chairRequest ? [] : await BorrowRecord.findAll({
         where: {
           equipmentId: lockedEquipment.equipmentId,
           campus: { [Op.in]: getCampusVariants(equipmentCampus) },
@@ -1200,25 +1446,21 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
       });
       if (reservationConflict || activeBorrowRecords.length > 1) return { conflict: true };
       const activeBorrowRecord = activeBorrowRecords[0] || null;
-      let previousBorrower = null;
       if (activeBorrowRecord) {
         const activeIdentity = await BorrowRequestAccountability.findByPk(activeBorrowRecord.id, { transaction, lock: transaction.LOCK.UPDATE });
         if (!activeIdentity || !isFacultyRole(activeBorrowRecord.borrowerType)) return { conflict: true };
         if (Number(activeIdentity.requesterUserId) === Number(borrower.id)) return { alreadyBorrowed: activeBorrowRecord };
-        previousBorrower = await User.findByPk(activeIdentity.requesterUserId, {
-          attributes: ["id", "name", "college", "role"],
-          transaction,
-          lock: transaction.LOCK.UPDATE
-        });
-        if (!previousBorrower) return { conflict: true };
+        return { conflict: true };
       }
 
-      const currentAssignments = await EquipmentAssignment.findAll({
-        where: { equipmentRecordId: lockedEquipment.id, unassignedAt: null },
-        order: [["assignedAt", "DESC"], ["id", "DESC"]],
-        transaction,
-        lock: transaction.LOCK.UPDATE
-      });
+      const currentAssignments = chairRequest
+        ? chairPool.assignment ? [chairPool.assignment] : []
+        : await EquipmentAssignment.findAll({
+            where: { equipmentRecordId: lockedEquipment.id, unassignedAt: null },
+            order: [["assignedAt", "DESC"], ["id", "DESC"]],
+            transaction,
+            lock: transaction.LOCK.UPDATE
+          });
       if (!currentAssignments.length) return { unassigned: true };
       const previousAccountable = currentAssignments.length
         ? await User.findByPk(currentAssignments[0].facultyUserId, {
@@ -1230,42 +1472,6 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
       const expectedReturn = durationMinutes
         ? getCampusDateTime(new Date(Math.ceil((borrowedAt.getTime() + durationMinutes * 60_000) / 60_000) * 60_000))
         : { date: null, time: null };
-      let transferredBorrowRecordId = null;
-      let transferReturnDate = null;
-      let transferReturnTime = null;
-      if (activeBorrowRecord) {
-        const { date: returnDate, time: returnTime } = getCampusDateTime(borrowedAt);
-        transferReturnDate = returnDate;
-        transferReturnTime = returnTime;
-        const transferRemarks = `Transferred to ${borrower.name} (${borrower.college}) via equipment QR handoff.`;
-        await activeBorrowRecord.update({
-          status: "Returned",
-          returnDate,
-          returnTime,
-          condition: "Good",
-          remarks: transferRemarks,
-          processedBy: borrower.name
-        }, { transaction });
-        await BorrowHistory.create({
-          recordId: activeBorrowRecord.id,
-          borrowerName: activeBorrowRecord.borrowerName,
-          equipmentId: lockedEquipment.equipmentId,
-          equipmentRecordId: lockedEquipment.id,
-          serialNumber: lockedEquipment.serialNumber || activeBorrowRecord.serialNumber,
-          equipmentName: lockedEquipment.name,
-          borrowDate: activeBorrowRecord.borrowDate,
-          borrowStartTime: activeBorrowRecord.borrowStartTime,
-          returnDate,
-          returnTime,
-          expectedReturnTime: activeBorrowRecord.expectedReturnTime,
-          condition: "Good",
-          purpose: activeBorrowRecord.purpose,
-          remarks: transferRemarks,
-          processedBy: borrower.name,
-          eventType: "returned"
-        }, { transaction });
-        transferredBorrowRecordId = activeBorrowRecord.id;
-      }
       const record = await BorrowRecord.create({
         id: recordId,
         borrowerName: borrower.name,
@@ -1275,7 +1481,7 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
         equipmentRecordId: lockedEquipment.id,
         serialNumber: lockedEquipment.serialNumber || null,
         equipmentName: lockedEquipment.name,
-        quantity: 1,
+        quantity: requestedQuantity,
         borrowDate,
         borrowStartTime,
         expectedReturnDate: expectedReturn.date,
@@ -1302,9 +1508,7 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
         borrowDate,
         borrowStartTime,
         purpose,
-        remarks: activeBorrowRecord
-          ? `Borrowed directly via QR handoff from ${previousBorrower.name} (${previousBorrower.college}). The previous borrow was closed and accountability remains unchanged.`
-          : "Borrowed directly via QR scan; MR accountability was not changed.",
+        remarks: "Borrowed directly via QR scan; the accountable faculty assignment was not changed.",
         processedBy: borrower.name,
         eventType: "borrowed"
       }, { transaction });
@@ -1312,7 +1516,7 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
         equipmentId: lockedEquipment.id,
         serialNumber: lockedEquipment.serialNumber || null,
         actionType: "borrowed",
-        actionDescription: `${borrower.name} borrowed ${lockedEquipment.name} (${lockedEquipment.equipmentId}) by scanning its QR code.`,
+        actionDescription: `${borrower.name} borrowed ${requestedQuantity} ${lockedEquipment.name} (${lockedEquipment.equipmentId}) by scanning its QR code.`,
         performedBy: borrower.id,
         performedByName: borrower.name,
         userRole: "faculty",
@@ -1323,10 +1527,9 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
           borrowerName: borrower.name,
           borrowerUserId: borrower.id,
           borrowerRole: "Faculty",
+          quantity: requestedQuantity,
           accountableFaculty: previousAccountable?.name || null,
           lastBorrower: true,
-          takenOverFrom: previousBorrower?.name || null,
-          takenOverFromRole: previousBorrower?.role || null,
           purpose
         },
         ipAddress: req.ip || null,
@@ -1338,53 +1541,32 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
         record,
         equipment: lockedEquipment,
         previousAccountable,
-        expectedReturn,
-        previousBorrower,
-        transferredBorrowRecordId,
-        transferReturnDate,
-        transferReturnTime
+        expectedReturn
       };
     });
 
     if (result.notFound) return res.status(404).json({ error: "Equipment is no longer available in your campus." });
     if (result.unassigned) {
-      return res.status(409).json({ error: "This equipment has no current MR Faculty assignment and cannot be borrowed." });
+      return res.status(409).json({ error: "This equipment has no accountable faculty assignment and cannot be borrowed." });
     }
-    if (result.unavailable) return res.status(409).json({ error: "Equipment is no longer available for borrowing." });
+    if (result.unavailable) {
+      return res.status(409).json({
+        error: chairRequest
+          ? Number.isInteger(result.availableCount)
+            ? `Only ${result.availableCount} serviceable chair${result.availableCount === 1 ? "" : "s"} are currently available in this lab/set.`
+            : "The scanned chair is no longer serviceable or its set is no longer available."
+          : "Equipment is no longer available for borrowing."
+      });
+    }
     if (result.conflict) return res.status(409).json({ error: "This equipment already has an active borrow request or borrowing." });
     if (result.alreadyBorrowed) return res.status(409).json({ error: "You already have this equipment borrowed. Scan again to mark it as returned." });
 
-    if (result.transferredBorrowRecordId) {
-      await logEquipmentBorrowAudit(req, {
-        equipment: result.equipment,
-        actionType: "returned",
-        description: `Borrow record ${result.transferredBorrowRecordId} was transferred from ${result.previousBorrower.name} to ${borrower.name} by QR handoff.`,
-        beforeState: { borrowStatus: "Borrowed", borrowerName: result.previousBorrower.name },
-        afterState: {
-          borrowStatus: "Returned",
-          transferredTo: borrower.name,
-          replacementBorrowRecordId: result.record.id,
-          returnDate: result.transferReturnDate,
-          returnTime: result.transferReturnTime
-        }
-      });
-    }
-
     await logAuditEntry(req, {
-      action: result.transferredBorrowRecordId ? "Equipment Borrow Transferred via QR" : "Equipment Borrowed via QR",
+      action: "Equipment Borrowed via QR",
       module: "Borrow Management",
       resourceId: result.record.id,
-      description: result.previousBorrower
-        ? `${borrower.name} took over ${result.equipment.name} (${result.equipment.equipmentId}) from ${result.previousBorrower.name} via QR; the previous borrow was closed.`
-        : `${borrower.name} borrowed ${result.equipment.name} (${result.equipment.equipmentId}) via QR; MR accountability was not changed.`,
-      details: result.previousBorrower ? {
-        previousBorrower: result.previousBorrower.name,
-        previousBorrowerCollege: result.previousBorrower.college || null,
-        newBorrower: borrower.name,
-        newBorrowerCollege: borrower.college,
-        previousBorrowRecordId: result.transferredBorrowRecordId,
-        newBorrowRecordId: result.record.id
-      } : { borrower: borrower.name, borrowRecordId: result.record.id }
+      description: `${borrower.name} borrowed ${requestedQuantity} ${result.equipment.name} (${result.equipment.equipmentId}) via QR; the accountable faculty assignment was not changed.`,
+      details: { borrower: borrower.name, borrowRecordId: result.record.id, quantity: requestedQuantity }
     });
 
     return res.status(201).json({
@@ -1392,9 +1574,6 @@ export const createFacultyQrBorrowRecord = async (req, res) => {
       isLastBorrower: true,
       currentAccountableFacultyName: result.previousAccountable?.name || null,
       previousAccountableFacultyName: result.previousAccountable?.name || null,
-      transferredFrom: result.previousBorrower
-        ? { name: result.previousBorrower.name, college: result.previousBorrower.college || null }
-        : null,
       expectedReturnDate: result.expectedReturn.date,
       expectedReturnTime: result.expectedReturn.time
     });
@@ -1444,10 +1623,13 @@ export const approveBorrowRecord = async (req, res) => {
       if (!decisionAccess.allowed) return { denied: true, decisionAccess };
       if (getBorrowRecordEffectiveStatus(lockedRecord.toJSON()) === "Overdue") return { expired: true };
       const studentQrHandoff = lockedRecord.remarks === "Student QR handoff request";
+      const chairApproval = isChairEquipment(equipment) && !studentQrHandoff;
       const canHandoffBorrowedStatus = studentQrHandoff &&
         /^(borrowed|in use)$/i.test(String(equipment.status || "").trim());
-      if (String(equipment.name || "") !== String(lockedRecord.equipmentName || "") ||
-          (isUnavailableForBorrowing(equipment.status) && !canHandoffBorrowedStatus)) {
+      if (isNonBorrowableEquipment(equipment) ||
+          String(equipment.name || "") !== String(lockedRecord.equipmentName || "") ||
+          (isUnavailableForBorrowing(equipment.status) && !canHandoffBorrowedStatus) ||
+          (chairApproval && String(equipment.status || "").trim().toLowerCase() !== "serviceable")) {
         return { unavailable: true };
       }
 
@@ -1493,7 +1675,15 @@ export const approveBorrowRecord = async (req, res) => {
           ? total + Number(activeRecord.quantity || 1)
           : total;
       }, 0);
-      if (overlappingQuantity + Number(lockedRecord.quantity || 1) > Number(equipment.quantity || 0)) {
+      if (chairApproval) {
+        const chairPool = await getChairPoolAvailability(equipment, {
+          transaction,
+          excludeBorrowRecordId: lockedRecord.id
+        });
+        if (Number(lockedRecord.quantity || 1) > chairPool.availableCount) {
+          return { unavailable: true };
+        }
+      } else if (overlappingQuantity + Number(lockedRecord.quantity || 1) > Number(equipment.quantity || 0)) {
         return { unavailable: true };
       }
 
@@ -1508,7 +1698,7 @@ export const approveBorrowRecord = async (req, res) => {
         const previousBorrower = previousIdentity?.requesterUserId
           ? await User.findByPk(previousIdentity.requesterUserId, { attributes: ["name", "role"], transaction })
           : null;
-        const transferRemarks = `Transferred to ${lockedRecord.borrowerName} via QR handoff after MR approval by ${approverName}.`;
+        const transferRemarks = `Transferred to ${lockedRecord.borrowerName} via QR handoff after approval by accountable faculty member ${approverName}.`;
         await previousRecord.update({
           status: "Returned",
           returnDate: borrowedAt.date,
@@ -1560,8 +1750,8 @@ export const approveBorrowRecord = async (req, res) => {
       }
       if (studentQrHandoff) {
         const handoffRemarks = transferFrom
-          ? `Borrowed directly via QR handoff from ${transferFrom.name} (${transferFrom.role}). MR approval by ${approverName}.`
-          : `Borrowed via equipment QR after MR approval by ${approverName}.`;
+          ? `Borrowed directly via QR handoff from ${transferFrom.name} (${transferFrom.role}). Approved by accountable faculty member ${approverName}.`
+          : `Borrowed via equipment QR after approval by accountable faculty member ${approverName}.`;
         await BorrowHistory.create({
           recordId: lockedRecord.id,
           borrowerName: lockedRecord.borrowerName,
@@ -1621,8 +1811,8 @@ export const approveBorrowRecord = async (req, res) => {
 
     const handoffDescription = result.studentQrHandoff
       ? result.transferFrom
-        ? `${updated.borrowerName} took over ${updated.equipmentId} from ${result.transferFrom.name}; MR Faculty ${approverName} approved the QR handoff.`
-        : `${updated.borrowerName} borrowed ${updated.equipmentId} through QR after MR Faculty ${approverName} approval.`
+        ? `${updated.borrowerName} took over ${updated.equipmentId} from ${result.transferFrom.name}; accountable faculty member ${approverName} approved the QR handoff.`
+        : `${updated.borrowerName} borrowed ${updated.equipmentId} through QR after approval by accountable faculty member ${approverName}.`
       : `Borrow request ${updated.id} for ${updated.equipmentId} was approved by ${approverName} for ${updated.borrowerName}. Status: Approved.`;
     await logAuditEntry(req, {
       action: result.studentQrHandoff ? "STUDENT_QR_HANDOFF_APPROVED" : "BORROW_REQUEST_APPROVED",
@@ -1971,35 +2161,8 @@ export const getFacultyQrBorrowStatus = async (req, res) => {
     });
     if (!equipment) return res.status(404).json({ error: "Equipment not found in your campus." });
 
-    const record = await BorrowRecord.findOne({
-      where: {
-        equipmentRecordId: equipment.id,
-        campus: { [Op.in]: getCampusVariants(scope.campus) },
-        status: "Borrowed"
-      },
-      order: [["borrowDate", "DESC"], ["borrowStartTime", "DESC"], ["created_at", "DESC"]]
-    });
-    if (!record) return res.json({ activeBorrow: null });
-    const identity = await BorrowRequestAccountability.findByPk(record.id);
-    const currentBorrower = identity
-      ? await User.findByPk(identity.requesterUserId, { attributes: ["id", "name", "college", "role"] })
-      : null;
-
-    const expectedReturn = record.expectedReturnDate
-      ? new Date(`${String(record.expectedReturnDate).slice(0, 10)}T${String(record.expectedReturnTime || "23:59").slice(0, 5)}:00+08:00`)
-      : null;
-    return res.json({
-      activeBorrow: {
-        id: record.id,
-        borrowerName: record.borrowerName || currentBorrower?.name || "Unknown borrower",
-        borrowerCollege: record.departmentInfo || currentBorrower?.college || null,
-        isFacultyBorrow: isFacultyRole(record.borrowerType) && isFacultyRole(currentBorrower?.role),
-        isMine: Number(identity?.requesterUserId) === Number(scope.userId),
-        expectedReturnDate: record.expectedReturnDate || null,
-        expectedReturnTime: record.expectedReturnTime || null,
-        isDue: Boolean(expectedReturn && expectedReturn <= new Date())
-      }
-    });
+    const activeBorrow = await getActiveBorrowDetails(equipment, scope.userId, scope.campus);
+    return res.json({ activeBorrow });
   } catch (error) {
     console.error("Failed to load Faculty QR borrow status.", error);
     return res.status(500).json({ error: "Failed to load QR borrow status." });
@@ -2023,6 +2186,7 @@ export const getStudentQrBorrowStatus = async (req, res) => {
       attributes: ["id", "equipmentId"]
     });
     if (!equipment) return res.status(404).json({ error: "Equipment not found in your campus." });
+    const activeBorrow = await getActiveBorrowDetails(equipment, scope.userId, scope.campus);
 
     const records = await BorrowRecord.findAll({
       where: {
@@ -2031,7 +2195,7 @@ export const getStudentQrBorrowStatus = async (req, res) => {
       },
       order: [["created_at", "DESC"], ["id", "DESC"]]
     });
-    if (!records.length) return res.json({ request: null });
+    if (!records.length) return res.json({ request: null, activeBorrow });
 
     const identities = await BorrowRequestAccountability.findAll({
       where: { borrowRecordId: { [Op.in]: records.map((record) => record.id) } }
@@ -2040,13 +2204,14 @@ export const getStudentQrBorrowStatus = async (req, res) => {
     const latestRequest = records.find((record) =>
       Number(identityByRecord.get(String(record.id))?.requesterUserId) === Number(scope.userId)
     );
-    if (!latestRequest) return res.json({ request: null });
+    if (!latestRequest) return res.json({ request: null, activeBorrow });
     const identity = identityByRecord.get(String(latestRequest.id));
     const approver = identity?.approvedByUserId
       ? await User.findByPk(identity.approvedByUserId, { attributes: ["name"] })
       : null;
 
     return res.json({
+      activeBorrow,
       request: {
         id: latestRequest.id,
         status: latestRequest.status,
@@ -2060,6 +2225,292 @@ export const getStudentQrBorrowStatus = async (req, res) => {
   } catch (error) {
     console.error("Failed to load Student QR borrow status.", error);
     return res.status(500).json({ error: "Failed to load QR borrow status." });
+  }
+};
+
+export const searchBorrowTurnoverRecipients = async (req, res) => {
+  try {
+    const scope = await getBorrowAccessScope(req);
+    if (!scope.authenticated) return res.status(401).json({ error: "Please log in to search turnover recipients." });
+    if (!scope.campus || !(String(scope.role || "").toLowerCase() === "student" || isFacultyRole(scope.role))) {
+      return res.status(403).json({ error: "Only students and instructors can search for turnover recipients." });
+    }
+
+    const query = String(req.query?.q || "").trim();
+    if (query.length < 2) return res.json({ recipients: [] });
+    const search = `%${query}%`;
+    const numericId = /^\d+$/.test(query) ? Number(query) : null;
+    const recipients = await User.findAll({
+      where: {
+        id: { [Op.ne]: scope.userId },
+        campus: { [Op.in]: getCampusVariants(scope.campus) },
+        email_verified: true,
+        role: { [Op.in]: ["student", "faculty", "instructor"] },
+        [Op.or]: [
+          { name: { [Op.like]: search } },
+          { student_number: { [Op.like]: search } },
+          ...(numericId ? [{ id: numericId }] : [])
+        ]
+      },
+      attributes: ["id", "name", "role", "student_number", "college"],
+      order: [["name", "ASC"]],
+      limit: 15
+    });
+
+    return res.json({
+      recipients: recipients.map((recipient) => ({
+        userId: recipient.id,
+        name: recipient.name,
+        role: isFacultyRole(recipient.role) ? "Instructor" : "Student",
+        identifier: recipient.student_number || `User ID ${recipient.id}`,
+        college: recipient.college || null
+      }))
+    });
+  } catch (error) {
+    console.error("Failed to search equipment turnover recipients.", error);
+    return res.status(500).json({ error: "Unable to search for turnover recipients." });
+  }
+};
+
+export const turnOverBorrowRecord = async (req, res) => {
+  try {
+    const scope = await getBorrowAccessScope(req);
+    if (!scope.authenticated) return res.status(401).json({ error: "Please log in to turn over equipment." });
+    if (!scope.campus || !(String(scope.role || "").toLowerCase() === "student" || isFacultyRole(scope.role))) {
+      return res.status(403).json({ error: "Only students and instructors can turn over borrowed equipment." });
+    }
+
+    const recipientUserId = Number(req.body?.recipientUserId);
+    if (!Number.isInteger(recipientUserId) || recipientUserId <= 0) {
+      return res.status(400).json({ error: "Select a valid Student or Instructor to receive the equipment." });
+    }
+    const snapshot = await BorrowRecord.findByPk(req.params.id);
+    if (!snapshot) return res.status(404).json({ error: "Borrow record not found." });
+    if (!canAccessBorrowRecord(scope, snapshot.campus)) {
+      return res.status(403).json({ error: "You do not have permission to turn over equipment from another campus." });
+    }
+
+    const newRecordId = `borrow-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    const result = await BorrowRecord.sequelize.transaction(async (transaction) => {
+      const equipment = snapshot.equipmentRecordId
+        ? await Equipment.findByPk(snapshot.equipmentRecordId, { transaction, lock: transaction.LOCK.UPDATE })
+        : await Equipment.findOne({
+            where: {
+              equipmentId: snapshot.equipmentId,
+              campus: { [Op.in]: getCampusVariants(snapshot.campus) },
+              name: snapshot.equipmentName
+            },
+            transaction,
+            lock: transaction.LOCK.UPDATE
+          });
+      const record = await BorrowRecord.findByPk(snapshot.id, { transaction, lock: transaction.LOCK.UPDATE });
+      if (!record) return { notFound: true };
+      if (!canAccessBorrowRecord(scope, record.campus)) return { denied: true };
+      if (!isCurrentBorrowRecord(record)) return { inactive: true };
+
+      const identity = await BorrowRequestAccountability.findByPk(record.id, {
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      if (!identity || Number(identity.requesterUserId) !== Number(scope.userId)) return { denied: true };
+
+      const recipient = await User.findByPk(recipientUserId, {
+        attributes: ["id", "name", "role", "student_number", "college", "program", "year", "section", "campus", "email_verified"],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      const recipientRole = String(recipient?.role || "").trim().toLowerCase();
+      const recipientEmailVerified = recipient?.email_verified === true ||
+        recipient?.email_verified === 1 ||
+        recipient?.email_verified === "1";
+      if (!recipient ||
+          !recipientEmailVerified ||
+          !["student", "faculty", "instructor"].includes(recipientRole) ||
+          normalizeCampus(recipient.campus) !== normalizeCampus(record.campus)) {
+        return { invalidRecipient: true };
+      }
+      if (Number(recipient.id) === Number(scope.userId)) return { selfTransfer: true };
+      if (!equipment ||
+          String(equipment.equipmentId) !== String(record.equipmentId) ||
+          normalizeCampus(equipment.campus) !== normalizeCampus(record.campus) ||
+          String(equipment.name || "") !== String(record.equipmentName || "")) {
+        return { unresolved: true };
+      }
+      if (isNonBorrowableEquipment(equipment)) return { restrictedType: true };
+
+      const activeBorrowRecords = (await BorrowRecord.findAll({
+        where: {
+          equipmentRecordId: equipment.id,
+          campus: { [Op.in]: getCampusVariants(record.campus) },
+          status: { [Op.in]: ["Borrowed", "borrowed", "Active", "active", "Checked Out", "checked out", "Approved", "approved", "Overdue", "overdue"] }
+        },
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      })).filter(isCurrentBorrowRecord);
+      if (activeBorrowRecords.length !== 1 || String(activeBorrowRecords[0].id) !== String(record.id)) {
+        return { conflict: true };
+      }
+
+      const actor = await User.findByPk(scope.userId, {
+        attributes: ["id", "name", "role"],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      if (!actor) return { denied: true };
+      const assignment = await EquipmentAssignment.findOne({
+        where: { equipmentRecordId: equipment.id, unassignedAt: null },
+        order: [["assignedAt", "DESC"], ["id", "DESC"]],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      const accountableFacultyUserId = assignment?.facultyUserId || identity.accountableFacultyUserId || null;
+      const { date: transferDate, time: transferTime } = getCampusDateTime();
+      const recipientLabel = isFacultyRole(recipient.role) ? "Instructor" : "Student";
+      const recipientIdentifier = recipient.student_number || `User ID ${recipient.id}`;
+      const actorLabel = isFacultyRole(actor.role) ? "Instructor" : "Student";
+      const actorIdentifier = actor.student_number || `User ID ${actor.id}`;
+      const transferRemarks = `Transferred to ${recipient.name} via Turn Over by ${actor.name}.`;
+      const previousStatus = record.status;
+      const newDepartmentInfo = [
+        recipient.college,
+        ...(recipientRole === "student" ? [recipient.program, recipient.year, recipient.section] : [])
+      ].filter(Boolean).join(" • ") || null;
+
+      await record.update({
+        status: "Returned",
+        returnDate: transferDate,
+        returnTime: transferTime,
+        condition: "Good",
+        remarks: transferRemarks,
+        processedBy: actor.name
+      }, { transaction });
+      await BorrowHistory.create({
+        recordId: record.id,
+        borrowerName: record.borrowerName,
+        equipmentId: record.equipmentId,
+        equipmentRecordId: equipment.id,
+        serialNumber: equipment.serialNumber || record.serialNumber,
+        equipmentName: record.equipmentName,
+        borrowDate: record.borrowDate,
+        borrowStartTime: record.borrowStartTime,
+        returnDate: transferDate,
+        returnTime: transferTime,
+        expectedReturnTime: record.expectedReturnTime,
+        condition: "Good",
+        purpose: record.purpose,
+        remarks: `${actor.name} (${actorLabel}, ${actorIdentifier}) turned over this item to ${recipient.name} (${recipientLabel}, ${recipientIdentifier}).`,
+        processedBy: actor.name,
+        eventType: "returned"
+      }, { transaction });
+
+      const newRecord = await BorrowRecord.create({
+        id: newRecordId,
+        borrowerName: recipient.name,
+        borrowerType: recipientRole === "student" ? "Student" : "Faculty",
+        departmentInfo: newDepartmentInfo,
+        equipmentId: equipment.equipmentId,
+        equipmentRecordId: equipment.id,
+        serialNumber: equipment.serialNumber || null,
+        equipmentName: equipment.name,
+        quantity: record.quantity,
+        borrowDate: transferDate,
+        borrowStartTime: transferTime,
+        expectedReturnDate: record.expectedReturnDate,
+        expectedReturnTime: record.expectedReturnTime,
+        campus: record.campus,
+        purpose: record.purpose,
+        status: "Borrowed",
+        processedBy: actor.name,
+        remarks: `Transferred from ${actor.name} via Turn Over.`
+      }, { transaction });
+      await BorrowRequestAccountability.create({
+        borrowRecordId: newRecord.id,
+        requesterUserId: recipient.id,
+        accountableFacultyUserId,
+        approvedByUserId: null,
+        approvedAt: null,
+        approvalRequired: false
+      }, { transaction });
+      await BorrowHistory.create({
+        recordId: newRecord.id,
+        borrowerName: recipient.name,
+        equipmentId: equipment.equipmentId,
+        equipmentRecordId: equipment.id,
+        serialNumber: equipment.serialNumber || null,
+        equipmentName: equipment.name,
+        borrowDate: transferDate,
+        borrowStartTime: transferTime,
+        expectedReturnTime: record.expectedReturnTime,
+        purpose: record.purpose,
+        remarks: `Borrowed directly via Turn Over from ${actor.name} (${actorLabel}, ${actorIdentifier}).`,
+        processedBy: actor.name,
+        eventType: "borrowed"
+      }, { transaction });
+      await EquipmentAuditTrail.create({
+        equipmentId: equipment.id,
+        serialNumber: equipment.serialNumber || null,
+        actionType: "borrowed",
+        actionDescription: `${actor.name} turned over ${equipment.name} (${equipment.equipmentId}) to ${recipient.name}.`,
+        performedBy: actor.id,
+        performedByName: actor.name,
+        userRole: isFacultyRole(actor.role) ? "faculty" : "student",
+        beforeState: {
+          borrowRecordId: record.id,
+          borrowStatus: result.previousStatus,
+          borrowerName: actor.name,
+          borrowerUserId: actor.id
+        },
+        afterState: {
+          borrowRecordId: newRecord.id,
+          borrowStatus: "Borrowed",
+          borrowerName: recipient.name,
+          borrowerUserId: recipient.id,
+          borrowerRole: recipientLabel,
+          accountableFacultyUserId,
+          turnedOverFrom: actor.name,
+          turnedOverFromUserId: actor.id
+        },
+        ipAddress: req.ip || null,
+        userAgent: req.get("user-agent") || null,
+        actionTimestamp: new Date()
+      }, { transaction });
+
+      return { record: newRecord, equipment, actor, recipient, recipientLabel, recipientIdentifier, previousStatus };
+    });
+
+    if (result.notFound) return res.status(404).json({ error: "Borrow record not found." });
+    if (result.denied) return res.status(403).json({ error: "Only the current borrower can turn over this equipment." });
+    if (result.inactive) return res.status(409).json({ error: "Only currently borrowed equipment can be turned over." });
+    if (result.invalidRecipient) return res.status(400).json({ error: "The recipient must be a verified Student or Instructor from your campus." });
+    if (result.selfTransfer) return res.status(400).json({ error: "Choose another Student or Instructor to receive the equipment." });
+    if (result.unresolved) return res.status(409).json({ error: "The equipment reference could not be verified. Ask an administrator to review this record." });
+    if (result.restrictedType) return res.status(409).json({ error: "Air conditioners/AC units, CBT equipment, and cabinets cannot be borrowed or turned over." });
+    if (result.conflict) return res.status(409).json({ error: "This equipment has conflicting active borrow records and cannot be turned over." });
+
+    await logAuditEntry(req, {
+      action: "EQUIPMENT_TURNED_OVER",
+      module: "Borrow Management",
+      resourceId: result.record.id,
+      description: `${result.actor.name} turned over ${result.equipment.equipmentId} to ${result.recipient.name}.`,
+      details: {
+        previousBorrowRecordId: snapshot.id,
+        newBorrowRecordId: result.record.id,
+        equipmentId: result.equipment.equipmentId,
+        fromUserId: result.actor.id,
+        fromName: result.actor.name,
+        toUserId: result.recipient.id,
+        toName: result.recipient.name,
+        toRole: result.recipientLabel,
+        toIdentifier: result.recipientIdentifier
+      }
+    });
+    return res.status(200).json({
+      ...buildBorrowResponse(result.record, result.equipment),
+      turnedOverFrom: { userId: result.actor.id, name: result.actor.name }
+    });
+  } catch (error) {
+    console.error("Failed to turn over borrowed equipment.", error);
+    return res.status(500).json({ error: "Unable to turn over this equipment. Please try again." });
   }
 };
 
@@ -2131,7 +2582,7 @@ export const releaseBorrowRecord = async (req, res) => {
         expectedReturnTime: record.expectedReturnTime,
         condition: equipment.condition || null,
         purpose: record.purpose,
-        remarks: `Equipment released to ${record.borrowerName}. MR accountability was not changed.`,
+        remarks: `Equipment released to ${record.borrowerName}. The accountable faculty assignment was not changed.`,
         processedBy: issuedBy,
         eventType: "borrowed"
       }, { transaction });
@@ -2164,7 +2615,7 @@ export const releaseBorrowRecord = async (req, res) => {
     await logEquipmentBorrowAudit(req, {
       equipment,
       actionType: "borrowed",
-      description: `${record.quantity} unit(s) of ${record.equipmentId} were released to ${record.borrowerName} by ${issuedBy}. MR accountability was not changed.`,
+      description: `${record.quantity} unit(s) of ${record.equipmentId} were released to ${record.borrowerName} by ${issuedBy}. The accountable faculty assignment was not changed.`,
       beforeState: { borrowStatus: "Approved" },
       afterState: {
         borrowRecordId: record.id,
@@ -2229,7 +2680,7 @@ export const returnBorrowRecord = async (req, res) => {
             })
           : null;
         if (String(requester?.role || "").trim().toLowerCase() !== "student" || !assignment) {
-          return res.status(403).json({ error: "Only the currently accountable MR Faculty member can mark this Student's equipment as returned." });
+          return res.status(403).json({ error: "Only the currently assigned accountable faculty member can mark this student's equipment as returned." });
         }
         facultyMirReturn = true;
       } else {
@@ -2292,7 +2743,7 @@ export const returnBorrowRecord = async (req, res) => {
           return { denied: true };
         }
       }
-      if (String(record.status || "").trim().toLowerCase() !== "borrowed") return { notBorrowed: true };
+      if (!isCurrentBorrowRecord(record)) return { notBorrowed: true };
 
       if (!equipment || String(equipment.equipmentId) !== String(record.equipmentId) ||
           normalizeCampus(equipment.campus) !== normalizeCampus(record.campus) ||
@@ -2302,6 +2753,7 @@ export const returnBorrowRecord = async (req, res) => {
 
       const returnedAt = new Date();
       const { date: returnDate, time: returnTime } = getCampusDateTime(returnedAt);
+      const beforeStatus = record.status;
       const status = condition === "Lost" ? "Pending Replacement" : "Returned";
       await record.update({
         status,
@@ -2310,7 +2762,7 @@ export const returnBorrowRecord = async (req, res) => {
         condition,
         remarks: facultySelfReturn
           ? facultyMirReturn
-            ? `Marked returned by accountable MR Faculty member ${receivedBy}.`
+            ? `Marked returned by accountable faculty member ${receivedBy}.`
             : "Marked returned by the borrowing Faculty member via equipment QR scan."
           : studentOwnReturn
             ? "Marked returned by the borrowing Student via equipment QR scan."
@@ -2340,7 +2792,7 @@ export const returnBorrowRecord = async (req, res) => {
         purpose: record.purpose,
         remarks: facultySelfReturn
           ? facultyMirReturn
-            ? `Equipment borrowed by ${record.borrowerName} was marked returned by accountable MR Faculty member ${receivedBy}.`
+            ? `Equipment borrowed by ${record.borrowerName} was marked returned by accountable faculty member ${receivedBy}.`
             : `Equipment marked returned by ${record.borrowerName} via QR scan.`
           : studentOwnReturn
             ? `Equipment marked returned by borrowing Student ${record.borrowerName} via QR scan.`
@@ -2363,14 +2815,14 @@ export const returnBorrowRecord = async (req, res) => {
           reportedBy: null
         }, { transaction });
       }
-      return { record, equipment, returnedAt, beforeStatus: "Borrowed" };
+      return { record, equipment, returnedAt, beforeStatus };
     });
 
     if (result.notFound) return res.status(404).json({ error: "Borrow record not found." });
     if (result.denied) return res.status(403).json({ error: "You do not have permission to process returns from another campus." });
     if (result.notBorrowed) return res.status(409).json({ error: "Only equipment that has been released can be returned." });
     if (result.unresolved) return res.status(409).json({ error: "The equipment reference could not be verified. Ask an administrator to review this record." });
-    const { record: updated, equipment: resolvedEquipment, returnedAt } = result;
+    const { record: updated, equipment: resolvedEquipment, returnedAt, beforeStatus } = result;
 
     await logAuditEntry(req, {
       action: condition === "Lost" ? "BORROW_EQUIPMENT_REPORTED_LOST" : "BORROW_EQUIPMENT_RETURNED",
@@ -2378,7 +2830,7 @@ export const returnBorrowRecord = async (req, res) => {
       resourceId: updated.id,
       description: facultySelfReturn
         ? facultyMirReturn
-          ? `${updated.equipmentId} borrowed by Student ${updated.borrowerName} was marked returned by accountable MR Faculty member ${receivedBy}.`
+          ? `${updated.equipmentId} borrowed by Student ${updated.borrowerName} was marked returned by accountable faculty member ${receivedBy}.`
           : `${updated.equipmentId} was marked returned by borrowing Faculty member ${updated.borrowerName}.`
         : studentOwnReturn
           ? `${updated.equipmentId} was marked returned by borrowing Student ${updated.borrowerName}.`
@@ -2397,7 +2849,7 @@ export const returnBorrowRecord = async (req, res) => {
       equipment: resolvedEquipment,
       actionType: condition === "Lost" ? "status_changed" : "returned",
       description: `Equipment ${updated.equipmentId} was ${condition === "Lost" ? "reported lost" : "returned"} by ${updated.borrowerName} in ${condition} condition; received by ${receivedBy}.`,
-      beforeState: { borrowStatus: "Borrowed" },
+      beforeState: { borrowStatus: beforeStatus },
       afterState: {
         status: updated.status,
         condition: updated.condition,
@@ -2524,6 +2976,17 @@ export const getBorrowHistory = async (req, res) => {
 
     const record = await BorrowRecord.findOne({ where: { id, ...strictWhere } });
     if (!record) return res.status(404).json({ error: "Borrow record not found." });
+    if (String(scope.role || "").trim().toLowerCase() === "student") {
+      const identity = await BorrowRequestAccountability.findByPk(record.id, {
+        attributes: ["requesterUserId"]
+      });
+      let isRequester = Number(identity?.requesterUserId) === Number(scope.userId);
+      if (!identity) {
+        const student = await User.findByPk(scope.userId, { attributes: ["name"] });
+        isRequester = String(record.borrowerName || "").trim() === String(student?.name || "").trim();
+      }
+      if (!isRequester) return res.status(404).json({ error: "Borrow record not found." });
+    }
 
     const history = await BorrowHistory.findAll({ where: { recordId: id }, order: [["created_at", "ASC"]] });
     res.json(history.map((entry) => entry.toJSON()));

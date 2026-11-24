@@ -385,7 +385,7 @@
 
     body.admin-shell .assignment-filter-grid {
       display: grid;
-      grid-template-columns: minmax(16rem, 1.45fr) minmax(12rem, .9fr) minmax(15rem, 1.2fr);
+      grid-template-columns: minmax(16rem, 1.45fr) minmax(12rem, .9fr) minmax(11rem, .85fr) minmax(15rem, 1.2fr);
       align-items: end;
       gap: .8rem;
       padding-top: .9rem;
@@ -1274,6 +1274,12 @@
               <option value="unassigned">Unassigned items</option>
             </select>
           </label>
+          <label class="assignment-filter-field" for="assignmentTypeFilter">
+            <span>Equipment type</span>
+            <select id="assignmentTypeFilter">
+              <option value="all">All types</option>
+            </select>
+          </label>
           <label class="assignment-filter-field" for="assignmentFacultyFilter">
             <span>Accountable Faculty</span>
             <select id="assignmentFacultyFilter">
@@ -1339,7 +1345,7 @@
   </div>
 
   <script src="/js/equipment-id-tooltip.js?v=2" defer></script>
-  <script src="/js/sidebar-component.js?v=106" defer></script>
+  <script src="/js/sidebar-component.js?v=127" defer></script>
   <script>
     const state = { equipment: [], faculty: [], histories: new Set(), selectedEquipmentIds: new Set(), loading: false, bulkAssigning: false, currentPage: 1 };
     const rowsPerPage = 12;
@@ -1380,11 +1386,13 @@
     function getVisibleEquipment() {
       const searchTerms = document.getElementById('assignmentSearch').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
       const assignmentStatus = document.getElementById('assignmentStatusFilter').value;
+      const equipmentType = document.getElementById('assignmentTypeFilter').value;
       const facultyId = document.getElementById('assignmentFacultyFilter').value;
       return state.equipment.filter((item) => {
         const assignedFacultyId = item.accountableFaculty?.id == null ? '' : String(item.accountableFaculty.id);
         if (assignmentStatus === 'assigned' && !assignedFacultyId) return false;
         if (assignmentStatus === 'unassigned' && assignedFacultyId) return false;
+        if (equipmentType !== 'all' && String(item.category || item.name || '').trim() !== equipmentType) return false;
         if (facultyId !== 'all' && assignedFacultyId !== facultyId) return false;
         const searchableText = [
           item.equipmentId, item.name, item.category, item.serialNumber, item.location,
@@ -1397,15 +1405,26 @@
 
     function syncSummaryFilterButtons() {
       const status = document.getElementById('assignmentStatusFilter').value;
+      const equipmentType = document.getElementById('assignmentTypeFilter').value;
       const faculty = document.getElementById('assignmentFacultyFilter').value;
       const hasSearch = Boolean(document.getElementById('assignmentSearch').value.trim());
       document.querySelectorAll('[data-assignment-summary-filter]').forEach((button) => {
-        const active = button.dataset.assignmentSummaryFilter === status && faculty === 'all' && !hasSearch;
+        const active = button.dataset.assignmentSummaryFilter === status && equipmentType === 'all' && faculty === 'all' && !hasSearch;
         button.setAttribute('aria-pressed', String(active));
       });
     }
 
     function renderRows() {
+      const typeFilter = document.getElementById('assignmentTypeFilter');
+      const selectedType = typeFilter.value;
+      const equipmentTypes = [...new Set(state.equipment
+        .map((item) => String(item.category || item.name || '').trim())
+        .filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }));
+      typeFilter.innerHTML = `<option value="all">All types</option>${equipmentTypes.map((type) =>
+        `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`
+      ).join('')}`;
+      typeFilter.value = equipmentTypes.includes(selectedType) ? selectedType : 'all';
       const visible = getVisibleEquipment();
       document.getElementById('totalEquipmentCount').textContent = String(state.equipment.length);
       document.getElementById('clearAssignmentSearch').hidden = !document.getElementById('assignmentSearch').value;
@@ -1689,6 +1708,7 @@
       if (summaryFilter) {
         assignmentSearch.value = '';
         document.getElementById('assignmentStatusFilter').value = summaryFilter.dataset.assignmentSummaryFilter;
+        document.getElementById('assignmentTypeFilter').value = 'all';
         document.getElementById('assignmentFacultyFilter').value = 'all';
         document.getElementById('bulkFacultySelect').value = '';
         state.selectedEquipmentIds.clear();
@@ -1712,6 +1732,10 @@
       renderRows();
     });
     document.getElementById('assignmentStatusFilter').addEventListener('change', () => {
+      state.currentPage = 1;
+      renderRows();
+    });
+    document.getElementById('assignmentTypeFilter').addEventListener('change', () => {
       state.currentPage = 1;
       renderRows();
     });

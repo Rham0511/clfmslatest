@@ -312,6 +312,15 @@ export async function getScheduleSeatingChart(req, res) {
            WHERE BINARY ps.setId IN (:stationSetIds)
              AND ps.activeUserId IS NOT NULL
              AND (ps.autoLogoutAt IS NULL OR ps.autoLogoutAt > UTC_TIMESTAMP())
+             AND (
+               NOT EXISTS (
+                 SELECT 1
+                 FROM users expiryUser
+                 WHERE expiryUser.id = ps.activeUserId
+                   AND LOWER(TRIM(expiryUser.role)) = 'student'
+               )
+               OR ps.startedAt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL 3 HOUR)
+             )
            ORDER BY ps.startedAt DESC`,
           { replacements: { stationSetIds, campusName }, type: QueryTypes.SELECT }
         )

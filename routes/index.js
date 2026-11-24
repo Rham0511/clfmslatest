@@ -17,19 +17,28 @@ import { User } from "../models/userModel.js";
 import { Equipment } from "../models/equipmentModel.js";
 import { BorrowRecord } from "../models/borrowRecordModel.js";
 import { MaintenanceRequest } from "../models/maintenanceRequestModel.js";
-import { loginPage, registerPage, loginUser, registerUser, dashboardPage, logoutUser, forgotPasswordPage, forgotPassword, verifyOtpPage, verifyOtp, resendOtp, resetPasswordPage, resetPassword, verifyEmail, updateProfile, uploadStudentPhoto } from "../controllers/authController.js";
+import { loginPage, registerPage, loginUser, registerUser, startGoogleLogin, startGoogleRegistration, googleOAuthCallback, dashboardPage, logoutUser, forgotPasswordPage, forgotPassword, verifyOtpPage, verifyOtp, resendOtp, resetPasswordPage, resetPassword, verifyEmail, updateProfile, uploadStudentPhoto } from "../controllers/authController.js";
 import { homePage } from "../controllers/homeController.js";
 import { inventoryPage, scanEquipmentQr, redirectLegacyEquipmentQr, resolveEquipmentQrToken, getEquipment, getStudentEquipment, getEquipmentCampusTotals, createEquipment, updateEquipment, updateEquipmentStatus, deleteEquipment, getEquipmentQr, getEquipmentCategories, createEquipmentCategory, deleteEquipmentCategory, reportEquipmentMissing, markEquipmentFound, transferEquipmentSet, getMissingEquipment, getEquipmentHistory, getEquipmentBorrowCycle, logEquipmentScan, getEquipmentScanHistory } from "../controllers/equipmentController.js";
-import { listBorrowRecords, createBorrowRecord, createStudentQrBorrowRecord, createFacultyQrBorrowRecord, getFacultyQrBorrowStatus, getStudentQrBorrowStatus, returnBorrowRecord, requestBorrowReturn, cancelBorrowRecord, releaseBorrowRecord, getBorrowHistory, listBorrowAudit, approveBorrowRecord, rejectBorrowRecord, listBorrowNotifications, markBorrowNotificationRead, markBorrowRecordLost } from "../controllers/borrowController.js";
+import { listBorrowRecords, createBorrowRecord, createStudentQrBorrowRecord, createFacultyQrBorrowRecord, getFacultyQrBorrowStatus, getStudentQrBorrowStatus, returnBorrowRecord, requestBorrowReturn, cancelBorrowRecord, releaseBorrowRecord, getBorrowHistory, listBorrowAudit, approveBorrowRecord, rejectBorrowRecord, listBorrowNotifications, markBorrowNotificationRead, markBorrowRecordLost, searchBorrowTurnoverRecipients, turnOverBorrowRecord } from "../controllers/borrowController.js";
 import { listEquipmentAvailability, getEquipmentBorrowingHistory } from "../controllers/equipmentAvailabilityController.js";
 import { listEquipmentAssignments, updateEquipmentAssignment, getEquipmentAssignmentHistory, listMyEquipmentAssignments, getMyEquipmentAssignmentHistory } from "../controllers/equipmentAssignmentController.js";
-import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, getFacultyScheduleAttendanceHistory, exportFacultyScheduleAttendanceHistory, scanAttendance, createAttendanceSession, getStudentAttendanceQrRoster, createStudentAttendanceQrs } from "../controllers/attendanceController.js";
+import { getAttendanceRecords, getAttendanceStats, getInstructorAttendanceDashboard, getInstructorAttendanceSessionDetails, getFacultyScheduleAttendanceHistory, exportFacultyScheduleAttendanceHistory, scanAttendance, createAttendanceSession, getStudentAttendanceQrRoster, createStudentAttendanceQrs, getClassScheduleStatus } from "../controllers/attendanceController.js";
 import { getAuditLogs, logAuditEntry } from "../controllers/auditController.js";
-import { getPCStationQr, getPCStationScanAvailability, getMyPCStationSessions, logoutMyPCStationSession, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction } from "../controllers/pcStationController.js";
+import { getPCStationQr, getPCStationScanAvailability, getMyPCStationSessions, logoutMyPCStationSession, redirectLegacyPCStationQr, scanPCStationQr, showPCStationScanResult, submitPCStationAction, enforceStudentPCStationSessionLimit, enforceExpiredStudentPCStationSession } from "../controllers/pcStationController.js";
 import { getAuditTrail } from "../controllers/auditTrailController.js";
 import { getPCAvailability, assignPC, endPCSession, getCurrentPCAssignment } from "../controllers/pcAssignmentController.js";
 import { answerRoleHelp, createRoleHelpChat, getRoleHelpChatMessages, listRoleHelpChats } from "../controllers/roleHelpController.js";
 import { getScheduleSeatingChart } from "../controllers/seatingChartController.js";
+import {
+  clearUserNotifications,
+  deleteUserNotification,
+  hideUserNotification,
+  listUserNotifications,
+  markAllUserNotificationsRead,
+  markUserNotificationRead,
+  muteUserNotification
+} from "../controllers/notificationController.js";
 import { getUserAuthContext, getUserCampusFromSession, canManageRecord, isAdminRole as isCampusAdminRole } from "../controllers/campusAuthController.js";
 import { LaboratorySchedule } from "../models/laboratoryScheduleModel.js";
 import { ClassListEntry } from "../models/classListEntryModel.js";
@@ -37,7 +46,7 @@ import { AttendanceSession } from "../models/attendanceSessionModel.js";
 import { Attendance } from "../models/attendanceModel.js";
 import { sequelize } from "../models/db.js";
 import { ensureArchiveRecordsTable, getArchivedEntityIds } from "../models/archiveRecords.js";
-import { formatComputerLabLocation, normalizeLabLabel } from "../models/computerLabService.js";
+import { findComputerLabByLabel, formatComputerLabLocation, getLegacyComputerLabNumber, normalizeLabLabel } from "../models/computerLabService.js";
 import { DataTypes, Op, QueryTypes } from "sequelize";
 import XLSX from "xlsx";
 
@@ -75,6 +84,7 @@ const getUploadedFileBuffer = (uploadedFile) => {
 };
 
 const router = express.Router();
+router.use(enforceExpiredStudentPCStationSession);
 
 const staticHtmlPages = [
   "admin-dashboard",
@@ -1265,12 +1275,6 @@ const pageConfigs = {
           letter-spacing: -.035em;
           line-height: 1.15;
         }
-        .schedule-manager-description {
-          margin: .25rem 0 0;
-          color: #a8c8b5;
-          font-size: .8rem;
-          line-height: 1.45;
-        }
         .schedule-manager-hours {
           display: inline-flex;
           align-items: center;
@@ -1859,7 +1863,6 @@ const pageConfigs = {
           .schedule-manager-intro { align-items: flex-start; }
           .schedule-manager-icon { width: 2.65rem; height: 2.65rem; border-radius: .85rem; }
           .schedule-manager-hours { display: none; }
-          .schedule-manager-description { max-width: 32rem; }
           .schedule-toolbar { align-items: stretch; }
           .schedule-manager-header {
             align-items: flex-start;
@@ -1909,7 +1912,6 @@ const pageConfigs = {
           <div class="schedule-manager-heading">
             <p class="schedule-manager-eyebrow">Academic planning</p>
             <h2 class="schedule-manager-title">Weekly laboratory schedule</h2>
-            <p class="schedule-manager-description">Monitor class schedules, filter the weekly timetable, and inspect laboratory availability.</p>
           </div>
           <span class="schedule-manager-hours"><i class="fas fa-clock" aria-hidden="true"></i> Monday–Friday <span aria-hidden="true">·</span> 7:30 AM–5:30 PM</span>
         </header>
@@ -3769,150 +3771,6 @@ const pageConfigs = {
           color: #1f2937 !important;
           box-shadow: none !important;
         }
-        .report-table-shell {
-          max-height: min(42vh, 25rem);
-          overflow: auto !important;
-          background: var(--app-table-bg, #07150f) !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-          outline: 0 !important;
-          padding: 0 !important;
-          scrollbar-gutter: auto !important;
-          scrollbar-width: thin;
-          scrollbar-color: #318451 #07150f;
-        }
-        .report-table-shell::-webkit-scrollbar {
-          width: .6rem;
-          height: .6rem;
-          background: #07150f;
-        }
-        .report-table-shell::-webkit-scrollbar-track {
-          border-radius: 999px;
-          background: #07150f;
-        }
-        .report-table-shell::-webkit-scrollbar-thumb {
-          border: 1px solid #07150f;
-          border-radius: 999px;
-          background: #318451;
-        }
-        .report-table-shell::-webkit-scrollbar-thumb:hover {
-          background: #397f58;
-        }
-        .report-table-shell::-webkit-scrollbar-corner {
-          background: #07150f;
-        }
-        #reportPreviewTable {
-          margin: 0 !important;
-          border: 0 !important;
-          outline: 0 !important;
-          border-collapse: collapse !important;
-          border-spacing: 0 !important;
-        }
-        #reportPreviewTable thead,
-        .report-preview-table thead tr {
-          background: #04120c !important;
-          border: 0 !important;
-          outline: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-        }
-        #reportPreviewTable thead th,
-        #reportPreviewTable thead th.theme-locked-table-header {
-          position: sticky !important;
-          top: 0 !important;
-          z-index: 5;
-          color: #d1fae5 !important;
-          font-size: .95rem !important;
-          padding: .9rem 1rem !important;
-          background: #04120c !important;
-          border: 0 !important;
-          border-bottom: 0 !important;
-          outline: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-          text-align: left !important;
-          vertical-align: bottom;
-          white-space: nowrap;
-        }
-        body.app-shell .main-container.theme-dark .report-preview-table thead,
-        body.app-shell .main-container.theme-dark .report-preview-table thead tr,
-        body.app-shell .main-container.theme-dark .report-preview-table thead th {
-          background: #04120c !important;
-          color: #f9fafb !important;
-          border: 0 !important;
-          border-bottom: 0 !important;
-        }
-        body.app-shell .main-container.theme-light .report-preview-table thead,
-        body.app-shell .main-container.theme-light .report-preview-table thead tr,
-        body.app-shell .main-container.theme-light .report-preview-table thead th {
-          background: #0a2e1d !important;
-          color: #d1fae5 !important;
-          border: 0 !important;
-          border-bottom: 0 !important;
-        }
-        #reportPreviewTable tbody {
-          background: #07150f !important;
-          border: 0 !important;
-        }
-        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr {
-          background: #07150f !important;
-          background-image: none !important;
-          border: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-          color: #f9fafb !important;
-        }
-        body.app-shell .main-container.theme-dark .report-table-shell {
-          background: var(--app-table-bg, #07150f) !important;
-          scrollbar-color: #318451 #07150f;
-        }
-        body.app-shell .main-container.theme-dark #reportPreviewTable tbody tr:nth-child(even) {
-          background: #0a1d15 !important;
-        }
-        body.app-shell .main-container.theme-dark #reportPreviewTable tbody td {
-          border: 0 !important;
-          border-bottom: 0 !important;
-        }
-        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr:hover {
-          background: #0a2e1d !important;
-        }
-        body.app-shell .main-container.theme-light .report-table-shell {
-          background: #ffffff !important;
-        }
-        body.app-shell .main-container.theme-light #reportPreviewTable tbody {
-          background: #ffffff !important;
-        }
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr,
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:nth-child(odd) {
-          background: #ffffff !important;
-          color: #1f2937 !important;
-        }
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:nth-child(even) {
-          background: #ffffff !important;
-          color: #1f2937 !important;
-        }
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr:hover {
-          background: #eaf5ed !important;
-        }
-        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody td,
-        body.app-shell .main-container .report-table-shell #reportPreviewTable tbody tr > td {
-          background: transparent !important;
-          color: #d1fae5 !important;
-          font-size: 1rem !important;
-          line-height: 1.5 !important;
-          padding: .9rem 1rem !important;
-          border: 0 !important;
-          border-bottom: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-        }
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody td,
-        body.app-shell .main-container.theme-light .report-table-shell #reportPreviewTable tbody tr > td {
-          color: #1f2937 !important;
-          border: 0 !important;
-          border-bottom: 0 !important;
-        }
         body.app-shell .main-container.theme-light #previewReportTitle,
         body.app-shell .main-container.theme-light #reportCountText,
         body.app-shell .main-container.theme-light #previewGeneratedAt {
@@ -4257,13 +4115,15 @@ const pageConfigs = {
 
         <div id="summaryCards" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
 
-        <div class="report-table-shell mt-5 overflow-x-auto rounded-3xl" style="border:0!important;outline:0!important;box-shadow:none!important">
-          <table id="reportPreviewTable" class="report-preview-table min-w-full border-collapse text-left text-sm text-emerald-50/90" style="border:0!important;outline:0!important;box-shadow:none!important;border-collapse:collapse">
-            <thead class="bg-[#06100b]" style="border:0!important;outline:0!important;box-shadow:none!important">
-              <tr id="reportTableHeader" style="border:0!important;outline:0!important;box-shadow:none!important"></tr>
-            </thead>
-            <tbody id="reportTableBody" style="border:0!important;outline:0!important;box-shadow:none!important"></tbody>
-          </table>
+        <div class="report-table-shell">
+          <div class="report-table-shell-inner">
+            <table id="reportPreviewTable" class="report-preview-table min-w-full text-left text-sm text-emerald-50/90">
+              <thead class="bg-[#06100b]">
+                <tr id="reportTableHeader"></tr>
+              </thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
         </div>
         <div id="reportPagination" class="mt-3 flex flex-wrap items-center justify-end gap-2"></div>
 
@@ -4297,7 +4157,7 @@ const pageConfigs = {
 
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.0/jspdf.plugin.autotable.min.js"></script>
-      <script src="/js/reports-page.js?v=20261121-no-table-lines"></script>
+      <script src="/js/reports-page.js?v=20261124-summary-colors"></script>
     `
   },
   "maintenance-queue": {
@@ -4764,7 +4624,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   const reportsPageClass = pageName === "reports" ? " reports-page" : "";
   const auditLogsPageClass = pageName === "audit-logs" ? " audit-logs-page" : "";
   const dashboardHeaderStylesheet = dashboardHeaderPageClass
-    ? '<link rel="stylesheet" href="/css/system-layout.css?v=8">'
+    ? '<link rel="stylesheet" href="/css/system-layout.css?v=9">'
     : "";
   const scheduleStylesheet = pageName === "laboratory-schedules"
     ? '<link rel="stylesheet" href="/css/laboratory-schedules.css?v=7">'
@@ -4777,10 +4637,10 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
       </style>`
     : "";
   const reportsStylesheet = pageName === "reports"
-    ? '<link rel="stylesheet" href="/css/reports.css?v=21">'
+    ? '<link rel="stylesheet" href="/css/reports.css?v=39">'
     : "";
   const adminMobilePolishStyles = ["laboratory-schedules", "reports"].includes(pageName)
-    ? '<link rel="stylesheet" href="/css/admin-mobile-polish.css?v=2">'
+    ? '<link rel="stylesheet" href="/css/admin-mobile-polish.css?v=3">'
     : "";
   const auditLogsStylesheet = pageName === "audit-logs"
     ? '<link rel="stylesheet" href="/css/audit-logs.css?v=19">'
@@ -4829,10 +4689,10 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=91">
+  <link rel="stylesheet" href="/css/sidebar.css?v=96">
   ${scheduleStylesheet}
   ${adminMobilePolishStyles}
-  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <link rel="stylesheet" href="/css/table-readability.css?v=2">
   <style>
     html { height: 100%; }
     html body.laboratory-schedules-page.schedule-embedded { width: 100%; height: 100% !important; min-height: 0 !important; margin: 0; overflow: hidden !important; }
@@ -4860,12 +4720,12 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
   ${scheduleCreationStyles}
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/sidebar.css?v=91">
+  <link rel="stylesheet" href="/css/sidebar.css?v=96">
   ${dashboardHeaderStylesheet}
   ${scheduleStylesheet}
   ${reportsStylesheet}
   ${adminMobilePolishStyles}
-  <link rel="stylesheet" href="/css/table-readability.css?v=1">
+  <link rel="stylesheet" href="/css/table-readability.css?v=2">
   ${auditLogsStylesheet}
   ${auditLogsScript}
   ${embeddedScheduleStyles}
@@ -4902,7 +4762,7 @@ const renderFeaturePage = (config, currentUserName = "Administrator", pageName =
     </main>
   </div>
   ${facultySidebarScripts}
-  ${embeddedSchedule ? "" : '<script src="/js/sidebar-component.js?v=106" defer></script>'}
+  ${embeddedSchedule ? "" : '<script src="/js/sidebar-component.js?v=127" defer></script>'}
 </body>
 </html>`;
 };
@@ -5336,7 +5196,7 @@ router.get("/", homePage);
 router.get("/landing", (req, res) => res.redirect("/"));
 router.get("/equipment-inventory", inventoryPage);
 router.get("/equipment-assignment", serveHtmlPage);
-router.get("/borrow-equipment", async (req, res) => {
+router.get("/borrow-equipment", enforceStudentPCStationSessionLimit, async (req, res) => {
   if (req.session?.userId) {
     const user = await User.findByPk(req.session.userId, { attributes: ["role"] });
     if (["faculty", "instructor"].includes(normalizeRoleName(user?.role))) {
@@ -5372,6 +5232,7 @@ router.get("/user-management", (req, res) => {
   req.params.page = "admin-user-management";
   return serveHtmlPage(req, res);
 });
+router.get("/admin-user-management", serveHtmlPage);
 router.get("/technician-accomplishments", (req, res) => {
   req.params.page = "admin-technician-accomplishments";
   return serveHtmlPage(req, res);
@@ -5394,11 +5255,11 @@ router.get("/maintenance-monitoring", (req, res) => {
 });
 router.get("/attendance", serveHtmlPage);
 router.get("/maintenance-reports", serveHtmlPage);
-router.get("/student-dashboard", serveHtmlPage);
-router.get("/student-audit-history", (req, res) =>
+router.get("/student-dashboard", enforceStudentPCStationSessionLimit, serveHtmlPage);
+router.get("/student-audit-history", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-audit-history", "/faculty-audit-history"));
 router.get("/faculty-dashboard", serveHtmlPage);
-router.get("/student-borrow-equipment", (req, res) =>
+router.get("/student-borrow-equipment", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-borrow-equipment", "/faculty-borrow-equipment"));
 router.get("/faculty-borrow-equipment", (req, res) =>
   facultyPortalPage(req, res, req.query.view === "availability"
@@ -5418,18 +5279,19 @@ router.get("/faculty-profile", (req, res) =>
   facultyPortalPage(req, res, "faculty-profile"));
 router.get("/faculty-laboratory-schedules", (req, res) =>
   facultyPortalPage(req, res, "faculty-laboratory-schedules"));
-router.get("/student-profile", (req, res) =>
+router.get("/student-profile", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-profile", "/faculty-profile"));
-router.get("/my-pc-station", serveHtmlPage);
-router.get("/student/scan-attendance", (req, res) =>
+router.get("/my-pc-station", enforceStudentPCStationSessionLimit, serveHtmlPage);
+router.get("/student/scan-attendance", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-scan-attendance", "/faculty-dashboard"));
-router.get("/student/report-issue", (req, res) => res.redirect("/student-report-equipment"));
-router.get("/student/report-damage", (req, res) => res.redirect("/student-report-equipment"));
-router.get("/report-equipment-issue", (req, res) => res.redirect("/student-report-equipment"));
-router.get("/student/my-requests", (req, res) => res.redirect("/student-my-requests"));
-router.get("/student/profile", (req, res) => res.redirect("/student-profile"));
-router.get("/student/dashboard", (req, res) => res.redirect("/student-dashboard"));
-router.get("/student/borrow-equipment", async (req, res) => {
+router.get("/student/report-issue", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-report-equipment"));
+router.get("/report-issue", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-report-equipment"));
+router.get("/student/report-damage", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-report-equipment"));
+router.get("/report-equipment-issue", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-report-equipment"));
+router.get("/student/my-requests", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-my-requests"));
+router.get("/student/profile", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-profile"));
+router.get("/student/dashboard", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-dashboard"));
+router.get("/student/borrow-equipment", enforceStudentPCStationSessionLimit, async (req, res) => {
   const currentUserId = req.session?.userId;
   if (!currentUserId) return res.redirect("/login");
 
@@ -5471,10 +5333,10 @@ router.get("/student/borrow-equipment", async (req, res) => {
     res.status(500).send("Failed to load Borrow Equipment page.");
   }
 });
-router.get("/student-report-issue", (req, res) => res.redirect("/student-report-equipment"));
-router.get("/student-report-equipment", (req, res) =>
+router.get("/student-report-issue", enforceStudentPCStationSessionLimit, (req, res) => res.redirect("/student-report-equipment"));
+router.get("/student-report-equipment", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-report-equipment", "/faculty-report-equipment"));
-router.get("/student-my-requests", (req, res) =>
+router.get("/student-my-requests", enforceStudentPCStationSessionLimit, (req, res) =>
   studentPortalPage(req, res, "student-my-requests", "/faculty-my-requests"));
 router.get("/technician-dashboard", serveHtmlPage);
 router.get("/technician-profile", serveHtmlPage);
@@ -5482,18 +5344,23 @@ router.get("/page/:page", serveFeaturePage);
 
 router.get("/login", loginPage);
 router.post("/login", loginUser);
-router.get("/api/pc-stations/qr/:token/status", getPCStationScanAvailability);
-router.get("/api/pc-stations/my-sessions", getMyPCStationSessions);
-router.post("/api/pc-stations/my-sessions/logout", logoutMyPCStationSession);
+router.get("/auth/google", startGoogleLogin);
+router.post("/auth/google/register", startGoogleRegistration);
+router.get("/auth/google/callback", googleOAuthCallback);
+router.get("/api/pc-stations/qr/:token/status", enforceStudentPCStationSessionLimit, getPCStationScanAvailability);
+router.post("/api/pc-stations/qr/:token/action", enforceStudentPCStationSessionLimit, submitPCStationAction);
+router.get("/api/pc-stations/my-sessions", enforceStudentPCStationSessionLimit, getMyPCStationSessions);
+router.post("/api/pc-stations/my-sessions/logout", enforceStudentPCStationSessionLimit, logoutMyPCStationSession);
 router.get("/api/help/chats", listRoleHelpChats);
 router.post("/api/help/chats", createRoleHelpChat);
 router.get("/api/help/chats/:chatId/messages", getRoleHelpChatMessages);
 router.post("/api/help/chat", answerRoleHelp);
-router.post("/pc-station/uid/:token/action", submitPCStationAction);
-router.get("/pc-station/s/:token/status", showPCStationScanResult);
-router.get("/pc-station/s/:token", scanPCStationQr);
-router.get("/pc-station/uid/:token/status", showPCStationScanResult);
-router.get("/pc-station/uid/:token", scanPCStationQr);
+router.post("/pc-station/uid/:token/action", enforceStudentPCStationSessionLimit, submitPCStationAction);
+router.get("/scan/pc/:token", enforceStudentPCStationSessionLimit, scanPCStationQr);
+router.get("/pc-station/s/:token/status", enforceStudentPCStationSessionLimit, showPCStationScanResult);
+router.get("/pc-station/s/:token", enforceStudentPCStationSessionLimit, scanPCStationQr);
+router.get("/pc-station/uid/:token/status", enforceStudentPCStationSessionLimit, showPCStationScanResult);
+router.get("/pc-station/uid/:token", enforceStudentPCStationSessionLimit, scanPCStationQr);
 router.get("/pc-station/:setId/status", redirectLegacyPCStationQr);
 router.get("/pc-station/:setId", redirectLegacyPCStationQr);
 router.get("/register", registerPage);
@@ -5600,7 +5467,7 @@ router.get('/reset-password', resetPasswordPage);
 router.post('/reset-password', resetPassword);
 router.get('/check-your-email', (req, res) => res.render('check-email', { title: 'Check your email' }));
 router.get('/verify-email/:token', verifyEmail);
-router.get("/dashboard", dashboardPage);
+router.get("/dashboard", enforceStudentPCStationSessionLimit, dashboardPage);
 router.get("/logout", logoutUser);
 
 router.get("/api/equipment", getEquipment);
@@ -6001,6 +5868,98 @@ router.get("/attendance/select-pc", async (req, res) => {
 // Laboratory Schedule Seating Chart
 router.get("/api/laboratory-schedules/:scheduleId/seating-chart", getScheduleSeatingChart);
 
+router.get("/api/borrow-records/qr-student/instructors", async (req, res) => {
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Please log in to view instructor options." });
+    }
+
+    const requester = await User.findByPk(req.session.userId, {
+      attributes: ["id", "role", "campus"]
+    });
+    if (!requester) return res.status(401).json({ error: "Your account could not be verified." });
+    if (normalizeRoleName(requester.role) !== "student") {
+      return res.status(403).json({ error: "Only students can view QR borrow instructor options." });
+    }
+
+    const rawCampus = requester.campus || await getUserCampusFromSession(req);
+    const campus = normalizeCampus(String(rawCampus || "").replace(/\s*Campus\s*$/i, ""));
+    if (!campus) return res.status(403).json({ error: "Your account must have an assigned campus." });
+
+    const requestedRoom = String(req.query.laboratoryRoom || "").trim();
+    if (!requestedRoom) {
+      return res.status(400).json({ error: "A laboratory is required to load instructor options." });
+    }
+
+    const computerLab = await findComputerLabByLabel(requestedRoom, campus);
+    const canonicalRoom = computerLab
+      ? formatComputerLabLocation(computerLab)
+      : normalizeRoom(requestedRoom);
+    if (!canonicalRoom) {
+      return res.status(400).json({ error: "The scanned equipment does not have a recognized laboratory." });
+    }
+
+    const campusValues = [campus, `${campus} Campus`];
+    const [archivedFacultyIds, archivedScheduleIds] = await Promise.all([
+      getArchivedEntityIds("faculty-account"),
+      getArchivedEntityIds("laboratory-schedule")
+    ]);
+    const [instructors, schedules] = await Promise.all([
+      User.findAll({
+        where: {
+          role: { [Op.in]: ["faculty", "Faculty", "instructor", "Instructor"] },
+          campus: { [Op.in]: campusValues },
+          ...(archivedFacultyIds.length ? { id: { [Op.notIn]: archivedFacultyIds } } : {})
+        },
+        attributes: ["id", "name"],
+        order: [["name", "ASC"]]
+      }),
+      LaboratorySchedule.findAll({
+        where: {
+          campus: { [Op.in]: campusValues },
+          ...(archivedScheduleIds.length ? { id: { [Op.notIn]: archivedScheduleIds } } : {})
+        },
+        attributes: ["instructor", "instructorUserId", "laboratoryRoom", "dayOfWeek", "startTime", "endTime", "status"],
+        raw: true
+      })
+    ]);
+
+    const requestedLabNumber = getLegacyComputerLabNumber(canonicalRoom);
+    const scheduledNow = schedules.filter((schedule) => {
+      const scheduleLabNumber = getLegacyComputerLabNumber(schedule.laboratoryRoom);
+      const sameLab = requestedLabNumber && scheduleLabNumber
+        ? requestedLabNumber === scheduleLabNumber
+        : normalizeLabLabel(schedule.laboratoryRoom) === normalizeLabLabel(canonicalRoom);
+      const scheduleStatus = String(schedule.status || "Confirmed").trim().toLowerCase();
+      return sameLab &&
+        scheduleStatus === "confirmed" &&
+        getClassScheduleStatus(schedule) === "In Progress";
+    });
+    const scheduledInstructorIds = new Set(
+      scheduledNow.map((schedule) => String(schedule.instructorUserId || "")).filter(Boolean)
+    );
+    const scheduledInstructorNames = new Set(
+      scheduledNow
+        .filter((schedule) => !schedule.instructorUserId)
+        .map((schedule) => String(schedule.instructor || "").trim().toLocaleLowerCase())
+        .filter(Boolean)
+    );
+
+    return res.json(instructors.flatMap((instructor) => {
+      const name = String(instructor.name || "").trim().replace(/\s+/g, " ");
+      if (!name) return [];
+      return [{
+        name,
+        scheduledNow: scheduledInstructorIds.has(String(instructor.id)) ||
+          scheduledInstructorNames.has(name.toLocaleLowerCase())
+      }];
+    }));
+  } catch (error) {
+    console.error("Failed to load QR borrow instructor options.", error);
+    return res.status(500).json({ error: "Unable to load instructor options for this laboratory." });
+  }
+});
+
 router.get("/api/borrow-records", listBorrowRecords);
 router.post("/api/borrow-records", createBorrowRecord);
 router.post("/api/borrow-records/qr-student", createStudentQrBorrowRecord);
@@ -6013,6 +5972,8 @@ router.put("/api/borrow-records/:id/cancel", cancelBorrowRecord);
 router.put("/api/borrow-records/:id/release", releaseBorrowRecord);
 router.put("/api/borrow-records/:id/request-return", requestBorrowReturn);
 router.put("/api/borrow-records/:id/return", returnBorrowRecord);
+router.get("/api/borrow-records/turnover/recipients", searchBorrowTurnoverRecipients);
+router.put("/api/borrow-records/:id/turn-over", turnOverBorrowRecord);
 router.put("/api/borrow-records/:id/mark-lost", markBorrowRecordLost);
 router.get("/api/borrow-records/:id/history", getBorrowHistory);
 router.get("/api/borrow-audit", listBorrowAudit);
@@ -6021,6 +5982,13 @@ router.get("/api/equipment-availability/:equipmentId/history", getEquipmentBorro
 router.get("/api/admin/notifications", listBorrowNotifications);
 router.get("/api/borrow-notifications", listBorrowNotifications);
 router.put("/api/borrow-notifications/:id/read", markBorrowNotificationRead);
+router.get("/api/notifications", listUserNotifications);
+router.put("/api/notifications/read-all", markAllUserNotificationsRead);
+router.put("/api/notifications/clear", clearUserNotifications);
+router.put("/api/notifications/:id/read", markUserNotificationRead);
+router.put("/api/notifications/:id/hide", hideUserNotification);
+router.put("/api/notifications/:id/mute", muteUserNotification);
+router.delete("/api/notifications/:id", deleteUserNotification);
 router.get("/api/audit-logs", getAuditLogs);
 router.get("/api/equipment-audit-trail", requireAdminForAudit, getAuditTrail);
 router.get("/api/announcements", (req, res) => {
@@ -8492,7 +8460,7 @@ router.delete('/api/equipment-sets/:setId/components/:equipmentId', equipmentSet
 
 // PC Set Management Page
 router.get('/pc-set-management', (req, res) => {
-  res.sendFile(path.join(__dirname, '../pc-set-management.html'));
+  res.redirect(302, '/equipment-inventory?view=pc-sets');
 });
 
 export default router;
